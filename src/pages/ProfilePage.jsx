@@ -409,7 +409,7 @@ const ProfilePage = () => {
 													<Dropdown align="end">
 														<Dropdown.Toggle 
 															variant="link" 
-															className="text-muted p-0 border-0"
+															className="text-muted text-decoration-none p-0 border-0"
 															style={{
 																background: 'none',
 																border: 'none',

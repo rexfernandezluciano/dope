@@ -394,7 +394,7 @@ const HomePage = () => {
 												<Dropdown align="end">
 													<Dropdown.Toggle 
 														variant="link" 
-														className="text-muted p-0 border-0"
+														className="text-muted text-decoration-none p-0 border-0"
 														style={{
 															background: 'none',
 															border: 'none',
@@ -403,7 +403,7 @@ const HomePage = () => {
 															width: '20px',
 															height: '20px'
 														}}
-													>
+													>...
 													</Dropdown.Toggle>
 													<Dropdown.Menu>
 														<Dropdown.Item onClick={() => navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)}>

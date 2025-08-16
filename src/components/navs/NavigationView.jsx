@@ -86,7 +86,7 @@ const NavigationView = ({ children, user }) => {
 								</li>
 								<li><hr className="dropdown-divider" /></li>
 								<li>
-									<button className="dropdown-item text-danger" onClick={handleLogout}>
+									<button className="dropdown-item px-3 text-danger" onClick={handleLogout}>
 										<BoxArrowRight size={16} className="me-2" />
 										Logout
 									</button>
