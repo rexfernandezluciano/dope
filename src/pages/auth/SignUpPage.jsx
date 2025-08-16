@@ -117,7 +117,7 @@ const SignUpPage = () => {
 				photoURL
 			};
 
-			const result = await authAPI.register(userData);
+			await authAPI.register(userData);
 			
 			await verifyUser(email);
 			setShowDialog(true);

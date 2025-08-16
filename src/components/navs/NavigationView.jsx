@@ -1,56 +1,68 @@
+
 /** @format */
 
-import React from "react";
-import { useLoaderData } from "react-router-dom";
-import { useLocation } from "react-router-dom";
-import { Navbar, Nav, Container, Offcanvas, Image, Row, Col, Spinner } from "react-bootstrap";
-import { HouseDoor, Person, Gear, BoxArrowRight } from "react-bootstrap-icons";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Navbar, Container, Image, Offcanvas, Nav, Row, Col } from "react-bootstrap";
+import { House, Person, Gear, BoxArrowRight } from "react-bootstrap-icons";
 
-const NavigationView = ({ children }) => {
-	const { pathname } = useLocation();
-	
-	const { user } = useLoaderData();
+import { authAPI } from "../../config/ApiConfig";
+import { removeAuthToken } from "../../utils/app-utils";
 
-	const isActive = path => pathname === path || pathname === user.username;
-	const navItemClass = path => `nav-link px-4 ${isActive(path) ? "active rounded-end-3 bg-primary px-sm-4 fw-bold" : "text-black"}`;
+const NavigationView = ({ children, user }) => {
+	const navigate = useNavigate();
+	const location = useLocation();
+
+	const handleLogout = async () => {
+		try {
+			await authAPI.logout();
+			removeAuthToken();
+			navigate("/auth/login");
+		} catch (err) {
+			console.error('Logout error:', err);
+			// Force logout even if API call fails
+			removeAuthToken();
+			navigate("/auth/login");
+		}
+	};
 
 	const menuItems = [
-		{ icon: <HouseDoor className="me-2" />, label: "Home", href: "/" },
-		{ icon: <Person className="me-2" />, label: "Profile", href: `/${user?.username}` },
-		{ icon: <Gear className="me-2" />, label: "Settings", href: "/settings" },
-		{ icon: <BoxArrowRight className="me-2" />, label: "Logout", href: "/logout" },
+		{
+			label: "Home",
+			href: "/",
+			icon: <House size={18} className="me-2" />,
+		},
+		{
+			label: "Profile",
+			href: `/profile/${user?.username}`,
+			icon: <Person size={18} className="me-2" />,
+		},
+		{
+			label: "Settings",
+			href: "/settings",
+			icon: <Gear size={18} className="me-2" />,
+		},
 	];
 
-	if (!user) {
-		return (
-			<div className="d-flex align-items-center justify-content-center min-vh-100">
-				<Spinner
-					animation="border"
-					variant="primary"
-				/>
-			</div>
-		);
-	}
+	const navItemClass = href => {
+		const isActive = location.pathname === href;
+		return `nav-link ${isActive ? "active" : ""}`;
+	};
 
 	return (
 		<>
 			{/* Mobile Navbar */}
 			<div className="d-md-none">
-				<Navbar
-					expand={false}
-					className="bg-white border-bottom">
+				<Navbar expand={false} className="bg-white border-bottom">
 					<Container fluid>
 						<Navbar.Toggle
 							aria-controls="offcanvasNavbar"
 							className="shadow-none border-0"
 						/>
-						<Navbar.Brand
-							href="/"
-							className="text-primary">
+						<Navbar.Brand href="/" className="text-primary">
 							DOPE
 						</Navbar.Brand>
 						<Image
-							src={user.photoURL}
+							src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
 							alt="avatar"
 							roundedCircle
 							width="35"
@@ -68,41 +80,49 @@ const NavigationView = ({ children }) => {
 							<Offcanvas.Body className="ps-0 pe-3">
 								<div className="text-center mb-4">
 									<Image
-										src={user.photoURL}
+										src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
 										roundedCircle
 										width={70}
 										height={70}
 									/>
-									<h6 className="mt-2">{user.name}</h6>
-									<small>{user.email}</small>
+									<h6 className="mt-2">{user?.name}</h6>
+									<small className="text-muted">{user?.email}</small>
+									{user?.hasBlueCheck && (
+										<div className="mt-1">
+											<span className="text-primary">✓ Verified</span>
+										</div>
+									)}
 								</div>
 								<Nav className="flex-column">
 									{menuItems.map((item, idx) => (
 										<Nav.Link
-											href={item.href}
 											key={idx}
+											href={item.href}
 											className={navItemClass(item.href)}>
 											{item.icon}
 											{item.label}
 										</Nav.Link>
 									))}
+									<Nav.Link
+										onClick={handleLogout}
+										className="nav-link text-danger"
+										style={{ cursor: "pointer" }}>
+										<BoxArrowRight size={18} className="me-2" />
+										Logout
+									</Nav.Link>
 								</Nav>
 							</Offcanvas.Body>
 						</Navbar.Offcanvas>
 					</Container>
 				</Navbar>
-				<div>{children}</div>
+				{children}
 			</div>
 
 			{/* Desktop Sidebar */}
 			<div className="d-none d-md-block">
-				<Navbar
-					expand={false}
-					className="bg-white border-bottom">
+				<Navbar expand={false} className="bg-white border-bottom">
 					<Container fluid>
-						<Navbar.Brand
-							href="#"
-							className="text-primary">
+						<Navbar.Brand href="/" className="text-primary">
 							DOPE Network
 						</Navbar.Brand>
 					</Container>
@@ -114,25 +134,35 @@ const NavigationView = ({ children }) => {
 						<Row className="justify-content-center mb-3">
 							<Col xs="auto">
 								<Image
-									src={user.photoURL}
+									src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
 									roundedCircle
 									width={80}
 									height={80}
 								/>
 							</Col>
 						</Row>
-						<h5 className="text-center">{user.name}</h5>
-						<p className="text-center text-muted small">{user.email}</p>
+						<h5 className="text-center">{user?.name}</h5>
+						<p className="text-center text-muted small">{user?.email}</p>
+						{user?.hasBlueCheck && (
+							<p className="text-center text-primary small">✓ Verified</p>
+						)}
 						<Nav className="flex-column">
 							{menuItems.map((item, idx) => (
 								<Nav.Link
-									href={item.href}
 									key={idx}
+									href={item.href}
 									className={navItemClass(item.href)}>
 									{item.icon}
 									{item.label}
 								</Nav.Link>
 							))}
+							<Nav.Link
+								onClick={handleLogout}
+								className="nav-link text-danger mt-3"
+								style={{ cursor: "pointer" }}>
+								<BoxArrowRight size={18} className="me-2" />
+								Logout
+							</Nav.Link>
 						</Nav>
 					</Container>
 				</div>

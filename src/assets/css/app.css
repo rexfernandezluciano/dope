@@ -107,3 +107,51 @@ a {
   color: #0069B5;
   -webkit-text-fill-color: #0069B5;
 }
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
+  .card {
+    border-radius: 0;
+  }
+  
+  .modal-fullscreen-md-down {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  
+  .btn {
+    touch-action: manipulation;
+  }
+  
+  .form-control, .form-select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Touch improvements */
+.nav-link, .btn {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+/* Profile image optimizations */
+.rounded-circle {
+  object-fit: cover;
+}
+
+/* Text wrapping for long usernames */
+.text-truncate-username {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
