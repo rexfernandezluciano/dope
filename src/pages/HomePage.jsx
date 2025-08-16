@@ -378,22 +378,58 @@ const HomePage = () => {
 											height="40"
 										/>
 										<div className="flex-grow-1">
-											<div className="d-flex align-items-center gap-1">
-												<span
-													className="fw-bold"
-													onClick={() =>
-														(window.location.href = `/${post.author.username}`)
-													}
-												>
-													{post.author.name}
-												</span>
-												{post.author.hasBlueCheck && (
-													<span className="text-primary">✓</span>
-												)}
-												<span className="text-muted">·</span>
-												<span className="text-muted small">
-													{formatTimeAgo(post.createdAt)}
-												</span>
+											<div className="d-flex align-items-center justify-content-between">
+												<div className="d-flex align-items-center gap-1">
+													<span
+														className="fw-bold"
+														style={{ cursor: "pointer", color: "inherit" }}
+														onClick={() =>
+															(window.location.href = `/${post.author.username}`)
+														}
+													>
+														{post.author.name}
+													</span>
+													{post.author.hasBlueCheck && (
+														<span className="text-primary">✓</span>
+													)}
+													<span className="text-muted">·</span>
+													<span className="text-muted small">
+														{formatTimeAgo(post.createdAt)}
+													</span>
+												</div>
+												<Dropdown align="end">
+													<Dropdown.Toggle 
+														variant="link" 
+														className="text-muted p-0 border-0"
+														style={{
+															background: 'none',
+															border: 'none',
+															boxShadow: 'none'
+														}}
+													>
+														⋯
+													</Dropdown.Toggle>
+													<Dropdown.Menu>
+														<Dropdown.Item onClick={() => navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)}>
+															Copy Link
+														</Dropdown.Item>
+														<Dropdown.Item>
+															Repost
+														</Dropdown.Item>
+														{post.author.id !== user.uid && (
+															<Dropdown.Item className="text-danger">
+																Report
+															</Dropdown.Item>
+														)}
+														{post.author.id === user.uid && (
+															<Dropdown.Item 
+																className="text-danger"
+																onClick={() => handleDeletePost(post.id)}>
+																Delete Post
+															</Dropdown.Item>
+														)}
+													</Dropdown.Menu>
+												</Dropdown>
 											</div>
 
 											{post.content && <p className="mb-2">{post.content}</p>}
@@ -553,54 +589,6 @@ const HomePage = () => {
 												>
 													<Share size={16} />
 												</Button>
-
-												{post.author.id === user.uid && (
-													<Dropdown align="end">
-													<Dropdown.Toggle 
-														variant="link" 
-														className="text-muted p-0 border-0"
-														style={{
-															background: 'none',
-															border: 'none',
-															boxShadow: 'none'
-														}}
-													>
-														⋯
-													</Dropdown.Toggle>
-													<Dropdown.Menu>
-														<Dropdown.Item
-															onClick={() => {
-																navigator.clipboard.writeText(
-																	`${window.location.origin}/post/${post.id}`,
-																);
-																alert("Link copied!");
-															}}
-														>
-															Copy Link
-														</Dropdown.Item>
-														<Dropdown.Item
-															onClick={() => {
-																alert("Repost functionality not implemented yet.");
-															}}
-														>
-															Repost
-														</Dropdown.Item>
-														{post.author.id !== user.uid && (
-															<Dropdown.Item className="text-danger">
-																Report
-															</Dropdown.Item>
-														)}
-														{post.author.id === user.uid && (
-															<Dropdown.Item 
-																className="text-danger"
-																onClick={() => handleDeletePost(post.id)}
-															>
-																Remove Post
-															</Dropdown.Item>
-														)}
-													</Dropdown.Menu>
-												</Dropdown>
-												)}
 											</div>
 										</div>
 									</div>
