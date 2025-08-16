@@ -630,7 +630,7 @@ const ProfilePage = () => {
 																e.target.closest('.action-btn').style.color = '#6c757d';
 															}}
 														>
-															<ChatDots size={18} style={{ flexShrink: 0 }} />
+															<ChatDots size={24} style={{ flexShrink: 0 }} />
 															{post._count.comments > 0 && (
 																<span className="small">{post._count.comments}</span>
 															)}
@@ -669,9 +669,9 @@ const ProfilePage = () => {
 															}}
 														>
 															{(post.likes || []).some(like => like.userId === currentUser.uid) ? (
-																<HeartFill size={18} style={{ flexShrink: 0 }} />
+																<HeartFill size={24} style={{ flexShrink: 0 }} />
 															) : (
-																<Heart size={18} style={{ flexShrink: 0 }} />
+																<Heart size={24} style={{ flexShrink: 0 }} />
 															)}
 															{(post._count?.likes || 0) > 0 && (
 																<span className="small">{post._count?.likes || 0}</span>
@@ -705,7 +705,7 @@ const ProfilePage = () => {
 																e.target.closest('.action-btn').style.color = '#6c757d';
 															}}
 														>
-															<Share size={18} style={{ flexShrink: 0 }} />
+															<Share size={24} style={{ flexShrink: 0 }} />
 														</Button>
 													</OverlayTrigger>
 												</div>
