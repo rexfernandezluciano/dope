@@ -235,7 +235,8 @@ const HomePage = () => {
 				)}
 
 				{/* Quick Post */}
-				<Card className="border-0 border-bottom rounded-0 mb-0 shadow-sm">
+				<Card className="border-0 border-bottom rounded-0 mb-0 shadow-sm"
+					onClick={() => setShowComposerModal(true)}>
 					<Card.Body className="px-3 py-3">
 						<div className="d-flex gap-3">
 							<Image
@@ -254,13 +255,10 @@ const HomePage = () => {
 									)}
 									<span className="text-muted">@{user?.username}</span>
 								</div>
-								<Button
-									variant="outline-secondary"
-									className="w-100 text-start text-muted border-1 bg-transparent rounded-pill py-2"
-									style={{ backgroundColor: 'rgba(0,0,0,0.05)' }}
-									onClick={() => setShowComposerModal(true)}>
+								<div
+									className="w-100 text-start text-muted border-1 bg-transparent">
 									What's on your mind?
-								</Button>
+								</div>
 							</div>
 						</div>
 					</Card.Body>
