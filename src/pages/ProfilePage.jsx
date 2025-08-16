@@ -465,18 +465,25 @@ const ProfilePage = () => {
 														<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
 													</div>
 													<Dropdown align="end" onClick={(e) => e.stopPropagation()}>
-														<Dropdown.Toggle
-															variant="link"
-															className="text-muted text-decoration-none p-0 border-0"
-															style={{
-																background: 'none',
-																border: 'none',
-																boxShadow: 'none'
-															}}
-															onClick={(e) => e.stopPropagation()}
+														<OverlayTrigger
+															placement="bottom"
+															overlay={<Tooltip>More options</Tooltip>}
 														>
-															<ThreeDots size={20} />
-														</Dropdown.Toggle>
+															<Dropdown.Toggle
+																variant="link"
+																className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
+																style={{
+																	width: '32px',
+																	height: '32px',
+																	background: 'none',
+																	border: 'none !important',
+																	boxShadow: 'none !important'
+																}}
+																onClick={(e) => e.stopPropagation()}
+															>
+																<ThreeDots size={16} />
+															</Dropdown.Toggle>
+														</OverlayTrigger>
 														<Dropdown.Menu onClick={(e) => e.stopPropagation()}>
 															<Dropdown.Item onClick={(e) => {
 																e.stopPropagation();

@@ -245,7 +245,7 @@ const HomePage = () => {
 
 	const handleSharePost = async (postId) => {
 		const postUrl = `${window.location.origin}/post/${postId}`;
-		
+
 		if (navigator.share) {
 			try {
 				await navigator.share({
@@ -492,7 +492,10 @@ const HomePage = () => {
 																objectFit: "cover",
 																cursor: "pointer",
 															}}
-															onClick={() => openImageViewer(post.imageUrls, 0)}
+															onClick={(e) => {
+																e.stopPropagation();
+																openImageViewer(post.imageUrls, 0);
+															}}
 														/>
 													) : (
 														// Multiple images - box layout
@@ -509,9 +512,10 @@ const HomePage = () => {
 																		objectFit: "cover",
 																		cursor: "pointer",
 																	}}
-																	onClick={() =>
-																		openImageViewer(post.imageUrls, 0)
-																	}
+																	onClick={(e) => {
+																		e.stopPropagation();
+																		openImageViewer(post.imageUrls, 0);
+																	}}
 																/>
 															</div>
 															{/* Right side with stacked images */}
@@ -535,9 +539,10 @@ const HomePage = () => {
 																				objectFit: "cover",
 																				cursor: "pointer",
 																			}}
-																			onClick={() =>
-																				openImageViewer(post.imageUrls, 1)
-																			}
+																			onClick={(e) => {
+																				e.stopPropagation();
+																				openImageViewer(post.imageUrls, 1);
+																			}}
 																		/>
 																	</div>
 																	{post.imageUrls.length > 2 && (
@@ -552,9 +557,10 @@ const HomePage = () => {
 																					objectFit: "cover",
 																					cursor: "pointer",
 																				}}
-																				onClick={() =>
-																					openImageViewer(post.imageUrls, 2)
-																				}
+																				onClick={(e) => {
+																					e.stopPropagation();
+																					openImageViewer(post.imageUrls, 2);
+																				}}
 																			/>
 																			{/* Show more indicator */}
 																			{post.imageUrls.length > 3 && (
@@ -568,9 +574,10 @@ const HomePage = () => {
 																						fontWeight: "bold",
 																						fontSize: "1.2rem",
 																					}}
-																					onClick={() =>
-																						openImageViewer(post.imageUrls, 2)
-																					}
+																					onClick={(e) => {
+																						e.stopPropagation();
+																						openImageViewer(post.imageUrls, 2);
+																					}}
 																				>
 																					+{post.imageUrls.length - 3}
 																				</div>
@@ -767,6 +774,7 @@ const HomePage = () => {
 											fontSize: "0.875rem",
 											fontWeight: "600",
 										}}
+										onClick={(e) => e.stopPropagation()}
 									>
 										{privacyOptions[privacy]} {privacy}
 									</Dropdown.Toggle>
