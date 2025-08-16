@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -16,29 +15,29 @@ const NavigationView = ({ children, user }) => {
 		try {
 			await authAPI.logout();
 			removeAuthToken();
-			navigate("/auth/login");
+			navigate("/");
 		} catch (err) {
 			console.error('Logout error:', err);
 			// Force logout even if API call fails
 			removeAuthToken();
-			navigate("/auth/login");
+			navigate("/");
 		}
 	};
 
 	const menuItems = [
 		{
 			label: "Home",
-			href: "/app",
+			href: "/",
 			icon: <House size={18} className="me-2" />,
 		},
 		{
 			label: "Profile",
-			href: `/app/profile/${user?.username}`,
+			href: `/profile/${user?.username}`,
 			icon: <Person size={18} className="me-2" />,
 		},
 		{
 			label: "Settings",
-			href: `/app/profile/${user?.username}/settings`,
+			href: `/${user?.username}/settings`,
 			icon: <Gear size={18} className="me-2" />,
 		},
 	];

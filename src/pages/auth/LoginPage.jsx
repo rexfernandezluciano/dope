@@ -1,4 +1,3 @@
-
 /** @format */
 
 import React, { useState } from "react";
@@ -29,7 +28,7 @@ const LoginPage = () => {
 		try {
 			setLoading(true);
 			const result = await authAPI.login(email, password);
-			
+
 			if (result.user && !result.user.hasVerifiedEmail) {
 				setError(
 					<>
@@ -52,13 +51,13 @@ const LoginPage = () => {
 				setLoading(false);
 				return;
 			}
-			
+
 			if (result.token) {
 				setAuthToken(result.token);
 				// Clear any existing errors
 				setError("");
 				// Use replace to prevent going back to login
-				navigate("/", { replace: true });
+				navigate("/home", { replace: true });
 			} else {
 				setError("Login failed. Please try again.");
 			}

@@ -17,7 +17,7 @@ const StartPage = () => {
 			try {
 				const user = await getUser();
 				if (user) {
-					navigate("/app", { replace: true });
+					navigate("/home", { replace: true });
 					return;
 				}
 			} catch (error) {

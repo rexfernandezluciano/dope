@@ -82,7 +82,7 @@ const SettingsPage = () => {
 	const handleLogout = () => {
 		authAPI.logout();
 		removeAuthToken();
-		navigate("/auth/login");
+		navigate("/");
 	};
 
 	const handleDeleteAccount = async () => {

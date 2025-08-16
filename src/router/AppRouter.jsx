@@ -28,7 +28,7 @@ const router = createBrowserRouter([
 		element: <SignUpPage />,
 	},
 	{
-		path: "/app",
+		path: "/home",
 		element: (
 			<RequireAuth>
 				<IndexPage />
@@ -41,19 +41,40 @@ const router = createBrowserRouter([
 				element: <HomePage />,
 				loader: indexPageLoader,
 			},
+		],
+	},
+	{
+		path: "/profile/:username",
+		element: (
+			<RequireAuth>
+				<IndexPage />
+			</RequireAuth>
+		),
+		loader: indexPageLoader,
+		children: [
 			{
-				path: "profile/:username",
+				index: true,
 				element: <ProfilePage />,
 				loader: indexPageLoader,
 			},
+		],
+	},
+	{
+		path: "/:username/settings",
+		element: (
+			<RequireAuth>
+				<IndexPage />
+			</RequireAuth>
+		),
+		loader: indexPageLoader,
+		children: [
 			{
-				path: "profile/:username/settings",
+				index: true,
 				element: <SettingsPage />,
 				loader: indexPageLoader,
 			},
 		],
 	},
-	
 ]);
 
 const AppRouter = () => {
