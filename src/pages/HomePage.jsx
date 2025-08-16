@@ -615,7 +615,7 @@ const HomePage = () => {
 															e.target.closest('.action-btn').style.color = '#6c757d';
 														}}
 													>
-														<ChatDots size={18} />
+														<ChatDots size={24} />
 														{post._count.comments > 0 && (
 															<span className="small">{post._count.comments}</span>
 														)}
@@ -652,9 +652,9 @@ const HomePage = () => {
 														}}
 													>
 														{post.likes.some((like) => like.userId === user.uid) ? (
-															<HeartFill size={18} />
+															<HeartFill size={24} />
 														) : (
-															<Heart size={18} />
+															<Heart size={24} />
 														)}
 														{post._count.likes > 0 && (
 															<span className="small">{post._count.likes}</span>
@@ -684,7 +684,7 @@ const HomePage = () => {
 															e.target.closest('.action-btn').style.color = '#6c757d';
 														}}
 													>
-														<Share size={18} />
+														<Share size={24} />
 													</Button>
 												</OverlayTrigger>
 											</div>

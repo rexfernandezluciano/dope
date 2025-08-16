@@ -25,7 +25,8 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	X,
-	ThreeDots
+	ThreeDots,
+	Calendar
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
