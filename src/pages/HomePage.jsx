@@ -12,9 +12,7 @@ import {
 	InputGroup,
 	Card,
 	Spinner,
-	Alert,
-	OverlayTrigger,
-	Tooltip
+	Alert
 } from "react-bootstrap";
 import {
 	Globe,

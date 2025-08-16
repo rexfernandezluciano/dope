@@ -1,26 +1,24 @@
-/** @format */
+/* @format */
 
 import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-	apiKey: "AIzaSyCvyvKXJh7mQTTyXJGZGEjKOi6AYikOB94",
-	authDomain: "tambayannetwork.web.app",
-	databaseURL: "https://tambayannetwork-default-rtdb.asia-southeast1.firebasedatabase.app",
-	projectId: "tambayannetwork",
-	storageBucket: "tambayannetwork.firebasestorage.app",
-	messagingSenderId: "376210324564",
-	appId: "1:376210324564:web:3d3c9c9511ff3ccdc3c1c1",
-	measurementId: "G-7MRJR9NCFP",
+	apiKey: "AIzaSyAxfinYGLdR1lQIdAExFkBrsjgA6rkmFBE",
+	authDomain: "www.dopp.eu.org",
+	projectId: "dope-international",
+	storageBucket: "dope-international.firebasestorage.app",
+	messagingSenderId: "171033182022",
+	appId: "1:171033182022:web:b5e61cc870771dc41daf47",
+	measurementId: "G-XV15BJFNYK",
 };
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth(app);
-const googleAuthProvider = new GoogleAuthProvider();
 
 const database = getDatabase(app);
 
-export { database, auth, analytics, googleAuthProvider };
+export { database, auth, analytics };
