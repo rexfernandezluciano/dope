@@ -85,7 +85,7 @@ a {
   color: #fff;
 }
 
-/* Navbar (if using .bg-primary) */
+/*Navbar if using .bg-primary */
 .navbar.bg-primary {
   background-color: #0069B5 !important;
 }
@@ -160,11 +160,11 @@ a {
     padding-left: 0;
     padding-right: 0;
   }
-  
+
   .card {
     border-radius: 0;
   }
-  
+
   .modal-fullscreen-md-down {
     width: 100vw;
     height: 100vh;
@@ -172,37 +172,50 @@ a {
     border: 0;
     border-radius: 0;
   }
-  
+
   .btn {
     touch-action: manipulation;
   }
-  
+
   .form-control, .form-select {
     font-size: 16px; /* Prevents zoom on iOS */
   }
-  
+
   /* Add top padding for mobile to account for sticky navbar */
   body {
     padding-top: 0;
   }
-  
+
   /* Enhanced horizontal scrolling for mobile */
   .horizontal-scroll-container {
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
   }
-  
+
   .horizontal-scroll-item {
     scroll-snap-align: start;
   }
 }
 
 /* Touch improvements */
-.nav-link, .btn {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+button, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* Image viewer modal */
+.image-viewer-modal .modal-dialog {
+  max-width: 90vw;
+}
+
+.image-viewer-modal .modal-body {
+  border-radius: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .image-viewer-modal .modal-dialog {
+    max-width: 95vw;
+    margin: 10px auto;
+  }
 }
 
 /* Profile image optimizations */

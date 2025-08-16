@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
-import { Container, Image, Modal, Form, Button, Dropdown, InputGroup, Card, Spinner, Alert } from "react-bootstrap";
-import { Globe, People, Lock, Camera, EmojiSmile, CameraVideo, X, Search, Heart, HeartFill, ChatDots, Share } from "react-bootstrap-icons";
+import { Container, Image, Modal, Form, Button, Dropdown, InputGroup, Card, Spinner, Alert, Carousel } from "react-bootstrap";
+import { Globe, People, Lock, Camera, EmojiSmile, CameraVideo, X, Search, Heart, HeartFill, ChatDots, Share, ChevronLeft, ChevronRight } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
@@ -26,6 +26,9 @@ const HomePage = () => {
 	const [submitting, setSubmitting] = useState(false);
 	const [isLive, setIsLive] = useState(false);
 	const [liveVideoUrl, setLiveVideoUrl] = useState("");
+	const [showImageViewer, setShowImageViewer] = useState(false);
+	const [currentImageIndex, setCurrentImageIndex] = useState(0);
+	const [currentImages, setCurrentImages] = useState([]);
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
 
@@ -227,6 +230,18 @@ const HomePage = () => {
 		return `${diffDays}d`;
 	};
 
+	const openImageViewer = (images, startIndex = 0) => {
+		setCurrentImages(images);
+		setCurrentImageIndex(startIndex);
+		setShowImageViewer(true);
+	};
+
+	const closeImageViewer = () => {
+		setShowImageViewer(false);
+		setCurrentImages([]);
+		setCurrentImageIndex(0);
+	};
+
 	const privacyOptions = {
 		Public: <Globe size={14} className="me-1" />,
 		Followers: <People size={14} className="me-1" />,
@@ -323,13 +338,13 @@ const HomePage = () => {
 																objectFit: "cover",
 																cursor: "pointer"
 															}}
-															onClick={() => window.open(post.imageUrls[0], '_blank')}
+															onClick={() => openImageViewer(post.imageUrls, 0)}
 														/>
 													) : (
 														// Multiple images - box layout
 														<div className="d-flex gap-2" style={{ height: "300px" }}>
 															{/* Main image on the left */}
-															<div className="flex-grow-1">
+															<div style={{ flex: "2" }}>
 																<Image
 																	src={post.imageUrls[0]}
 																	className="rounded w-100 h-100"
@@ -337,39 +352,53 @@ const HomePage = () => {
 																		objectFit: "cover",
 																		cursor: "pointer"
 																	}}
-																	onClick={() => window.open(post.imageUrls[0], '_blank')}
+																	onClick={() => openImageViewer(post.imageUrls, 0)}
 																/>
 															</div>
 															{/* Right side with stacked images */}
-															<div className="d-flex flex-column gap-2" style={{ width: "150px" }}>
-																{post.imageUrls.slice(1, 3).map((url, idx) => (
-																	<div key={idx + 1} className="flex-grow-1 position-relative">
+															{post.imageUrls.length > 1 && (
+																<div className="d-flex flex-column gap-2" style={{ flex: "1" }}>
+																	<div style={{ height: post.imageUrls.length > 2 ? "calc(50% - 4px)" : "100%" }}>
 																		<Image
-																			src={url}
+																			src={post.imageUrls[1]}
 																			className="rounded w-100 h-100"
 																			style={{ 
 																				objectFit: "cover",
 																				cursor: "pointer"
 																			}}
-																			onClick={() => window.open(url, '_blank')}
+																			onClick={() => openImageViewer(post.imageUrls, 1)}
 																		/>
-																		{/* Show more indicator on the last visible image */}
-																		{idx === 1 && post.imageUrls.length > 3 && (
-																			<div 
-																				className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
-																				style={{ 
-																					backgroundColor: "rgba(0, 0, 0, 0.7)",
-																					cursor: "pointer",
-																					color: "white",
-																					fontWeight: "bold"
-																				}}
-																				onClick={() => window.open(post.imageUrls[0], '_blank')}>
-																				+{post.imageUrls.length - 3}
-																			</div>
-																		)}
 																	</div>
-																))}
-															</div>
+																	{post.imageUrls.length > 2 && (
+																		<div style={{ height: "calc(50% - 4px)" }} className="position-relative">
+																			<Image
+																				src={post.imageUrls[2]}
+																				className="rounded w-100 h-100"
+																				style={{ 
+																					objectFit: "cover",
+																					cursor: "pointer"
+																				}}
+																				onClick={() => openImageViewer(post.imageUrls, 2)}
+																			/>
+																			{/* Show more indicator */}
+																			{post.imageUrls.length > 3 && (
+																				<div 
+																					className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
+																					style={{ 
+																						backgroundColor: "rgba(0, 0, 0, 0.7)",
+																						cursor: "pointer",
+																						color: "white",
+																						fontWeight: "bold",
+																						fontSize: "1.2rem"
+																					}}
+																					onClick={() => openImageViewer(post.imageUrls, 2)}>
+																					+{post.imageUrls.length - 3}
+																				</div>
+																			)}
+																		</div>
+																	)}
+																</div>
+															)}
 														</div>
 													)}
 												</div>
@@ -632,6 +661,65 @@ const HomePage = () => {
 									handleSelectGif(gif);
 								}}
 							/>
+						</div>
+					</Modal.Body>
+				</Modal>
+			)}
+
+			{/* Image Viewer Modal */}
+			{showImageViewer && (
+				<Modal
+					show={showImageViewer}
+					onHide={closeImageViewer}
+					centered
+					size="lg"
+					className="image-viewer-modal">
+					<Modal.Body className="p-0 bg-dark text-center">
+						<div className="position-relative">
+							<Button
+								variant="link"
+								className="position-absolute top-0 end-0 m-2 text-white"
+								style={{ zIndex: 10 }}
+								onClick={closeImageViewer}>
+								<X size={24} />
+							</Button>
+							
+							{currentImages.length > 1 && (
+								<>
+									<Button
+										variant="link"
+										className="position-absolute top-50 start-0 translate-middle-y text-white ms-2"
+										style={{ zIndex: 10 }}
+										disabled={currentImageIndex === 0}
+										onClick={() => setCurrentImageIndex(prev => Math.max(0, prev - 1))}>
+										<ChevronLeft size={32} />
+									</Button>
+									
+									<Button
+										variant="link"
+										className="position-absolute top-50 end-0 translate-middle-y text-white me-2"
+										style={{ zIndex: 10 }}
+										disabled={currentImageIndex === currentImages.length - 1}
+										onClick={() => setCurrentImageIndex(prev => Math.min(currentImages.length - 1, prev + 1))}>
+										<ChevronRight size={32} />
+									</Button>
+								</>
+							)}
+							
+							<Image
+								src={currentImages[currentImageIndex]}
+								className="w-100"
+								style={{ 
+									maxHeight: "80vh",
+									objectFit: "contain"
+								}}
+							/>
+							
+							{currentImages.length > 1 && (
+								<div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 text-white">
+									{currentImageIndex + 1} / {currentImages.length}
+								</div>
+							)}
 						</div>
 					</Modal.Body>
 				</Modal>
