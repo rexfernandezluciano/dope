@@ -26,6 +26,7 @@
 		"@giphy/react-components": "^10.1.0",
 		"animate.css": "^4.1.1",
 		"bootstrap": "^5.3.7",
+		"crypto": "^1.0.1",
 		"firebase": "^12.1.0",
 		"heic2any": "^0.0.4",
 		"md5": "^2.3.0",

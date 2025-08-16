@@ -1,12 +1,10 @@
 /** @format */
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useLoaderData } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { Navbar, Nav, Container, Offcanvas, Image, Row, Col, Spinner } from "react-bootstrap";
 import { HouseDoor, Person, Gear, BoxArrowRight } from "react-bootstrap-icons";
-
-import { getUser } from "../../utils/app-utils";
 
 const NavigationView = ({ children }) => {
 	const { pathname } = useLocation();

@@ -2,13 +2,11 @@
 /** @format */
 
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 import { getUser } from "../../utils/app-utils";
 import StartPage from "../../pages/StartPage";
 
 const RequireAuth = ({ children }) => {
-	const location = useLocation();
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
 

@@ -1,14 +1,12 @@
 /** @format */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useLoaderData } from "react-router-dom";
 import { Container, Image, Modal, Form, Button, Dropdown, InputGroup } from "react-bootstrap";
 import { Globe, People, Lock, Camera, EmojiSmile, CameraVideo, X, Search } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
-
-import { getUser } from "../utils/app-utils";
 
 const HomePage = () => {
 	const [showComposerModal, setShowComposerModal] = useState(false);

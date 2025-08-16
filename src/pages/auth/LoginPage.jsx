@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert } from "react-bootstrap";
 
 import { authAPI } from "../../config/ApiConfig";
-import { verifyUser, userExist, setAuthToken } from "../../utils/app-utils";
+import { verifyUser, setAuthToken } from "../../utils/app-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
