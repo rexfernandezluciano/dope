@@ -1,14 +1,42 @@
 /** @format */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Row, Col, Button, Image, Container } from "react-bootstrap";
+import { Row, Col, Button, Image, Container, Spinner } from "react-bootstrap";
 
 import IntroductionBanner from "../components/banners/IntroductionBanner";
 import socialNetIllustration from "../assets/images/undraw_social-networking_v4z1.svg";
+import { getUser } from "../utils/app-utils";
 
 const StartPage = () => {
 	const navigate = useNavigate();
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		const checkAuth = async () => {
+			try {
+				const user = await getUser();
+				if (user) {
+					navigate("/app", { replace: true });
+					return;
+				}
+			} catch (error) {
+				console.error('Auth check failed:', error);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		checkAuth();
+	}, [navigate]);
+
+	if (loading) {
+		return (
+			<Container className="d-flex justify-content-center align-items-center vh-100">
+				<Spinner animation="border" variant="primary" />
+			</Container>
+		);
+	}
 
 	return (
 		<Container fluid="md">

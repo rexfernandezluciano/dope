@@ -39,14 +39,17 @@ const router = createBrowserRouter([
 			{
 				index: true,
 				element: <HomePage />,
+				loader: indexPageLoader,
 			},
 			{
 				path: "profile/:username",
 				element: <ProfilePage />,
+				loader: indexPageLoader,
 			},
 			{
 				path: "settings",
 				element: <SettingsPage />,
+				loader: indexPageLoader,
 			},
 		],
 	},

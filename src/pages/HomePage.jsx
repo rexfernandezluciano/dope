@@ -26,7 +26,8 @@ const HomePage = () => {
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
 
-	const { user } = useLoaderData();
+	const loaderData = useLoaderData() || {};
+	const { user } = loaderData;
 
 	useEffect(() => {
 		loadPosts();

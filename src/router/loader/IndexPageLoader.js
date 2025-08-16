@@ -2,13 +2,14 @@
 
 import { getUser } from "../../utils/app-utils";
 
-const IndexPageLoader = async () => {
+const indexPageLoader = async () => {
 	try {
 		const user = await getUser();
 		return { user };
-	} catch (e) {
-		return null;
+	} catch (error) {
+		console.error("Error loading user:", error);
+		return { user: null };
 	}
 };
 
-export default IndexPageLoader;
+export default indexPageLoader;
