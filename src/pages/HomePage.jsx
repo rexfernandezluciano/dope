@@ -230,7 +230,7 @@ const HomePage = () => {
 
 	const confirmDeletePost = async () => {
 		if (!postToDelete) return;
-		
+
 		try {
 			await postAPI.deletePost(postToDelete);
 			setPosts((prev) => prev.filter((post) => post.id !== postToDelete));
@@ -741,7 +741,7 @@ const HomePage = () => {
 									variant="link"
 									size="sm"
 									className={`p-1 ${photos?.length >= MAX_IMAGES ? "text-secondary" : "text-muted"}`}
-									onClick={() => handlePhotoClick()}
+									onClick={handlePhotoClick}
 									disabled={photos?.length >= MAX_IMAGES}
 									title={
 										photos?.length >= MAX_IMAGES
@@ -751,6 +751,14 @@ const HomePage = () => {
 								>
 									<Camera size={18} />
 								</Button>
+								<input
+									type="file"
+									ref={fileInputRef}
+									onChange={handleFileChange}
+									accept="image/*"
+									multiple
+									style={{ display: 'none' }}
+								/>
 								<Button
 									variant="link"
 									size="sm"
