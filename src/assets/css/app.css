@@ -126,6 +126,34 @@ a {
   background: transparent !important;
 }
 
+/* Horizontal scroll container for images */
+.horizontal-scroll-container {
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 3px;
+}
+
+.horizontal-scroll-item {
+  flex-shrink: 0;
+  display: inline-block;
+}
+
 /* Mobile optimizations */
 @media (max-width: 768px) {
   .container {
@@ -156,6 +184,16 @@ a {
   /* Add top padding for mobile to account for sticky navbar */
   body {
     padding-top: 0;
+  }
+  
+  /* Enhanced horizontal scrolling for mobile */
+  .horizontal-scroll-container {
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+  }
+  
+  .horizontal-scroll-item {
+    scroll-snap-align: start;
   }
 }
 

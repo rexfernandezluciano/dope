@@ -370,39 +370,30 @@ const ProfilePage = () => {
 
 												{post.imageUrls && post.imageUrls.length > 0 && (
 													<div className="mb-2">
-														<div 
-															className="d-flex gap-2 overflow-x-auto pb-2" 
-															style={{ 
-																scrollbarWidth: "thin",
-																scrollbarColor: "#ccc transparent",
-																overflowX: "auto",
-																whiteSpace: "nowrap"
-															}}>
+														<div className="horizontal-scroll-container d-flex gap-2 pb-2">
 															{post.imageUrls.slice(0, 4).map((url, idx) => (
 																<Image
 																	key={idx}
 																	src={url}
-																	className="rounded"
+																	className="rounded horizontal-scroll-item"
 																	style={{ 
 																		width: post.imageUrls.length === 1 ? "100%" : "250px",
 																		height: "200px", 
 																		objectFit: "cover",
 																		cursor: "pointer",
-																		minWidth: post.imageUrls.length === 1 ? "auto" : "250px",
-																		flexShrink: 0
+																		minWidth: post.imageUrls.length === 1 ? "auto" : "250px"
 																	}}
 																	onClick={() => window.open(url, '_blank')}
 																/>
 															))}
 															{post.imageUrls.length > 4 && (
 																<div 
-																	className="d-flex align-items-center justify-content-center rounded bg-light text-muted"
+																	className="d-flex align-items-center justify-content-center rounded bg-light text-muted horizontal-scroll-item"
 																	style={{ 
 																		width: "250px",
 																		height: "200px",
 																		minWidth: "250px",
-																		cursor: "pointer",
-																		flexShrink: 0
+																		cursor: "pointer"
 																	}}
 																	onClick={() => window.open(post.imageUrls[0], '_blank')}>
 																	+{post.imageUrls.length - 4} more
