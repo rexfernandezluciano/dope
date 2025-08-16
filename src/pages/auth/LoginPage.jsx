@@ -30,7 +30,7 @@ const LoginPage = () => {
 			setLoading(true);
 			const result = await authAPI.login(email, password);
 			
-			if (!result.hasVerifiedEmail) {
+			if (!result.user.hasVerifiedEmail) {
 				setError(
 					<>
 						Please verify your account first to continue.{" "}

@@ -31,11 +31,13 @@ const apiRequest = async (endpoint, options = {}) => {
 };
 
 export const authAPI = {
-	login: (email, password) => 
-		apiRequest('/auth/login', {
+	login: async (email, password) => {
+		const response = await apiRequest('/auth/login', {
 			method: 'POST',
 			body: { email, password }
-		}),
+		});
+		return response;
+	},
 	
 	register: (userData) => 
 		apiRequest('/auth/register', {

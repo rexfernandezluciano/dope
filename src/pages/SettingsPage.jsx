@@ -1,10 +1,9 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import { Container, Card, Form, Button, Alert, Modal, Row, Col } from "react-bootstrap";
-import { Shield, Bell, Eye, Globe, Users, Lock, Trash } from "react-bootstrap-icons";
+import { Shield, Bell, Eye, Globe, People, Lock, Trash } from "react-bootstrap-icons";
 
 import { userAPI, authAPI } from "../config/ApiConfig";
 import { removeAuthToken } from "../utils/app-utils";
@@ -18,7 +17,7 @@ const SettingsPage = () => {
 		photoURL: "",
 		privacy: {
 			profile: "public",
-			comments: "public", 
+			comments: "public",
 			sharing: true,
 			chat: "public"
 		}
@@ -82,7 +81,7 @@ const SettingsPage = () => {
 
 	const privacyOptions = [
 		{ value: "public", label: "Public", icon: <Globe size={16} /> },
-		{ value: "followers", label: "Followers only", icon: <Users size={16} /> },
+		{ value: "followers", label: "Followers only", icon: <People size={16} /> },
 		{ value: "private", label: "Private", icon: <Lock size={16} /> }
 	];
 
@@ -91,9 +90,9 @@ const SettingsPage = () => {
 			<h2 className="mb-4">Settings</h2>
 
 			{message && (
-				<Alert 
-					variant={messageType} 
-					dismissible 
+				<Alert
+					variant={messageType}
+					dismissible
 					onClose={() => setMessage("")}
 					className="mb-4">
 					{message}
@@ -132,7 +131,7 @@ const SettingsPage = () => {
 								</Form.Group>
 							</Col>
 						</Row>
-						
+
 						<Form.Group className="mb-3">
 							<Form.Label>Bio</Form.Label>
 							<Form.Control
@@ -275,23 +274,23 @@ const SettingsPage = () => {
 
 			{/* Action Buttons */}
 			<div className="d-grid gap-2">
-				<Button 
-					variant="primary" 
+				<Button
+					variant="primary"
 					size="lg"
 					onClick={handleSaveSettings}
 					disabled={loading}>
 					{loading ? "Saving..." : "Save Settings"}
 				</Button>
-				
-				<Button 
-					variant="outline-secondary" 
+
+				<Button
+					variant="outline-secondary"
 					size="lg"
 					onClick={handleLogout}>
 					Logout
 				</Button>
-				
-				<Button 
-					variant="outline-danger" 
+
+				<Button
+					variant="outline-danger"
 					size="lg"
 					onClick={() => setShowDeleteModal(true)}>
 					<Trash size={16} className="me-2" />

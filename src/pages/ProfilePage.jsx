@@ -1,10 +1,9 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
 import { useParams, useLoaderData } from "react-router-dom";
 import { Container, Image, Button, Card, Nav, Tab, Row, Col, Spinner, Alert, Modal, Form } from "react-bootstrap";
-import { Calendar, LocationOn, Link as LinkIcon, Heart, HeartFill, ChatDots, Share, Camera } from "react-bootstrap-icons";
+import { Calendar, LocationOn, Link as LinkIcon, Heart, HeartFill, ChatDots, Share, Camera, People } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
 
@@ -39,15 +38,15 @@ const ProfilePage = () => {
 				userAPI.getFollowers(username),
 				userAPI.getFollowing(username)
 			]);
-			
+
 			setProfileUser(userResponse.user);
 			setPosts(postsResponse.posts);
 			setFollowers(followersResponse.followers);
 			setFollowing(followingResponse.following);
-			
+
 			// Check if current user is following this profile
 			setIsFollowing(followersResponse.followers.some(f => f.uid === currentUser.uid));
-			
+
 			// Set edit form data
 			setEditForm({
 				name: userResponse.user.name || "",
@@ -65,7 +64,7 @@ const ProfilePage = () => {
 		try {
 			await userAPI.followUser(username);
 			setIsFollowing(!isFollowing);
-			
+
 			// Update followers count
 			if (isFollowing) {
 				setFollowers(prev => prev.filter(f => f.uid !== currentUser.uid));
@@ -85,7 +84,7 @@ const ProfilePage = () => {
 					const isLiked = post.likes.some(like => like.userId === currentUser.uid);
 					return {
 						...post,
-						likes: isLiked 
+						likes: isLiked
 							? post.likes.filter(like => like.userId !== currentUser.uid)
 							: [...post.likes, { userId: currentUser.uid }],
 						_count: {
@@ -127,9 +126,9 @@ const ProfilePage = () => {
 
 	const formatJoinDate = (dateString) => {
 		const date = new Date(dateString);
-		return date.toLocaleDateString('en-US', { 
-			year: 'numeric', 
-			month: 'long' 
+		return date.toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'long'
 		});
 	};
 
@@ -155,7 +154,7 @@ const ProfilePage = () => {
 		<Container className="px-0 px-md-3">
 			{/* Cover & Profile Photo */}
 			<div className="position-relative">
-				<div 
+				<div
 					style={{ height: "200px", background: "linear-gradient(45deg, #667eea 0%, #764ba2 100%)" }}
 					className="w-100 bg-primary"
 				/>
@@ -184,17 +183,17 @@ const ProfilePage = () => {
 						</div>
 						<p className="text-muted mb-0">@{profileUser.username}</p>
 					</div>
-					
+
 					{isOwnProfile ? (
-						<Button 
-							variant="outline-primary" 
+						<Button
+							variant="outline-primary"
 							size="sm"
 							onClick={() => setShowEditModal(true)}>
 							Edit Profile
 						</Button>
 					) : (
-						<Button 
-							variant={isFollowing ? "outline-primary" : "primary"} 
+						<Button
+							variant={isFollowing ? "outline-primary" : "primary"}
 							size="sm"
 							onClick={handleFollow}>
 							{isFollowing ? "Unfollow" : "Follow"}
@@ -216,15 +215,21 @@ const ProfilePage = () => {
 							<span className="badge bg-primary">{profileUser.subscription}</span>
 						</div>
 					)}
+					{/* Email Verification Status */}
+					{!profileUser.hasVerifiedEmail && (
+						<div className="d-flex align-items-center gap-1 text-danger">
+							<Alert variant="danger" className="p-1 mb-0 fs-6">Email not verified</Alert>
+						</div>
+					)}
 				</div>
 
 				<div className="d-flex gap-4 mb-3">
 					<span>
-						<strong>{following.length}</strong> 
+						<strong>{following.length}</strong>
 						<span className="text-muted"> Following</span>
 					</span>
 					<span>
-						<strong>{followers.length}</strong> 
+						<strong>{followers.length}</strong>
 						<span className="text-muted"> Followers</span>
 					</span>
 				</div>
@@ -281,7 +286,7 @@ const ProfilePage = () => {
 													<span className="text-muted">·</span>
 													<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
 												</div>
-												
+
 												{post.content && (
 													<p className="mb-2">{post.content}</p>
 												)}
@@ -307,13 +312,13 @@ const ProfilePage = () => {
 														<ChatDots size={16} />
 														<span className="small">{post._count.comments}</span>
 													</Button>
-													
+
 													<Button
 														variant="link"
 														size="sm"
 														className={`p-0 border-0 d-flex align-items-center gap-1 ${
-															post.likes.some(like => like.userId === currentUser.uid) 
-																? 'text-danger' 
+															post.likes.some(like => like.userId === currentUser.uid)
+																? 'text-danger'
 																: 'text-muted'
 														}`}
 														onClick={() => handleLikePost(post.id)}>
@@ -324,7 +329,7 @@ const ProfilePage = () => {
 														)}
 														<span className="small">{post._count.likes}</span>
 													</Button>
-													
+
 													<Button
 														variant="link"
 														size="sm"

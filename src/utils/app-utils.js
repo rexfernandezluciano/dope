@@ -12,8 +12,8 @@ export const getUser = async () => {
 		const token = localStorage.getItem('authToken');
 		if (!token) return null;
 		
-		const user = await authAPI.getCurrentUser();
-		return user;
+		const response = await authAPI.getCurrentUser();
+		return response.user || response;
 	} catch (error) {
 		console.error('Error getting user:', error);
 		localStorage.removeItem('authToken');
