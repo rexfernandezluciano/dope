@@ -2,7 +2,7 @@
 /** @format */
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 import heic2any from "heic2any";
 
@@ -32,6 +32,8 @@ const SignUpPage = () => {
 	const [dialogTitle, setDialogTitle] = useState("");
 	const [showDialog, setShowDialog] = useState(false);
 	const [loading, setLoading] = useState(false);
+
+	const navigate = useNavigate();
 
 	const nextStep = () => {
 		if (step < steps.length - 1) {
@@ -122,8 +124,8 @@ const SignUpPage = () => {
 			
 			await verifyUser(email);
 			setShowDialog(true);
-			setDialogTitle("Verification Link");
-			setDialogMessage("Verification link was sent to your email address.");
+			setDialogTitle("Account Created Successfully!");
+			setDialogMessage("Verification link was sent to your email address. You will be redirected to login.");
 		} catch (err) {
 			setError(err.message);
 		} finally {
@@ -213,8 +215,15 @@ const SignUpPage = () => {
 								<Button
 									type="submit"
 									disabled={loading}
-									className="w-100">
-									Next
+									className="w-100 d-flex align-items-center justify-content-center">
+									{loading ? (
+										<Spinner
+											animation="border"
+											size="sm"
+										/>
+									) : (
+										"Next"
+									)}
 								</Button>
 							</Form>
 							<hr />
@@ -291,8 +300,16 @@ const SignUpPage = () => {
 								</Form.Floating>
 								<Button
 									type="submit"
-									className="w-100 mb-2">
-									Next
+									disabled={loading}
+									className="w-100 mb-2 d-flex align-items-center justify-content-center">
+									{loading ? (
+										<Spinner
+											animation="border"
+											size="sm"
+										/>
+									) : (
+										"Next"
+									)}
 								</Button>
 								<Button
 									variant="secondary"
@@ -336,12 +353,16 @@ const SignUpPage = () => {
 							<Button
 								onClick={handleSignup}
 								disabled={loading}
-								className="w-100 mb-2">
+								className="w-100 mb-2 d-flex align-items-center justify-content-center">
 								{loading ? (
-									<Spinner
-										animation="border"
-										size="sm"
-									/>
+									<>
+										<Spinner
+											animation="border"
+											size="sm"
+											className="me-2"
+										/>
+										Creating Account...
+									</>
 								) : (
 									"Finish & Sign Up"
 								)}
@@ -357,9 +378,21 @@ const SignUpPage = () => {
 							</Button>
 							<Button
 								variant="link"
-								className="w-100 text-muted mt-2"
+								className="w-100 text-muted mt-2 d-flex align-items-center justify-content-center"
+								disabled={loading}
 								onClick={handleSignup}>
-								Skip & Sign Up
+								{loading ? (
+									<>
+										<Spinner
+											animation="border"
+											size="sm"
+											className="me-2"
+										/>
+										Creating Account...
+									</>
+								) : (
+									"Skip & Sign Up"
+								)}
 							</Button>
 						</div>
 					)}
@@ -370,11 +403,17 @@ const SignUpPage = () => {
 				<AlertDialog
 					title={dialogTitle}
 					message={dialogMessage}
-					dialogButtonMessage="Okay"
-					onDialogButtonClick={() => setShowDialog(false)}
+					dialogButtonMessage="Go to Login"
+					onDialogButtonClick={() => {
+						setShowDialog(false);
+						navigate("/auth/login");
+					}}
 					type="primary"
 					show={showDialog}
-					onHide={() => setShowDialog(false)}
+					onHide={() => {
+						setShowDialog(false);
+						navigate("/auth/login");
+					}}
 				/>
 			)}
 		</div>

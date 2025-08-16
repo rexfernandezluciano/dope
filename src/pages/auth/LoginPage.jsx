@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Row, Col, Form, Button, Image, Alert } from "react-bootstrap";
+import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 
 import { authAPI } from "../../config/ApiConfig";
 import { verifyUser, setAuthToken } from "../../utils/app-utils";
@@ -20,12 +20,14 @@ const LoginPage = () => {
 	const [showDialog, setShowDialog] = useState(false);
 	const [dialogMessage, setDialogMessage] = useState("");
 	const [dialogTitle, setDialogTitle] = useState("");
+	const [loading, setLoading] = useState(false);
 
 	const navigate = useNavigate();
 
 	const handleEmailLogin = async e => {
 		e.preventDefault();
 		try {
+			setLoading(true);
 			const result = await authAPI.login(email, password);
 			
 			if (!result.user.emailVerified) {
@@ -54,17 +56,22 @@ const LoginPage = () => {
 			navigate("/");
 		} catch (err) {
 			setError(err.message);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	const handleGoogleLogin = async () => {
 		try {
+			setLoading(true);
 			// For Google OAuth, you'll need to implement Google Sign-In
 			// This is a placeholder for the Google OAuth flow
 			console.log("Google login not yet implemented with custom API");
 			setError("Google login is not yet available with the custom API");
 		} catch (err) {
 			setError(err.message);
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -101,7 +108,9 @@ const LoginPage = () => {
 									id="floatingInputEmail"
 									type="email"
 									placeholder="Enter email"
+									value={email}
 									onChange={e => setEmail(e.target.value)}
+									disabled={loading}
 									className="shadow-none"
 									required
 								/>
@@ -113,7 +122,9 @@ const LoginPage = () => {
 									id="floatingPassword"
 									type="password"
 									placeholder="Enter password"
+									value={password}
 									onChange={e => setPassword(e.target.value)}
+									disabled={loading}
 									className="shadow-none"
 									required
 								/>
@@ -125,8 +136,20 @@ const LoginPage = () => {
 									variant="primary"
 									type="submit"
 									size="md"
-									className="shadow-none">
-									Log In
+									disabled={loading}
+									className="shadow-none d-flex align-items-center justify-content-center">
+									{loading ? (
+										<>
+											<Spinner
+												animation="border"
+												size="sm"
+												className="me-2"
+											/>
+											Logging In...
+										</>
+									) : (
+										"Log In"
+									)}
 								</Button>
 							</div>
 						</Form>
@@ -142,6 +165,7 @@ const LoginPage = () => {
 								variant="outline-secondary"
 								onClick={handleGoogleLogin}
 								size="md"
+								disabled={loading}
 								className="shadow-none">
 								Continue with Google
 							</Button>
