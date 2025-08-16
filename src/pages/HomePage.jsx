@@ -12,8 +12,7 @@ import {
 	InputGroup,
 	Card,
 	Spinner,
-	Alert,
-	Carousel,
+	Alert
 } from "react-bootstrap";
 import {
 	Globe,
@@ -21,7 +20,6 @@ import {
 	Lock,
 	Camera,
 	EmojiSmile,
-	CameraVideo,
 	X,
 	Search,
 	Heart,
@@ -743,7 +741,7 @@ const HomePage = () => {
 									variant="link"
 									size="sm"
 									className={`p-1 ${photos?.length >= MAX_IMAGES ? "text-secondary" : "text-muted"}`}
-									onClick={() => fileInputRef.current?.click()}
+									onClick={() => handlePhotoClick()}
 									disabled={photos?.length >= MAX_IMAGES}
 									title={
 										photos?.length >= MAX_IMAGES
