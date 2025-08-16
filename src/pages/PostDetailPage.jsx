@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
@@ -31,7 +30,7 @@ const PostDetailPage = () => {
 				postAPI.getPost(postId),
 				commentAPI.getComments(postId)
 			]);
-			
+
 			setPost(postResponse);
 			setComments(commentsResponse.comments || []);
 		} catch (err) {
@@ -69,21 +68,9 @@ const PostDetailPage = () => {
 
 		try {
 			setSubmitting(true);
-			const response = await commentAPI.createComment(postId, {
-				content: newComment
-			});
-
-			setComments(prev => [...prev, response]);
+			await commentAPI.createComment(postId, newComment.trim());
 			setNewComment("");
-			
-			// Update post comment count
-			setPost(prev => ({
-				...prev,
-				_count: {
-					...prev._count,
-					comments: (prev._count?.comments || 0) + 1
-				}
-			}));
+			loadPostAndComments(); // Reload to get updated comments
 		} catch (err) {
 			setError(err.message);
 		} finally {
