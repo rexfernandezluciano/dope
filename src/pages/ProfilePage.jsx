@@ -9,7 +9,8 @@ import { userAPI, postAPI } from "../config/ApiConfig";
 
 const ProfilePage = () => {
 	const { username } = useParams();
-	const { user: currentUser } = useLoaderData();
+	const loaderData = useLoaderData() || {};
+	const { user: currentUser } = loaderData;
 	const [profileUser, setProfileUser] = useState(null);
 	const [posts, setPosts] = useState([]);
 	const [followers, setFollowers] = useState([]);
@@ -132,7 +133,7 @@ const ProfilePage = () => {
 		});
 	};
 
-	if (loading) {
+	if (loading || !currentUser) {
 		return (
 			<Container className="text-center py-5">
 				<Spinner animation="border" />

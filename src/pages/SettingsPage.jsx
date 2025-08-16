@@ -9,7 +9,8 @@ import { userAPI, authAPI } from "../config/ApiConfig";
 import { removeAuthToken } from "../utils/app-utils";
 
 const SettingsPage = () => {
-	const { user } = useLoaderData();
+	const loaderData = useLoaderData() || {};
+	const { user } = loaderData;
 	const navigate = useNavigate();
 	const [settings, setSettings] = useState({
 		name: "",
@@ -42,6 +43,14 @@ const SettingsPage = () => {
 			});
 		}
 	}, [user]);
+
+	if (!user) {
+		return (
+			<Container className="text-center py-5">
+				<div>Loading...</div>
+			</Container>
+		);
+	}
 
 	const handleSaveSettings = async () => {
 		try {

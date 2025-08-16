@@ -1,12 +1,15 @@
 /** @format */
 
-import { Outlet } from "react-router-dom";
+import { Outlet, useLoaderData } from "react-router-dom";
 
 import NavigationView from "../components/navs/NavigationView";
 
 const IndexPage = () => {
+  const loaderData = useLoaderData() || {};
+  const { user } = loaderData;
+
   return (
-    <NavigationView>
+    <NavigationView user={user}>
       <Outlet />
     </NavigationView>
   );
