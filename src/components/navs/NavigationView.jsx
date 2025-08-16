@@ -44,7 +44,7 @@ const NavigationView = ({ children, user }) => {
 
 	const navItemClass = href => {
 		const isActive = location.pathname === href;
-		return `nav-link ${isActive ? "active" : ""}`;
+		return `nav-link px-3 py-2 rounded-pill ${isActive ? "bg-primary text-white" : "text-dark"}`;
 	};
 
 	return (
@@ -60,13 +60,39 @@ const NavigationView = ({ children, user }) => {
 						<Navbar.Brand href="/" className="text-primary">
 							DOPE
 						</Navbar.Brand>
-						<Image
-							src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
-							alt="avatar"
-							roundedCircle
-							width="35"
-							height="35"
-						/>
+						<div className="dropdown">
+							<Image
+								src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
+								alt="avatar"
+								roundedCircle
+								width="35"
+								height="35"
+								style={{ cursor: 'pointer' }}
+								data-bs-toggle="dropdown"
+								aria-expanded="false"
+							/>
+							<ul className="dropdown-menu dropdown-menu-end">
+								<li>
+									<a className="dropdown-item" href={`/${user?.username}`}>
+										<Person size={16} className="me-2" />
+										Profile
+									</a>
+								</li>
+								<li>
+									<a className="dropdown-item" href={`/${user?.username}/settings`}>
+										<Gear size={16} className="me-2" />
+										Settings
+									</a>
+								</li>
+								<li><hr className="dropdown-divider" /></li>
+								<li>
+									<button className="dropdown-item text-danger" onClick={handleLogout}>
+										<BoxArrowRight size={16} className="me-2" />
+										Logout
+									</button>
+								</li>
+							</ul>
+						</div>
 						<Navbar.Offcanvas
 							id="offcanvasNavbar"
 							aria-labelledby="offcanvasNavbarLabel"
@@ -145,7 +171,7 @@ const NavigationView = ({ children, user }) => {
 						{user?.hasBlueCheck && (
 							<p className="text-center text-primary small">✓ Verified</p>
 						)}
-						<Nav className="flex-column">
+						<Nav className="flex-column gap-1">
 							{menuItems.map((item, idx) => (
 								<Nav.Link
 									key={idx}
@@ -157,7 +183,7 @@ const NavigationView = ({ children, user }) => {
 							))}
 							<Nav.Link
 								onClick={handleLogout}
-								className="nav-link text-danger mt-3"
+								className="nav-link text-danger mt-3 px-3 py-2 rounded-pill"
 								style={{ cursor: "pointer" }}>
 								<BoxArrowRight size={18} className="me-2" />
 								Logout

@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -42,6 +41,15 @@ const router = createBrowserRouter([
 				loader: indexPageLoader,
 			},
 		],
+	},
+	{
+		path: "/post/:postId",
+		element: (
+			<RequireAuth>
+				<IndexPage />
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
 	},
 	{
 		path: "/:username",

@@ -321,7 +321,8 @@ const HomePage = () => {
 												<Button
 													variant="link"
 													size="sm"
-													className="text-muted p-0 border-0 d-flex align-items-center gap-1">
+													className="text-muted p-0 border-0 d-flex align-items-center gap-1"
+													onClick={() => window.location.href = `/post/${post.id}`}>
 													<ChatDots size={16} />
 													<span className="small">{post._count.comments}</span>
 												</Button>

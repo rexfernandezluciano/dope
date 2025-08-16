@@ -152,6 +152,43 @@ export const commentAPI = {
 			}
 		});
 		const queryString = searchParams.toString();
+		return apiRequest(`/posts/${postId}/comments${queryString ? `?${queryString}` : ''}`, {
+			method: 'GET'
+		});
+	},
+	
+	createComment: (postId, commentData) => 
+		apiRequest(`/posts/${postId}/comments`, {
+			method: 'POST',
+			body: commentData
+		}),
+	
+	updateComment: (postId, commentId, commentData) => 
+		apiRequest(`/posts/${postId}/comments/${commentId}`, {
+			method: 'PUT',
+			body: commentData
+		}),
+	
+	deleteComment: (postId, commentId) => 
+		apiRequest(`/posts/${postId}/comments/${commentId}`, {
+			method: 'DELETE'
+		}),
+	
+	likeComment: (postId, commentId) => 
+		apiRequest(`/posts/${postId}/comments/${commentId}/like`, {
+			method: 'POST'
+		})
+};
+
+export const commentAPI = {
+	getComments: (postId, params = {}) => {
+		const searchParams = new URLSearchParams();
+		Object.keys(params).forEach(key => {
+			if (params[key] !== undefined && params[key] !== null) {
+				searchParams.append(key, params[key]);
+			}
+		});
+		const queryString = searchParams.toString();
 		return apiRequest(`/comments/post/${postId}${queryString ? `?${queryString}` : ''}`, {
 			method: 'GET'
 		});

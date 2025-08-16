@@ -244,10 +244,18 @@ const ProfilePage = () => {
 			<div className="px-3 pt-4">
 				<div className="d-flex justify-content-between align-items-start mb-3">
 					<div>
-						<div className="d-flex align-items-center gap-1">
+						<div className="d-flex align-items-center gap-2">
 							<h3 className="mb-0">{profileUser.name}</h3>
 							{profileUser.hasBlueCheck && (
-								<span className="text-primary fs-5">✓</span>
+								<span className="text-primary fs-5" style={{ fontSize: "1.2rem" }}>✓</span>
+							)}
+							{profileUser.subscription && profileUser.subscription !== 'free' && (
+								<span className={`badge ${
+									profileUser.subscription === 'premium' ? 'bg-warning text-dark' : 
+									profileUser.subscription === 'pro' ? 'bg-primary' : 'bg-secondary'
+								}`} style={{ fontSize: "0.7rem" }}>
+									{profileUser.subscription.toUpperCase()}
+								</span>
 							)}
 						</div>
 						<p className="text-muted mb-0">@{profileUser.username}</p>
@@ -377,7 +385,8 @@ const ProfilePage = () => {
 													<Button
 														variant="link"
 														size="sm"
-														className="text-muted p-0 border-0 d-flex align-items-center gap-1">
+														className="text-muted p-0 border-0 d-flex align-items-center gap-1"
+														onClick={() => window.location.href = `/post/${post.id}`}>
 														<ChatDots size={16} />
 														<span className="small">{post._count.comments}</span>
 													</Button>
