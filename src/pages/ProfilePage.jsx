@@ -370,36 +370,65 @@ const ProfilePage = () => {
 
 												{post.imageUrls && post.imageUrls.length > 0 && (
 													<div className="mb-2">
-														<div className="horizontal-scroll-container d-flex gap-2 pb-2">
-															{post.imageUrls.slice(0, 4).map((url, idx) => (
-																<Image
-																	key={idx}
-																	src={url}
-																	className="rounded horizontal-scroll-item"
-																	style={{ 
-																		width: post.imageUrls.length === 1 ? "100%" : "250px",
-																		height: "200px", 
-																		objectFit: "cover",
-																		cursor: "pointer",
-																		minWidth: post.imageUrls.length === 1 ? "auto" : "250px"
-																	}}
-																	onClick={() => window.open(url, '_blank')}
-																/>
-															))}
-															{post.imageUrls.length > 4 && (
-																<div 
-																	className="d-flex align-items-center justify-content-center rounded bg-light text-muted horizontal-scroll-item"
-																	style={{ 
-																		width: "250px",
-																		height: "200px",
-																		minWidth: "250px",
-																		cursor: "pointer"
-																	}}
-																	onClick={() => window.open(post.imageUrls[0], '_blank')}>
-																	+{post.imageUrls.length - 4} more
+														{post.imageUrls.length === 1 ? (
+															// Single image - full width
+															<Image
+																src={post.imageUrls[0]}
+																className="rounded w-100"
+																style={{ 
+																	height: "300px", 
+																	objectFit: "cover",
+																	cursor: "pointer"
+																}}
+																onClick={() => window.open(post.imageUrls[0], '_blank')}
+															/>
+														) : (
+															// Multiple images - box layout
+															<div className="d-flex gap-2" style={{ height: "300px" }}>
+																{/* Main image on the left */}
+																<div className="flex-grow-1">
+																	<Image
+																		src={post.imageUrls[0]}
+																		className="rounded w-100 h-100"
+																		style={{ 
+																			objectFit: "cover",
+																			cursor: "pointer"
+																		}}
+																		onClick={() => window.open(post.imageUrls[0], '_blank')}
+																	/>
 																</div>
-															)}
-														</div>
+																{/* Right side with stacked images */}
+																<div className="d-flex flex-column gap-2" style={{ width: "150px" }}>
+																	{post.imageUrls.slice(1, 3).map((url, idx) => (
+																		<div key={idx + 1} className="flex-grow-1 position-relative">
+																			<Image
+																				src={url}
+																				className="rounded w-100 h-100"
+																				style={{ 
+																					objectFit: "cover",
+																					cursor: "pointer"
+																				}}
+																				onClick={() => window.open(url, '_blank')}
+																			/>
+																			{/* Show more indicator on the last visible image */}
+																			{idx === 1 && post.imageUrls.length > 3 && (
+																				<div 
+																					className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
+																					style={{ 
+																						backgroundColor: "rgba(0, 0, 0, 0.7)",
+																						cursor: "pointer",
+																						color: "white",
+																						fontWeight: "bold"
+																					}}
+																					onClick={() => window.open(post.imageUrls[0], '_blank')}>
+																					+{post.imageUrls.length - 3}
+																				</div>
+																			)}
+																		</div>
+																	))}
+																</div>
+															</div>
+														)}
 													</div>
 												)}
 
