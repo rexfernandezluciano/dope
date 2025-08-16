@@ -629,14 +629,14 @@ const ProfilePage = () => {
 
 													<OverlayTrigger
 														placement="bottom"
-														overlay={<Tooltip>{post.likes.some(like => like.userId === currentUser.uid) ? 'Unlike' : 'Like'}</Tooltip>}
+														overlay={<Tooltip>{(post.likes || []).some(like => like.userId === currentUser.uid) ? 'Unlike' : 'Like'}</Tooltip>}
 													>
 														<Button
 															variant="link"
 															size="sm"
 															className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 															style={{
-																color: post.likes.some(like => like.userId === currentUser.uid) ? '#dc3545' : '#6c757d',
+																color: (post.likes || []).some(like => like.userId === currentUser.uid) ? '#dc3545' : '#6c757d',
 																transition: 'all 0.2s'
 															}}
 															onClick={(e) => {
@@ -644,25 +644,25 @@ const ProfilePage = () => {
 																handleLikePost(post.id);
 															}}
 															onMouseEnter={(e) => {
-																if (!post.likes.some(like => like.userId === currentUser.uid)) {
+																if (!(post.likes || []).some(like => like.userId === currentUser.uid)) {
 																	e.target.closest('.action-btn').style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
 																	e.target.closest('.action-btn').style.color = '#dc3545';
 																}
 															}}
 															onMouseLeave={(e) => {
-																if (!post.likes.some(like => like.userId === currentUser.uid)) {
+																if (!(post.likes || []).some(like => like.userId === currentUser.uid)) {
 																	e.target.closest('.action-btn').style.backgroundColor = 'transparent';
 																	e.target.closest('.action-btn').style.color = '#6c757d';
 																}
 															}}
 														>
-															{post.likes.some(like => like.userId === currentUser.uid) ? (
+															{(post.likes || []).some(like => like.userId === currentUser.uid) ? (
 																<HeartFill size={18} />
 															) : (
 																<Heart size={18} />
 															)}
-															{post._count.likes > 0 && (
-																<span className="small">{post._count.likes}</span>
+															{(post._count?.likes || 0) > 0 && (
+																<span className="small">{post._count?.likes || 0}</span>
 															)}
 														</Button>
 													</OverlayTrigger>
