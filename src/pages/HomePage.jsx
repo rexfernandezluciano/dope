@@ -73,7 +73,7 @@ const HomePage = () => {
 		const formData = new FormData();
 		formData.append('file', file);
 		formData.append('upload_preset', 'dope_network'); // You'll need to set this up in Cloudinary
-		
+
 		try {
 			const response = await fetch('https://api.cloudinary.com/v1_1/your_cloud_name/image/upload', {
 				method: 'POST',
@@ -382,58 +382,61 @@ const HomePage = () => {
 					</Modal.Header>
 
 					<Modal.Body className="overflow-x-hidden">
-						<div className="d-flex gap-2">
+						<div className="d-flex gap-3 mb-3">
 							<Image
 								src={user?.photoURL ?? "https://i.pravatar.cc/150?img=10"}
 								alt="avatar"
 								roundedCircle
-								width="35"
-								height="35"
+								width="48"
+								height="48"
 							/>
 
 							<div className="flex-grow-1">
-								<div className="d-flex align-items-center gap-2 mb-1">
-									<div className="d-flex align-items-center gap-1">
-										<span className="fw-bold small">{user?.name}</span>
-										{user?.hasBlueCheck && (
-											<span className="text-primary">✓</span>
-										)}
-										<span className="text-muted small">@{user?.username}</span>
-									</div>
-									<Dropdown onSelect={value => setPrivacy(value)} align="end">
-										<Dropdown.Toggle
-											variant="light"
-											size="sm"
-											className="border rounded-pill px-2 py-0 d-flex align-items-center"
-											style={{
-												fontSize: "0.75rem",
-												backgroundColor: "#f0f2f5",
-											}}>
-											{privacyOptions[privacy]} {privacy}
-										</Dropdown.Toggle>
-
-										<Dropdown.Menu>
-											{Object.keys(privacyOptions).map(opt => (
-												<Dropdown.Item key={opt} eventKey={opt}>
-													{privacyOptions[opt]} {opt}
-												</Dropdown.Item>
-											))}
-										</Dropdown.Menu>
-									</Dropdown>
+								<div className="d-flex align-items-center gap-1 mb-2">
+									<span className="fw-bold">{user?.name}</span>
+									{user?.hasBlueCheck && (
+										<span className="text-primary">✓</span>
+									)}
+									<span className="text-muted">@{user?.username}</span>
 								</div>
+
+								<Dropdown onSelect={value => setPrivacy(value)} className="mb-3">
+									<Dropdown.Toggle
+										variant="outline-primary"
+										size="sm"
+										className="border rounded-pill px-3 py-1 d-flex align-items-center text-primary"
+										style={{
+											fontSize: "0.875rem",
+											fontWeight: "600",
+										}}>
+										{privacyOptions[privacy]} {privacy}
+									</Dropdown.Toggle>
+
+									<Dropdown.Menu>
+										{Object.keys(privacyOptions).map(opt => (
+											<Dropdown.Item key={opt} eventKey={opt}>
+												{privacyOptions[opt]} {opt}
+											</Dropdown.Item>
+										))}
+									</Dropdown.Menu>
+								</Dropdown>
+
+								<Form.Control
+									as="textarea"
+									ref={textareaRef}
+									value={postText}
+									onInput={handleInput}
+									placeholder="What's happening?"
+									className="border-0 shadow-none fs-5"
+									rows={3}
+									style={{ 
+										overflow: "hidden", 
+										resize: "none",
+										minHeight: "120px"
+									}}
+								/>
 							</div>
 						</div>
-
-						<Form.Control
-							as="textarea"
-							ref={textareaRef}
-							value={postText}
-							onInput={handleInput}
-							placeholder="What's on your mind?"
-							className="px-0 border-0 rounded-0 shadow-none"
-							rows={1}
-							style={{ overflow: "hidden", resize: "none" }}
-						/>
 
 						{photos?.length > 0 && (
 							<div className="d-flex align-items-center gap-2 overflow-x-auto mt-2">
@@ -507,6 +510,10 @@ const HomePage = () => {
 									</span>
 								</Button>
 							</div>
+							{/* Character limit indicator */}
+							<span className="text-muted">
+								{postText.length}/280
+							</span>
 						</div>
 					</Modal.Body>
 
