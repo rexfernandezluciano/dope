@@ -314,7 +314,7 @@ const HomePage = () => {
 											{post.imageUrls && post.imageUrls.length > 0 && (
 												<div className="mb-2">
 													<div 
-														className="d-flex gap-2 overflow-x-auto pb-2" 
+														className="d-flex justify-content-center gap-2 overflow-x-auto pb-2" 
 														style={{ 
 															scrollbarWidth: "thin",
 															scrollbarColor: "#ccc transparent",
