@@ -2,8 +2,35 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
-import { Container, Image, Modal, Form, Button, Dropdown, InputGroup, Card, Spinner, Alert, Carousel } from "react-bootstrap";
-import { Globe, People, Lock, Camera, EmojiSmile, CameraVideo, X, Search, Heart, HeartFill, ChatDots, Share, ChevronLeft, ChevronRight } from "react-bootstrap-icons";
+import {
+	Container,
+	Image,
+	Modal,
+	Form,
+	Button,
+	Dropdown,
+	InputGroup,
+	Card,
+	Spinner,
+	Alert,
+	Carousel,
+} from "react-bootstrap";
+import {
+	Globe,
+	People,
+	Lock,
+	Camera,
+	EmojiSmile,
+	CameraVideo,
+	X,
+	Search,
+	Heart,
+	HeartFill,
+	ChatDots,
+	Share,
+	ChevronLeft,
+	ChevronRight,
+} from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
@@ -47,7 +74,7 @@ const HomePage = () => {
 
 			const response = await postAPI.getPosts(params);
 			if (cursor) {
-				setPosts(prev => [...prev, ...response.posts]);
+				setPosts((prev) => [...prev, ...response.posts]);
 			} else {
 				setPosts(response.posts);
 			}
@@ -60,7 +87,7 @@ const HomePage = () => {
 		}
 	};
 
-	const handleInput = e => {
+	const handleInput = (e) => {
 		const textarea = textareaRef.current;
 		if (textarea) {
 			textarea.style.height = "auto";
@@ -75,18 +102,21 @@ const HomePage = () => {
 
 	const uploadToCloudinary = async (file) => {
 		const formData = new FormData();
-		formData.append('file', file);
-		formData.append('upload_preset', 'dope_network'); // You'll need to set this up in Cloudinary
+		formData.append("file", file);
+		formData.append("upload_preset", "dope_network"); // You'll need to set this up in Cloudinary
 
 		try {
-			const response = await fetch('https://api.cloudinary.com/v1_1/your_cloud_name/image/upload', {
-				method: 'POST',
-				body: formData
-			});
+			const response = await fetch(
+				"https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
+				{
+					method: "POST",
+					body: formData,
+				},
+			);
 			const data = await response.json();
 			return data.secure_url;
 		} catch (error) {
-			console.error('Error uploading to Cloudinary:', error);
+			console.error("Error uploading to Cloudinary:", error);
 			return null;
 		}
 	};
@@ -99,7 +129,9 @@ const HomePage = () => {
 			const filesToUpload = files.slice(0, remainingSlots);
 
 			if (filesToUpload.length < files.length) {
-				alert(`You can only upload up to ${MAX_IMAGES} images. Only the first ${filesToUpload.length} will be uploaded.`);
+				alert(
+					`You can only upload up to ${MAX_IMAGES} images. Only the first ${filesToUpload.length} will be uploaded.`,
+				);
 			}
 
 			const uploadedUrls = [];
@@ -109,19 +141,19 @@ const HomePage = () => {
 					uploadedUrls.push(url);
 				}
 			}
-			setPhotos(prev => [...(prev || []), ...uploadedUrls]);
+			setPhotos((prev) => [...(prev || []), ...uploadedUrls]);
 		}
 	};
 
-	const handleRemovePhoto = index => {
-		setPhotos(prev => prev.filter((_, i) => i !== index));
+	const handleRemovePhoto = (index) => {
+		setPhotos((prev) => prev.filter((_, i) => i !== index));
 	};
 
 	const handleStickerClick = () => {
 		setShowStickerModal(true);
 	};
 
-	const handleSelectGif = gif => {
+	const handleSelectGif = (gif) => {
 		const currentPhotos = photos || [];
 		if (currentPhotos.length >= MAX_IMAGES) {
 			alert(`You can only add up to ${MAX_IMAGES} images/GIFs.`);
@@ -129,7 +161,7 @@ const HomePage = () => {
 		}
 
 		const imageUrl = gif.images.fixed_height.url;
-		setPhotos(prev => [...(prev || []), imageUrl]);
+		setPhotos((prev) => [...(prev || []), imageUrl]);
 		setShowStickerModal(false);
 	};
 
@@ -141,7 +173,7 @@ const HomePage = () => {
 			const postData = {
 				content: postText,
 				privacy: privacy.toLowerCase(),
-				postType: isLive ? 'live' : 'text',
+				postType: isLive ? "live" : "text",
 			};
 
 			if (liveVideoUrl && isLive) {
@@ -150,22 +182,22 @@ const HomePage = () => {
 
 			if (photos && photos.length > 0) {
 				// If photos are URLs (from Cloudinary), include them in postData
-				if (typeof photos[0] === 'string') {
+				if (typeof photos[0] === "string") {
 					postData.imageUrls = photos;
 					await postAPI.createPost(postData);
 				} else {
 					// If photos are files, use FormData
 					const formData = new FormData();
-					formData.append('content', postText);
-					formData.append('privacy', privacy.toLowerCase());
-					formData.append('postType', isLive ? 'live' : 'text');
+					formData.append("content", postText);
+					formData.append("privacy", privacy.toLowerCase());
+					formData.append("postType", isLive ? "live" : "text");
 
 					if (liveVideoUrl && isLive) {
-						formData.append('liveVideoUrl', liveVideoUrl);
+						formData.append("liveVideoUrl", liveVideoUrl);
 					}
 
 					for (let i = 0; i < photos.length; i++) {
-						formData.append('images', photos[i]);
+						formData.append("images", photos[i]);
 					}
 
 					await postAPI.createPost(formData);
@@ -194,37 +226,38 @@ const HomePage = () => {
 		if (window.confirm("Are you sure you want to delete this post?")) {
 			try {
 				await postAPI.deletePost(postId);
-				setPosts(prev => prev.filter(post => post.id !== postId));
+				setPosts((prev) => prev.filter((post) => post.id !== postId));
 			} catch (err) {
-				console.error('Error deleting post:', err);
-				setError('Failed to delete post.');
+				console.error("Error deleting post:", err);
+				setError("Failed to delete post.");
 			}
 		}
 	};
-
 
 	const handleLikePost = async (postId) => {
 		try {
 			await postAPI.likePost(postId);
 			// Update posts state to reflect like change
-			setPosts(prev => prev.map(post => {
-				if (post.id === postId) {
-					const isLiked = post.likes.some(like => like.userId === user.uid);
-					return {
-						...post,
-						likes: isLiked
-							? post.likes.filter(like => like.userId !== user.uid)
-							: [...post.likes, { userId: user.uid }],
-						_count: {
-							...post._count,
-							likes: isLiked ? post._count.likes - 1 : post._count.likes + 1
-						}
-					};
-				}
-				return post;
-			}));
+			setPosts((prev) =>
+				prev.map((post) => {
+					if (post.id === postId) {
+						const isLiked = post.likes.some((like) => like.userId === user.uid);
+						return {
+							...post,
+							likes: isLiked
+								? post.likes.filter((like) => like.userId !== user.uid)
+								: [...post.likes, { userId: user.uid }],
+							_count: {
+								...post._count,
+								likes: isLiked ? post._count.likes - 1 : post._count.likes + 1,
+							},
+						};
+					}
+					return post;
+				}),
+			);
 		} catch (err) {
-			console.error('Error liking post:', err);
+			console.error("Error liking post:", err);
 		}
 	};
 
@@ -236,7 +269,7 @@ const HomePage = () => {
 		const diffHours = Math.floor(diffMs / 3600000);
 		const diffDays = Math.floor(diffMs / 86400000);
 
-		if (diffMins < 1) return 'now';
+		if (diffMins < 1) return "now";
 		if (diffMins < 60) return `${diffMins}m`;
 		if (diffHours < 24) return `${diffHours}h`;
 		return `${diffDays}d`;
@@ -261,9 +294,12 @@ const HomePage = () => {
 	};
 
 	const gf = new GiphyFetch("BXvRq8D03IHvybiQ6Fjls2pkPJLXjx9x");
-	const fetchGifs = offset => (searchTerm ? gf.search(searchTerm, { offset, limit: 12 }) : gf.trending({ offset, limit: 12 }));
+	const fetchGifs = (offset) =>
+		searchTerm
+			? gf.search(searchTerm, { offset, limit: 12 })
+			: gf.trending({ offset, limit: 12 });
 
-	const handleSearchChange = e => {
+	const handleSearchChange = (e) => {
 		setSearchTerm(e.target.value);
 	};
 
@@ -277,8 +313,10 @@ const HomePage = () => {
 				)}
 
 				{/* Quick Post */}
-				<Card className="border-0 border-bottom rounded-0 mb-0 shadow-sm"
-					onClick={() => setShowComposerModal(true)}>
+				<Card
+					className="border-0 border-bottom rounded-0 mb-0 shadow-sm"
+					onClick={() => setShowComposerModal(true)}
+				>
 					<Card.Body className="px-3 py-3">
 						<div className="d-flex gap-3">
 							<Image
@@ -296,8 +334,7 @@ const HomePage = () => {
 										<span className="text-primary">✓</span>
 									)}
 								</div>
-								<div
-									className="w-100 text-start text-muted border-1 bg-transparent">
+								<div className="w-100 text-start text-muted border-1 bg-transparent">
 									What's on your mind?
 								</div>
 							</div>
@@ -312,11 +349,17 @@ const HomePage = () => {
 				) : (
 					<>
 						{posts.map((post) => (
-							<Card key={post.id} className="border-0 border-bottom rounded-0 mb-0">
+							<Card
+								key={post.id}
+								className="border-0 border-bottom rounded-0 mb-0"
+							>
 								<Card.Body className="px-3">
 									<div className="d-flex gap-2">
 										<Image
-											src={post.author.photoURL || "https://i.pravatar.cc/150?img=10"}
+											src={
+												post.author.photoURL ||
+												"https://i.pravatar.cc/150?img=10"
+											}
 											alt="avatar"
 											roundedCircle
 											width="40"
@@ -324,18 +367,24 @@ const HomePage = () => {
 										/>
 										<div className="flex-grow-1">
 											<div className="d-flex align-items-center gap-1">
-												<span className="fw-bold">{post.author.name}</span>
+												<span
+													className="fw-bold"
+													onClick={() =>
+														(window.location.href = `/${post.author.username}`)
+													}
+												>
+													{post.author.name}
+												</span>
 												{post.author.hasBlueCheck && (
 													<span className="text-primary">✓</span>
 												)}
-												<span className="text-muted">@{post.author.username}</span>
 												<span className="text-muted">·</span>
-												<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
+												<span className="text-muted small">
+													{formatTimeAgo(post.createdAt)}
+												</span>
 											</div>
 
-											{post.content && (
-												<p className="mb-2">{post.content}</p>
-											)}
+											{post.content && <p className="mb-2">{post.content}</p>}
 
 											{post.imageUrls && post.imageUrls.length > 0 && (
 												<div className="mb-2">
@@ -344,65 +393,91 @@ const HomePage = () => {
 														<Image
 															src={post.imageUrls[0]}
 															className="rounded w-100"
-															style={{ 
-																height: "300px", 
+															style={{
+																height: "300px",
 																objectFit: "cover",
-																cursor: "pointer"
+																cursor: "pointer",
 															}}
 															onClick={() => openImageViewer(post.imageUrls, 0)}
 														/>
 													) : (
 														// Multiple images - box layout
-														<div className="d-flex gap-2" style={{ height: "300px" }}>
+														<div
+															className="d-flex gap-2"
+															style={{ height: "300px" }}
+														>
 															{/* Main image on the left */}
 															<div style={{ flex: "2" }}>
 																<Image
 																	src={post.imageUrls[0]}
 																	className="rounded w-100 h-100"
-																	style={{ 
+																	style={{
 																		objectFit: "cover",
-																		cursor: "pointer"
+																		cursor: "pointer",
 																	}}
-																	onClick={() => openImageViewer(post.imageUrls, 0)}
+																	onClick={() =>
+																		openImageViewer(post.imageUrls, 0)
+																	}
 																/>
 															</div>
 															{/* Right side with stacked images */}
 															{post.imageUrls.length > 1 && (
-																<div className="d-flex flex-column gap-2" style={{ flex: "1" }}>
-																	<div style={{ height: post.imageUrls.length > 2 ? "calc(50% - 4px)" : "100%" }}>
+																<div
+																	className="d-flex flex-column gap-2"
+																	style={{ flex: "1" }}
+																>
+																	<div
+																		style={{
+																			height:
+																				post.imageUrls.length > 2
+																					? "calc(50% - 4px)"
+																					: "100%",
+																		}}
+																	>
 																		<Image
 																			src={post.imageUrls[1]}
 																			className="rounded w-100 h-100"
-																			style={{ 
+																			style={{
 																				objectFit: "cover",
-																				cursor: "pointer"
+																				cursor: "pointer",
 																			}}
-																			onClick={() => openImageViewer(post.imageUrls, 1)}
+																			onClick={() =>
+																				openImageViewer(post.imageUrls, 1)
+																			}
 																		/>
 																	</div>
 																	{post.imageUrls.length > 2 && (
-																		<div style={{ height: "calc(50% - 4px)" }} className="position-relative">
+																		<div
+																			style={{ height: "calc(50% - 4px)" }}
+																			className="position-relative"
+																		>
 																			<Image
 																				src={post.imageUrls[2]}
 																				className="rounded w-100 h-100"
-																				style={{ 
+																				style={{
 																					objectFit: "cover",
-																					cursor: "pointer"
+																					cursor: "pointer",
 																				}}
-																				onClick={() => openImageViewer(post.imageUrls, 2)}
+																				onClick={() =>
+																					openImageViewer(post.imageUrls, 2)
+																				}
 																			/>
 																			{/* Show more indicator */}
 																			{post.imageUrls.length > 3 && (
-																				<div 
+																				<div
 																					className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
-																					style={{ 
-																						backgroundColor: "rgba(0, 0, 0, 0.7)",
+																					style={{
+																						backgroundColor:
+																							"rgba(0, 0, 0, 0.7)",
 																						cursor: "pointer",
 																						color: "white",
 																						fontWeight: "bold",
-																						fontSize: "1.2rem"
+																						fontSize: "1.2rem",
 																					}}
-																					onClick={() => openImageViewer(post.imageUrls, 2)}>
+																					onClick={() =>
+																						openImageViewer(post.imageUrls, 2)
+																					}
+																				>
 																					+{post.imageUrls.length - 3}
 																				</div>
 																			)}
@@ -414,10 +489,12 @@ const HomePage = () => {
 													)}
 												</div>
 											)}
-											{post.postType === 'live' && post.liveVideoUrl && (
+											{post.postType === "live" && post.liveVideoUrl && (
 												<div className="mb-2">
 													{/* Placeholder for live video embed */}
-													<p className="text-danger fw-bold">Live Video: {post.liveVideoUrl}</p>
+													<p className="text-danger fw-bold">
+														Live Video: {post.liveVideoUrl}
+													</p>
 												</div>
 											)}
 
@@ -426,7 +503,10 @@ const HomePage = () => {
 													variant="link"
 													size="sm"
 													className="text-muted p-0 border-0 d-flex align-items-center gap-1"
-													onClick={() => window.location.href = `/post/${post.id}`}>
+													onClick={() =>
+														(window.location.href = `/post/${post.id}`)
+													}
+												>
 													<ChatDots size={16} />
 													<span className="small">{post._count.comments}</span>
 												</Button>
@@ -435,11 +515,18 @@ const HomePage = () => {
 													variant="link"
 													size="sm"
 													className="p-0 border-0 d-flex align-items-center gap-1"
-													style={{ 
-														color: post.likes.some(like => like.userId === user.uid) ? '#dc3545' : '#6c757d'
+													style={{
+														color: post.likes.some(
+															(like) => like.userId === user.uid,
+														)
+															? "#dc3545"
+															: "#6c757d",
 													}}
-													onClick={() => handleLikePost(post.id)}>
-													{post.likes.some(like => like.userId === user.uid) ? (
+													onClick={() => handleLikePost(post.id)}
+												>
+													{post.likes.some(
+														(like) => like.userId === user.uid,
+													) ? (
 														<HeartFill size={16} />
 													) : (
 														<Heart size={16} />
@@ -450,7 +537,8 @@ const HomePage = () => {
 												<Button
 													variant="link"
 													size="sm"
-													className="text-muted p-0 border-0">
+													className="text-muted p-0 border-0"
+												>
 													<Share size={16} />
 												</Button>
 
@@ -460,25 +548,55 @@ const HomePage = () => {
 															variant="link"
 															size="sm"
 															className="text-muted p-0 border-0"
-															bsPrefix="dropdown-toggle-no-caret">
-															<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-three-dots" viewBox="0 0 16 16">
-																<path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+															bsPrefix="dropdown-toggle-no-caret"
+														>
+															<svg
+																xmlns="http://www.w3.org/2000/svg"
+																width="16"
+																height="16"
+																fill="currentColor"
+																className="bi bi-three-dots"
+																viewBox="0 0 16 16"
+															>
+																<path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" />
 															</svg>
 														</Dropdown.Toggle>
 														<Dropdown.Menu>
-															<Dropdown.Item onClick={() => handleDeletePost(post.id)}>Remove Post</Dropdown.Item>
-															<Dropdown.Item onClick={() => {
-																navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-																alert('Link copied!');
-															}}>Copy Link</Dropdown.Item>
-															<Dropdown.Item onClick={() => {
-																// Implement repost logic here
-																alert('Repost functionality not implemented yet.');
-															}}>Repost</Dropdown.Item>
-															<Dropdown.Item onClick={() => {
-																// Implement report logic here
-																alert('Report functionality not implemented yet.');
-															}}>Report</Dropdown.Item>
+															<Dropdown.Item
+																onClick={() => handleDeletePost(post.id)}
+															>
+																Remove Post
+															</Dropdown.Item>
+															<Dropdown.Item
+																onClick={() => {
+																	navigator.clipboard.writeText(
+																		`${window.location.origin}/post/${post.id}`,
+																	);
+																	alert("Link copied!");
+																}}
+															>
+																Copy Link
+															</Dropdown.Item>
+															<Dropdown.Item
+																onClick={() => {
+																	// Implement repost logic here
+																	alert(
+																		"Repost functionality not implemented yet.",
+																	);
+																}}
+															>
+																Repost
+															</Dropdown.Item>
+															<Dropdown.Item
+																onClick={() => {
+																	// Implement report logic here
+																	alert(
+																		"Report functionality not implemented yet.",
+																	);
+																}}
+															>
+																Report
+															</Dropdown.Item>
 														</Dropdown.Menu>
 													</Dropdown>
 												)}
@@ -494,8 +612,13 @@ const HomePage = () => {
 								<Button
 									variant="outline-primary"
 									onClick={() => loadPosts(nextCursor)}
-									disabled={loading}>
-									{loading ? <Spinner size="sm" animation="border" /> : "Load More"}
+									disabled={loading}
+								>
+									{loading ? (
+										<Spinner size="sm" animation="border" />
+									) : (
+										"Load More"
+									)}
 								</Button>
 							</div>
 						)}
@@ -511,7 +634,8 @@ const HomePage = () => {
 					fullscreen="md-down"
 					backdrop="static"
 					onHide={() => setShowComposerModal(false)}
-					centered>
+					centered
+				>
 					<Modal.Header closeButton>
 						<Modal.Title>Create Post</Modal.Title>
 					</Modal.Header>
@@ -534,7 +658,10 @@ const HomePage = () => {
 									)}
 								</div>
 
-								<Dropdown onSelect={value => setPrivacy(value)} className="mb-3">
+								<Dropdown
+									onSelect={(value) => setPrivacy(value)}
+									className="mb-3"
+								>
 									<Dropdown.Toggle
 										variant="outline-primary"
 										size="sm"
@@ -542,12 +669,13 @@ const HomePage = () => {
 										style={{
 											fontSize: "0.875rem",
 											fontWeight: "600",
-										}}>
+										}}
+									>
 										{privacyOptions[privacy]} {privacy}
 									</Dropdown.Toggle>
 
 									<Dropdown.Menu>
-										{Object.keys(privacyOptions).map(opt => (
+										{Object.keys(privacyOptions).map((opt) => (
 											<Dropdown.Item key={opt} eventKey={opt}>
 												{privacyOptions[opt]} {opt}
 											</Dropdown.Item>
@@ -563,19 +691,23 @@ const HomePage = () => {
 									placeholder="What's happening?"
 									className="border-0 shadow-none fs-5"
 									rows={3}
-									style={{ 
-										overflow: "hidden", 
+									style={{
+										overflow: "hidden",
 										resize: "none",
-										minHeight: "120px"
+										minHeight: "120px",
 									}}
 								/>
 							</div>
 						</div>
 
 						{photos?.length > 0 && (
-							<div className="d-flex gap-2 overflow-x-auto mt-2 pb-2" style={{ scrollbarWidth: "thin" }}>
+							<div
+								className="d-flex gap-2 overflow-x-auto mt-2 pb-2"
+								style={{ scrollbarWidth: "thin" }}
+							>
 								{photos.map((file, idx) => {
-									const url = typeof file === "string" ? file : URL.createObjectURL(file);
+									const url =
+										typeof file === "string" ? file : URL.createObjectURL(file);
 									return (
 										<div key={idx} className="position-relative flex-shrink-0">
 											<Image
@@ -590,7 +722,12 @@ const HomePage = () => {
 												size="sm"
 												onClick={() => handleRemovePhoto(idx)}
 												className="position-absolute top-0 end-0 m-1 p-0 rounded-circle"
-												style={{ width: "20px", height: "20px", lineHeight: "16px" }}>
+												style={{
+													width: "20px",
+													height: "20px",
+													lineHeight: "16px",
+												}}
+											>
 												<X size={12} />
 											</Button>
 										</div>
@@ -616,42 +753,53 @@ const HomePage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-1 ${(photos?.length >= MAX_IMAGES) ? 'text-secondary' : 'text-muted'}`}
+									className={`p-1 ${photos?.length >= MAX_IMAGES ? "text-secondary" : "text-muted"}`}
 									onClick={() => fileInputRef.current?.click()}
 									disabled={photos?.length >= MAX_IMAGES}
-									title={photos?.length >= MAX_IMAGES ? `Maximum ${MAX_IMAGES} images allowed` : 'Add photo'}>
+									title={
+										photos?.length >= MAX_IMAGES
+											? `Maximum ${MAX_IMAGES} images allowed`
+											: "Add photo"
+									}
+								>
 									<Camera size={18} />
 								</Button>
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-1 ${(photos?.length >= MAX_IMAGES) ? 'text-secondary' : 'text-muted'}`}
+									className={`p-1 ${photos?.length >= MAX_IMAGES ? "text-secondary" : "text-muted"}`}
 									onClick={() => setShowStickerModal(true)}
 									disabled={photos?.length >= MAX_IMAGES}
-									title={photos?.length >= MAX_IMAGES ? `Maximum ${MAX_IMAGES} images allowed` : 'Add GIF'}>
+									title={
+										photos?.length >= MAX_IMAGES
+											? `Maximum ${MAX_IMAGES} images allowed`
+											: "Add GIF"
+									}
+								>
 									<EmojiSmile size={18} />
 								</Button>
 								<Button
 									variant={isLive ? "danger" : "link"}
 									size="sm"
 									className={isLive ? "text-white p-1" : "text-muted p-1"}
-									onClick={() => setIsLive(!isLive)}>
+									onClick={() => setIsLive(!isLive)}
+								>
 									<span className="d-flex align-items-center gap-1">
-										<span style={{
-											width: "8px",
-											height: "8px",
-											borderRadius: "50%",
-											backgroundColor: isLive ? "#fff" : "#dc3545",
-											display: "inline-block"
-										}}></span>
+										<span
+											style={{
+												width: "8px",
+												height: "8px",
+												borderRadius: "50%",
+												backgroundColor: isLive ? "#fff" : "#dc3545",
+												display: "inline-block",
+											}}
+										></span>
 										{isLive ? "LIVE" : "Go Live"}
 									</span>
 								</Button>
 							</div>
 							{/* Character limit indicator */}
-							<span className="text-muted">
-								{postText.length}/280
-							</span>
+							<span className="text-muted">{postText.length}/280</span>
 						</div>
 					</Modal.Body>
 
@@ -659,7 +807,10 @@ const HomePage = () => {
 						<Button
 							className="w-100"
 							onClick={handleCreatePost}
-							disabled={submitting || (!postText.trim() && !photos && !liveVideoUrl)}>
+							disabled={
+								submitting || (!postText.trim() && !photos && !liveVideoUrl)
+							}
+						>
 							{submitting ? <Spinner size="sm" animation="border" /> : "Post"}
 						</Button>
 					</Modal.Footer>
@@ -672,7 +823,8 @@ const HomePage = () => {
 					show={showStickerModal}
 					onHide={() => setShowStickerModal(false)}
 					fullscreen="md-down"
-					centered>
+					centered
+				>
 					<Modal.Header closeButton>
 						<Modal.Title>Stickers</Modal.Title>
 					</Modal.Header>
@@ -712,14 +864,16 @@ const HomePage = () => {
 					onHide={closeImageViewer}
 					centered
 					size="lg"
-					className="image-viewer-modal">
+					className="image-viewer-modal"
+				>
 					<Modal.Body className="p-0 bg-dark text-center">
 						<div className="position-relative">
 							<Button
 								variant="link"
 								className="position-absolute top-0 end-0 m-2 text-white"
 								style={{ zIndex: 10 }}
-								onClick={closeImageViewer}>
+								onClick={closeImageViewer}
+							>
 								<X size={24} />
 							</Button>
 
@@ -730,7 +884,10 @@ const HomePage = () => {
 										className="position-absolute top-50 start-0 translate-middle-y text-white ms-2"
 										style={{ zIndex: 10 }}
 										disabled={currentImageIndex === 0}
-										onClick={() => setCurrentImageIndex(prev => Math.max(0, prev - 1))}>
+										onClick={() =>
+											setCurrentImageIndex((prev) => Math.max(0, prev - 1))
+										}
+									>
 										<ChevronLeft size={32} />
 									</Button>
 
@@ -739,7 +896,12 @@ const HomePage = () => {
 										className="position-absolute top-50 end-0 translate-middle-y text-white me-2"
 										style={{ zIndex: 10 }}
 										disabled={currentImageIndex === currentImages.length - 1}
-										onClick={() => setCurrentImageIndex(prev => Math.min(currentImages.length - 1, prev + 1))}>
+										onClick={() =>
+											setCurrentImageIndex((prev) =>
+												Math.min(currentImages.length - 1, prev + 1),
+											)
+										}
+									>
 										<ChevronRight size={32} />
 									</Button>
 								</>
@@ -748,9 +910,9 @@ const HomePage = () => {
 							<Image
 								src={currentImages[currentImageIndex]}
 								className="w-100"
-								style={{ 
+								style={{
 									maxHeight: "80vh",
-									objectFit: "contain"
+									objectFit: "contain",
 								}}
 							/>
 
