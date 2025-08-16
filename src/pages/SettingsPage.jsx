@@ -108,7 +108,7 @@ const SettingsPage = () => {
 	];
 
 	return (
-		<Container className="py-3" style={{ maxWidth: "600px" }}>
+		<Container className="py-3 px-0 px-md-3">
 			<h2 className="mb-4">Settings</h2>
 
 			{message && (
@@ -171,6 +171,56 @@ const SettingsPage = () => {
 					</Form>
 				</Card.Body>
 			</Card>
+
+			{/* Posts */}
+			<Card className="mb-4">
+				<Card.Header className="d-flex align-items-center gap-2">
+					<h5 className="mb-0">Posts</h5>
+				</Card.Header>
+				<Card.Body>
+					{user.posts && user.posts.length > 0 ? (
+						user.posts.map(post => (
+							<div key={post.id} className="mb-3 pb-3 border-bottom">
+								<div className="d-flex align-items-center mb-2">
+									<img
+										src={post.author.photoURL}
+										alt={post.author.name}
+										className="rounded-circle me-2"
+										style={{ width: "40px", height: "40px" }}
+									/>
+									<div>
+										<h6 className="mb-0">{post.author.name}</h6>
+										<small className="text-muted">@{post.author.username}</small>
+									</div>
+								</div>
+								<p>{post.content}</p>
+								{post.imageUrls && post.imageUrls.length > 0 && (
+									<img src={post.imageUrls[0]} alt="Post image" className="img-fluid rounded mb-2" />
+								)}
+								{post.liveVideoUrl && (
+									<div className="embed-responsive embed-responsive-16by9 mb-2">
+										<iframe
+											className="embed-responsive-item"
+											src={post.liveVideoUrl}
+											allowFullScreen
+											title="Live Video"></iframe>
+									</div>
+								)}
+								<div className="d-flex justify-content-between">
+									<small className="text-muted">{new Date(post.createdAt).toLocaleString()}</small>
+									<div>
+										{post._count.likes} Likes {/* Placeholder for like functionality */}
+										{/* Placeholder for comment count and functionality */}
+									</div>
+								</div>
+							</div>
+						))
+					) : (
+						<p>No posts found.</p>
+					)}
+				</Card.Body>
+			</Card>
+
 
 			{/* Privacy Settings */}
 			<Card className="mb-4">

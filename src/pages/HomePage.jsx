@@ -23,6 +23,8 @@ const HomePage = () => {
 	const [hasMore, setHasMore] = useState(false);
 	const [nextCursor, setNextCursor] = useState(null);
 	const [submitting, setSubmitting] = useState(false);
+	const [isLive, setIsLive] = useState(false);
+	const [liveVideoUrl, setLiveVideoUrl] = useState("");
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
 
@@ -89,50 +91,50 @@ const HomePage = () => {
 	};
 
 	const handleCreatePost = async () => {
-		if (!postText.trim() && (!photos || photos.length === 0)) {
-			return;
-		}
+		if (!postText.trim() && !photos && !liveVideoUrl) return;
 
 		try {
 			setSubmitting(true);
-			// Filter out non-string elements (e.g., File objects) from imageUrls
-			const imageUrls = photos ? photos.filter(p => typeof p === 'string') : [];
-			// Handle File objects separately if needed, but for now assume they are processed elsewhere or not needed for this API call.
-			const filesToUpload = photos ? photos.filter(p => typeof p !== 'string') : [];
-
-			// Construct the payload based on what the API expects.
-			// Assuming the API expects `content`, `imageUrls`, and `postType`.
-			// If files need to be uploaded, the API call structure would need to change (e.g., using FormData).
-			const payload = {
-				content: postText.trim(),
-				imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
-				postType: "text"
+			const postData = {
+				content: postText,
+				privacy: privacy.toLowerCase(),
+				postType: isLive ? 'live' : 'text',
 			};
 
-			// If there are files to upload, you might need a different API call or payload structure.
-			// For example:
-			// const formData = new FormData();
-			// formData.append('content', postText.trim());
-			// if (imageUrls.length > 0) formData.append('imageUrls', JSON.stringify(imageUrls));
-			// if (filesToUpload.length > 0) {
-			//     filesToUpload.forEach((file, index) => {
-			//         formData.append(`files`, file, file.name);
-			//     });
-			// }
-			// await postAPI.createPostWithFiles(formData); // Assuming such a method exists
+			if (liveVideoUrl && isLive) {
+				postData.liveVideoUrl = liveVideoUrl;
+			}
 
-			await postAPI.createPost(payload); // Using the existing method with the constructed payload
+			if (photos) {
+				const formData = new FormData();
+				formData.append('content', postText);
+				formData.append('privacy', privacy.toLowerCase());
+				formData.append('postType', isLive ? 'live' : 'text');
 
+				if (liveVideoUrl && isLive) {
+					formData.append('liveVideoUrl', liveVideoUrl);
+				}
 
+				for (let i = 0; i < photos.length; i++) {
+					formData.append('images', photos[i]);
+				}
+
+				await postAPI.createPost(formData);
+			} else {
+				await postAPI.createPost(postData);
+			}
+
+			// Reset form
 			setPostText("");
 			setPhotos(null);
+			setIsLive(false);
+			setLiveVideoUrl("");
 			setShowComposerModal(false);
-			loadPosts(); // Reload posts
+
+			// Reload posts
+			loadPosts();
 		} catch (err) {
-			// The error message from the backend might be more descriptive.
-			// For now, we'll use the generic error message.
-			setError("Failed to create post. Please check the payload or try again.");
-			console.error('Error creating post:', err); // Log the actual error for debugging
+			setError(err.message);
 		} finally {
 			setSubmitting(false);
 		}
@@ -193,31 +195,34 @@ const HomePage = () => {
 
 	return (
 		<>
-			<div className="mt-2">
-				<div
-					className="d-flex align-items-center gap-2 pb-2 px-3 border-bottom"
-					onClick={() => setShowComposerModal(true)}
-					style={{ cursor: "pointer" }}>
-					<Image
-						src={user?.photoURL ?? "https://i.pravatar.cc/150?img=10"}
-						alt="avatar"
-						roundedCircle
-						width="35"
-						height="35"
-					/>
-					<div className="d-grid">
-						<span className="fw-bold small">{user?.name}</span>
-						<span className="text-muted">What's on your mind?</span>
-					</div>
-				</div>
-			</div>
-
-			<Container className="px-0 px-md-3">
+			<Container className="py-3 px-0 px-md-3">
 				{error && (
-					<Alert variant="danger" dismissible onClose={() => setError("")} className="mx-3 mt-3">
+					<Alert variant="danger" className="mx-3">
 						{error}
 					</Alert>
 				)}
+
+				{/* Quick Post */}
+				<Card className="border-0 border-bottom rounded-0 mb-0 shadow-sm">
+					<Card.Body className="px-3 py-3">
+						<div className="d-flex gap-3">
+							<Image
+								src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
+								alt="avatar"
+								roundedCircle
+								width="45"
+								height="45"
+								style={{ objectFit: "cover" }}
+							/>
+							<Button
+								variant="outline-secondary"
+								className="flex-grow-1 text-start text-muted border-1 bg-light rounded-pill py-2"
+								onClick={() => setShowComposerModal(true)}>
+								What's on your mind, {user?.name?.split(' ')[0]}?
+							</Button>
+						</div>
+					</Card.Body>
+				</Card>
 
 				{loading && posts.length === 0 ? (
 					<div className="text-center py-5">
@@ -261,6 +266,12 @@ const HomePage = () => {
 															style={{ maxHeight: "400px", objectFit: "cover" }}
 														/>
 													))}
+												</div>
+											)}
+											{post.postType === 'live' && post.liveVideoUrl && (
+												<div className="mb-2">
+													{/* Placeholder for live video embed */}
+													<p className="text-danger fw-bold">Live Video: {post.liveVideoUrl}</p>
 												</div>
 											)}
 
@@ -405,24 +416,51 @@ const HomePage = () => {
 							</div>
 						)}
 
-						<div className="d-flex align-items-center gap-3 pt-3 mt-2 border-top flex-nowrap pe-2 overflow-auto"
-							style={{ fontSize: "0.85rem", WebkitOverflowScrolling: "touch" }}>
-							<Button
-								variant="light"
-								size="sm"
-								className="d-flex align-items-center gap-1 border-0 flex-shrink-0"
-								onClick={handlePhotoClick}>
-								<Camera size={18} className="text-success" />
-								Photos
-							</Button>
-							<Button
-								variant="light"
-								size="sm"
-								className="d-flex align-items-center gap-1 border-0 flex-shrink-0"
-								onClick={handleStickerClick}>
-								<EmojiSmile size={18} className="text-warning" />
-								Stickers
-							</Button>
+						{isLive && (
+							<Form.Group className="mb-3">
+								<Form.Label>Live Video URL</Form.Label>
+								<Form.Control
+									type="url"
+									value={liveVideoUrl}
+									onChange={(e) => setLiveVideoUrl(e.target.value)}
+									placeholder="https://example.com/live-stream"
+								/>
+							</Form.Group>
+						)}
+
+						<div className="d-flex justify-content-between align-items-center">
+							<div className="d-flex gap-2">
+								<Button
+									variant="link"
+									size="sm"
+									className="text-muted p-1"
+									onClick={() => fileInputRef.current?.click()}>
+									<Camera size={18} />
+								</Button>
+								<Button
+									variant="link"
+									size="sm"
+									className="text-muted p-1"
+									onClick={() => setShowStickerModal(true)}>
+									<EmojiSmile size={18} />
+								</Button>
+								<Button
+									variant={isLive ? "danger" : "link"}
+									size="sm"
+									className={isLive ? "text-white p-1" : "text-muted p-1"}
+									onClick={() => setIsLive(!isLive)}>
+									<span className="d-flex align-items-center gap-1">
+										<span style={{
+											width: "8px",
+											height: "8px",
+											borderRadius: "50%",
+											backgroundColor: isLive ? "#fff" : "#dc3545",
+											display: "inline-block"
+										}}></span>
+										{isLive ? "LIVE" : "Go Live"}
+									</span>
+								</Button>
+							</div>
 						</div>
 					</Modal.Body>
 
@@ -430,7 +468,7 @@ const HomePage = () => {
 						<Button
 							className="w-100"
 							onClick={handleCreatePost}
-							disabled={submitting || (!postText.trim() && (!photos || photos.length === 0))}>
+							disabled={submitting || (!postText.trim() && !photos && !liveVideoUrl)}>
 							{submitting ? <Spinner size="sm" animation="border" /> : "Post"}
 						</Button>
 					</Modal.Footer>

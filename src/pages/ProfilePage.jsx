@@ -37,46 +37,59 @@ const ProfilePage = () => {
 			
 			// Load user profile first
 			const userResponse = await userAPI.getUser(username);
-			if (!userResponse || !userResponse.user) {
+			if (!userResponse) {
 				throw new Error("User not found");
 			}
-			setProfileUser(userResponse.user);
+			
+			// Handle response structure - the API returns user data directly
+			setProfileUser(userResponse);
 
 			// Set edit form data
 			setEditForm({
-				name: userResponse.user.name || "",
-				bio: userResponse.user.bio || "",
-				photoURL: userResponse.user.photoURL || ""
+				name: userResponse.name || "",
+				bio: userResponse.bio || "",
+				photoURL: userResponse.photoURL || ""
 			});
 
-			// Load additional data with fallbacks
-			try {
-				const postsResponse = await postAPI.getPosts({ author: username });
-				setPosts(postsResponse.posts || []);
-			} catch (err) {
-				console.error('Error loading posts:', err);
-				setPosts([]);
-			}
-
-			try {
-				const followersResponse = await userAPI.getFollowers(username);
-				setFollowers(followersResponse.followers || []);
-				
-				// Check if current user is following this profile
-				if (currentUser) {
-					setIsFollowing((followersResponse.followers || []).some(f => f.uid === currentUser.uid));
+			// Set posts from user response if available
+			if (userResponse.posts) {
+				setPosts(userResponse.posts);
+			} else {
+				// Fallback to separate posts API call
+				try {
+					const postsResponse = await postAPI.getPosts({ author: username });
+					setPosts(postsResponse.posts || []);
+				} catch (err) {
+					console.error('Error loading posts:', err);
+					setPosts([]);
 				}
-			} catch (err) {
-				console.error('Error loading followers:', err);
-				setFollowers([]);
 			}
 
-			try {
-				const followingResponse = await userAPI.getFollowing(username);
-				setFollowing(followingResponse.following || []);
-			} catch (err) {
-				console.error('Error loading following:', err);
-				setFollowing([]);
+			// Use counts from user response if available
+			if (userResponse._count) {
+				setFollowers(new Array(userResponse._count.followers).fill({}));
+				setFollowing(new Array(userResponse._count.following).fill({}));
+			} else {
+				try {
+					const followersResponse = await userAPI.getFollowers(username);
+					setFollowers(followersResponse.followers || []);
+					
+					// Check if current user is following this profile
+					if (currentUser) {
+						setIsFollowing((followersResponse.followers || []).some(f => f.uid === currentUser.uid));
+					}
+				} catch (err) {
+					console.error('Error loading followers:', err);
+					setFollowers([]);
+				}
+
+				try {
+					const followingResponse = await userAPI.getFollowing(username);
+					setFollowing(followingResponse.following || []);
+				} catch (err) {
+					console.error('Error loading following:', err);
+					setFollowing([]);
+				}
 			}
 
 		} catch (err) {
@@ -108,15 +121,16 @@ const ProfilePage = () => {
 			await postAPI.likePost(postId);
 			setPosts(prev => prev.map(post => {
 				if (post.id === postId) {
-					const isLiked = post.likes.some(like => like.userId === currentUser.uid);
+					const likes = post.likes || [];
+					const isLiked = likes.some(like => like.userId === currentUser.uid);
 					return {
 						...post,
 						likes: isLiked
-							? post.likes.filter(like => like.userId !== currentUser.uid)
-							: [...post.likes, { userId: currentUser.uid }],
+							? likes.filter(like => like.userId !== currentUser.uid)
+							: [...likes, { userId: currentUser.uid }],
 						_count: {
 							...post._count,
-							likes: isLiked ? post._count.likes - 1 : post._count.likes + 1
+							likes: isLiked ? (post._count?.likes || 1) - 1 : (post._count?.likes || 0) + 1
 						}
 					};
 				}
@@ -178,7 +192,7 @@ const ProfilePage = () => {
 	const isOwnProfile = currentUser.username === username;
 
 	return (
-		<Container className="px-0 px-md-3">
+		<Container className="py-3 px-0 px-md-3">
 			{/* Cover & Profile Photo */}
 			<div className="position-relative">
 				<div
@@ -344,17 +358,17 @@ const ProfilePage = () => {
 														variant="link"
 														size="sm"
 														className={`p-0 border-0 d-flex align-items-center gap-1 ${
-															post.likes.some(like => like.userId === currentUser.uid)
+															(post.likes || []).some(like => like.userId === currentUser.uid)
 																? 'text-danger'
 																: 'text-muted'
 														}`}
 														onClick={() => handleLikePost(post.id)}>
-														{post.likes.some(like => like.userId === currentUser.uid) ? (
+														{(post.likes || []).some(like => like.userId === currentUser.uid) ? (
 															<HeartFill size={16} />
 														) : (
 															<Heart size={16} />
 														)}
-														<span className="small">{post._count.likes}</span>
+														<span className="small">{post._count?.likes || 0}</span>
 													</Button>
 
 													<Button
