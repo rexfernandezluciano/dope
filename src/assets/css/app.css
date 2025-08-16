@@ -108,6 +108,24 @@ a {
   -webkit-text-fill-color: #0069B5;
 }
 
+/* Sticky navbar */
+.sticky-top {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1020 !important;
+}
+
+/* Improved tab styling */
+.nav-tabs .nav-link {
+  border: none !important;
+  background: transparent !important;
+}
+
+.nav-tabs .nav-link.active {
+  border-bottom: 2px solid #0069B5 !important;
+  background: transparent !important;
+}
+
 /* Mobile optimizations */
 @media (max-width: 768px) {
   .container {
@@ -133,6 +151,11 @@ a {
   
   .form-control, .form-select {
     font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Add top padding for mobile to account for sticky navbar */
+  body {
+    padding-top: 0;
   }
 }
 

@@ -141,6 +141,24 @@ const ProfilePage = () => {
 		}
 	};
 
+	const uploadProfileImageToCloudinary = async (file) => {
+		const formData = new FormData();
+		formData.append('file', file);
+		formData.append('upload_preset', 'dope_network'); // You'll need to set this up in Cloudinary
+		
+		try {
+			const response = await fetch('https://api.cloudinary.com/v1_1/your_cloud_name/image/upload', {
+				method: 'POST',
+				body: formData
+			});
+			const data = await response.json();
+			return data.secure_url;
+		} catch (error) {
+			console.error('Error uploading to Cloudinary:', error);
+			return null;
+		}
+	};
+
 	const handleUpdateProfile = async () => {
 		try {
 			await userAPI.updateUser(username, editForm);
@@ -148,6 +166,16 @@ const ProfilePage = () => {
 			setShowEditModal(false);
 		} catch (err) {
 			setError(err.message);
+		}
+	};
+
+	const handleProfileImageUpload = async (e) => {
+		const file = e.target.files[0];
+		if (file) {
+			const url = await uploadProfileImageToCloudinary(file);
+			if (url) {
+				setEditForm(prev => ({ ...prev, photoURL: url }));
+			}
 		}
 	};
 
@@ -192,9 +220,9 @@ const ProfilePage = () => {
 	const isOwnProfile = currentUser.username === username;
 
 	return (
-		<Container className="py-3 px-0 px-md-3">
+		<Container className="py-0 px-0">
 			{/* Cover & Profile Photo */}
-			<div className="position-relative">
+			<div className="position-relative mb-4">
 				<div
 					style={{ height: "200px", background: "linear-gradient(45deg, #667eea 0%, #764ba2 100%)" }}
 					className="w-100 bg-primary"
@@ -213,7 +241,7 @@ const ProfilePage = () => {
 			</div>
 
 			{/* Profile Info */}
-			<div className="px-3 pt-5">
+			<div className="px-3 pt-4">
 				<div className="d-flex justify-content-between align-items-start mb-3">
 					<div>
 						<div className="d-flex align-items-center gap-1">
@@ -278,29 +306,29 @@ const ProfilePage = () => {
 
 			{/* Tabs */}
 			<Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
-				<Nav variant="tabs" className="border-bottom">
-					<Nav.Item>
-						<Nav.Link eventKey="posts" className="text-center">
-							Posts
-							<div className="small text-muted">{posts.length}</div>
+				<Nav variant="tabs" className="border-bottom mx-0">
+					<Nav.Item className="flex-fill">
+						<Nav.Link eventKey="posts" className="text-center py-3">
+							<div className="fw-bold">{posts.length}</div>
+							<div className="small text-muted">Posts</div>
 						</Nav.Link>
 					</Nav.Item>
-					<Nav.Item>
-						<Nav.Link eventKey="followers" className="text-center">
-							Followers
-							<div className="small text-muted">{followers.length}</div>
+					<Nav.Item className="flex-fill">
+						<Nav.Link eventKey="followers" className="text-center py-3">
+							<div className="fw-bold">{followers.length}</div>
+							<div className="small text-muted">Followers</div>
 						</Nav.Link>
 					</Nav.Item>
-					<Nav.Item>
-						<Nav.Link eventKey="following" className="text-center">
-							Following
-							<div className="small text-muted">{following.length}</div>
+					<Nav.Item className="flex-fill">
+						<Nav.Link eventKey="following" className="text-center py-3">
+							<div className="fw-bold">{following.length}</div>
+							<div className="small text-muted">Following</div>
 						</Nav.Link>
 					</Nav.Item>
 				</Nav>
 
 				<Tab.Content>
-					<Tab.Pane eventKey="posts">
+					<Tab.Pane eventKey="posts" className="px-0">
 						{posts.length === 0 ? (
 							<div className="text-center py-5 text-muted">
 								<p>No posts yet</p>
@@ -308,7 +336,7 @@ const ProfilePage = () => {
 						) : (
 							posts.map((post) => (
 								<Card key={post.id} className="border-0 border-bottom rounded-0">
-									<Card.Body className="px-3">
+									<Card.Body className="px-3 py-3">
 										<div className="d-flex gap-2">
 											<Image
 												src={post.author.photoURL || "https://i.pravatar.cc/150?img=10"}
@@ -357,11 +385,10 @@ const ProfilePage = () => {
 													<Button
 														variant="link"
 														size="sm"
-														className={`p-0 border-0 d-flex align-items-center gap-1 ${
-															(post.likes || []).some(like => like.userId === currentUser.uid)
-																? 'text-danger'
-																: 'text-muted'
-														}`}
+														className="p-0 border-0 d-flex align-items-center gap-1"
+														style={{ 
+															color: (post.likes || []).some(like => like.userId === currentUser.uid) ? '#dc3545' : '#6c757d'
+														}}
 														onClick={() => handleLikePost(post.id)}>
 														{(post.likes || []).some(like => like.userId === currentUser.uid) ? (
 															<HeartFill size={16} />
@@ -386,7 +413,7 @@ const ProfilePage = () => {
 						)}
 					</Tab.Pane>
 
-					<Tab.Pane eventKey="followers">
+					<Tab.Pane eventKey="followers" className="px-0">
 						{followers.length === 0 ? (
 							<div className="text-center py-5 text-muted">
 								<p>No followers yet</p>
@@ -394,7 +421,7 @@ const ProfilePage = () => {
 						) : (
 							followers.map((follower) => (
 								<Card key={follower.uid} className="border-0 border-bottom rounded-0">
-									<Card.Body className="px-3">
+									<Card.Body className="px-3 py-3">
 										<div className="d-flex align-items-center gap-3">
 											<Image
 												src={follower.photoURL || "https://i.pravatar.cc/150?img=10"}
@@ -422,7 +449,7 @@ const ProfilePage = () => {
 						)}
 					</Tab.Pane>
 
-					<Tab.Pane eventKey="following">
+					<Tab.Pane eventKey="following" className="px-0">
 						{following.length === 0 ? (
 							<div className="text-center py-5 text-muted">
 								<p>Not following anyone yet</p>
@@ -430,7 +457,7 @@ const ProfilePage = () => {
 						) : (
 							following.map((followedUser) => (
 								<Card key={followedUser.uid} className="border-0 border-bottom rounded-0">
-									<Card.Body className="px-3">
+									<Card.Body className="px-3 py-3">
 										<div className="d-flex align-items-center gap-3">
 											<Image
 												src={followedUser.photoURL || "https://i.pravatar.cc/150?img=10"}
@@ -469,12 +496,26 @@ const ProfilePage = () => {
 					<Modal.Body>
 						<Form>
 							<Form.Group className="mb-3">
-								<Form.Label>Profile Picture URL</Form.Label>
-								<Form.Control
-									type="url"
-									value={editForm.photoURL}
-									onChange={(e) => setEditForm(prev => ({ ...prev, photoURL: e.target.value }))}
-									placeholder="https://example.com/photo.jpg"
+								<Form.Label>Profile Picture</Form.Label>
+								<div className="d-flex gap-2">
+									<Form.Control
+										type="url"
+										value={editForm.photoURL}
+										onChange={(e) => setEditForm(prev => ({ ...prev, photoURL: e.target.value }))}
+										placeholder="https://example.com/photo.jpg"
+									/>
+									<Button
+										variant="outline-secondary"
+										onClick={() => document.getElementById('profile-image-upload').click()}>
+										Upload
+									</Button>
+								</div>
+								<input
+									id="profile-image-upload"
+									type="file"
+									accept="image/*"
+									onChange={handleProfileImageUpload}
+									style={{ display: 'none' }}
 								/>
 							</Form.Group>
 							<Form.Group className="mb-3">

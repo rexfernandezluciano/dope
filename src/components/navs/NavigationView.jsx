@@ -51,7 +51,7 @@ const NavigationView = ({ children, user }) => {
 		<>
 			{/* Mobile Navbar */}
 			<div className="d-md-none">
-				<Navbar expand={false} className="bg-white border-bottom">
+				<Navbar expand={false} className="bg-white border-bottom sticky-top">
 					<Container fluid>
 						<Navbar.Toggle
 							aria-controls="offcanvasNavbar"
@@ -119,7 +119,7 @@ const NavigationView = ({ children, user }) => {
 
 			{/* Desktop Sidebar */}
 			<div className="d-none d-md-block">
-				<Navbar expand={false} className="bg-white border-bottom">
+				<Navbar expand={false} className="bg-white border-bottom sticky-top">
 					<Container fluid>
 						<Navbar.Brand href="/" className="text-primary">
 							DOPE Network

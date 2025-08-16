@@ -69,10 +69,35 @@ const HomePage = () => {
 		fileInputRef.current.click();
 	};
 
-	const handleFileChange = e => {
+	const uploadToCloudinary = async (file) => {
+		const formData = new FormData();
+		formData.append('file', file);
+		formData.append('upload_preset', 'dope_network'); // You'll need to set this up in Cloudinary
+		
+		try {
+			const response = await fetch('https://api.cloudinary.com/v1_1/your_cloud_name/image/upload', {
+				method: 'POST',
+				body: formData
+			});
+			const data = await response.json();
+			return data.secure_url;
+		} catch (error) {
+			console.error('Error uploading to Cloudinary:', error);
+			return null;
+		}
+	};
+
+	const handleFileChange = async (e) => {
 		const files = Array.from(e.target.files);
 		if (files.length) {
-			setPhotos(prev => [...(prev || []), ...files]);
+			const uploadedUrls = [];
+			for (const file of files) {
+				const url = await uploadToCloudinary(file);
+				if (url) {
+					uploadedUrls.push(url);
+				}
+			}
+			setPhotos(prev => [...(prev || []), ...uploadedUrls]);
 		}
 	};
 
@@ -105,21 +130,28 @@ const HomePage = () => {
 				postData.liveVideoUrl = liveVideoUrl;
 			}
 
-			if (photos) {
-				const formData = new FormData();
-				formData.append('content', postText);
-				formData.append('privacy', privacy.toLowerCase());
-				formData.append('postType', isLive ? 'live' : 'text');
+			if (photos && photos.length > 0) {
+				// If photos are URLs (from Cloudinary), include them in postData
+				if (typeof photos[0] === 'string') {
+					postData.imageUrls = photos;
+					await postAPI.createPost(postData);
+				} else {
+					// If photos are files, use FormData
+					const formData = new FormData();
+					formData.append('content', postText);
+					formData.append('privacy', privacy.toLowerCase());
+					formData.append('postType', isLive ? 'live' : 'text');
 
-				if (liveVideoUrl && isLive) {
-					formData.append('liveVideoUrl', liveVideoUrl);
+					if (liveVideoUrl && isLive) {
+						formData.append('liveVideoUrl', liveVideoUrl);
+					}
+
+					for (let i = 0; i < photos.length; i++) {
+						formData.append('images', photos[i]);
+					}
+
+					await postAPI.createPost(formData);
 				}
-
-				for (let i = 0; i < photos.length; i++) {
-					formData.append('images', photos[i]);
-				}
-
-				await postAPI.createPost(formData);
 			} else {
 				await postAPI.createPost(postData);
 			}
@@ -224,7 +256,8 @@ const HomePage = () => {
 								</div>
 								<Button
 									variant="outline-secondary"
-									className="w-100 text-start text-muted border-1 bg-light rounded-pill py-2"
+									className="w-100 text-start text-muted border-1 bg-transparent rounded-pill py-2"
+									style={{ backgroundColor: 'rgba(0,0,0,0.05)' }}
 									onClick={() => setShowComposerModal(true)}>
 									What's on your mind?
 								</Button>
@@ -296,11 +329,10 @@ const HomePage = () => {
 												<Button
 													variant="link"
 													size="sm"
-													className={`p-0 border-0 d-flex align-items-center gap-1 ${
-														post.likes.some(like => like.userId === user.uid)
-															? 'text-danger'
-															: 'text-muted'
-													}`}
+													className="p-0 border-0 d-flex align-items-center gap-1"
+													style={{ 
+														color: post.likes.some(like => like.userId === user.uid) ? '#dc3545' : '#6c757d'
+													}}
 													onClick={() => handleLikePost(post.id)}>
 													{post.likes.some(like => like.userId === user.uid) ? (
 														<HeartFill size={16} />
