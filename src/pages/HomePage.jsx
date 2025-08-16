@@ -601,7 +601,11 @@ const HomePage = () => {
 														variant="link"
 														size="sm"
 														className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-														style={{ transition: 'all 0.2s' }}
+														style={{ 
+															transition: 'all 0.2s',
+															minWidth: '40px',
+															height: '36px'
+														}}
 														onClick={(e) => {
 															e.stopPropagation();
 															window.location.href = `/post/${post.id}`;
@@ -615,7 +619,7 @@ const HomePage = () => {
 															e.target.closest('.action-btn').style.color = '#6c757d';
 														}}
 													>
-														<ChatDots size={24} />
+														<ChatDots size={24} style={{ flexShrink: 0 }} />
 														{post._count.comments > 0 && (
 															<span className="small">{post._count.comments}</span>
 														)}
@@ -632,7 +636,9 @@ const HomePage = () => {
 														className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 														style={{ 
 															color: post.likes.some((like) => like.userId === user.uid) ? "#dc3545" : "#6c757d",
-															transition: 'all 0.2s'
+															transition: 'all 0.2s',
+															minWidth: '40px',
+															height: '36px'
 														}}
 														onClick={(e) => {
 															e.stopPropagation();
@@ -652,9 +658,9 @@ const HomePage = () => {
 														}}
 													>
 														{post.likes.some((like) => like.userId === user.uid) ? (
-															<HeartFill size={24} />
+															<HeartFill size={24} style={{ flexShrink: 0 }} />
 														) : (
-															<Heart size={24} />
+															<Heart size={24} style={{ flexShrink: 0 }} />
 														)}
 														{post._count.likes > 0 && (
 															<span className="small">{post._count.likes}</span>
@@ -670,7 +676,11 @@ const HomePage = () => {
 														variant="link"
 														size="sm"
 														className="text-muted p-2 border-0 rounded-circle action-btn"
-														style={{ transition: 'all 0.2s' }}
+														style={{ 
+															transition: 'all 0.2s',
+															minWidth: '40px',
+															height: '36px'
+														}}
 														onClick={(e) => {
 															e.stopPropagation();
 															handleSharePost(post.id);
@@ -684,7 +694,7 @@ const HomePage = () => {
 															e.target.closest('.action-btn').style.color = '#6c757d';
 														}}
 													>
-														<Share size={24} />
+														<Share size={24} style={{ flexShrink: 0 }} />
 													</Button>
 												</OverlayTrigger>
 											</div>
