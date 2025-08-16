@@ -402,10 +402,12 @@ const HomePage = () => {
 														style={{
 															background: 'none',
 															border: 'none',
-															boxShadow: 'none'
+															boxShadow: 'none',
+															opacity: 0,
+															width: '20px',
+															height: '20px'
 														}}
 													>
-														⋯
 													</Dropdown.Toggle>
 													<Dropdown.Menu>
 														<Dropdown.Item onClick={() => navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)}>
