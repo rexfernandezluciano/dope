@@ -109,7 +109,7 @@ const SettingsPage = () => {
 
 	return (
 		<Container className="py-3 px-0 px-md-3">
-			<h2 className="mb-4">Settings</h2>
+			<h2 className="px-3 mb-4">Settings</h2>
 
 			{message && (
 				<Alert
@@ -345,10 +345,10 @@ const SettingsPage = () => {
 			</Card>
 
 			{/* Action Buttons */}
-			<div className="d-grid gap-2">
+			<div className="px-3 d-grid gap-2">
 				<Button
 					variant="primary"
-					size="lg"
+					size="md"
 					onClick={handleSaveSettings}
 					disabled={loading}>
 					{loading ? "Saving..." : "Save Settings"}
@@ -356,14 +356,14 @@ const SettingsPage = () => {
 
 				<Button
 					variant="outline-secondary"
-					size="lg"
+					size="md"
 					onClick={handleLogout}>
 					Logout
 				</Button>
 
 				<Button
 					variant="outline-danger"
-					size="lg"
+					size="md"
 					onClick={() => setShowDeleteModal(true)}>
 					<Trash size={16} className="me-2" />
 					Delete Account
