@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useRef, useEffect } from "react";
@@ -38,7 +37,7 @@ const HomePage = () => {
 			setLoading(true);
 			const params = { limit: 20 };
 			if (cursor) params.cursor = cursor;
-			
+
 			const response = await postAPI.getPosts(params);
 			if (cursor) {
 				setPosts(prev => [...prev, ...response.posts]);
@@ -95,24 +94,49 @@ const HomePage = () => {
 
 		try {
 			setSubmitting(true);
+			// Filter out non-string elements (e.g., File objects) from imageUrls
 			const imageUrls = photos ? photos.filter(p => typeof p === 'string') : [];
-			
-			await postAPI.createPost({
+			// Handle File objects separately if needed, but for now assume they are processed elsewhere or not needed for this API call.
+			const filesToUpload = photos ? photos.filter(p => typeof p !== 'string') : [];
+
+			// Construct the payload based on what the API expects.
+			// Assuming the API expects `content`, `imageUrls`, and `postType`.
+			// If files need to be uploaded, the API call structure would need to change (e.g., using FormData).
+			const payload = {
 				content: postText.trim(),
 				imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
 				postType: "text"
-			});
+			};
+
+			// If there are files to upload, you might need a different API call or payload structure.
+			// For example:
+			// const formData = new FormData();
+			// formData.append('content', postText.trim());
+			// if (imageUrls.length > 0) formData.append('imageUrls', JSON.stringify(imageUrls));
+			// if (filesToUpload.length > 0) {
+			//     filesToUpload.forEach((file, index) => {
+			//         formData.append(`files`, file, file.name);
+			//     });
+			// }
+			// await postAPI.createPostWithFiles(formData); // Assuming such a method exists
+
+			await postAPI.createPost(payload); // Using the existing method with the constructed payload
+
 
 			setPostText("");
 			setPhotos(null);
 			setShowComposerModal(false);
 			loadPosts(); // Reload posts
 		} catch (err) {
-			setError(err.message);
+			// The error message from the backend might be more descriptive.
+			// For now, we'll use the generic error message.
+			setError("Failed to create post. Please check the payload or try again.");
+			console.error('Error creating post:', err); // Log the actual error for debugging
 		} finally {
 			setSubmitting(false);
 		}
 	};
+
 
 	const handleLikePost = async (postId) => {
 		try {
@@ -123,7 +147,7 @@ const HomePage = () => {
 					const isLiked = post.likes.some(like => like.userId === user.uid);
 					return {
 						...post,
-						likes: isLiked 
+						likes: isLiked
 							? post.likes.filter(like => like.userId !== user.uid)
 							: [...post.likes, { userId: user.uid }],
 						_count: {
@@ -221,7 +245,7 @@ const HomePage = () => {
 												<span className="text-muted">·</span>
 												<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
 											</div>
-											
+
 											{post.content && (
 												<p className="mb-2">{post.content}</p>
 											)}
@@ -247,13 +271,13 @@ const HomePage = () => {
 													<ChatDots size={16} />
 													<span className="small">{post._count.comments}</span>
 												</Button>
-												
+
 												<Button
 													variant="link"
 													size="sm"
 													className={`p-0 border-0 d-flex align-items-center gap-1 ${
-														post.likes.some(like => like.userId === user.uid) 
-															? 'text-danger' 
+														post.likes.some(like => like.userId === user.uid)
+															? 'text-danger'
 															: 'text-muted'
 													}`}
 													onClick={() => handleLikePost(post.id)}>
@@ -264,7 +288,7 @@ const HomePage = () => {
 													)}
 													<span className="small">{post._count.likes}</span>
 												</Button>
-												
+
 												<Button
 													variant="link"
 													size="sm"
@@ -379,15 +403,6 @@ const HomePage = () => {
 								})}
 							</div>
 						)}
-
-						<input
-							type="file"
-							ref={fileInputRef}
-							onChange={handleFileChange}
-							accept="image/*"
-							multiple
-							style={{ display: "none" }}
-						/>
 
 						<div className="d-flex align-items-center gap-3 pt-3 mt-2 border-top flex-nowrap pe-2 overflow-auto"
 							style={{ fontSize: "0.85rem", WebkitOverflowScrolling: "touch" }}>

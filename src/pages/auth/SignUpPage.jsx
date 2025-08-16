@@ -7,7 +7,7 @@ import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 import heic2any from "heic2any";
 
 import { authAPI } from "../../config/ApiConfig";
-import { verifyUser, userExistByEmail, getGravatar } from "../../utils/app-utils";
+import { verifyUser, userExistByEmail, getGravatar, createUsername } from "../../utils/app-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
@@ -107,14 +107,15 @@ const SignUpPage = () => {
 			setLoading(true);
 			const displayName = `${firstName} ${lastName}`.trim();
 			const photoURL = photo ? photoPreview : getGravatar(email);
+			const username = await createUsername(displayName);
 
 			const userData = {
-				firstName,
-				lastName,
-				displayName,
+				name: displayName,
 				email,
+				username,
 				password,
-				photoURL
+				photoURL,
+				subscription: "free"
 			};
 
 			await authAPI.register(userData);
