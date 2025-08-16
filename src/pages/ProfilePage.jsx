@@ -374,31 +374,35 @@ const ProfilePage = () => {
 															className="d-flex gap-2 overflow-x-auto pb-2" 
 															style={{ 
 																scrollbarWidth: "thin",
-																scrollbarColor: "#ccc transparent"
+																scrollbarColor: "#ccc transparent",
+																overflowX: "auto",
+																whiteSpace: "nowrap"
 															}}>
 															{post.imageUrls.slice(0, 4).map((url, idx) => (
 																<Image
 																	key={idx}
 																	src={url}
-																	className="rounded flex-shrink-0"
+																	className="rounded"
 																	style={{ 
 																		width: post.imageUrls.length === 1 ? "100%" : "250px",
 																		height: "200px", 
 																		objectFit: "cover",
 																		cursor: "pointer",
-																		minWidth: post.imageUrls.length === 1 ? "auto" : "250px"
+																		minWidth: post.imageUrls.length === 1 ? "auto" : "250px",
+																		flexShrink: 0
 																	}}
 																	onClick={() => window.open(url, '_blank')}
 																/>
 															))}
 															{post.imageUrls.length > 4 && (
 																<div 
-																	className="d-flex align-items-center justify-content-center rounded flex-shrink-0 bg-light text-muted"
+																	className="d-flex align-items-center justify-content-center rounded bg-light text-muted"
 																	style={{ 
 																		width: "250px",
 																		height: "200px",
 																		minWidth: "250px",
-																		cursor: "pointer"
+																		cursor: "pointer",
+																		flexShrink: 0
 																	}}
 																	onClick={() => window.open(post.imageUrls[0], '_blank')}>
 																	+{post.imageUrls.length - 4} more
