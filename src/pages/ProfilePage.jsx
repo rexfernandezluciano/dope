@@ -6,6 +6,7 @@ import { Container, Image, Button, Card, Nav, Tab, Row, Col, Spinner, Alert, Mod
 import { Calendar, LocationOn, Link as LinkIcon, Heart, HeartFill, ChatDots, Share, Camera, People, ChevronLeft, ChevronRight, X } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
+import AlertDialog from "../components/dialogs/AlertDialog";
 
 const ProfilePage = () => {
 	const { username } = useParams();
@@ -23,6 +24,8 @@ const ProfilePage = () => {
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
+	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+	const [postToDelete, setPostToDelete] = useState(null);
 	const [editForm, setEditForm] = useState({
 		name: "",
 		bio: "",
@@ -216,14 +219,23 @@ const ProfilePage = () => {
 		setCurrentImageIndex(0);
 	};
 
-	const handleDeletePost = async (postId) => {
-		if (window.confirm('Are you sure you want to delete this post?')) {
-			try {
-				await postAPI.deletePost(postId);
-				setPosts(prev => prev.filter(post => post.id !== postId));
-			} catch (err) {
-				setError('Failed to delete post');
-			}
+	const handleDeletePost = (postId) => {
+		setPostToDelete(postId);
+		setShowDeleteDialog(true);
+	};
+
+	const confirmDeletePost = async () => {
+		if (!postToDelete) return;
+		
+		try {
+			await postAPI.deletePost(postToDelete);
+			setPosts(prev => prev.filter(post => post.id !== postToDelete));
+			setShowDeleteDialog(false);
+			setPostToDelete(null);
+		} catch (err) {
+			setError('Failed to delete post');
+			setShowDeleteDialog(false);
+			setPostToDelete(null);
 		}
 	};
 
@@ -395,8 +407,16 @@ const ProfilePage = () => {
 														<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
 													</div>
 													<Dropdown align="end">
-														<Dropdown.Toggle variant="link" className="text-muted p-0 border-0">
-															<span>⋯</span>
+														<Dropdown.Toggle 
+															variant="link" 
+															className="text-muted p-0 border-0"
+															style={{
+																background: 'none',
+																border: 'none',
+																boxShadow: 'none'
+															}}
+														>
+															⋯
 														</Dropdown.Toggle>
 														<Dropdown.Menu>
 															<Dropdown.Item onClick={() => navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)}>
@@ -739,6 +759,20 @@ const ProfilePage = () => {
 					</Modal.Body>
 				</Modal>
 			)}
+
+			{/* Delete Post Confirmation Dialog */}
+			<AlertDialog
+				show={showDeleteDialog}
+				onHide={() => {
+					setShowDeleteDialog(false);
+					setPostToDelete(null);
+				}}
+				title="Delete Post"
+				message="Are you sure you want to delete this post? This action cannot be undone."
+				dialogButtonMessage="Delete"
+				onDialogButtonClick={confirmDeletePost}
+				type="danger"
+			/>
 		</Container>
 	);
 };

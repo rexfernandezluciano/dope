@@ -36,6 +36,7 @@ import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 
 import { postAPI, commentAPI } from "../config/ApiConfig";
+import AlertDialog from "../components/dialogs/AlertDialog";
 
 const HomePage = () => {
 	const [showComposerModal, setShowComposerModal] = useState(false);
@@ -56,6 +57,8 @@ const HomePage = () => {
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
+	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+	const [postToDelete, setPostToDelete] = useState(null);
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
 
@@ -222,15 +225,24 @@ const HomePage = () => {
 		}
 	};
 
-	const handleDeletePost = async (postId) => {
-		if (window.confirm("Are you sure you want to delete this post?")) {
-			try {
-				await postAPI.deletePost(postId);
-				setPosts((prev) => prev.filter((post) => post.id !== postId));
-			} catch (err) {
-				console.error("Error deleting post:", err);
-				setError("Failed to delete post.");
-			}
+	const handleDeletePost = (postId) => {
+		setPostToDelete(postId);
+		setShowDeleteDialog(true);
+	};
+
+	const confirmDeletePost = async () => {
+		if (!postToDelete) return;
+		
+		try {
+			await postAPI.deletePost(postToDelete);
+			setPosts((prev) => prev.filter((post) => post.id !== postToDelete));
+			setShowDeleteDialog(false);
+			setPostToDelete(null);
+		} catch (err) {
+			console.error("Error deleting post:", err);
+			setError("Failed to delete post.");
+			setShowDeleteDialog(false);
+			setPostToDelete(null);
 		}
 	};
 
@@ -544,61 +556,50 @@ const HomePage = () => {
 
 												{post.author.id === user.uid && (
 													<Dropdown align="end">
-														<Dropdown.Toggle
-															variant="link"
-															size="sm"
-															className="text-muted p-0 border-0"
-															bsPrefix="dropdown-toggle-no-caret"
+													<Dropdown.Toggle 
+														variant="link" 
+														className="text-muted p-0 border-0"
+														style={{
+															background: 'none',
+															border: 'none',
+															boxShadow: 'none'
+														}}
+													>
+														⋯
+													</Dropdown.Toggle>
+													<Dropdown.Menu>
+														<Dropdown.Item
+															onClick={() => {
+																navigator.clipboard.writeText(
+																	`${window.location.origin}/post/${post.id}`,
+																);
+																alert("Link copied!");
+															}}
 														>
-															<svg
-																xmlns="http://www.w3.org/2000/svg"
-																width="16"
-																height="16"
-																fill="currentColor"
-																className="bi bi-three-dots"
-																viewBox="0 0 16 16"
-															>
-																<path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" />
-															</svg>
-														</Dropdown.Toggle>
-														<Dropdown.Menu>
-															<Dropdown.Item
+															Copy Link
+														</Dropdown.Item>
+														<Dropdown.Item
+															onClick={() => {
+																alert("Repost functionality not implemented yet.");
+															}}
+														>
+															Repost
+														</Dropdown.Item>
+														{post.author.id !== user.uid && (
+															<Dropdown.Item className="text-danger">
+																Report
+															</Dropdown.Item>
+														)}
+														{post.author.id === user.uid && (
+															<Dropdown.Item 
+																className="text-danger"
 																onClick={() => handleDeletePost(post.id)}
 															>
 																Remove Post
 															</Dropdown.Item>
-															<Dropdown.Item
-																onClick={() => {
-																	navigator.clipboard.writeText(
-																		`${window.location.origin}/post/${post.id}`,
-																	);
-																	alert("Link copied!");
-																}}
-															>
-																Copy Link
-															</Dropdown.Item>
-															<Dropdown.Item
-																onClick={() => {
-																	// Implement repost logic here
-																	alert(
-																		"Repost functionality not implemented yet.",
-																	);
-																}}
-															>
-																Repost
-															</Dropdown.Item>
-															<Dropdown.Item
-																onClick={() => {
-																	// Implement report logic here
-																	alert(
-																		"Report functionality not implemented yet.",
-																	);
-																}}
-															>
-																Report
-															</Dropdown.Item>
-														</Dropdown.Menu>
-													</Dropdown>
+														)}
+													</Dropdown.Menu>
+												</Dropdown>
 												)}
 											</div>
 										</div>
@@ -925,6 +926,20 @@ const HomePage = () => {
 					</Modal.Body>
 				</Modal>
 			)}
+
+			{/* Delete Post Confirmation Dialog */}
+			<AlertDialog
+				show={showDeleteDialog}
+				onHide={() => {
+					setShowDeleteDialog(false);
+					setPostToDelete(null);
+				}}
+				title="Delete Post"
+				message="Are you sure you want to delete this post? This action cannot be undone."
+				dialogButtonMessage="Delete"
+				onDialogButtonClick={confirmDeletePost}
+				type="danger"
+			/>
 		</>
 	);
 };
