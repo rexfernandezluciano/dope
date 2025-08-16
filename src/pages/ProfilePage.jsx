@@ -286,7 +286,12 @@ const ProfilePage = () => {
 	};
 
 	const handlePostClick = (postId, e) => {
-		if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.dropdown')) {
+		// Don't navigate if clicking on buttons, links, dropdowns, or images
+		if (e.target.closest('button') || 
+			e.target.closest('a') || 
+			e.target.closest('.dropdown') ||
+			e.target.closest('img') ||
+			e.target.tagName === 'IMG') {
 			return;
 		}
 		window.location.href = `/post/${postId}`;
@@ -459,7 +464,7 @@ const ProfilePage = () => {
 														<span className="text-muted">·</span>
 														<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
 													</div>
-													<Dropdown align="end">
+													<Dropdown align="end" onClick={(e) => e.stopPropagation()}>
 														<Dropdown.Toggle
 															variant="link"
 															className="text-muted text-decoration-none p-0 border-0"
@@ -468,10 +473,11 @@ const ProfilePage = () => {
 																border: 'none',
 																boxShadow: 'none'
 															}}
+															onClick={(e) => e.stopPropagation()}
 														>
 															<ThreeDots size={20} />
 														</Dropdown.Toggle>
-														<Dropdown.Menu>
+														<Dropdown.Menu onClick={(e) => e.stopPropagation()}>
 															<Dropdown.Item onClick={(e) => {
 																e.stopPropagation();
 																navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
@@ -606,7 +612,11 @@ const ProfilePage = () => {
 															variant="link"
 															size="sm"
 															className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-															style={{ transition: 'all 0.2s' }}
+															style={{ 
+																transition: 'all 0.2s',
+																minWidth: '40px',
+																height: '36px'
+															}}
 															onClick={(e) => {
 																e.stopPropagation();
 																window.location.href = `/post/${post.id}`;
@@ -620,7 +630,7 @@ const ProfilePage = () => {
 																e.target.closest('.action-btn').style.color = '#6c757d';
 															}}
 														>
-															<ChatDots size={18} />
+															<ChatDots size={18} style={{ flexShrink: 0 }} />
 															{post._count.comments > 0 && (
 																<span className="small">{post._count.comments}</span>
 															)}
@@ -637,7 +647,9 @@ const ProfilePage = () => {
 															className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 															style={{
 																color: (post.likes || []).some(like => like.userId === currentUser.uid) ? '#dc3545' : '#6c757d',
-																transition: 'all 0.2s'
+																transition: 'all 0.2s',
+																minWidth: '40px',
+																height: '36px'
 															}}
 															onClick={(e) => {
 																e.stopPropagation();
@@ -657,9 +669,9 @@ const ProfilePage = () => {
 															}}
 														>
 															{(post.likes || []).some(like => like.userId === currentUser.uid) ? (
-																<HeartFill size={18} />
+																<HeartFill size={18} style={{ flexShrink: 0 }} />
 															) : (
-																<Heart size={18} />
+																<Heart size={18} style={{ flexShrink: 0 }} />
 															)}
 															{(post._count?.likes || 0) > 0 && (
 																<span className="small">{post._count?.likes || 0}</span>
@@ -675,7 +687,11 @@ const ProfilePage = () => {
 															variant="link"
 															size="sm"
 															className="text-muted p-2 border-0 rounded-circle action-btn"
-															style={{ transition: 'all 0.2s' }}
+															style={{ 
+																transition: 'all 0.2s',
+																minWidth: '40px',
+																height: '36px'
+															}}
 															onClick={(e) => {
 																e.stopPropagation();
 																handleSharePost(post.id);
@@ -689,7 +705,7 @@ const ProfilePage = () => {
 																e.target.closest('.action-btn').style.color = '#6c757d';
 															}}
 														>
-															<Share size={18} />
+															<Share size={18} style={{ flexShrink: 0 }} />
 														</Button>
 													</OverlayTrigger>
 												</div>
