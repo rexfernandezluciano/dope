@@ -12,7 +12,9 @@ import {
 	InputGroup,
 	Card,
 	Spinner,
-	Alert
+	Alert,
+	OverlayTrigger,
+	Tooltip
 } from "react-bootstrap";
 import {
 	Globe,
@@ -28,6 +30,7 @@ import {
 	Share,
 	ChevronLeft,
 	ChevronRight,
+	ThreeDots
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
@@ -240,6 +243,38 @@ const HomePage = () => {
 		}
 	};
 
+	const handleSharePost = async (postId) => {
+		const postUrl = `${window.location.origin}/post/${postId}`;
+		
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: 'Check out this post',
+					url: postUrl
+				});
+			} catch (err) {
+				// Fallback to clipboard if sharing fails
+				navigator.clipboard.writeText(postUrl);
+			}
+		} else {
+			// Fallback to clipboard for browsers that don't support Web Share API
+			try {
+				await navigator.clipboard.writeText(postUrl);
+				// You could show a toast notification here
+			} catch (err) {
+				console.error('Failed to copy to clipboard:', err);
+			}
+		}
+	};
+
+	const handlePostClick = (postId, e) => {
+		// Don't navigate if clicking on interactive elements
+		if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.dropdown')) {
+			return;
+		}
+		window.location.href = `/post/${postId}`;
+	};
+
 	const handleLikePost = async (postId) => {
 		try {
 			await postAPI.likePost(postId);
@@ -357,7 +392,9 @@ const HomePage = () => {
 						{posts.map((post) => (
 							<Card
 								key={post.id}
-								className="border-0 border-bottom rounded-0 mb-0"
+								className="border-0 border-bottom rounded-0 mb-0 post-card"
+								style={{ cursor: 'pointer' }}
+								onClick={(e) => handlePostClick(post.id, e)}
 							>
 								<Card.Body className="px-3">
 									<div className="d-flex gap-2">
@@ -377,9 +414,10 @@ const HomePage = () => {
 													<span
 														className="fw-bold"
 														style={{ cursor: "pointer", color: "inherit" }}
-														onClick={() =>
-															(window.location.href = `/${post.author.username}`)
-														}
+														onClick={(e) => {
+															e.stopPropagation();
+															window.location.href = `/${post.author.username}`;
+														}}
 													>
 														{post.author.name}
 													</span>
@@ -392,35 +430,47 @@ const HomePage = () => {
 													</span>
 												</div>
 												<Dropdown align="end">
-													<Dropdown.Toggle 
-														variant="link" 
-														className="text-muted text-decoration-none p-0 border-0"
-														style={{
-															background: 'none',
-															border: 'none',
-															boxShadow: 'none',
-															opacity: 0,
-															width: '20px',
-															height: '20px'
-														}}
-													>...
-													</Dropdown.Toggle>
+													<OverlayTrigger
+														placement="bottom"
+														overlay={<Tooltip>More options</Tooltip>}
+													>
+														<Dropdown.Toggle 
+															variant="link" 
+															className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
+															style={{
+																width: '32px',
+																height: '32px',
+																background: 'none',
+																border: 'none !important',
+																boxShadow: 'none !important'
+															}}
+															onClick={(e) => e.stopPropagation()}
+														>
+															<ThreeDots size={16} />
+														</Dropdown.Toggle>
+													</OverlayTrigger>
 													<Dropdown.Menu>
-														<Dropdown.Item onClick={() => navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)}>
+														<Dropdown.Item onClick={(e) => {
+															e.stopPropagation();
+															navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+														}}>
 															Copy Link
 														</Dropdown.Item>
-														<Dropdown.Item>
+														<Dropdown.Item onClick={(e) => e.stopPropagation()}>
 															Repost
 														</Dropdown.Item>
 														{post.author.id !== user.uid && (
-															<Dropdown.Item className="text-danger">
+															<Dropdown.Item className="text-danger" onClick={(e) => e.stopPropagation()}>
 																Report
 															</Dropdown.Item>
 														)}
 														{post.author.id === user.uid && (
 															<Dropdown.Item 
 																className="text-danger"
-																onClick={() => handleDeletePost(post.id)}>
+																onClick={(e) => {
+																	e.stopPropagation();
+																	handleDeletePost(post.id);
+																}}>
 																Delete Post
 															</Dropdown.Item>
 														)}
@@ -542,49 +592,101 @@ const HomePage = () => {
 												</div>
 											)}
 
-											<div className="d-flex justify-content-between text-muted mt-2">
-												<Button
-													variant="link"
-													size="sm"
-													className="text-muted p-0 border-0 d-flex align-items-center gap-1"
-													onClick={() =>
-														(window.location.href = `/post/${post.id}`)
-													}
+											<div className="d-flex justify-content-around text-muted mt-3 pt-2 border-top" style={{ maxWidth: '400px' }}>
+												<OverlayTrigger
+													placement="bottom"
+													overlay={<Tooltip>Reply</Tooltip>}
 												>
-													<ChatDots size={16} />
-													<span className="small">{post._count.comments}</span>
-												</Button>
+													<Button
+														variant="link"
+														size="sm"
+														className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+														style={{ transition: 'all 0.2s' }}
+														onClick={(e) => {
+															e.stopPropagation();
+															window.location.href = `/post/${post.id}`;
+														}}
+														onMouseEnter={(e) => {
+															e.target.closest('.action-btn').style.backgroundColor = 'rgba(29, 161, 242, 0.1)';
+															e.target.closest('.action-btn').style.color = '#1da1f2';
+														}}
+														onMouseLeave={(e) => {
+															e.target.closest('.action-btn').style.backgroundColor = 'transparent';
+															e.target.closest('.action-btn').style.color = '#6c757d';
+														}}
+													>
+														<ChatDots size={18} />
+														{post._count.comments > 0 && (
+															<span className="small">{post._count.comments}</span>
+														)}
+													</Button>
+												</OverlayTrigger>
 
-												<Button
-													variant="link"
-													size="sm"
-													className="p-0 border-0 d-flex align-items-center gap-1"
-													style={{
-														color: post.likes.some(
-															(like) => like.userId === user.uid,
-														)
-															? "#dc3545"
-															: "#6c757d",
-													}}
-													onClick={() => handleLikePost(post.id)}
+												<OverlayTrigger
+													placement="bottom"
+													overlay={<Tooltip>{post.likes.some((like) => like.userId === user.uid) ? 'Unlike' : 'Like'}</Tooltip>}
 												>
-													{post.likes.some(
-														(like) => like.userId === user.uid,
-													) ? (
-														<HeartFill size={16} />
-													) : (
-														<Heart size={16} />
-													)}
-													<span className="small">{post._count.likes}</span>
-												</Button>
+													<Button
+														variant="link"
+														size="sm"
+														className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+														style={{ 
+															color: post.likes.some((like) => like.userId === user.uid) ? "#dc3545" : "#6c757d",
+															transition: 'all 0.2s'
+														}}
+														onClick={(e) => {
+															e.stopPropagation();
+															handleLikePost(post.id);
+														}}
+														onMouseEnter={(e) => {
+															if (!post.likes.some((like) => like.userId === user.uid)) {
+																e.target.closest('.action-btn').style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+																e.target.closest('.action-btn').style.color = '#dc3545';
+															}
+														}}
+														onMouseLeave={(e) => {
+															if (!post.likes.some((like) => like.userId === user.uid)) {
+																e.target.closest('.action-btn').style.backgroundColor = 'transparent';
+																e.target.closest('.action-btn').style.color = '#6c757d';
+															}
+														}}
+													>
+														{post.likes.some((like) => like.userId === user.uid) ? (
+															<HeartFill size={18} />
+														) : (
+															<Heart size={18} />
+														)}
+														{post._count.likes > 0 && (
+															<span className="small">{post._count.likes}</span>
+														)}
+													</Button>
+												</OverlayTrigger>
 
-												<Button
-													variant="link"
-													size="sm"
-													className="text-muted p-0 border-0"
+												<OverlayTrigger
+													placement="bottom"
+													overlay={<Tooltip>Share</Tooltip>}
 												>
-													<Share size={16} />
-												</Button>
+													<Button
+														variant="link"
+														size="sm"
+														className="text-muted p-2 border-0 rounded-circle action-btn"
+														style={{ transition: 'all 0.2s' }}
+														onClick={(e) => {
+															e.stopPropagation();
+															handleSharePost(post.id);
+														}}
+														onMouseEnter={(e) => {
+															e.target.closest('.action-btn').style.backgroundColor = 'rgba(23, 191, 99, 0.1)';
+															e.target.closest('.action-btn').style.color = '#17bf63';
+														}}
+														onMouseLeave={(e) => {
+															e.target.closest('.action-btn').style.backgroundColor = 'transparent';
+															e.target.closest('.action-btn').style.color = '#6c757d';
+														}}
+													>
+														<Share size={18} />
+													</Button>
+												</OverlayTrigger>
 											</div>
 										</div>
 									</div>

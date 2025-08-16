@@ -282,3 +282,27 @@ button, [role="button"] {
     max-width: 100px;
   }
 }
+
+/* Post card hover effects */
+.post-card:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Action button enhancements */
+.action-btn {
+  transition: all 0.2s ease;
+  width: 36px;
+  height: 36px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Custom dropdown toggle styling */
+.dropdown-toggle::after {
+  display: none !important;
+}

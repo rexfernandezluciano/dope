@@ -2,8 +2,24 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useLoaderData, useNavigate } from "react-router-dom";
-import { Container, Image, Button, Card, Form, Spinner, Alert } from "react-bootstrap";
-import { Heart, HeartFill, ChatDots, Share, ArrowLeft } from "react-bootstrap-icons";
+import {
+	Container,
+	Image,
+	Button,
+	Card,
+	Form,
+	Spinner,
+	Alert,
+	OverlayTrigger,
+	Tooltip
+} from "react-bootstrap";
+import {
+	Heart,
+	HeartFill,
+	ChatDots,
+	Share,
+	ArrowLeft
+} from "react-bootstrap-icons";
 
 import { postAPI, commentAPI } from "../config/ApiConfig";
 
@@ -62,6 +78,15 @@ const PostDetailPage = () => {
 		}
 	};
 
+	const handleSharePost = () => {
+		const postUrl = window.location.href;
+		navigator.clipboard.writeText(postUrl).then(() => {
+			alert("Link copied to clipboard!");
+		}).catch(err => {
+			console.error("Failed to copy link: ", err);
+		});
+	};
+
 	const handleSubmitComment = async (e) => {
 		e.preventDefault();
 		if (!newComment.trim()) return;
@@ -108,6 +133,27 @@ const PostDetailPage = () => {
 		);
 	}
 
+	// Tooltip for like button
+	const renderLikeTooltip = (props) => (
+		<Tooltip id="like-tooltip" {...props}>
+			Like
+		</Tooltip>
+	);
+
+	// Tooltip for comment button
+	const renderCommentTooltip = (props) => (
+		<Tooltip id="comment-tooltip" {...props}>
+			Comment
+		</Tooltip>
+	);
+
+	// Tooltip for share button
+	const renderShareTooltip = (props) => (
+		<Tooltip id="share-tooltip" {...props}>
+			Share post link
+		</Tooltip>
+	);
+
 	return (
 		<Container className="py-0 px-0">
 			{/* Header */}
@@ -122,8 +168,8 @@ const PostDetailPage = () => {
 				<h5 className="mb-0">Post</h5>
 			</div>
 
-			{/* Post */}
-			<Card className="border-0 border-bottom rounded-0">
+			{/* Post Card - Clickable */}
+			<Card className="border-0 border-bottom rounded-0 cursor-pointer" onClick={() => navigate(`/posts/${postId}`)}>
 				<Card.Body className="px-3 py-3">
 					<div className="d-flex gap-3">
 						<Image
@@ -162,36 +208,66 @@ const PostDetailPage = () => {
 							)}
 
 							<div className="d-flex justify-content-between text-muted mt-3 py-2 border-top">
-								<Button
-									variant="link"
-									size="sm"
-									className="text-muted p-0 border-0 d-flex align-items-center gap-1">
-									<ChatDots size={18} />
-									<span>{post._count?.comments || 0}</span>
-								</Button>
+								{/* Comment Action */}
+								<OverlayTrigger placement="bottom" overlay={renderCommentTooltip}>
+									<Button
+										variant="link"
+										size="sm"
+										className="text-muted p-0 border-0 d-flex align-items-center gap-1"
+										onClick={(e) => {
+											e.stopPropagation(); // Prevent card click
+											// Implement scroll to comment input or open comment section
+										}}>
+										<ChatDots size={18} />
+										<span className="ms-1">{post._count?.comments || 0}</span>
+									</Button>
+								</OverlayTrigger>
 
-								<Button
-									variant="link"
-									size="sm"
-									className="p-0 border-0 d-flex align-items-center gap-1"
-									style={{ 
-										color: (post.likes || []).some(like => like.userId === user.uid) ? '#dc3545' : '#6c757d'
-									}}
-									onClick={handleLikePost}>
-									{(post.likes || []).some(like => like.userId === user.uid) ? (
-										<HeartFill size={18} />
-									) : (
-										<Heart size={18} />
-									)}
-									<span>{post._count?.likes || 0}</span>
-								</Button>
 
-								<Button
-									variant="link"
-									size="sm"
-									className="text-muted p-0 border-0">
-									<Share size={18} />
-								</Button>
+								{/* Like Action */}
+								<OverlayTrigger placement="bottom" overlay={renderLikeTooltip}>
+									<Button
+										variant="link"
+										size="sm"
+										className="p-0 border-0 d-flex align-items-center gap-1"
+										style={{
+											color: (post.likes || []).some(like => like.userId === user.uid) ? '#dc3545' : '#6c757d'
+										}}
+										onClick={handleLikePost}>
+										{(post.likes || []).some(like => like.userId === user.uid) ? (
+											<HeartFill size={18} />
+										) : (
+											<Heart size={18} />
+										)}
+										<span className="ms-1">{post._count?.likes || 0}</span>
+									</Button>
+								</OverlayTrigger>
+
+								{/* Share Action */}
+								<OverlayTrigger placement="bottom" overlay={renderShareTooltip}>
+									<Button
+										variant="link"
+										size="sm"
+										className="text-muted p-0 border-0"
+										onClick={(e) => {
+											e.stopPropagation(); // Prevent card click
+											handleSharePost();
+										}}>
+										<Share size={18} />
+									</Button>
+								</OverlayTrigger>
+
+								{/* Options (three dots) */}
+								<OverlayTrigger placement="bottom" overlay={<Tooltip id="options-tooltip">More options</Tooltip>}>
+									<Button
+										variant="link"
+										size="sm"
+										className="text-muted p-0 border-0"
+										onClick={(e) => e.stopPropagation()} // Prevent card click
+									>
+										<span className="fw-bold fs-5">...</span>
+									</Button>
+								</OverlayTrigger>
 							</div>
 						</div>
 					</div>
@@ -266,19 +342,27 @@ const PostDetailPage = () => {
 									<p className="mb-2 mt-1">{comment.content}</p>
 
 									<div className="d-flex gap-4 text-muted">
-										<Button
-											variant="link"
-											size="sm"
-											className="text-muted p-0 border-0 d-flex align-items-center gap-1">
-											<ChatDots size={14} />
-										</Button>
+										<OverlayTrigger placement="bottom" overlay={renderCommentTooltip}>
+											<Button
+												variant="link"
+												size="sm"
+												className="text-muted p-0 border-0 d-flex align-items-center gap-1"
+												onClick={(e) => {
+													e.stopPropagation();
+													// Implement scroll to comment input or open comment section
+												}}>
+												<ChatDots size={14} />
+											</Button>
+										</OverlayTrigger>
 
-										<Button
-											variant="link"
-											size="sm"
-											className="text-muted p-0 border-0 d-flex align-items-center gap-1">
-											<Heart size={14} />
-										</Button>
+										<OverlayTrigger placement="bottom" overlay={renderLikeTooltip}>
+											<Button
+												variant="link"
+												size="sm"
+												className="text-muted p-0 border-0 d-flex align-items-center gap-1">
+												<Heart size={14} />
+											</Button>
+										</OverlayTrigger>
 									</div>
 								</div>
 							</div>

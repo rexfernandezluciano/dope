@@ -2,8 +2,31 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useLoaderData } from "react-router-dom";
-import { Container, Image, Button, Card, Nav, Tab, Row, Col, Spinner, Alert, Modal, Form, Carousel, Dropdown } from "react-bootstrap";
-import { Calendar, LocationOn, Link as LinkIcon, Heart, HeartFill, ChatDots, Share, Camera, People, ChevronLeft, ChevronRight, X } from "react-bootstrap-icons";
+import {
+	Container,
+	Image,
+	Card,
+	Nav,
+	Tab,
+	Button,
+	Dropdown,
+	Modal,
+	Form,
+	Spinner,
+	Alert,
+	OverlayTrigger,
+	Tooltip
+} from "react-bootstrap";
+import {
+	Heart,
+	HeartFill,
+	ChatDots,
+	Share,
+	ChevronLeft,
+	ChevronRight,
+	X,
+	ThreeDots
+} from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -226,17 +249,46 @@ const ProfilePage = () => {
 
 	const confirmDeletePost = async () => {
 		if (!postToDelete) return;
-		
+
 		try {
 			await postAPI.deletePost(postToDelete);
 			setPosts(prev => prev.filter(post => post.id !== postToDelete));
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
 		} catch (err) {
-			setError('Failed to delete post');
+			console.error('Error deleting post:', err);
+			setError('Failed to delete post.');
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
 		}
+	};
+
+	const handleSharePost = async (postId) => {
+		const postUrl = `${window.location.origin}/post/${postId}`;
+
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: 'Check out this post',
+					url: postUrl
+				});
+			} catch (err) {
+				navigator.clipboard.writeText(postUrl);
+			}
+		} else {
+			try {
+				await navigator.clipboard.writeText(postUrl);
+			} catch (err) {
+				console.error('Failed to copy to clipboard:', err);
+			}
+		}
+	};
+
+	const handlePostClick = (postId, e) => {
+		if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.dropdown')) {
+			return;
+		}
+		window.location.href = `/post/${postId}`;
 	};
 
 	if (loading || !currentUser) {
@@ -289,7 +341,7 @@ const ProfilePage = () => {
 							)}
 							{profileUser.subscription && profileUser.subscription !== 'free' && (
 								<span className={`badge ${
-									profileUser.subscription === 'premium' ? 'bg-warning text-dark' : 
+									profileUser.subscription === 'premium' ? 'bg-warning text-dark' :
 									profileUser.subscription === 'pro' ? 'bg-primary' : 'bg-secondary'
 								}`} style={{ fontSize: "0.7rem" }}>
 									{profileUser.subscription.toUpperCase()}
@@ -381,7 +433,7 @@ const ProfilePage = () => {
 							</div>
 						) : (
 							posts.map((post) => (
-								<Card key={post.id} className="border-0 border-bottom rounded-0">
+								<Card key={post.id} className="border-0 border-bottom rounded-0" onClick={(e) => handlePostClick(post.id, e)}>
 									<Card.Body className="px-3 py-3">
 										<div className="d-flex gap-2">
 											<Image
@@ -394,7 +446,7 @@ const ProfilePage = () => {
 											<div className="flex-grow-1">
 												<div className="d-flex align-items-center justify-content-between">
 													<div className="d-flex align-items-center gap-1">
-														<span 
+														<span
 															className="fw-bold"
 															style={{ cursor: "pointer", color: "inherit" }}
 															onClick={() => window.location.href = `/${post.author.username}`}>
@@ -407,8 +459,8 @@ const ProfilePage = () => {
 														<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
 													</div>
 													<Dropdown align="end">
-														<Dropdown.Toggle 
-															variant="link" 
+														<Dropdown.Toggle
+															variant="link"
 															className="text-muted text-decoration-none p-0 border-0"
 															style={{
 																background: 'none',
@@ -416,24 +468,30 @@ const ProfilePage = () => {
 																boxShadow: 'none'
 															}}
 														>
-															⋯
+															<ThreeDots size={20} />
 														</Dropdown.Toggle>
 														<Dropdown.Menu>
-															<Dropdown.Item onClick={() => navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)}>
+															<Dropdown.Item onClick={(e) => {
+																e.stopPropagation();
+																navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+															}}>
 																Copy Link
 															</Dropdown.Item>
-															<Dropdown.Item>
+															<Dropdown.Item onClick={(e) => e.stopPropagation()}>
 																Repost
 															</Dropdown.Item>
-															{post.author.uid !== currentUser.uid && (
-																<Dropdown.Item className="text-danger">
+															{post.author.id !== currentUser.uid && (
+																<Dropdown.Item className="text-danger" onClick={(e) => e.stopPropagation()}>
 																	Report
 																</Dropdown.Item>
 															)}
-															{post.author.uid === currentUser.uid && (
-																<Dropdown.Item 
+															{post.author.id === currentUser.uid && (
+																<Dropdown.Item
 																	className="text-danger"
-																	onClick={() => handleDeletePost(post.id)}>
+																	onClick={(e) => {
+																		e.stopPropagation();
+																		handleDeletePost(post.id);
+																	}}>
 																	Delete Post
 																</Dropdown.Item>
 															)}
@@ -452,12 +510,15 @@ const ProfilePage = () => {
 															<Image
 																src={post.imageUrls[0]}
 																className="rounded w-100"
-																style={{ 
-																	height: "300px", 
+																style={{
+																	height: "300px",
 																	objectFit: "cover",
 																	cursor: "pointer"
 																}}
-																onClick={() => openImageViewer(post.imageUrls, 0)}
+																onClick={(e) => {
+																	e.stopPropagation();
+																	openImageViewer(post.imageUrls, 0);
+																}}
 															/>
 														) : (
 															// Multiple images - box layout
@@ -467,11 +528,14 @@ const ProfilePage = () => {
 																	<Image
 																		src={post.imageUrls[0]}
 																		className="rounded w-100 h-100"
-																		style={{ 
+																		style={{
 																			objectFit: "cover",
 																			cursor: "pointer"
 																		}}
-																		onClick={() => openImageViewer(post.imageUrls, 0)}
+																		onClick={(e) => {
+																			e.stopPropagation();
+																			openImageViewer(post.imageUrls, 0);
+																		}}
 																	/>
 																</div>
 																{/* Right side with stacked images */}
@@ -481,11 +545,14 @@ const ProfilePage = () => {
 																			<Image
 																				src={post.imageUrls[1]}
 																				className="rounded w-100 h-100"
-																				style={{ 
+																				style={{
 																					objectFit: "cover",
 																					cursor: "pointer"
 																				}}
-																				onClick={() => openImageViewer(post.imageUrls, 1)}
+																				onClick={(e) => {
+																					e.stopPropagation();
+																					openImageViewer(post.imageUrls, 1);
+																				}}
 																			/>
 																		</div>
 																		{post.imageUrls.length > 2 && (
@@ -493,24 +560,30 @@ const ProfilePage = () => {
 																				<Image
 																					src={post.imageUrls[2]}
 																					className="rounded w-100 h-100"
-																					style={{ 
+																					style={{
 																						objectFit: "cover",
 																						cursor: "pointer"
 																					}}
-																					onClick={() => openImageViewer(post.imageUrls, 2)}
+																					onClick={(e) => {
+																						e.stopPropagation();
+																						openImageViewer(post.imageUrls, 2);
+																					}}
 																				/>
 																				{/* Show more indicator */}
 																				{post.imageUrls.length > 3 && (
-																					<div 
+																					<div
 																						className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
-																						style={{ 
+																						style={{
 																							backgroundColor: "rgba(0, 0, 0, 0.7)",
 																							cursor: "pointer",
 																							color: "white",
 																							fontWeight: "bold",
 																							fontSize: "1.2rem"
 																						}}
-																						onClick={() => openImageViewer(post.imageUrls, 2)}>
+																						onClick={(e) => {
+																							e.stopPropagation();
+																							openImageViewer(post.imageUrls, 2);
+																						}}>
 																						+{post.imageUrls.length - 3}
 																					</div>
 																				)}
@@ -523,38 +596,101 @@ const ProfilePage = () => {
 													</div>
 												)}
 
-												<div className="d-flex justify-content-between text-muted mt-2">
-													<Button
-														variant="link"
-														size="sm"
-														className="text-muted p-0 border-0 d-flex align-items-center gap-1"
-														onClick={() => window.location.href = `/post/${post.id}`}>
-														<ChatDots size={16} />
-														<span className="small">{post._count.comments}</span>
-													</Button>
+												<div className="d-flex justify-content-around text-muted mt-3 pt-2 border-top" style={{ maxWidth: '400px' }}>
+													<OverlayTrigger
+														placement="bottom"
+														overlay={<Tooltip>Reply</Tooltip>}
+													>
+														<Button
+															variant="link"
+															size="sm"
+															className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+															style={{ transition: 'all 0.2s' }}
+															onClick={(e) => {
+																e.stopPropagation();
+																window.location.href = `/post/${post.id}`;
+															}}
+															onMouseEnter={(e) => {
+																e.target.closest('.action-btn').style.backgroundColor = 'rgba(29, 161, 242, 0.1)';
+																e.target.closest('.action-btn').style.color = '#1da1f2';
+															}}
+															onMouseLeave={(e) => {
+																e.target.closest('.action-btn').style.backgroundColor = 'transparent';
+																e.target.closest('.action-btn').style.color = '#6c757d';
+															}}
+														>
+															<ChatDots size={18} />
+															{post._count.comments > 0 && (
+																<span className="small">{post._count.comments}</span>
+															)}
+														</Button>
+													</OverlayTrigger>
 
-													<Button
-														variant="link"
-														size="sm"
-														className="p-0 border-0 d-flex align-items-center gap-1"
-														style={{ 
-															color: (post.likes || []).some(like => like.userId === currentUser.uid) ? '#dc3545' : '#6c757d'
-														}}
-														onClick={() => handleLikePost(post.id)}>
-														{(post.likes || []).some(like => like.userId === currentUser.uid) ? (
-															<HeartFill size={16} />
-														) : (
-															<Heart size={16} />
-														)}
-														<span className="small">{post._count?.likes || 0}</span>
-													</Button>
+													<OverlayTrigger
+														placement="bottom"
+														overlay={<Tooltip>{post.likes.some(like => like.userId === currentUser.uid) ? 'Unlike' : 'Like'}</Tooltip>}
+													>
+														<Button
+															variant="link"
+															size="sm"
+															className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+															style={{
+																color: post.likes.some(like => like.userId === currentUser.uid) ? '#dc3545' : '#6c757d',
+																transition: 'all 0.2s'
+															}}
+															onClick={(e) => {
+																e.stopPropagation();
+																handleLikePost(post.id);
+															}}
+															onMouseEnter={(e) => {
+																if (!post.likes.some(like => like.userId === currentUser.uid)) {
+																	e.target.closest('.action-btn').style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+																	e.target.closest('.action-btn').style.color = '#dc3545';
+																}
+															}}
+															onMouseLeave={(e) => {
+																if (!post.likes.some(like => like.userId === currentUser.uid)) {
+																	e.target.closest('.action-btn').style.backgroundColor = 'transparent';
+																	e.target.closest('.action-btn').style.color = '#6c757d';
+																}
+															}}
+														>
+															{post.likes.some(like => like.userId === currentUser.uid) ? (
+																<HeartFill size={18} />
+															) : (
+																<Heart size={18} />
+															)}
+															{post._count.likes > 0 && (
+																<span className="small">{post._count.likes}</span>
+															)}
+														</Button>
+													</OverlayTrigger>
 
-													<Button
-														variant="link"
-														size="sm"
-														className="text-muted p-0 border-0">
-														<Share size={16} />
-													</Button>
+													<OverlayTrigger
+														placement="bottom"
+														overlay={<Tooltip>Share</Tooltip>}
+													>
+														<Button
+															variant="link"
+															size="sm"
+															className="text-muted p-2 border-0 rounded-circle action-btn"
+															style={{ transition: 'all 0.2s' }}
+															onClick={(e) => {
+																e.stopPropagation();
+																handleSharePost(post.id);
+															}}
+															onMouseEnter={(e) => {
+																e.target.closest('.action-btn').style.backgroundColor = 'rgba(23, 191, 99, 0.1)';
+																e.target.closest('.action-btn').style.color = '#17bf63';
+															}}
+															onMouseLeave={(e) => {
+																e.target.closest('.action-btn').style.backgroundColor = 'transparent';
+																e.target.closest('.action-btn').style.color = '#6c757d';
+															}}
+														>
+															<Share size={18} />
+														</Button>
+													</OverlayTrigger>
 												</div>
 											</div>
 										</div>
@@ -718,7 +854,7 @@ const ProfilePage = () => {
 								onClick={closeImageViewer}>
 								<X size={24} />
 							</Button>
-							
+
 							{currentImages.length > 1 && (
 								<>
 									<Button
@@ -729,7 +865,7 @@ const ProfilePage = () => {
 										onClick={() => setCurrentImageIndex(prev => Math.max(0, prev - 1))}>
 										<ChevronLeft size={32} />
 									</Button>
-									
+
 									<Button
 										variant="link"
 										className="position-absolute top-50 end-0 translate-middle-y text-white me-2"
@@ -740,16 +876,16 @@ const ProfilePage = () => {
 									</Button>
 								</>
 							)}
-							
+
 							<Image
 								src={currentImages[currentImageIndex]}
 								className="w-100"
-								style={{ 
+								style={{
 									maxHeight: "80vh",
 									objectFit: "contain"
 								}}
 							/>
-							
+
 							{currentImages.length > 1 && (
 								<div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 text-white">
 									{currentImageIndex + 1} / {currentImages.length}
