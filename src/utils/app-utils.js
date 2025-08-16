@@ -16,7 +16,10 @@ export const getUser = async () => {
 		return response.user || response;
 	} catch (error) {
 		console.error('Error getting user:', error);
-		localStorage.removeItem('authToken');
+		// Only remove token if it's an auth error (401/403)
+		if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
+			localStorage.removeItem('authToken');
+		}
 		return null;
 	}
 };

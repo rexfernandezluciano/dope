@@ -30,7 +30,7 @@ const LoginPage = () => {
 			setLoading(true);
 			const result = await authAPI.login(email, password);
 			
-			if (!result.user.hasVerifiedEmail) {
+			if (result.user && !result.user.hasVerifiedEmail) {
 				setError(
 					<>
 						Please verify your account first to continue.{" "}
@@ -49,13 +49,21 @@ const LoginPage = () => {
 						</a>
 					</>,
 				);
+				setLoading(false);
 				return;
 			}
 			
-			setAuthToken(result.token);
-			navigate("/");
+			if (result.token) {
+				setAuthToken(result.token);
+				// Clear any existing errors
+				setError("");
+				// Use replace to prevent going back to login
+				navigate("/", { replace: true });
+			} else {
+				setError("Login failed. Please try again.");
+			}
 		} catch (err) {
-			setError(err.message);
+			setError(err.message || "Login failed. Please check your credentials.");
 		} finally {
 			setLoading(false);
 		}

@@ -2,6 +2,7 @@
 /** @format */
 
 import { useEffect, useState } from "react";
+import { Spinner, Container } from "react-bootstrap";
 
 import { getUser } from "../../utils/app-utils";
 import StartPage from "../../pages/StartPage";
@@ -13,6 +14,13 @@ const RequireAuth = ({ children }) => {
 	useEffect(() => {
 		const checkAuth = async () => {
 			try {
+				const token = localStorage.getItem('authToken');
+				if (!token) {
+					setUser(null);
+					setLoading(false);
+					return;
+				}
+
 				const currentUser = await getUser();
 				setUser(currentUser);
 			} catch (error) {
@@ -27,7 +35,14 @@ const RequireAuth = ({ children }) => {
 	}, []);
 
 	if (loading) {
-		return <div>Loading...</div>; // You can replace this with a proper loading component
+		return (
+			<Container className="d-flex justify-content-center align-items-center vh-100">
+				<div className="text-center">
+					<Spinner animation="border" variant="primary" />
+					<p className="mt-2">Loading...</p>
+				</div>
+			</Container>
+		);
 	}
 
 	if (!user) {
