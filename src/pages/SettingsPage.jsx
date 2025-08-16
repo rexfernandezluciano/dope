@@ -184,7 +184,7 @@ const SettingsPage = () => {
 								<div className="d-flex align-items-center mb-2">
 									<img
 										src={post.author.photoURL}
-										alt={post.author.name}
+										alt="Profile"
 										className="rounded-circle me-2"
 										style={{ width: "40px", height: "40px" }}
 									/>

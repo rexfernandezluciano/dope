@@ -33,7 +33,7 @@ import {
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 
-import { postAPI, commentAPI } from "../config/ApiConfig";
+import { postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 
 const HomePage = () => {
@@ -148,10 +148,6 @@ const HomePage = () => {
 
 	const handleRemovePhoto = (index) => {
 		setPhotos((prev) => prev.filter((_, i) => i !== index));
-	};
-
-	const handleStickerClick = () => {
-		setShowStickerModal(true);
 	};
 
 	const handleSelectGif = (gif) => {
