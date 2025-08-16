@@ -243,8 +243,7 @@ const PostDetailPage = () => {
 										}}
 									>
 										<ThreeDots size={16} />
-										</Dropdown.Toggle>
-									</OverlayTrigger>
+									</Dropdown.Toggle>
 									<Dropdown.Menu>
 										<Dropdown.Item onClick={() => navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)}>
 											Copy Link
