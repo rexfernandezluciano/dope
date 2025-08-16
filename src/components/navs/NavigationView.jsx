@@ -130,7 +130,7 @@ const NavigationView = ({ children, user }) => {
 									))}
 									<Nav.Link
 										onClick={handleLogout}
-										className="nav-link text-danger"
+										className="nav-link px-3 text-danger"
 										style={{ cursor: "pointer" }}>
 										<BoxArrowRight size={18} className="me-2" />
 										Logout
