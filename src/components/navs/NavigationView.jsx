@@ -44,7 +44,7 @@ const NavigationView = ({ children, user }) => {
 
 	const navItemClass = href => {
 		const isActive = location.pathname === href;
-		return `nav-link px-3 py-2 rounded-pill ${isActive ? "bg-primary text-white" : "text-dark"}`;
+		return `nav-link px-3 py-2 rounded-end-3 ${isActive ? "bg-primary text-white" : "text-dark"}`;
 	};
 
 	return (

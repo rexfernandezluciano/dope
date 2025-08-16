@@ -335,7 +335,7 @@ const ProfilePage = () => {
 	if (loading || !currentUser) {
 		return (
 			<Container className="text-center py-5">
-				<Spinner animation="border" />
+				<Spinner animation="border" variant="primary" />
 			</Container>
 		);
 	}
@@ -639,7 +639,7 @@ const ProfilePage = () => {
 															e.target.closest('.action-btn').style.color = '#6c757d';
 														}}
 													>
-														<ChatDots size={24} style={{ flexShrink: 0 }} />
+														<ChatDots size={20} style={{ flexShrink: 0 }} />
 														{post._count.comments > 0 && (
 															<span className="small">{post._count.comments}</span>
 														)}
@@ -673,9 +673,9 @@ const ProfilePage = () => {
 														}}
 													>
 														{(post.likes || []).some(like => like.userId === currentUser.uid) ? (
-															<HeartFill size={24} style={{ flexShrink: 0 }} />
+															<HeartFill size={20} style={{ flexShrink: 0 }} />
 														) : (
-															<Heart size={24} style={{ flexShrink: 0 }} />
+															<Heart size={20} style={{ flexShrink: 0 }} />
 														)}
 														{(post._count?.likes || 0) > 0 && (
 															<span className="small">{post._count?.likes || 0}</span>
@@ -704,7 +704,7 @@ const ProfilePage = () => {
 															e.target.closest('.action-btn').style.color = '#6c757d';
 														}}
 													>
-														<Share size={24} style={{ flexShrink: 0 }} />
+														<Share size={20} style={{ flexShrink: 0 }} />
 													</Button>
 												</div>
 											</div>

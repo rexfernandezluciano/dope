@@ -397,7 +397,7 @@ const HomePage = () => {
 
 				{loading && posts.length === 0 ? (
 					<div className="text-center py-5">
-						<Spinner animation="border" />
+						<Spinner animation="border" variant="primary" />
 					</div>
 				) : (
 					<>
@@ -604,7 +604,7 @@ const HomePage = () => {
 														e.target.closest('.action-btn').style.color = '#6c757d';
 													}}
 												>
-													<ChatDots size={24} style={{ flexShrink: 0 }} />
+													<ChatDots size={20} style={{ flexShrink: 0 }} />
 													{post._count.comments > 0 && (
 														<span className="small">{post._count.comments}</span>
 													)}
@@ -638,9 +638,9 @@ const HomePage = () => {
 													}}
 												>
 													{post.likes.some((like) => like.userId === user.uid) ? (
-														<HeartFill size={24} style={{ flexShrink: 0 }} />
+														<HeartFill size={20} style={{ flexShrink: 0 }} />
 													) : (
-														<Heart size={24} style={{ flexShrink: 0 }} />
+														<Heart size={20} style={{ flexShrink: 0 }} />
 													)}
 													{post._count.likes > 0 && (
 														<span className="small">{post._count.likes}</span>
