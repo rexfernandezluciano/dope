@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useLoaderData } from "react-router-dom";
-import { Container, Image, Button, Card, Nav, Tab, Row, Col, Spinner, Alert, Modal, Form, Carousel } from "react-bootstrap";
+import { Container, Image, Button, Card, Nav, Tab, Row, Col, Spinner, Alert, Modal, Form, Carousel, Dropdown } from "react-bootstrap";
 import { Calendar, LocationOn, Link as LinkIcon, Heart, HeartFill, ChatDots, Share, Camera, People, ChevronLeft, ChevronRight, X } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
@@ -216,6 +216,17 @@ const ProfilePage = () => {
 		setCurrentImageIndex(0);
 	};
 
+	const handleDeletePost = async (postId) => {
+		if (window.confirm('Are you sure you want to delete this post?')) {
+			try {
+				await postAPI.deletePost(postId);
+				setPosts(prev => prev.filter(post => post.id !== postId));
+			} catch (err) {
+				setError('Failed to delete post');
+			}
+		}
+	};
+
 	if (loading || !currentUser) {
 		return (
 			<Container className="text-center py-5">
@@ -369,14 +380,45 @@ const ProfilePage = () => {
 												height="40"
 											/>
 											<div className="flex-grow-1">
-												<div className="d-flex align-items-center gap-1">
-													<span className="fw-bold">{post.author.name}</span>
-													{post.author.hasBlueCheck && (
-														<span className="text-primary">✓</span>
-													)}
-													<span className="text-muted">@{post.author.username}</span>
-													<span className="text-muted">·</span>
-													<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
+												<div className="d-flex align-items-center justify-content-between">
+													<div className="d-flex align-items-center gap-1">
+														<span 
+															className="fw-bold"
+															style={{ cursor: "pointer", color: "inherit" }}
+															onClick={() => window.location.href = `/${post.author.username}`}>
+															{post.author.name}
+														</span>
+														{post.author.hasBlueCheck && (
+															<span className="text-primary">✓</span>
+														)}
+														<span className="text-muted">·</span>
+														<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
+													</div>
+													<Dropdown align="end">
+														<Dropdown.Toggle variant="link" className="text-muted p-0 border-0">
+															<span>⋯</span>
+														</Dropdown.Toggle>
+														<Dropdown.Menu>
+															<Dropdown.Item onClick={() => navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)}>
+																Copy Link
+															</Dropdown.Item>
+															<Dropdown.Item>
+																Repost
+															</Dropdown.Item>
+															{post.author.uid !== currentUser.uid && (
+																<Dropdown.Item className="text-danger">
+																	Report
+																</Dropdown.Item>
+															)}
+															{post.author.uid === currentUser.uid && (
+																<Dropdown.Item 
+																	className="text-danger"
+																	onClick={() => handleDeletePost(post.id)}>
+																	Delete Post
+																</Dropdown.Item>
+															)}
+														</Dropdown.Menu>
+													</Dropdown>
 												</div>
 
 												{post.content && (

@@ -97,11 +97,11 @@ const HomePage = () => {
 			const currentPhotos = photos || [];
 			const remainingSlots = MAX_IMAGES - currentPhotos.length;
 			const filesToUpload = files.slice(0, remainingSlots);
-			
+
 			if (filesToUpload.length < files.length) {
 				alert(`You can only upload up to ${MAX_IMAGES} images. Only the first ${filesToUpload.length} will be uploaded.`);
 			}
-			
+
 			const uploadedUrls = [];
 			for (const file of filesToUpload) {
 				const url = await uploadToCloudinary(file);
@@ -127,7 +127,7 @@ const HomePage = () => {
 			alert(`You can only add up to ${MAX_IMAGES} images/GIFs.`);
 			return;
 		}
-		
+
 		const imageUrl = gif.images.fixed_height.url;
 		setPhotos(prev => [...(prev || []), imageUrl]);
 		setShowStickerModal(false);
@@ -187,6 +187,18 @@ const HomePage = () => {
 			setError(err.message);
 		} finally {
 			setSubmitting(false);
+		}
+	};
+
+	const handleDeletePost = async (postId) => {
+		if (window.confirm("Are you sure you want to delete this post?")) {
+			try {
+				await postAPI.deletePost(postId);
+				setPosts(prev => prev.filter(post => post.id !== postId));
+			} catch (err) {
+				console.error('Error deleting post:', err);
+				setError('Failed to delete post.');
+			}
 		}
 	};
 
@@ -257,7 +269,7 @@ const HomePage = () => {
 
 	return (
 		<>
-			<Container className="py-3 px-0 px-md-3">
+			<Container className="py-3 px-0 px-0 px-md-3">
 				{error && (
 					<Alert variant="danger" className="mx-3">
 						{error}
@@ -283,7 +295,6 @@ const HomePage = () => {
 									{user?.hasBlueCheck && (
 										<span className="text-primary">✓</span>
 									)}
-									<span className="text-muted">@{user?.username}</span>
 								</div>
 								<div
 									className="w-100 text-start text-muted border-1 bg-transparent">
@@ -442,6 +453,35 @@ const HomePage = () => {
 													className="text-muted p-0 border-0">
 													<Share size={16} />
 												</Button>
+
+												{post.author.id === user.uid && (
+													<Dropdown align="end">
+														<Dropdown.Toggle
+															variant="link"
+															size="sm"
+															className="text-muted p-0 border-0"
+															bsPrefix="dropdown-toggle-no-caret">
+															<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-three-dots" viewBox="0 0 16 16">
+																<path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+															</svg>
+														</Dropdown.Toggle>
+														<Dropdown.Menu>
+															<Dropdown.Item onClick={() => handleDeletePost(post.id)}>Remove Post</Dropdown.Item>
+															<Dropdown.Item onClick={() => {
+																navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+																alert('Link copied!');
+															}}>Copy Link</Dropdown.Item>
+															<Dropdown.Item onClick={() => {
+																// Implement repost logic here
+																alert('Repost functionality not implemented yet.');
+															}}>Repost</Dropdown.Item>
+															<Dropdown.Item onClick={() => {
+																// Implement report logic here
+																alert('Report functionality not implemented yet.');
+															}}>Report</Dropdown.Item>
+														</Dropdown.Menu>
+													</Dropdown>
+												)}
 											</div>
 										</div>
 									</div>
@@ -492,7 +532,6 @@ const HomePage = () => {
 									{user?.hasBlueCheck && (
 										<span className="text-primary">✓</span>
 									)}
-									<span className="text-muted">@{user?.username}</span>
 								</div>
 
 								<Dropdown onSelect={value => setPrivacy(value)} className="mb-3">
@@ -683,7 +722,7 @@ const HomePage = () => {
 								onClick={closeImageViewer}>
 								<X size={24} />
 							</Button>
-							
+
 							{currentImages.length > 1 && (
 								<>
 									<Button
@@ -694,7 +733,7 @@ const HomePage = () => {
 										onClick={() => setCurrentImageIndex(prev => Math.max(0, prev - 1))}>
 										<ChevronLeft size={32} />
 									</Button>
-									
+
 									<Button
 										variant="link"
 										className="position-absolute top-50 end-0 translate-middle-y text-white me-2"
@@ -705,7 +744,7 @@ const HomePage = () => {
 									</Button>
 								</>
 							)}
-							
+
 							<Image
 								src={currentImages[currentImageIndex]}
 								className="w-100"
@@ -714,7 +753,7 @@ const HomePage = () => {
 									objectFit: "contain"
 								}}
 							/>
-							
+
 							{currentImages.length > 1 && (
 								<div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 text-white">
 									{currentImageIndex + 1} / {currentImages.length}
