@@ -46,6 +46,7 @@ const PostDetailPage = () => {
 	const [currentImages, setCurrentImages] = useState([]);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 	const [postToDelete, setPostToDelete] = useState(null);
+	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
 
 	useEffect(() => {
 		loadPostAndComments();
@@ -230,41 +231,20 @@ const PostDetailPage = () => {
 									<span className="text-muted">·</span>
 									<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
 								</div>
-								<Dropdown align="end">
-									<Dropdown.Toggle 
-										variant="link" 
-										className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
-										style={{
-											width: '32px',
-											height: '32px',
-											background: 'none',
-											border: 'none !important',
-											boxShadow: 'none !important'
-										}}
-									>
-										<ThreeDots size={16} />
-									</Dropdown.Toggle>
-									<Dropdown.Menu>
-										<Dropdown.Item onClick={() => navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`)}>
-											Copy Link
-										</Dropdown.Item>
-										<Dropdown.Item>
-											Repost
-										</Dropdown.Item>
-										{post.author.id !== user.uid && (
-											<Dropdown.Item className="text-danger">
-												Report
-											</Dropdown.Item>
-										)}
-										{post.author.id === user.uid && (
-											<Dropdown.Item 
-												className="text-danger"
-												onClick={() => handleDeletePost(post.id)}>
-												Delete Post
-											</Dropdown.Item>
-										)}
-									</Dropdown.Menu>
-								</Dropdown>
+								<Button
+									variant="link" 
+									className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
+									style={{
+										width: '32px',
+										height: '32px',
+										background: 'none',
+										border: 'none !important',
+										boxShadow: 'none !important'
+									}}
+									onClick={() => setShowPostOptionsModal(true)}
+								>
+									<ThreeDots size={16} />
+								</Button>
 							</div>
 
 							{post.content && (
@@ -590,6 +570,55 @@ const PostDetailPage = () => {
 					</Modal.Body>
 				</Modal>
 			)}
+
+			{/* Post Options Modal */}
+			<Modal
+				show={showPostOptionsModal}
+				onHide={() => setShowPostOptionsModal(false)}
+				centered
+			>
+				<Modal.Header closeButton>
+					<Modal.Title>Post Options</Modal.Title>
+				</Modal.Header>
+				<Modal.Body className="p-0">
+					<div className="list-group list-group-flush">
+						<button 
+							className="list-group-item list-group-item-action border-0"
+							onClick={() => {
+								navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+								setShowPostOptionsModal(false);
+							}}
+						>
+							Copy Link
+						</button>
+						<button 
+							className="list-group-item list-group-item-action border-0"
+							onClick={() => setShowPostOptionsModal(false)}
+						>
+							Repost
+						</button>
+						{post.author.id !== user.uid && (
+							<button 
+								className="list-group-item list-group-item-action border-0 text-danger"
+								onClick={() => setShowPostOptionsModal(false)}
+							>
+								Report
+							</button>
+						)}
+						{post.author.id === user.uid && (
+							<button 
+								className="list-group-item list-group-item-action border-0 text-danger"
+								onClick={() => {
+									setShowPostOptionsModal(false);
+									handleDeletePost(post.id);
+								}}
+							>
+								Delete Post
+							</button>
+						)}
+					</div>
+				</Modal.Body>
+			</Modal>
 
 			{/* Delete Post Confirmation Dialog */}
 			<AlertDialog

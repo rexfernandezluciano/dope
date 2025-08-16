@@ -62,6 +62,8 @@ const HomePage = () => {
 	const [postToDelete, setPostToDelete] = useState(null);
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
+	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
+	const [selectedPost, setSelectedPost] = useState(null);
 
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData;
@@ -328,6 +330,16 @@ const HomePage = () => {
 		setCurrentImageIndex(0);
 	};
 
+	const openPostOptionsModal = (post) => {
+		setSelectedPost(post);
+		setShowPostOptionsModal(true);
+	};
+
+	const closePostOptionsModal = () => {
+		setShowPostOptionsModal(false);
+		setSelectedPost(null);
+	};
+
 	const privacyOptions = {
 		Public: <Globe size={14} className="me-1" />,
 		Followers: <People size={14} className="me-1" />,
@@ -429,48 +441,23 @@ const HomePage = () => {
 														{formatTimeAgo(post.createdAt)}
 													</span>
 												</div>
-												<Dropdown align="end" onClick={(e) => e.stopPropagation()}>
-													<Dropdown.Toggle 
-														variant="link" 
-														className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
-														style={{
-															width: '32px',
-															height: '32px',
-															background: 'none',
-															border: 'none !important',
-															boxShadow: 'none !important'
-														}}
-														onClick={(e) => e.stopPropagation()}
-													>
-														<ThreeDots size={16} />
-													</Dropdown.Toggle>
-													<Dropdown.Menu onClick={(e) => e.stopPropagation()}>
-														<Dropdown.Item onClick={(e) => {
-															e.stopPropagation();
-															navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-														}}>
-															Copy Link
-														</Dropdown.Item>
-														<Dropdown.Item onClick={(e) => e.stopPropagation()}>
-															Repost
-														</Dropdown.Item>
-														{post.author.id !== user.uid && (
-															<Dropdown.Item className="text-danger" onClick={(e) => e.stopPropagation()}>
-																Report
-															</Dropdown.Item>
-														)}
-														{post.author.id === user.uid && (
-															<Dropdown.Item 
-																className="text-danger"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	handleDeletePost(post.id);
-																}}>
-																Delete Post
-															</Dropdown.Item>
-														)}
-													</Dropdown.Menu>
-												</Dropdown>
+												<Button
+													variant="link" 
+													className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
+													style={{
+														width: '32px',
+														height: '32px',
+														background: 'none',
+														border: 'none !important',
+														boxShadow: 'none !important'
+													}}
+													onClick={(e) => {
+														e.stopPropagation();
+														openPostOptionsModal(post);
+													}}
+												>
+													<ThreeDots size={16} />
+												</Button>
 											</div>
 
 											{post.content && <p className="mb-2">{post.content}</p>}
@@ -749,7 +736,7 @@ const HomePage = () => {
 									<Dropdown.Toggle
 										variant="outline-primary"
 										size="sm"
-										className="border rounded-pill px-3 py-1 d-flex align-items-center text-primary"
+										className="border rounded-pill px-3 py-1 d-flex align-items-center text-primary shadow-none"
 										style={{
 											fontSize: "0.875rem",
 											fontWeight: "600",
@@ -829,6 +816,7 @@ const HomePage = () => {
 									value={liveVideoUrl}
 									onChange={(e) => setLiveVideoUrl(e.target.value)}
 									placeholder="https://example.com/live-stream"
+									className="shadow-none"
 								/>
 							</Form.Group>
 						)}
@@ -1018,6 +1006,80 @@ const HomePage = () => {
 					</Modal.Body>
 				</Modal>
 			)}
+
+			{/* Post Options Modal */}
+			<Modal
+				show={showPostOptionsModal}
+				onHide={closePostOptionsModal}
+				centered
+				size="sm"
+			>
+				<Modal.Header closeButton>
+					<Modal.Title>Post Options</Modal.Title>
+				</Modal.Header>
+				{selectedPost && (
+					<Modal.Body className="p-0">
+						<ul className="list-unstyled mb-0">
+							<li className="border-bottom">
+								<Button
+									variant="link"
+									className="w-100 text-start text-decoration-none text-dark p-2"
+									onClick={(e) => {
+										e.stopPropagation();
+										navigator.clipboard.writeText(`${window.location.origin}/post/${selectedPost.id}`);
+										closePostOptionsModal();
+									}}
+								>
+									Copy Link
+								</Button>
+							</li>
+							<li className="border-bottom">
+								<Button
+									variant="link"
+									className="w-100 text-start text-decoration-none text-dark p-2"
+									onClick={(e) => {
+										e.stopPropagation();
+										// Handle repost logic
+										closePostOptionsModal();
+									}}
+								>
+									Repost
+								</Button>
+							</li>
+							{selectedPost.author.id !== user.uid && (
+								<li className="border-bottom">
+									<Button
+										variant="link"
+										className="w-100 text-start text-decoration-none text-danger p-2"
+										onClick={(e) => {
+											e.stopPropagation();
+											// Handle report logic
+											closePostOptionsModal();
+										}}
+									>
+										Report
+									</Button>
+								</li>
+							)}
+							{selectedPost.author.id === user.uid && (
+								<li className="border-bottom">
+									<Button
+										variant="link"
+										className="w-100 text-start text-decoration-none text-danger p-2"
+										onClick={(e) => {
+											e.stopPropagation();
+											handleDeletePost(selectedPost.id);
+											closePostOptionsModal();
+										}}
+									>
+										Delete Post
+									</Button>
+								</li>
+							)}
+						</ul>
+					</Modal.Body>
+				)}
+			</Modal>
 
 			{/* Delete Post Confirmation Dialog */}
 			<AlertDialog

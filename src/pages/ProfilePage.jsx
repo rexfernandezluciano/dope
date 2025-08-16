@@ -55,6 +55,8 @@ const ProfilePage = () => {
 		bio: "",
 		photoURL: ""
 	});
+	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
+	const [selectedPostForOptions, setSelectedPostForOptions] = useState(null);
 
 	useEffect(() => {
 		loadProfile();
@@ -297,6 +299,39 @@ const ProfilePage = () => {
 		window.location.href = `/post/${postId}`;
 	};
 
+	const openPostOptionsModal = (post) => {
+		setSelectedPostForOptions(post);
+		setShowPostOptionsModal(true);
+	};
+
+	const closePostOptionsModal = () => {
+		setShowPostOptionsModal(false);
+		setSelectedPostForOptions(null);
+	};
+
+	const handleOptionAction = (action, postId) => {
+		if (!postId) return;
+		switch (action) {
+			case 'copyLink':
+				navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
+				break;
+			case 'repost':
+				// Implement repost logic
+				console.log('Reposting post:', postId);
+				break;
+			case 'report':
+				// Implement report logic
+				console.log('Reporting post:', postId);
+				break;
+			case 'delete':
+				handleDeletePost(postId);
+				break;
+			default:
+				break;
+		}
+		closePostOptionsModal();
+	};
+
 	if (loading || !currentUser) {
 		return (
 			<Container className="text-center py-5">
@@ -464,48 +499,24 @@ const ProfilePage = () => {
 														<span className="text-muted">·</span>
 														<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
 													</div>
-													<Dropdown align="end" onClick={(e) => e.stopPropagation()}>
-														<Dropdown.Toggle
-															variant="link"
-															className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
-															style={{
-																width: '32px',
-																height: '32px',
-																background: 'none',
-																border: 'none !important',
-																boxShadow: 'none !important'
-															}}
-															onClick={(e) => e.stopPropagation()}
-														>
-															<ThreeDots size={16} />
-														</Dropdown.Toggle>
-														<Dropdown.Menu onClick={(e) => e.stopPropagation()}>
-															<Dropdown.Item onClick={(e) => {
-																e.stopPropagation();
-																navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
-															}}>
-																Copy Link
-															</Dropdown.Item>
-															<Dropdown.Item onClick={(e) => e.stopPropagation()}>
-																Repost
-															</Dropdown.Item>
-															{post.author.id !== currentUser.uid && (
-																<Dropdown.Item className="text-danger" onClick={(e) => e.stopPropagation()}>
-																	Report
-																</Dropdown.Item>
-															)}
-															{post.author.id === currentUser.uid && (
-																<Dropdown.Item
-																	className="text-danger"
-																	onClick={(e) => {
-																		e.stopPropagation();
-																		handleDeletePost(post.id);
-																	}}>
-																	Delete Post
-																</Dropdown.Item>
-															)}
-														</Dropdown.Menu>
-													</Dropdown>
+													
+													<Button
+														variant="link" 
+														className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
+														style={{
+															width: '32px',
+															height: '32px',
+															background: 'none',
+															border: 'none !important',
+															boxShadow: 'none !important'
+														}}
+														onClick={(e) => {
+															e.stopPropagation();
+															openPostOptionsModal(post);
+														}}
+													>
+														<ThreeDots size={16} />
+													</Button>
 												</div>
 
 												{post.content && (
@@ -794,6 +805,7 @@ const ProfilePage = () => {
 										value={editForm.photoURL}
 										onChange={(e) => setEditForm(prev => ({ ...prev, photoURL: e.target.value }))}
 										placeholder="https://example.com/photo.jpg"
+										className="form-control-no-shadow"
 									/>
 									<Button
 										variant="outline-secondary"
@@ -816,6 +828,7 @@ const ProfilePage = () => {
 									value={editForm.name}
 									onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
 									placeholder="Your name"
+									className="form-control-no-shadow"
 								/>
 							</Form.Group>
 							<Form.Group className="mb-3">
@@ -826,6 +839,7 @@ const ProfilePage = () => {
 									value={editForm.bio}
 									onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
 									placeholder="Tell us about yourself"
+									className="form-control-no-shadow"
 								/>
 							</Form.Group>
 						</Form>
@@ -894,6 +908,47 @@ const ProfilePage = () => {
 								<div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 text-white">
 									{currentImageIndex + 1} / {currentImages.length}
 								</div>
+							)}
+						</div>
+					</Modal.Body>
+				</Modal>
+			)}
+
+			{/* Post Options Modal */}
+			{showPostOptionsModal && selectedPostForOptions && (
+				<Modal show={showPostOptionsModal} onHide={closePostOptionsModal} centered>
+					<Modal.Header closeButton>
+						<Modal.Title>Post Options</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<div className="list-group list-group-flush">
+							<button
+								className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+								onClick={() => handleOptionAction('copyLink', selectedPostForOptions.id)}>
+								<span>Copy Link</span>
+								<span className="text-muted">Share this post's link</span>
+							</button>
+							<button
+								className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+								onClick={() => handleOptionAction('repost', selectedPostForOptions.id)}>
+								<span>Repost</span>
+								<span className="text-muted">Share this post to your followers</span>
+							</button>
+							{selectedPostForOptions.author.id !== currentUser.uid && (
+								<button
+									className="list-group-item list-group-item-action text-danger d-flex justify-content-between align-items-center"
+									onClick={() => handleOptionAction('report', selectedPostForOptions.id)}>
+									<span>Report Post</span>
+									<span className="text-muted">Flag this post for review</span>
+								</button>
+							)}
+							{selectedPostForOptions.author.id === currentUser.uid && (
+								<button
+									className="list-group-item list-group-item-action text-danger d-flex justify-content-between align-items-center"
+									onClick={() => handleOptionAction('delete', selectedPostForOptions.id)}>
+									<span>Delete Post</span>
+									<span className="text-muted">Remove this post permanently</span>
+								</button>
 							)}
 						</div>
 					</Modal.Body>
