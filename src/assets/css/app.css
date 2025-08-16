@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+a {
+  text-decoration: none;
+  text-decoration-line: none;
+  outline: none;
+}
+
+.btn-primary {
+  background-color: #0069B5 !important;
+  border-color: #0069B5 !important;
+  color: #fff !important;
+}
+
+.btn-outline-primary {
+  border-color: #0069B5 !important;
+  color: #0069B5 !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: #006c96 !important;
+  border-color: #006c96 !important;
+  -webkit-background-clip: #0069B5;
+  background-clip: #0069B5;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+  background-color: #0069B5;
+  border-color: #0069B5 !important;
+  color: #fff !important;
+}
+
+/* Backgrounds */
+.bg-primary {
+  background-color: #0069B5 !important;
+  color: #fff !important;
+}
+
+/* Text */
+.text-primary {
+  color: #0069B5 !important;
+  -webkit-text-fill-color: #0069B5 !important;
+}
+
+/* Borders */
+.border-primary {
+  border-color: #0069B5 !important;
+}
+
+/* Alerts */
+.alert-primary {
+  background-color: #0069B5 !important;
+  border-color: #0069B5 !important;
+  color: #fff !important;
+}
+
+/* Badges */
+.badge-primary,
+.bg-primary.badge {
+  background-color: #0069B5 !important;
+  color: #fff !important;
+}
+
+/* Pagination */
+.page-link {
+  color: #0069B5;
+}
+
+.page-item.active .page-link {
+  background-color: #0069B5;
+  border-color: #0069B5;
+}
+
+/* List group */
+.list-group-item-primary {
+  background-color: #0069B5;
+  color: #fff;
+}
+
+/* Navbar (if using .bg-primary) */
+.navbar.bg-primary {
+  background-color: #0069B5 !important;
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link {
+  color: #0069B5 !important;
+}
+
+.navbar .active {
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  background: #0069B5;
+  background-color: #0069B5;
+  border-radius: 12px;
+}
+
+.link-primary {
+  color: #0069B5;
+  -webkit-text-fill-color: #0069B5;
+}
