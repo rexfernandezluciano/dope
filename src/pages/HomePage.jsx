@@ -367,7 +367,7 @@ const HomePage = () => {
 
 				{/* Quick Post */}
 				<Card
-					className="border-0 border-bottom rounded-0 mb-0 shadow-sm"
+					className="border-0 border-bottom rounded-0 mb-0 shadow-none"
 					onClick={() => setShowComposerModal(true)}
 				>
 					<Card.Body className="px-3 py-3">
@@ -669,7 +669,7 @@ const HomePage = () => {
 														e.target.closest('.action-btn').style.color = '#6c757d';
 													}}
 												>
-													<Share size={24} style={{ flexShrink: 0 }} />
+													<Share size={20} style={{ flexShrink: 0 }} />
 												</Button>
 											</div>
 										</div>
@@ -736,7 +736,7 @@ const HomePage = () => {
 									<Dropdown.Toggle
 										variant="outline-primary"
 										size="sm"
-										className="border rounded-pill px-3 py-1 d-flex align-items-center text-primary shadow-none"
+										className="border rounded-pill px-3 py-1 d-flex align-items-center shadow-none"
 										style={{
 											fontSize: "0.875rem",
 											fontWeight: "600",
@@ -944,7 +944,7 @@ const HomePage = () => {
 					show={showImageViewer}
 					onHide={closeImageViewer}
 					centered
-					size="lg"
+					size="md"
 					className="image-viewer-modal"
 				>
 					<Modal.Body className="p-0 bg-dark text-center">
@@ -1015,7 +1015,7 @@ const HomePage = () => {
 				size="sm"
 			>
 				<Modal.Header closeButton>
-					<Modal.Title>Post Options</Modal.Title>
+					<Modal.Title className="fs-4">Post Options</Modal.Title>
 				</Modal.Header>
 				{selectedPost && (
 					<Modal.Body className="p-0">
@@ -1023,7 +1023,7 @@ const HomePage = () => {
 							<li className="border-bottom">
 								<Button
 									variant="link"
-									className="w-100 text-start text-decoration-none text-dark p-2"
+									className="w-100 px-3 post-card text-start text-decoration-none text-dark p-2"
 									onClick={(e) => {
 										e.stopPropagation();
 										navigator.clipboard.writeText(`${window.location.origin}/post/${selectedPost.id}`);
@@ -1036,7 +1036,7 @@ const HomePage = () => {
 							<li className="border-bottom">
 								<Button
 									variant="link"
-									className="w-100 text-start text-decoration-none text-dark p-2"
+									className="w-100 px-3 post-card text-start text-decoration-none text-dark p-2"
 									onClick={(e) => {
 										e.stopPropagation();
 										// Handle repost logic
@@ -1047,10 +1047,10 @@ const HomePage = () => {
 								</Button>
 							</li>
 							{selectedPost.author.id !== user.uid && (
-								<li className="border-bottom">
+								<li className="border-0">
 									<Button
 										variant="link"
-										className="w-100 text-start text-decoration-none text-danger p-2"
+										className="w-100 px-3 post-card text-start text-decoration-none text-danger p-2"
 										onClick={(e) => {
 											e.stopPropagation();
 											// Handle report logic
@@ -1061,11 +1061,11 @@ const HomePage = () => {
 									</Button>
 								</li>
 							)}
-							{selectedPost.author.id === user.uid && (
-								<li className="border-bottom">
+							{selectedPost.author.uid === user.uid && (
+								<li className="border-0 border-top">
 									<Button
 										variant="link"
-										className="w-100 text-start text-decoration-none text-danger p-2"
+										className="w-100 px-3 post-card text-start text-decoration-none text-danger p-2"
 										onClick={(e) => {
 											e.stopPropagation();
 											handleDeletePost(selectedPost.id);

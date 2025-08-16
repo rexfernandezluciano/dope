@@ -9,13 +9,10 @@ import {
 	Nav,
 	Tab,
 	Button,
-	Dropdown,
 	Modal,
 	Form,
 	Spinner,
 	Alert,
-	OverlayTrigger,
-	Tooltip
 } from "react-bootstrap";
 import {
 	Heart,
@@ -26,7 +23,7 @@ import {
 	ChevronRight,
 	X,
 	ThreeDots,
-	Calendar
+	Calendar,
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
@@ -53,14 +50,10 @@ const ProfilePage = () => {
 	const [editForm, setEditForm] = useState({
 		name: "",
 		bio: "",
-		photoURL: ""
+		photoURL: "",
 	});
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
 	const [selectedPostForOptions, setSelectedPostForOptions] = useState(null);
-
-	useEffect(() => {
-		loadProfile();
-	}, [username]);
 
 	const loadProfile = async () => {
 		try {
@@ -80,7 +73,7 @@ const ProfilePage = () => {
 			setEditForm({
 				name: userResponse.name || "",
 				bio: userResponse.bio || "",
-				photoURL: userResponse.photoURL || ""
+				photoURL: userResponse.photoURL || "",
 			});
 
 			// Set posts from user response if available
@@ -92,7 +85,7 @@ const ProfilePage = () => {
 					const postsResponse = await postAPI.getPosts({ author: username });
 					setPosts(postsResponse.posts || []);
 				} catch (err) {
-					console.error('Error loading posts:', err);
+					console.error("Error loading posts:", err);
 					setPosts([]);
 				}
 			}
@@ -108,10 +101,14 @@ const ProfilePage = () => {
 
 					// Check if current user is following this profile
 					if (currentUser) {
-						setIsFollowing((followersResponse.followers || []).some(f => f.uid === currentUser.uid));
+						setIsFollowing(
+							(followersResponse.followers || []).some(
+								(f) => f.uid === currentUser.uid,
+							),
+						);
 					}
 				} catch (err) {
-					console.error('Error loading followers:', err);
+					console.error("Error loading followers:", err);
 					setFollowers([]);
 				}
 
@@ -119,18 +116,21 @@ const ProfilePage = () => {
 					const followingResponse = await userAPI.getFollowing(username);
 					setFollowing(followingResponse.following || []);
 				} catch (err) {
-					console.error('Error loading following:', err);
+					console.error("Error loading following:", err);
 					setFollowing([]);
 				}
 			}
-
 		} catch (err) {
-			console.error('Error loading profile:', err);
-			setError(err.message || 'Failed to load profile');
+			console.error("Error loading profile:", err);
+			setError(err.message || "Failed to load profile");
 		} finally {
 			setLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		loadProfile();
+	}, [username]);
 
 	const handleFollow = async () => {
 		try {
@@ -139,9 +139,9 @@ const ProfilePage = () => {
 
 			// Update followers count
 			if (isFollowing) {
-				setFollowers(prev => prev.filter(f => f.uid !== currentUser.uid));
+				setFollowers((prev) => prev.filter((f) => f.uid !== currentUser.uid));
 			} else {
-				setFollowers(prev => [...prev, currentUser]);
+				setFollowers((prev) => [...prev, currentUser]);
 			}
 		} catch (err) {
 			setError(err.message);
@@ -151,42 +151,51 @@ const ProfilePage = () => {
 	const handleLikePost = async (postId) => {
 		try {
 			await postAPI.likePost(postId);
-			setPosts(prev => prev.map(post => {
-				if (post.id === postId) {
-					const likes = post.likes || [];
-					const isLiked = likes.some(like => like.userId === currentUser.uid);
-					return {
-						...post,
-						likes: isLiked
-							? likes.filter(like => like.userId !== currentUser.uid)
-							: [...likes, { userId: currentUser.uid }],
-						_count: {
-							...post._count,
-							likes: isLiked ? (post._count?.likes || 1) - 1 : (post._count?.likes || 0) + 1
-						}
-					};
-				}
-				return post;
-			}));
+			setPosts((prev) =>
+				prev.map((post) => {
+					if (post.id === postId) {
+						const likes = post.likes || [];
+						const isLiked = likes.some(
+							(like) => like.userId === currentUser.uid,
+						);
+						return {
+							...post,
+							likes: isLiked
+								? likes.filter((like) => like.userId !== currentUser.uid)
+								: [...likes, { userId: currentUser.uid }],
+							_count: {
+								...post._count,
+								likes: isLiked
+									? (post._count?.likes || 1) - 1
+									: (post._count?.likes || 0) + 1,
+							},
+						};
+					}
+					return post;
+				}),
+			);
 		} catch (err) {
-			console.error('Error liking post:', err);
+			console.error("Error liking post:", err);
 		}
 	};
 
 	const uploadProfileImageToCloudinary = async (file) => {
 		const formData = new FormData();
-		formData.append('file', file);
-		formData.append('upload_preset', 'dope_network'); // You'll need to set this up in Cloudinary
+		formData.append("file", file);
+		formData.append("upload_preset", "dope_network"); // You'll need to set this up in Cloudinary
 
 		try {
-			const response = await fetch('https://api.cloudinary.com/v1_1/your_cloud_name/image/upload', {
-				method: 'POST',
-				body: formData
-			});
+			const response = await fetch(
+				"https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
+				{
+					method: "POST",
+					body: formData,
+				},
+			);
 			const data = await response.json();
 			return data.secure_url;
 		} catch (error) {
-			console.error('Error uploading to Cloudinary:', error);
+			console.error("Error uploading to Cloudinary:", error);
 			return null;
 		}
 	};
@@ -194,7 +203,7 @@ const ProfilePage = () => {
 	const handleUpdateProfile = async () => {
 		try {
 			await userAPI.updateUser(username, editForm);
-			setProfileUser(prev => ({ ...prev, ...editForm }));
+			setProfileUser((prev) => ({ ...prev, ...editForm }));
 			setShowEditModal(false);
 		} catch (err) {
 			setError(err.message);
@@ -206,7 +215,7 @@ const ProfilePage = () => {
 		if (file) {
 			const url = await uploadProfileImageToCloudinary(file);
 			if (url) {
-				setEditForm(prev => ({ ...prev, photoURL: url }));
+				setEditForm((prev) => ({ ...prev, photoURL: url }));
 			}
 		}
 	};
@@ -219,7 +228,7 @@ const ProfilePage = () => {
 		const diffHours = Math.floor(diffMs / 3600000);
 		const diffDays = Math.floor(diffMs / 86400000);
 
-		if (diffMins < 1) return 'now';
+		if (diffMins < 1) return "now";
 		if (diffMins < 60) return `${diffMins}m`;
 		if (diffHours < 24) return `${diffHours}h`;
 		return `${diffDays}d`;
@@ -227,9 +236,9 @@ const ProfilePage = () => {
 
 	const formatJoinDate = (dateString) => {
 		const date = new Date(dateString);
-		return date.toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'long'
+		return date.toLocaleDateString("en-US", {
+			year: "numeric",
+			month: "long",
 		});
 	};
 
@@ -255,12 +264,12 @@ const ProfilePage = () => {
 
 		try {
 			await postAPI.deletePost(postToDelete);
-			setPosts(prev => prev.filter(post => post.id !== postToDelete));
+			setPosts((prev) => prev.filter((post) => post.id !== postToDelete));
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
 		} catch (err) {
-			console.error('Error deleting post:', err);
-			setError('Failed to delete post.');
+			console.error("Error deleting post:", err);
+			setError("Failed to delete post.");
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
 		}
@@ -272,8 +281,8 @@ const ProfilePage = () => {
 		if (navigator.share) {
 			try {
 				await navigator.share({
-					title: 'Check out this post',
-					url: postUrl
+					title: "Check out this post",
+					url: postUrl,
 				});
 			} catch (err) {
 				navigator.clipboard.writeText(postUrl);
@@ -282,18 +291,20 @@ const ProfilePage = () => {
 			try {
 				await navigator.clipboard.writeText(postUrl);
 			} catch (err) {
-				console.error('Failed to copy to clipboard:', err);
+				console.error("Failed to copy to clipboard:", err);
 			}
 		}
 	};
 
 	const handlePostClick = (postId, e) => {
 		// Don't navigate if clicking on buttons, links, dropdowns, or images
-		if (e.target.closest('button') || 
-			e.target.closest('a') || 
-			e.target.closest('.dropdown') ||
-			e.target.closest('img') ||
-			e.target.tagName === 'IMG') {
+		if (
+			e.target.closest("button") ||
+			e.target.closest("a") ||
+			e.target.closest(".dropdown") ||
+			e.target.closest("img") ||
+			e.target.tagName === "IMG"
+		) {
 			return;
 		}
 		window.location.href = `/post/${postId}`;
@@ -312,18 +323,20 @@ const ProfilePage = () => {
 	const handleOptionAction = (action, postId) => {
 		if (!postId) return;
 		switch (action) {
-			case 'copyLink':
-				navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
+			case "copyLink":
+				navigator.clipboard.writeText(
+					`${window.location.origin}/post/${postId}`,
+				);
 				break;
-			case 'repost':
+			case "repost":
 				// Implement repost logic
-				console.log('Reposting post:', postId);
+				console.log("Reposting post:", postId);
 				break;
-			case 'report':
+			case "report":
 				// Implement report logic
-				console.log('Reporting post:', postId);
+				console.log("Reporting post:", postId);
 				break;
-			case 'delete':
+			case "delete":
 				handleDeletePost(postId);
 				break;
 			default:
@@ -355,10 +368,16 @@ const ProfilePage = () => {
 			{/* Cover & Profile Photo */}
 			<div className="position-relative mb-4">
 				<div
-					style={{ height: "200px", background: "linear-gradient(45deg, #667eea 0%, #764ba2 100%)" }}
+					style={{
+						height: "200px",
+						background: "linear-gradient(45deg, #667eea 0%, #764ba2 100%)",
+					}}
 					className="w-100 bg-primary"
 				/>
-				<div className="position-absolute" style={{ bottom: "-50px", left: "20px" }}>
+				<div
+					className="position-absolute"
+					style={{ bottom: "-50px", left: "20px" }}
+				>
 					<Image
 						src={profileUser.photoURL || "https://i.pravatar.cc/150?img=10"}
 						alt="Profile"
@@ -378,16 +397,28 @@ const ProfilePage = () => {
 						<div className="d-flex align-items-center gap-2">
 							<h3 className="mb-0">{profileUser.name}</h3>
 							{profileUser.hasBlueCheck && (
-								<span className="text-primary fs-5" style={{ fontSize: "1.2rem" }}>✓</span>
-							)}
-							{profileUser.subscription && profileUser.subscription !== 'free' && (
-								<span className={`badge ${
-									profileUser.subscription === 'premium' ? 'bg-warning text-dark' :
-									profileUser.subscription === 'pro' ? 'bg-primary' : 'bg-secondary'
-								}`} style={{ fontSize: "0.7rem" }}>
-									{profileUser.subscription.toUpperCase()}
+								<span
+									className="text-primary fs-5"
+									style={{ fontSize: "1.2rem" }}
+								>
+									✓
 								</span>
 							)}
+							{profileUser.subscription &&
+								profileUser.subscription !== "free" && (
+									<span
+										className={`badge ${
+											profileUser.subscription === "premium"
+												? "bg-warning text-dark"
+												: profileUser.subscription === "pro"
+													? "bg-primary"
+													: "bg-secondary"
+										}`}
+										style={{ fontSize: "0.7rem" }}
+									>
+										{profileUser.subscription.toUpperCase()}
+									</span>
+								)}
 						</div>
 						<p className="text-muted mb-0">@{profileUser.username}</p>
 					</div>
@@ -396,39 +427,36 @@ const ProfilePage = () => {
 						<Button
 							variant="outline-primary"
 							size="sm"
-							onClick={() => setShowEditModal(true)}>
+							onClick={() => setShowEditModal(true)}
+						>
 							Edit Profile
 						</Button>
 					) : (
 						<Button
 							variant={isFollowing ? "outline-primary" : "primary"}
 							size="sm"
-							onClick={handleFollow}>
+							onClick={handleFollow}
+						>
 							{isFollowing ? "Unfollow" : "Follow"}
 						</Button>
 					)}
 				</div>
 
-				{profileUser.bio && (
-					<p className="mb-2">{profileUser.bio}</p>
-				)}
+				{profileUser.bio && <p className="mb-2">{profileUser.bio}</p>}
 
 				<div className="d-flex flex-wrap gap-3 text-muted small mb-3">
 					<div className="d-flex align-items-center gap-1">
 						<Calendar size={14} />
 						Joined {formatJoinDate(profileUser.createdAt)}
 					</div>
-					{profileUser.subscription !== 'free' && (
+					{profileUser.subscription !== "free" && (
 						<div className="d-flex align-items-center gap-1">
-							<span className="badge bg-primary">{profileUser.subscription}</span>
+							<span className="badge bg-primary">
+								{profileUser.subscription}
+							</span>
 						</div>
 					)}
 					{/* Email Verification Status */}
-					{!profileUser.hasVerifiedEmail && (
-						<div className="d-flex align-items-center gap-1 text-danger">
-							<Alert variant="danger" className="p-1 mb-0 fs-6">Email not verified</Alert>
-						</div>
-					)}
 				</div>
 
 				<div className="d-flex gap-4 mb-3">
@@ -474,11 +502,18 @@ const ProfilePage = () => {
 							</div>
 						) : (
 							posts.map((post) => (
-								<Card key={post.id} className="border-0 border-bottom rounded-0" onClick={(e) => handlePostClick(post.id, e)}>
+								<Card
+									key={post.id}
+									className="border-0 border-bottom rounded-0 post-card"
+									onClick={(e) => handlePostClick(post.id, e)}
+								>
 									<Card.Body className="px-3 py-3">
 										<div className="d-flex gap-2">
 											<Image
-												src={post.author.photoURL || "https://i.pravatar.cc/150?img=10"}
+												src={
+													post.author.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
 												alt="avatar"
 												roundedCircle
 												width="40"
@@ -490,25 +525,30 @@ const ProfilePage = () => {
 														<span
 															className="fw-bold"
 															style={{ cursor: "pointer", color: "inherit" }}
-															onClick={() => window.location.href = `/${post.author.username}`}>
+															onClick={() =>
+																(window.location.href = `/${post.author.username}`)
+															}
+														>
 															{post.author.name}
 														</span>
 														{post.author.hasBlueCheck && (
 															<span className="text-primary">✓</span>
 														)}
 														<span className="text-muted">·</span>
-														<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
+														<span className="text-muted small">
+															{formatTimeAgo(post.createdAt)}
+														</span>
 													</div>
-													
+
 													<Button
-														variant="link" 
+														variant="link"
 														className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
 														style={{
-															width: '32px',
-															height: '32px',
-															background: 'none',
-															border: 'none !important',
-															boxShadow: 'none !important'
+															width: "32px",
+															height: "32px",
+															background: "none",
+															border: "none !important",
+															boxShadow: "none !important",
 														}}
 														onClick={(e) => {
 															e.stopPropagation();
@@ -519,9 +559,7 @@ const ProfilePage = () => {
 													</Button>
 												</div>
 
-												{post.content && (
-													<p className="mb-2">{post.content}</p>
-												)}
+												{post.content && <p className="mb-2">{post.content}</p>}
 
 												{post.imageUrls && post.imageUrls.length > 0 && (
 													<div className="mb-2">
@@ -533,7 +571,7 @@ const ProfilePage = () => {
 																style={{
 																	height: "300px",
 																	objectFit: "cover",
-																	cursor: "pointer"
+																	cursor: "pointer",
 																}}
 																onClick={(e) => {
 																	e.stopPropagation();
@@ -542,7 +580,10 @@ const ProfilePage = () => {
 															/>
 														) : (
 															// Multiple images - box layout
-															<div className="d-flex gap-2" style={{ height: "300px" }}>
+															<div
+																className="d-flex gap-2"
+																style={{ height: "300px" }}
+															>
 																{/* Main image on the left */}
 																<div style={{ flex: "2" }}>
 																	<Image
@@ -550,7 +591,7 @@ const ProfilePage = () => {
 																		className="rounded w-100 h-100"
 																		style={{
 																			objectFit: "cover",
-																			cursor: "pointer"
+																			cursor: "pointer",
 																		}}
 																		onClick={(e) => {
 																			e.stopPropagation();
@@ -560,14 +601,24 @@ const ProfilePage = () => {
 																</div>
 																{/* Right side with stacked images */}
 																{post.imageUrls.length > 1 && (
-																	<div className="d-flex flex-column gap-2" style={{ flex: "1" }}>
-																		<div style={{ height: post.imageUrls.length > 2 ? "calc(50% - 4px)" : "100%" }}>
+																	<div
+																		className="d-flex flex-column gap-2"
+																		style={{ flex: "1" }}
+																	>
+																		<div
+																			style={{
+																				height:
+																					post.imageUrls.length > 2
+																						? "calc(50% - 4px)"
+																						: "100%",
+																			}}
+																		>
 																			<Image
 																				src={post.imageUrls[1]}
 																				className="rounded w-100 h-100"
 																				style={{
 																					objectFit: "cover",
-																					cursor: "pointer"
+																					cursor: "pointer",
 																				}}
 																				onClick={(e) => {
 																					e.stopPropagation();
@@ -576,13 +627,16 @@ const ProfilePage = () => {
 																			/>
 																		</div>
 																		{post.imageUrls.length > 2 && (
-																			<div style={{ height: "calc(50% - 4px)" }} className="position-relative">
+																			<div
+																				style={{ height: "calc(50% - 4px)" }}
+																				className="position-relative"
+																			>
 																				<Image
 																					src={post.imageUrls[2]}
 																					className="rounded w-100 h-100"
 																					style={{
 																						objectFit: "cover",
-																						cursor: "pointer"
+																						cursor: "pointer",
 																					}}
 																					onClick={(e) => {
 																						e.stopPropagation();
@@ -594,16 +648,21 @@ const ProfilePage = () => {
 																					<div
 																						className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
 																						style={{
-																							backgroundColor: "rgba(0, 0, 0, 0.7)",
+																							backgroundColor:
+																								"rgba(0, 0, 0, 0.7)",
 																							cursor: "pointer",
 																							color: "white",
 																							fontWeight: "bold",
-																							fontSize: "1.2rem"
+																							fontSize: "1.2rem",
 																						}}
 																						onClick={(e) => {
 																							e.stopPropagation();
-																							openImageViewer(post.imageUrls, 2);
-																						}}>
+																							openImageViewer(
+																								post.imageUrls,
+																								2,
+																							);
+																						}}
+																					>
 																						+{post.imageUrls.length - 3}
 																					</div>
 																				)}
@@ -616,32 +675,44 @@ const ProfilePage = () => {
 													</div>
 												)}
 
-												<div className="d-flex justify-content-around text-muted mt-3 pt-2 border-top" style={{ maxWidth: '400px' }}>
+												<div
+													className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
+													style={{ maxWidth: "400px" }}
+												>
 													<Button
 														variant="link"
 														size="sm"
 														className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-														style={{ 
-															transition: 'all 0.2s',
-															minWidth: '40px',
-															height: '36px'
+														style={{
+															transition: "all 0.2s",
+															minWidth: "40px",
+															height: "36px",
 														}}
 														onClick={(e) => {
 															e.stopPropagation();
 															window.location.href = `/post/${post.id}`;
 														}}
 														onMouseEnter={(e) => {
-															e.target.closest('.action-btn').style.backgroundColor = 'rgba(29, 161, 242, 0.1)';
-															e.target.closest('.action-btn').style.color = '#1da1f2';
+															e.target.closest(
+																".action-btn",
+															).style.backgroundColor =
+																"rgba(29, 161, 242, 0.1)";
+															e.target.closest(".action-btn").style.color =
+																"#1da1f2";
 														}}
 														onMouseLeave={(e) => {
-															e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-															e.target.closest('.action-btn').style.color = '#6c757d';
+															e.target.closest(
+																".action-btn",
+															).style.backgroundColor = "transparent";
+															e.target.closest(".action-btn").style.color =
+																"#6c757d";
 														}}
 													>
 														<ChatDots size={20} style={{ flexShrink: 0 }} />
 														{post._count.comments > 0 && (
-															<span className="small">{post._count.comments}</span>
+															<span className="small">
+																{post._count.comments}
+															</span>
 														)}
 													</Button>
 
@@ -650,35 +721,58 @@ const ProfilePage = () => {
 														size="sm"
 														className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 														style={{
-															color: (post.likes || []).some(like => like.userId === currentUser.uid) ? '#dc3545' : '#6c757d',
-															transition: 'all 0.2s',
-															minWidth: '40px',
-															height: '36px'
+															color: (post.likes || []).some(
+																(like) => like.userId === currentUser.uid,
+															)
+																? "#dc3545"
+																: "#6c757d",
+															transition: "all 0.2s",
+															minWidth: "40px",
+															height: "36px",
 														}}
 														onClick={(e) => {
 															e.stopPropagation();
 															handleLikePost(post.id);
 														}}
 														onMouseEnter={(e) => {
-															if (!(post.likes || []).some(like => like.userId === currentUser.uid)) {
-																e.target.closest('.action-btn').style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
-																e.target.closest('.action-btn').style.color = '#dc3545';
+															if (
+																!(post.likes || []).some(
+																	(like) => like.userId === currentUser.uid,
+																)
+															) {
+																e.target.closest(
+																	".action-btn",
+																).style.backgroundColor =
+																	"rgba(220, 53, 69, 0.1)";
+																e.target.closest(".action-btn").style.color =
+																	"#dc3545";
 															}
 														}}
 														onMouseLeave={(e) => {
-															if (!(post.likes || []).some(like => like.userId === currentUser.uid)) {
-																e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-																e.target.closest('.action-btn').style.color = '#6c757d';
+															if (
+																!(post.likes || []).some(
+																	(like) => like.userId === currentUser.uid,
+																)
+															) {
+																e.target.closest(
+																	".action-btn",
+																).style.backgroundColor = "transparent";
+																e.target.closest(".action-btn").style.color =
+																	"#6c757d";
 															}
 														}}
 													>
-														{(post.likes || []).some(like => like.userId === currentUser.uid) ? (
+														{(post.likes || []).some(
+															(like) => like.userId === currentUser.uid,
+														) ? (
 															<HeartFill size={20} style={{ flexShrink: 0 }} />
 														) : (
 															<Heart size={20} style={{ flexShrink: 0 }} />
 														)}
 														{(post._count?.likes || 0) > 0 && (
-															<span className="small">{post._count?.likes || 0}</span>
+															<span className="small">
+																{post._count?.likes || 0}
+															</span>
 														)}
 													</Button>
 
@@ -686,22 +780,29 @@ const ProfilePage = () => {
 														variant="link"
 														size="sm"
 														className="text-muted p-2 border-0 rounded-circle action-btn"
-														style={{ 
-															transition: 'all 0.2s',
-															minWidth: '40px',
-															height: '36px'
+														style={{
+															transition: "all 0.2s",
+															minWidth: "40px",
+															height: "36px",
 														}}
 														onClick={(e) => {
 															e.stopPropagation();
 															handleSharePost(post.id);
 														}}
 														onMouseEnter={(e) => {
-															e.target.closest('.action-btn').style.backgroundColor = 'rgba(23, 191, 99, 0.1)';
-															e.target.closest('.action-btn').style.color = '#17bf63';
+															e.target.closest(
+																".action-btn",
+															).style.backgroundColor =
+																"rgba(23, 191, 99, 0.1)";
+															e.target.closest(".action-btn").style.color =
+																"#17bf63";
 														}}
 														onMouseLeave={(e) => {
-															e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-															e.target.closest('.action-btn').style.color = '#6c757d';
+															e.target.closest(
+																".action-btn",
+															).style.backgroundColor = "transparent";
+															e.target.closest(".action-btn").style.color =
+																"#6c757d";
 														}}
 													>
 														<Share size={20} style={{ flexShrink: 0 }} />
@@ -722,11 +823,17 @@ const ProfilePage = () => {
 							</div>
 						) : (
 							followers.map((follower) => (
-								<Card key={follower.uid} className="border-0 border-bottom rounded-0">
+								<Card
+									key={follower.uid}
+									className="border-0 border-bottom rounded-0"
+								>
 									<Card.Body className="px-3 py-3">
 										<div className="d-flex align-items-center gap-3">
 											<Image
-												src={follower.photoURL || "https://i.pravatar.cc/150?img=10"}
+												src={
+													follower.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
 												alt="avatar"
 												roundedCircle
 												width="50"
@@ -741,7 +848,9 @@ const ProfilePage = () => {
 												</div>
 												<p className="text-muted mb-0">@{follower.username}</p>
 												{follower.bio && (
-													<p className="small text-muted mb-0">{follower.bio}</p>
+													<p className="small text-muted mb-0">
+														{follower.bio}
+													</p>
 												)}
 											</div>
 										</div>
@@ -758,11 +867,17 @@ const ProfilePage = () => {
 							</div>
 						) : (
 							following.map((followedUser) => (
-								<Card key={followedUser.uid} className="border-0 border-bottom rounded-0">
+								<Card
+									key={followedUser.uid}
+									className="border-0 border-bottom rounded-0"
+								>
 									<Card.Body className="px-3 py-3">
 										<div className="d-flex align-items-center gap-3">
 											<Image
-												src={followedUser.photoURL || "https://i.pravatar.cc/150?img=10"}
+												src={
+													followedUser.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
 												alt="avatar"
 												roundedCircle
 												width="50"
@@ -775,9 +890,13 @@ const ProfilePage = () => {
 														<span className="text-primary">✓</span>
 													)}
 												</div>
-												<p className="text-muted mb-0">@{followedUser.username}</p>
+												<p className="text-muted mb-0">
+													@{followedUser.username}
+												</p>
 												{followedUser.bio && (
-													<p className="small text-muted mb-0">{followedUser.bio}</p>
+													<p className="small text-muted mb-0">
+														{followedUser.bio}
+													</p>
 												)}
 											</div>
 										</div>
@@ -791,7 +910,12 @@ const ProfilePage = () => {
 
 			{/* Edit Profile Modal */}
 			{showEditModal && (
-				<Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered>
+				<Modal
+					show={showEditModal}
+					fullscreen="md-down"
+					onHide={() => setShowEditModal(false)}
+					centered
+				>
 					<Modal.Header closeButton>
 						<Modal.Title>Edit Profile</Modal.Title>
 					</Modal.Header>
@@ -803,13 +927,21 @@ const ProfilePage = () => {
 									<Form.Control
 										type="url"
 										value={editForm.photoURL}
-										onChange={(e) => setEditForm(prev => ({ ...prev, photoURL: e.target.value }))}
+										onChange={(e) =>
+											setEditForm((prev) => ({
+												...prev,
+												photoURL: e.target.value,
+											}))
+										}
 										placeholder="https://example.com/photo.jpg"
 										className="form-control-no-shadow"
 									/>
 									<Button
 										variant="outline-secondary"
-										onClick={() => document.getElementById('profile-image-upload').click()}>
+										onClick={() =>
+											document.getElementById("profile-image-upload").click()
+										}
+									>
 										Upload
 									</Button>
 								</div>
@@ -818,7 +950,7 @@ const ProfilePage = () => {
 									type="file"
 									accept="image/*"
 									onChange={handleProfileImageUpload}
-									style={{ display: 'none' }}
+									style={{ display: "none" }}
 								/>
 							</Form.Group>
 							<Form.Group className="mb-3">
@@ -826,7 +958,9 @@ const ProfilePage = () => {
 								<Form.Control
 									type="text"
 									value={editForm.name}
-									onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+									onChange={(e) =>
+										setEditForm((prev) => ({ ...prev, name: e.target.value }))
+									}
 									placeholder="Your name"
 									className="form-control-no-shadow"
 								/>
@@ -837,7 +971,9 @@ const ProfilePage = () => {
 									as="textarea"
 									rows={3}
 									value={editForm.bio}
-									onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+									onChange={(e) =>
+										setEditForm((prev) => ({ ...prev, bio: e.target.value }))
+									}
 									placeholder="Tell us about yourself"
 									className="form-control-no-shadow"
 								/>
@@ -862,14 +998,16 @@ const ProfilePage = () => {
 					onHide={closeImageViewer}
 					centered
 					size="lg"
-					className="image-viewer-modal">
+					className="image-viewer-modal"
+				>
 					<Modal.Body className="p-0 bg-dark text-center">
 						<div className="position-relative">
 							<Button
 								variant="link"
 								className="position-absolute top-0 end-0 m-2 text-white"
 								style={{ zIndex: 10 }}
-								onClick={closeImageViewer}>
+								onClick={closeImageViewer}
+							>
 								<X size={24} />
 							</Button>
 
@@ -880,7 +1018,10 @@ const ProfilePage = () => {
 										className="position-absolute top-50 start-0 translate-middle-y text-white ms-2"
 										style={{ zIndex: 10 }}
 										disabled={currentImageIndex === 0}
-										onClick={() => setCurrentImageIndex(prev => Math.max(0, prev - 1))}>
+										onClick={() =>
+											setCurrentImageIndex((prev) => Math.max(0, prev - 1))
+										}
+									>
 										<ChevronLeft size={32} />
 									</Button>
 
@@ -889,7 +1030,12 @@ const ProfilePage = () => {
 										className="position-absolute top-50 end-0 translate-middle-y text-white me-2"
 										style={{ zIndex: 10 }}
 										disabled={currentImageIndex === currentImages.length - 1}
-										onClick={() => setCurrentImageIndex(prev => Math.min(currentImages.length - 1, prev + 1))}>
+										onClick={() =>
+											setCurrentImageIndex((prev) =>
+												Math.min(currentImages.length - 1, prev + 1),
+											)
+										}
+									>
 										<ChevronRight size={32} />
 									</Button>
 								</>
@@ -900,7 +1046,7 @@ const ProfilePage = () => {
 								className="w-100"
 								style={{
 									maxHeight: "80vh",
-									objectFit: "contain"
+									objectFit: "contain",
 								}}
 							/>
 
@@ -916,38 +1062,50 @@ const ProfilePage = () => {
 
 			{/* Post Options Modal */}
 			{showPostOptionsModal && selectedPostForOptions && (
-				<Modal show={showPostOptionsModal} onHide={closePostOptionsModal} centered>
+				<Modal
+					show={showPostOptionsModal}
+					onHide={closePostOptionsModal}
+					centered
+				>
 					<Modal.Header closeButton>
-						<Modal.Title>Post Options</Modal.Title>
+						<Modal.Title className="fs-4">Post Options</Modal.Title>
 					</Modal.Header>
-					<Modal.Body>
-						<div className="list-group list-group-flush">
+					<Modal.Body className="p-0">
+						<div className="list-group list-group-flush px-0">
 							<button
-								className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-								onClick={() => handleOptionAction('copyLink', selectedPostForOptions.id)}>
+								className="list-group-item list-group-item-action d-flex px-3 p-2"
+								onClick={() =>
+									handleOptionAction("copyLink", selectedPostForOptions.id)
+								}
+							>
 								<span>Copy Link</span>
-								<span className="text-muted">Share this post's link</span>
 							</button>
 							<button
-								className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-								onClick={() => handleOptionAction('repost', selectedPostForOptions.id)}>
+								className="list-group-item list-group-item-action d-flex px-3 p-2"
+								onClick={() =>
+									handleOptionAction("repost", selectedPostForOptions.id)
+								}
+							>
 								<span>Repost</span>
-								<span className="text-muted">Share this post to your followers</span>
 							</button>
-							{selectedPostForOptions.author.id !== currentUser.uid && (
+							{selectedPostForOptions.author.uid !== currentUser.uid && (
 								<button
-									className="list-group-item list-group-item-action text-danger d-flex justify-content-between align-items-center"
-									onClick={() => handleOptionAction('report', selectedPostForOptions.id)}>
+									className="list-group-item list-group-item-action text-danger d-flex px-3 p-2"
+									onClick={() =>
+										handleOptionAction("report", selectedPostForOptions.id)
+									}
+								>
 									<span>Report Post</span>
-									<span className="text-muted">Flag this post for review</span>
 								</button>
 							)}
-							{selectedPostForOptions.author.id === currentUser.uid && (
+							{selectedPostForOptions.author.uid === currentUser.uid && (
 								<button
-									className="list-group-item list-group-item-action text-danger d-flex justify-content-between align-items-center"
-									onClick={() => handleOptionAction('delete', selectedPostForOptions.id)}>
+									className="list-group-item list-group-item-action text-danger d-flex px-3"
+									onClick={() =>
+										handleOptionAction("delete", selectedPostForOptions.id)
+									}
+								>
 									<span>Delete Post</span>
-									<span className="text-muted">Remove this post permanently</span>
 								</button>
 							)}
 						</div>

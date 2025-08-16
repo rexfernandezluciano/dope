@@ -175,11 +175,9 @@ a {
 
   .btn {
     touch-action: manipulation;
-    font-size: 14px;
   }
 
   .form-control, .form-select {
-    font-size: 16px; /* Prevents zoom on iOS */
     box-shadow: none !important;
   }
 
@@ -190,31 +188,10 @@ a {
   /* Add top padding for mobile to account for sticky navbar */
   body {
     padding-top: 0;
-    font-size: 14px;
   }
-
-  /* Responsive font sizes */
-  h1, .display-1 { font-size: 2rem !important; }
-  h2, .display-2 { font-size: 1.75rem !important; }
-  h3, .display-3 { font-size: 1.5rem !important; }
-  h4 { font-size: 1.25rem !important; }
-  h5 { font-size: 1.1rem !important; }
-  h6 { font-size: 1rem !important; }
-  
-  .lead { font-size: 1rem !important; }
-  .small { font-size: 0.8rem !important; }
   
   .card-body {
     padding: 0.75rem;
-    font-size: 14px;
-  }
-  
-  .modal-body {
-    font-size: 14px;
-  }
-  
-  .modal-title {
-    font-size: 1.25rem !important;
   }
 
   /* Enhanced horizontal scrolling for mobile */
@@ -264,13 +241,6 @@ button, [role="button"] {
 
 /* Responsive text utilities */
 @media (max-width: 576px) {
-  .fs-1 { font-size: 1.75rem !important; }
-  .fs-2 { font-size: 1.5rem !important; }
-  .fs-3 { font-size: 1.25rem !important; }
-  .fs-4 { font-size: 1.1rem !important; }
-  .fs-5 { font-size: 1rem !important; }
-  .fs-6 { font-size: 0.9rem !important; }
-  
   .text-truncate-username {
     max-width: 120px;
   }
@@ -278,10 +248,8 @@ button, [role="button"] {
 
 /* Extra responsive sizing for very small screens */
 @media (max-width: 480px) {
-  body { font-size: 13px; }
-  .btn { font-size: 13px; padding: 0.25rem 0.5rem; }
-  .card-body { padding: 0.5rem; font-size: 13px; }
-  .modal-body { font-size: 13px; }
+  .btn { padding: 0.25rem 0.5rem; }
+  .card-body { padding: 0.5rem; }
   
   .text-truncate-username {
     max-width: 100px;
