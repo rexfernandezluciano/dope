@@ -310,19 +310,19 @@ const ProfilePage = () => {
 					<Nav.Item className="flex-fill">
 						<Nav.Link eventKey="posts" className="text-center py-3">
 							<div className="fw-bold">{posts.length}</div>
-							<div className="small text-muted">Posts</div>
+							<div className="ms-1 small text-muted">Posts</div>
 						</Nav.Link>
 					</Nav.Item>
 					<Nav.Item className="flex-fill">
 						<Nav.Link eventKey="followers" className="text-center py-3">
 							<div className="fw-bold">{followers.length}</div>
-							<div className="small text-muted">Followers</div>
+							<div className="ms-1 small text-muted">Followers</div>
 						</Nav.Link>
 					</Nav.Item>
 					<Nav.Item className="flex-fill">
 						<Nav.Link eventKey="following" className="text-center py-3">
 							<div className="fw-bold">{following.length}</div>
-							<div className="small text-muted">Following</div>
+							<div className="ms-1 small text-muted">Following</div>
 						</Nav.Link>
 					</Nav.Item>
 				</Nav>
