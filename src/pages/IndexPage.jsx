@@ -1,6 +1,6 @@
 /** @format */
 
-import { Outlet, useLoaderData } from "react-router-dom";
+import { Outlet, useLoaderData, useLocation } from "react-router-dom";
 
 import NavigationView from "../components/navs/NavigationView";
 import HomePage from "./HomePage";
@@ -11,6 +11,8 @@ import PostDetailPage from "./PostDetailPage";
 const IndexPage = () => {
   const loaderData = useLoaderData() || {};
   const { user } = loaderData;
+  const location = useLocation();
+  const pathname = location.pathname;
 
   // Check if it's a post detail page
 	if (pathname.startsWith('/post/')) {

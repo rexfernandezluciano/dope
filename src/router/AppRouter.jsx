@@ -49,7 +49,7 @@ const router = createBrowserRouter([
 				<IndexPage />
 			</RequireAuth>
 		),
-		loader: IndexPageLoader,
+		loader: indexPageLoader,
 	},
 	{
 		path: "/:username",
