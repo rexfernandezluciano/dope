@@ -1,12 +1,12 @@
+
 /** @format */
 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert } from "react-bootstrap";
-import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 
-import { auth, googleAuthProvider } from "../../config/FirebaseConfig";
-import { verifyUser, userExist } from "../../utils/app-utils";
+import { authAPI } from "../../config/ApiConfig";
+import { verifyUser, userExist, setAuthToken } from "../../utils/app-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
@@ -26,9 +26,9 @@ const LoginPage = () => {
 	const handleEmailLogin = async e => {
 		e.preventDefault();
 		try {
-			const result = await signInWithEmailAndPassword(auth, email, password);
-			const user = result.user;
-			if (!user.emailVerified) {
+			const result = await authAPI.login(email, password);
+			
+			if (!result.user.emailVerified) {
 				setError(
 					<>
 						Please verify your account first to continue.{" "}
@@ -37,11 +37,10 @@ const LoginPage = () => {
 							role="button"
 							className="fw-bold"
 							onClick={() => {
-								verifyUser().then(() => {
+								verifyUser(email).then(() => {
 									setShowDialog(true);
 									setDialogTitle("Verification Link");
 									setDialogMessage("Verification link was sent to your email address.");
-									auth.signOut();
 								});
 							}}>
 							Resend verification link.
@@ -50,6 +49,8 @@ const LoginPage = () => {
 				);
 				return;
 			}
+			
+			setAuthToken(result.token);
 			navigate("/");
 		} catch (err) {
 			setError(err.message);
@@ -58,37 +59,10 @@ const LoginPage = () => {
 
 	const handleGoogleLogin = async () => {
 		try {
-			const result = await signInWithPopup(auth, googleAuthProvider);
-			const user = result.user;
-
-			const isExist = await userExist(user.uid);
-			if (!isExist) {
-				setError("The account doesn't exist.");
-				return;
-			}
-			if (!user.emailVerified) {
-				setError(
-					<>
-						Please verify your account first to continue.{" "}
-						<a
-							href="#verify"
-							role="button"
-							className="fw-bold"
-							onClick={() => {
-								verifyUser().then(() => {
-									setShowDialog(true);
-									setDialogTitle("Verification Link");
-									setDialogMessage("Verification link was sent to your email address.");
-									auth.signOut();
-								});
-							}}>
-							Resend verification link.
-						</a>
-					</>,
-				);
-				return;
-			}
-			navigate("/");
+			// For Google OAuth, you'll need to implement Google Sign-In
+			// This is a placeholder for the Google OAuth flow
+			console.log("Google login not yet implemented with custom API");
+			setError("Google login is not yet available with the custom API");
 		} catch (err) {
 			setError(err.message);
 		}

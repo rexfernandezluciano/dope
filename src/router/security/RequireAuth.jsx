@@ -1,22 +1,36 @@
+
 /** @format */
 
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../../config/FirebaseConfig";
+import { getUser } from "../../utils/app-utils";
 import StartPage from "../../pages/StartPage";
 
 const RequireAuth = ({ children }) => {
 	const location = useLocation();
 	const [user, setUser] = useState(null);
+	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
-		const unsubscribe = onAuthStateChanged(auth, currentUser => {
-			setUser(currentUser);
-		});
-		return unsubscribe;
+		const checkAuth = async () => {
+			try {
+				const currentUser = await getUser();
+				setUser(currentUser);
+			} catch (error) {
+				console.error('Auth check failed:', error);
+				setUser(null);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		checkAuth();
 	}, []);
+
+	if (loading) {
+		return <div>Loading...</div>; // You can replace this with a proper loading component
+	}
 
 	if (!user) {
 		return <StartPage />;

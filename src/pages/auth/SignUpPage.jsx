@@ -1,13 +1,13 @@
+
 /** @format */
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
-import { createUserWithEmailAndPassword, signInWithPopup, updateProfile } from "firebase/auth";
 import heic2any from "heic2any";
 
-import { auth, googleAuthProvider } from "../../config/FirebaseConfig";
-import { verifyUser, saveUser, userExist, userExistByEmail, getGravatar } from "../../utils/app-utils";
+import { authAPI } from "../../config/ApiConfig";
+import { verifyUser, userExistByEmail, getGravatar } from "../../utils/app-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
@@ -61,7 +61,7 @@ const SignUpPage = () => {
 			setLoading(true);
 			const exists = await userExistByEmail(email);
 			if (exists) {
-				setError("Email address is already exist. Please try again.");
+				setError("Email address already exists. Please try again.");
 				return;
 			}
 			changeStep(3, true);
@@ -106,19 +106,23 @@ const SignUpPage = () => {
 		try {
 			setLoading(true);
 			const displayName = `${firstName} ${lastName}`.trim();
-			const result = await createUserWithEmailAndPassword(auth, email, password);
-			const user = result.user;
+			const photoURL = photo ? photoPreview : getGravatar(email);
 
-			let photoURL = photo ? photoPreview : getGravatar(email);
+			const userData = {
+				firstName,
+				lastName,
+				displayName,
+				email,
+				password,
+				photoURL
+			};
 
-			await updateProfile(user, { displayName, photoURL });
-			await saveUser(user);
-
-			await verifyUser();
+			const result = await authAPI.register(userData);
+			
+			await verifyUser(email);
 			setShowDialog(true);
 			setDialogTitle("Verification Link");
 			setDialogMessage("Verification link was sent to your email address.");
-			auth.signOut();
 		} catch (err) {
 			setError(err.message);
 		} finally {
@@ -129,23 +133,9 @@ const SignUpPage = () => {
 	const handleGoogleSignup = async () => {
 		try {
 			setLoading(true);
-			const result = await signInWithPopup(auth, googleAuthProvider);
-			const user = result.user;
-			const isExist = await userExist(user.uid);
-			if (isExist) {
-				setError(`The ${user.email} is already exist. Please try again.`);
-				return;
-			}
-			await updateProfile(user, {
-				displayName: `${firstName} ${lastName}`,
-				photoURL: getGravatar(email),
-			});
-			await saveUser(user);
-			await verifyUser();
-			setShowDialog(true);
-			setDialogTitle("Verification Link");
-			setDialogMessage(`Verification link was sent to ${email}.`);
-			auth.signOut();
+			// Google OAuth implementation would go here
+			console.log("Google signup not yet implemented with custom API");
+			setError("Google signup is not yet available with the custom API");
 		} catch (err) {
 			setError(err.message);
 		} finally {

@@ -1,57 +1,44 @@
+
 /** @format */
 
-import { auth, database } from "../config/FirebaseConfig";
-import { ref, get, set } from "firebase/database";
-import { sendEmailVerification } from "firebase/auth";
-import md5 from "md5";
+import { authAPI, userAPI } from '../config/ApiConfig';
 
 /**
- * Sends a verification email to the currently signed-in user.
- * @returns {Promise<void>} Resolves when the email is sent, rejects on failure.
+ * Get current authenticated user
+ * @returns {Promise<Object|null>} User object or null
  */
-const verifyUser = () => {
-	if (!auth.currentUser) {
-		return Promise.reject(new Error("No user is currently signed in."));
-	}
-
-	return sendEmailVerification(auth.currentUser);
-};
-
-/**
- * Reloads the current user and checks if their email is verified.
- * @returns {Promise<boolean>} True if email is verified, false otherwise.
- */
-const userIsVerified = async () => {
-	if (!auth.currentUser) return false;
-
+export const getUser = async () => {
 	try {
-		await auth.currentUser.reload();
-		return auth.currentUser.emailVerified;
+		const token = localStorage.getItem('authToken');
+		if (!token) return null;
+		
+		const user = await authAPI.getCurrentUser();
+		return user;
 	} catch (error) {
-		return false;
+		console.error('Error getting user:', error);
+		localStorage.removeItem('authToken');
+		return null;
 	}
 };
 
 /**
- * Save User Data to the database.
- * @returns {Promise<void>} It save user data if not existed, not otherwise.
+ * Save user data
+ * @param {Object} userData - User data to save
+ * @returns {Promise<void>}
  */
-const saveUser = async user => {
-	const userRef = ref(database, `users/${user.uid}`);
-
-	const snapshot = await get(userRef);
-	if (!snapshot.exists()) {
-		await set(userRef, {
-			uid: user.uid,
-			name: user.displayName,
-			email: user.email,
-			photoURL: user.photoURL,
+export const saveUser = async (userData) => {
+	try {
+		await userAPI.updateUser(userData.uid, {
+			uid: userData.uid,
+			name: userData.displayName,
+			email: userData.email,
+			photoURL: userData.photoURL,
 			role: {
 				user: true,
 				editor: false,
 				moderator: false,
 			},
-			username: await createUsername(user.displayName),
+			username: await createUsername(userData.displayName),
 			status: "online",
 			account: {
 				verified: false,
@@ -60,96 +47,124 @@ const saveUser = async user => {
 			lastSeen: new Date().toISOString(),
 			createdAt: new Date().toISOString(),
 		});
+	} catch (error) {
+		console.error('Error saving user:', error);
+		throw error;
 	}
 };
 
 /**
- * Check if user is admin or not.
- * @returns {Promise<boolean>} true if admin, false otherwise.
+ * Check if user is admin
+ * @returns {Promise<boolean>} true if admin, false otherwise
  */
-
-const isAdmin = async () => {
-	const user = auth.currentUser;
-	if (!user) return false;
-
-	const snapshot = await get(ref(database, `admins/${user.uid}`));
-	return snapshot.exists();
+export const isAdmin = async () => {
+	try {
+		const user = await getUser();
+		if (!user) return false;
+		
+		const result = await userAPI.isAdmin(user.uid);
+		return result.isAdmin;
+	} catch (error) {
+		console.error('Error checking admin status:', error);
+		return false;
+	}
 };
 
 /**
- * To check if user is logged in.
- * @returns {auth<Boolean|Object>} true if user is valid object, false if not.
+ * Check if user exists by ID
+ * @param {string} uid - User ID
+ * @returns {Promise<boolean>} true if exists, false otherwise
  */
-
-const getUser = async () => {
-	const user = auth.currentUser;
-	if (!user) return null;
-
-	const snapshot = await get(ref(database, `users/${user.uid}`));
-	return snapshot.exists() ? snapshot.val() : null;
-};
-
-const userExist = async uid => {
-	const snapshot = await get(ref(database, `users/${uid}`));
-	return snapshot.exists();
-};
-
-const userExistByEmail = async email => {
+export const userExist = async (uid) => {
 	try {
-		const snapshot = await get(ref(database, "users"));
-		if (!snapshot.exists()) return false;
-
-		let exists = false;
-		snapshot.forEach(child => {
-			if (child.val().email?.toLowerCase() === email.toLowerCase()) {
-				exists = true;
-			}
-		});
-
-		return exists;
+		const result = await userAPI.checkUserExists(uid);
+		return result.exists;
 	} catch (error) {
-		console.error("Error checking user by email:", error);
+		console.error('Error checking user existence:', error);
 		return false;
 	}
 };
 
-const checkUsername = async username => {
+/**
+ * Check if user exists by email
+ * @param {string} email - Email address
+ * @returns {Promise<boolean>} true if exists, false otherwise
+ */
+export const userExistByEmail = async (email) => {
 	try {
-		const snapshot = await get(ref(database, "users"));
-		if (!snapshot.exists()) return false;
-
-		let exists = false;
-		snapshot.forEach(child => {
-			if (child.val().username?.toLowerCase() === username.toLowerCase()) {
-				exists = true;
-			}
-		});
-
-		return exists;
+		const result = await userAPI.checkEmailExists(email);
+		return result.exists;
 	} catch (error) {
-		console.error("Error checking user by email:", error);
+		console.error('Error checking email existence:', error);
 		return false;
 	}
 };
 
-const isUserAllowed = async email => {
-	const snapshot = await get(ref(database, "allowlists"));
-	if (!snapshot.exists()) return false;
-
-	const allowlist = snapshot.val();
-	return allowlist.includes(email);
+/**
+ * Send email verification
+ * @param {string} email - Email address
+ * @returns {Promise<void>}
+ */
+export const verifyUser = async (email) => {
+	try {
+		await authAPI.resendVerification(email);
+	} catch (error) {
+		console.error('Error sending verification:', error);
+		throw error;
+	}
 };
 
-const getGravatar = email => {
-	const hash = md5(email.trim().toLowerCase());
-	return `https://www.gravatar.com/avatar/${hash}?d=identicon`;
+/**
+ * Create a unique username from display name
+ * @param {string} displayName - Display name
+ * @returns {Promise<string>} Generated username
+ */
+export const createUsername = async (displayName) => {
+	if (!displayName) return 'user' + Date.now();
+	
+	// Generate username from display name
+	let username = displayName.toLowerCase()
+		.replace(/[^a-z0-9]/g, '')
+		.substring(0, 15);
+	
+	// Add random number if username is too short
+	if (username.length < 3) {
+		username += Math.floor(Math.random() * 1000);
+	}
+	
+	return username;
 };
 
-const createUsername = async (displayName) => {
-	const base = displayName.replace(/\s+/g, "").toLowerCase();
-	const number = Math.floor(Math.random() * 9000) + 100;
-
-	return await checkUsername(base) ? `${base}${number}` : base;
+/**
+ * Get Gravatar URL
+ * @param {string} email - Email address
+ * @returns {string} Gravatar URL
+ */
+export const getGravatar = (email) => {
+	const crypto = require('crypto');
+	const hash = crypto.createHash('md5').update(email.toLowerCase().trim()).digest('hex');
+	return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=200`;
 };
 
-export { verifyUser, userIsVerified, saveUser, isAdmin, getUser, isUserAllowed, userExist, userExistByEmail, getGravatar, createUsername };
+/**
+ * Store authentication token
+ * @param {string} token - JWT token
+ */
+export const setAuthToken = (token) => {
+	localStorage.setItem('authToken', token);
+};
+
+/**
+ * Remove authentication token
+ */
+export const removeAuthToken = () => {
+	localStorage.removeItem('authToken');
+};
+
+/**
+ * Get authentication token
+ * @returns {string|null} JWT token or null
+ */
+export const getAuthToken = () => {
+	return localStorage.getItem('authToken');
+};
