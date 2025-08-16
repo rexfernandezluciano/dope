@@ -27,12 +27,12 @@ const NavigationView = ({ children, user }) => {
 	const menuItems = [
 		{
 			label: "Home",
-			href: "/",
+			href: "/home",
 			icon: <House size={18} className="me-2" />,
 		},
 		{
 			label: "Profile",
-			href: `/profile/${user?.username}`,
+			href: `/${user?.username}`,
 			icon: <Person size={18} className="me-2" />,
 		},
 		{

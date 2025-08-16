@@ -214,12 +214,21 @@ const HomePage = () => {
 								height="45"
 								style={{ objectFit: "cover" }}
 							/>
-							<Button
-								variant="outline-secondary"
-								className="flex-grow-1 text-start text-muted border-1 bg-light rounded-pill py-2"
-								onClick={() => setShowComposerModal(true)}>
-								What's on your mind, {user?.name?.split(' ')[0]}?
-							</Button>
+							<div className="flex-grow-1">
+								<div className="d-flex align-items-center gap-1 mb-2">
+									<span className="fw-bold">{user?.name}</span>
+									{user?.hasBlueCheck && (
+										<span className="text-primary">✓</span>
+									)}
+									<span className="text-muted">@{user?.username}</span>
+								</div>
+								<Button
+									variant="outline-secondary"
+									className="w-100 text-start text-muted border-1 bg-light rounded-pill py-2"
+									onClick={() => setShowComposerModal(true)}>
+									What's on your mind?
+								</Button>
+							</div>
 						</div>
 					</Card.Body>
 				</Card>
@@ -352,8 +361,14 @@ const HomePage = () => {
 							/>
 
 							<div className="flex-grow-1">
-								<div className="mb-1">
-									<span className="fw-bold small">{user?.name}</span>
+								<div className="d-flex align-items-center gap-2 mb-1">
+									<div className="d-flex align-items-center gap-1">
+										<span className="fw-bold small">{user?.name}</span>
+										{user?.hasBlueCheck && (
+											<span className="text-primary">✓</span>
+										)}
+										<span className="text-muted small">@{user?.username}</span>
+									</div>
 									<Dropdown onSelect={value => setPrivacy(value)} align="end">
 										<Dropdown.Toggle
 											variant="light"

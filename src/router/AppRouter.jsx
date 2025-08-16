@@ -44,7 +44,7 @@ const router = createBrowserRouter([
 		],
 	},
 	{
-		path: "/profile/:username",
+		path: "/:username",
 		element: (
 			<RequireAuth>
 				<IndexPage />
