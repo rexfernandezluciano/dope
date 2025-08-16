@@ -429,27 +429,22 @@ const HomePage = () => {
 														{formatTimeAgo(post.createdAt)}
 													</span>
 												</div>
-												<Dropdown align="end">
-													<OverlayTrigger
-														placement="bottom"
-														overlay={<Tooltip>More options</Tooltip>}
+												<Dropdown align="end" onClick={(e) => e.stopPropagation()}>
+													<Dropdown.Toggle 
+														variant="link" 
+														className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
+														style={{
+															width: '32px',
+															height: '32px',
+															background: 'none',
+															border: 'none !important',
+															boxShadow: 'none !important'
+														}}
+														onClick={(e) => e.stopPropagation()}
 													>
-														<Dropdown.Toggle 
-															variant="link" 
-															className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
-															style={{
-																width: '32px',
-																height: '32px',
-																background: 'none',
-																border: 'none !important',
-																boxShadow: 'none !important'
-															}}
-															onClick={(e) => e.stopPropagation()}
-														>
-															<ThreeDots size={16} />
-														</Dropdown.Toggle>
-													</OverlayTrigger>
-													<Dropdown.Menu>
+														<ThreeDots size={16} />
+													</Dropdown.Toggle>
+													<Dropdown.Menu onClick={(e) => e.stopPropagation()}>
 														<Dropdown.Item onClick={(e) => {
 															e.stopPropagation();
 															navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
@@ -600,110 +595,95 @@ const HomePage = () => {
 											)}
 
 											<div className="d-flex justify-content-around text-muted mt-3 pt-2 border-top" style={{ maxWidth: '400px' }}>
-												<OverlayTrigger
-													placement="bottom"
-													overlay={<Tooltip>Reply</Tooltip>}
+												<Button
+													variant="link"
+													size="sm"
+													className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+													style={{ 
+														transition: 'all 0.2s',
+														minWidth: '40px',
+														height: '36px'
+													}}
+													onClick={(e) => {
+														e.stopPropagation();
+														window.location.href = `/post/${post.id}`;
+													}}
+													onMouseEnter={(e) => {
+														e.target.closest('.action-btn').style.backgroundColor = 'rgba(29, 161, 242, 0.1)';
+														e.target.closest('.action-btn').style.color = '#1da1f2';
+													}}
+													onMouseLeave={(e) => {
+														e.target.closest('.action-btn').style.backgroundColor = 'transparent';
+														e.target.closest('.action-btn').style.color = '#6c757d';
+													}}
 												>
-													<Button
-														variant="link"
-														size="sm"
-														className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-														style={{ 
-															transition: 'all 0.2s',
-															minWidth: '40px',
-															height: '36px'
-														}}
-														onClick={(e) => {
-															e.stopPropagation();
-															window.location.href = `/post/${post.id}`;
-														}}
-														onMouseEnter={(e) => {
-															e.target.closest('.action-btn').style.backgroundColor = 'rgba(29, 161, 242, 0.1)';
-															e.target.closest('.action-btn').style.color = '#1da1f2';
-														}}
-														onMouseLeave={(e) => {
+													<ChatDots size={24} style={{ flexShrink: 0 }} />
+													{post._count.comments > 0 && (
+														<span className="small">{post._count.comments}</span>
+													)}
+												</Button>
+
+												<Button
+													variant="link"
+													size="sm"
+													className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+													style={{ 
+														color: post.likes.some((like) => like.userId === user.uid) ? "#dc3545" : "#6c757d",
+														transition: 'all 0.2s',
+														minWidth: '40px',
+														height: '36px'
+													}}
+													onClick={(e) => {
+														e.stopPropagation();
+														handleLikePost(post.id);
+													}}
+													onMouseEnter={(e) => {
+														if (!post.likes.some((like) => like.userId === user.uid)) {
+															e.target.closest('.action-btn').style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+															e.target.closest('.action-btn').style.color = '#dc3545';
+														}
+													}}
+													onMouseLeave={(e) => {
+														if (!post.likes.some((like) => like.userId === user.uid)) {
 															e.target.closest('.action-btn').style.backgroundColor = 'transparent';
 															e.target.closest('.action-btn').style.color = '#6c757d';
-														}}
-													>
-														<ChatDots size={24} style={{ flexShrink: 0 }} />
-														{post._count.comments > 0 && (
-															<span className="small">{post._count.comments}</span>
-														)}
-													</Button>
-												</OverlayTrigger>
-
-												<OverlayTrigger
-													placement="bottom"
-													overlay={<Tooltip>{post.likes.some((like) => like.userId === user.uid) ? 'Unlike' : 'Like'}</Tooltip>}
+														}
+													}}
 												>
-													<Button
-														variant="link"
-														size="sm"
-														className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-														style={{ 
-															color: post.likes.some((like) => like.userId === user.uid) ? "#dc3545" : "#6c757d",
-															transition: 'all 0.2s',
-															minWidth: '40px',
-															height: '36px'
-														}}
-														onClick={(e) => {
-															e.stopPropagation();
-															handleLikePost(post.id);
-														}}
-														onMouseEnter={(e) => {
-															if (!post.likes.some((like) => like.userId === user.uid)) {
-																e.target.closest('.action-btn').style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
-																e.target.closest('.action-btn').style.color = '#dc3545';
-															}
-														}}
-														onMouseLeave={(e) => {
-															if (!post.likes.some((like) => like.userId === user.uid)) {
-																e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-																e.target.closest('.action-btn').style.color = '#6c757d';
-															}
-														}}
-													>
-														{post.likes.some((like) => like.userId === user.uid) ? (
-															<HeartFill size={24} style={{ flexShrink: 0 }} />
-														) : (
-															<Heart size={24} style={{ flexShrink: 0 }} />
-														)}
-														{post._count.likes > 0 && (
-															<span className="small">{post._count.likes}</span>
-														)}
-													</Button>
-												</OverlayTrigger>
+													{post.likes.some((like) => like.userId === user.uid) ? (
+														<HeartFill size={24} style={{ flexShrink: 0 }} />
+													) : (
+														<Heart size={24} style={{ flexShrink: 0 }} />
+													)}
+													{post._count.likes > 0 && (
+														<span className="small">{post._count.likes}</span>
+													)}
+												</Button>
 
-												<OverlayTrigger
-													placement="bottom"
-													overlay={<Tooltip>Share</Tooltip>}
+												<Button
+													variant="link"
+													size="sm"
+													className="text-muted p-2 border-0 rounded-circle action-btn"
+													style={{ 
+														transition: 'all 0.2s',
+														minWidth: '40px',
+														height: '36px'
+													}}
+													onClick={(e) => {
+														e.stopPropagation();
+														handleSharePost(post.id);
+													}}
+													onMouseEnter={(e) => {
+														e.target.closest('.action-btn').style.backgroundColor = 'rgba(23, 191, 99, 0.1)';
+														e.target.closest('.action-btn').style.color = '#17bf63';
+													}}
+													onMouseLeave={(e) => {
+														e.target.closest('.action-btn').style.backgroundColor = 'transparent';
+														e.target.closest('.action-btn').style.color = '#6c757d';
+													}}
 												>
-													<Button
-														variant="link"
-														size="sm"
-														className="text-muted p-2 border-0 rounded-circle action-btn"
-														style={{ 
-															transition: 'all 0.2s',
-															minWidth: '40px',
-															height: '36px'
-														}}
-														onClick={(e) => {
-															e.stopPropagation();
-															handleSharePost(post.id);
-														}}
-														onMouseEnter={(e) => {
-															e.target.closest('.action-btn').style.backgroundColor = 'rgba(23, 191, 99, 0.1)';
-															e.target.closest('.action-btn').style.color = '#17bf63';
-														}}
-														onMouseLeave={(e) => {
-															e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-															e.target.closest('.action-btn').style.color = '#6c757d';
-														}}
-													>
-														<Share size={24} style={{ flexShrink: 0 }} />
-													</Button>
-												</OverlayTrigger>
+													<Share size={24} style={{ flexShrink: 0 }} />
+												</Button>
 											</div>
 										</div>
 									</div>
