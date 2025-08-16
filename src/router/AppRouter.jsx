@@ -47,58 +47,13 @@ const router = createBrowserRouter([
 				loader: indexPageLoader,
 			},
 			{
-				path: "settings",
+				path: "profile/:username/settings",
 				element: <SettingsPage />,
 				loader: indexPageLoader,
 			},
 		],
 	},
-	// Legacy routes for backward compatibility
-	{
-		path: "/home",
-		element: (
-			<RequireAuth>
-				<IndexPage />
-			</RequireAuth>
-		),
-		loader: indexPageLoader,
-		children: [
-			{
-				index: true,
-				element: <HomePage />,
-			},
-		],
-	},
-	{
-		path: "/profile/:username",
-		element: (
-			<RequireAuth>
-				<IndexPage />
-			</RequireAuth>
-		),
-		loader: indexPageLoader,
-		children: [
-			{
-				index: true,
-				element: <ProfilePage />,
-			},
-		],
-	},
-	{
-		path: "/settings",
-		element: (
-			<RequireAuth>
-				<IndexPage />
-			</RequireAuth>
-		),
-		loader: indexPageLoader,
-		children: [
-			{
-				index: true,
-				element: <SettingsPage />,
-			},
-		],
-	},
+	
 ]);
 
 const AppRouter = () => {

@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState, useEffect } from "react";
-import { useLoaderData, useNavigate } from "react-router-dom";
+import { useLoaderData, useNavigate, useParams } from "react-router-dom";
 import { Container, Card, Form, Button, Alert, Modal, Row, Col } from "react-bootstrap";
 import { Shield, Bell, Eye, Globe, People, Lock, Trash } from "react-bootstrap-icons";
 
@@ -9,6 +9,7 @@ import { userAPI, authAPI } from "../config/ApiConfig";
 import { removeAuthToken } from "../utils/app-utils";
 
 const SettingsPage = () => {
+	const { username } = useParams();
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData;
 	const navigate = useNavigate();
@@ -52,14 +53,26 @@ const SettingsPage = () => {
 		);
 	}
 
+	// Check if user is trying to access their own settings
+	if (user.username !== username) {
+		return (
+			<Container className="text-center py-5">
+				<Alert variant="danger">
+					You can only access your own settings.
+				</Alert>
+			</Container>
+		);
+	}
+
 	const handleSaveSettings = async () => {
 		try {
 			setLoading(true);
-			await userAPI.updateUser(user.username, settings);
+			await userAPI.updateUser(username, settings);
 			setMessage("Settings updated successfully!");
 			setMessageType("success");
 		} catch (err) {
-			setMessage(err.message);
+			console.error('Error updating settings:', err);
+			setMessage(err.message || 'Failed to update settings');
 			setMessageType("danger");
 		} finally {
 			setLoading(false);

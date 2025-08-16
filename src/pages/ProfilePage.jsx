@@ -33,20 +33,14 @@ const ProfilePage = () => {
 	const loadProfile = async () => {
 		try {
 			setLoading(true);
-			const [userResponse, postsResponse, followersResponse, followingResponse] = await Promise.all([
-				userAPI.getUser(username),
-				postAPI.getPosts({ author: username }),
-				userAPI.getFollowers(username),
-				userAPI.getFollowing(username)
-			]);
-
+			setError("");
+			
+			// Load user profile first
+			const userResponse = await userAPI.getUser(username);
+			if (!userResponse || !userResponse.user) {
+				throw new Error("User not found");
+			}
 			setProfileUser(userResponse.user);
-			setPosts(postsResponse.posts);
-			setFollowers(followersResponse.followers);
-			setFollowing(followingResponse.following);
-
-			// Check if current user is following this profile
-			setIsFollowing(followersResponse.followers.some(f => f.uid === currentUser.uid));
 
 			// Set edit form data
 			setEditForm({
@@ -54,8 +48,40 @@ const ProfilePage = () => {
 				bio: userResponse.user.bio || "",
 				photoURL: userResponse.user.photoURL || ""
 			});
+
+			// Load additional data with fallbacks
+			try {
+				const postsResponse = await postAPI.getPosts({ author: username });
+				setPosts(postsResponse.posts || []);
+			} catch (err) {
+				console.error('Error loading posts:', err);
+				setPosts([]);
+			}
+
+			try {
+				const followersResponse = await userAPI.getFollowers(username);
+				setFollowers(followersResponse.followers || []);
+				
+				// Check if current user is following this profile
+				if (currentUser) {
+					setIsFollowing((followersResponse.followers || []).some(f => f.uid === currentUser.uid));
+				}
+			} catch (err) {
+				console.error('Error loading followers:', err);
+				setFollowers([]);
+			}
+
+			try {
+				const followingResponse = await userAPI.getFollowing(username);
+				setFollowing(followingResponse.following || []);
+			} catch (err) {
+				console.error('Error loading following:', err);
+				setFollowing([]);
+			}
+
 		} catch (err) {
-			setError(err.message);
+			console.error('Error loading profile:', err);
+			setError(err.message || 'Failed to load profile');
 		} finally {
 			setLoading(false);
 		}
