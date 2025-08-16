@@ -370,14 +370,22 @@ const ProfilePage = () => {
 
 												{post.imageUrls && post.imageUrls.length > 0 && (
 													<div className="mb-2">
-														{post.imageUrls.map((url, idx) => (
-															<Image
-																key={idx}
-																src={url}
-																className="rounded mb-2 w-100"
-																style={{ maxHeight: "400px", objectFit: "cover" }}
-															/>
-														))}
+														<div className="d-flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: "thin" }}>
+															{post.imageUrls.map((url, idx) => (
+																<Image
+																	key={idx}
+																	src={url}
+																	className="rounded flex-shrink-0"
+																	style={{ 
+																		width: post.imageUrls.length === 1 ? "100%" : "250px",
+																		height: "200px", 
+																		objectFit: "cover",
+																		cursor: "pointer"
+																	}}
+																	onClick={() => window.open(url, '_blank')}
+																/>
+															))}
+														</div>
 													</div>
 												)}
 

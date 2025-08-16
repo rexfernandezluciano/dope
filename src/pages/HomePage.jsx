@@ -16,6 +16,7 @@ const HomePage = () => {
 	const [privacy, setPrivacy] = useState("Public");
 	const [showStickerModal, setShowStickerModal] = useState(false);
 	const [photos, setPhotos] = useState(null);
+	const MAX_IMAGES = 4;
 	const [searchTerm, setSearchTerm] = useState("");
 	const [posts, setPosts] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -90,8 +91,16 @@ const HomePage = () => {
 	const handleFileChange = async (e) => {
 		const files = Array.from(e.target.files);
 		if (files.length) {
+			const currentPhotos = photos || [];
+			const remainingSlots = MAX_IMAGES - currentPhotos.length;
+			const filesToUpload = files.slice(0, remainingSlots);
+			
+			if (filesToUpload.length < files.length) {
+				alert(`You can only upload up to ${MAX_IMAGES} images. Only the first ${filesToUpload.length} will be uploaded.`);
+			}
+			
 			const uploadedUrls = [];
-			for (const file of files) {
+			for (const file of filesToUpload) {
 				const url = await uploadToCloudinary(file);
 				if (url) {
 					uploadedUrls.push(url);
@@ -110,6 +119,12 @@ const HomePage = () => {
 	};
 
 	const handleSelectGif = gif => {
+		const currentPhotos = photos || [];
+		if (currentPhotos.length >= MAX_IMAGES) {
+			alert(`You can only add up to ${MAX_IMAGES} images/GIFs.`);
+			return;
+		}
+		
 		const imageUrl = gif.images.fixed_height.url;
 		setPhotos(prev => [...(prev || []), imageUrl]);
 		setShowStickerModal(false);
@@ -298,14 +313,22 @@ const HomePage = () => {
 
 											{post.imageUrls && post.imageUrls.length > 0 && (
 												<div className="mb-2">
-													{post.imageUrls.map((url, idx) => (
-														<Image
-															key={idx}
-															src={url}
-															className="rounded mb-2 w-100"
-															style={{ maxHeight: "400px", objectFit: "cover" }}
-														/>
-													))}
+													<div className="d-flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: "thin" }}>
+														{post.imageUrls.map((url, idx) => (
+															<Image
+																key={idx}
+																src={url}
+																className="rounded flex-shrink-0"
+																style={{ 
+																	width: post.imageUrls.length === 1 ? "100%" : "250px",
+																	height: "200px", 
+																	objectFit: "cover",
+																	cursor: "pointer"
+																}}
+																onClick={() => window.open(url, '_blank')}
+															/>
+														))}
+													</div>
 												</div>
 											)}
 											{post.postType === 'live' && post.liveVideoUrl && (
@@ -439,15 +462,15 @@ const HomePage = () => {
 						</div>
 
 						{photos?.length > 0 && (
-							<div className="d-flex align-items-center gap-2 overflow-x-auto mt-2">
+							<div className="d-flex gap-2 overflow-x-auto mt-2 pb-2" style={{ scrollbarWidth: "thin" }}>
 								{photos.map((file, idx) => {
 									const url = typeof file === "string" ? file : URL.createObjectURL(file);
 									return (
-										<div key={idx} className="position-relative" style={{ display: "inline-block" }}>
+										<div key={idx} className="position-relative flex-shrink-0">
 											<Image
 												src={url}
-												width={200}
-												height={200}
+												width={120}
+												height={120}
 												className="rounded-3 border bg-light"
 												style={{ objectFit: "cover" }}
 											/>
@@ -456,8 +479,8 @@ const HomePage = () => {
 												size="sm"
 												onClick={() => handleRemovePhoto(idx)}
 												className="position-absolute top-0 end-0 m-1 p-0 rounded-circle"
-												style={{ width: "24px", height: "24px", lineHeight: "20px" }}>
-												<X size={20} />
+												style={{ width: "20px", height: "20px", lineHeight: "16px" }}>
+												<X size={12} />
 											</Button>
 										</div>
 									);
@@ -482,15 +505,19 @@ const HomePage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className="text-muted p-1"
-									onClick={() => fileInputRef.current?.click()}>
+									className={`p-1 ${(photos?.length >= MAX_IMAGES) ? 'text-secondary' : 'text-muted'}`}
+									onClick={() => fileInputRef.current?.click()}
+									disabled={photos?.length >= MAX_IMAGES}
+									title={photos?.length >= MAX_IMAGES ? `Maximum ${MAX_IMAGES} images allowed` : 'Add photo'}>
 									<Camera size={18} />
 								</Button>
 								<Button
 									variant="link"
 									size="sm"
-									className="text-muted p-1"
-									onClick={() => setShowStickerModal(true)}>
+									className={`p-1 ${(photos?.length >= MAX_IMAGES) ? 'text-secondary' : 'text-muted'}`}
+									onClick={() => setShowStickerModal(true)}
+									disabled={photos?.length >= MAX_IMAGES}
+									title={photos?.length >= MAX_IMAGES ? `Maximum ${MAX_IMAGES} images allowed` : 'Add GIF'}>
 									<EmojiSmile size={18} />
 								</Button>
 								<Button
