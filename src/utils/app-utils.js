@@ -141,8 +141,8 @@ export const createUsername = async (displayName) => {
  * @returns {string} Gravatar URL
  */
 export const getGravatar = (email) => {
-	const crypto = require('crypto');
-	const hash = crypto.createHash('md5').update(email.toLowerCase().trim()).digest('hex');
+	const md5 = require('md5');
+	const hash = md5(email.toLowerCase().trim());
 	return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=200`;
 };
 
