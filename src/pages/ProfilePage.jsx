@@ -34,13 +34,13 @@ const ProfilePage = () => {
 		try {
 			setLoading(true);
 			setError("");
-			
+
 			// Load user profile first
 			const userResponse = await userAPI.getUser(username);
 			if (!userResponse) {
 				throw new Error("User not found");
 			}
-			
+
 			// Handle response structure - the API returns user data directly
 			setProfileUser(userResponse);
 
@@ -73,7 +73,7 @@ const ProfilePage = () => {
 				try {
 					const followersResponse = await userAPI.getFollowers(username);
 					setFollowers(followersResponse.followers || []);
-					
+
 					// Check if current user is following this profile
 					if (currentUser) {
 						setIsFollowing((followersResponse.followers || []).some(f => f.uid === currentUser.uid));
@@ -145,7 +145,7 @@ const ProfilePage = () => {
 		const formData = new FormData();
 		formData.append('file', file);
 		formData.append('upload_preset', 'dope_network'); // You'll need to set this up in Cloudinary
-		
+
 		try {
 			const response = await fetch('https://api.cloudinary.com/v1_1/your_cloud_name/image/upload', {
 				method: 'POST',
@@ -370,8 +370,13 @@ const ProfilePage = () => {
 
 												{post.imageUrls && post.imageUrls.length > 0 && (
 													<div className="mb-2">
-														<div className="d-flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: "thin" }}>
-															{post.imageUrls.map((url, idx) => (
+														<div 
+															className="d-flex gap-2 overflow-x-auto pb-2" 
+															style={{ 
+																scrollbarWidth: "thin",
+																scrollbarColor: "#ccc transparent"
+															}}>
+															{post.imageUrls.slice(0, 4).map((url, idx) => (
 																<Image
 																	key={idx}
 																	src={url}
@@ -380,11 +385,25 @@ const ProfilePage = () => {
 																		width: post.imageUrls.length === 1 ? "100%" : "250px",
 																		height: "200px", 
 																		objectFit: "cover",
-																		cursor: "pointer"
+																		cursor: "pointer",
+																		minWidth: post.imageUrls.length === 1 ? "auto" : "250px"
 																	}}
 																	onClick={() => window.open(url, '_blank')}
 																/>
 															))}
+															{post.imageUrls.length > 4 && (
+																<div 
+																	className="d-flex align-items-center justify-content-center rounded flex-shrink-0 bg-light text-muted"
+																	style={{ 
+																		width: "250px",
+																		height: "200px",
+																		minWidth: "250px",
+																		cursor: "pointer"
+																	}}
+																	onClick={() => window.open(post.imageUrls[0], '_blank')}>
+																	+{post.imageUrls.length - 4} more
+																</div>
+															)}
 														</div>
 													</div>
 												)}
