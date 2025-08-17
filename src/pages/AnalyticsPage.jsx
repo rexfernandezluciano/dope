@@ -18,18 +18,18 @@ import {
 	BarChartFill,
 	GraphUp,
 	Heart,
-	ChatDots,
+	ChatDots as MessageCircle,
 	Share,
-	People,
+	People as Users,
 	Calendar3,
-	Target,
+	Bullseye as Target,
 	Gift,
-	Award,
+	Award as Crown,
 	Eye,
 	FileText,
 	Activity,
 	Star,
-	Lightning,
+	Lightning as Zap,
 	CurrencyDollar,
 } from "react-bootstrap-icons";
 
@@ -149,7 +149,7 @@ const AnalyticsPage = () => {
 							<p className="mb-2 post-content">{post.content}</p>
 							<div className="d-flex flex-wrap gap-3 text-muted small">
 								<span><Heart className="me-1 text-danger" size={12} />{post.likesCount || 0}</span>
-								<span><ChatDots className="me-1 text-primary" size={12} />{post.commentsCount || 0}</span>
+								<span><MessageCircle className="me-1 text-primary" size={12} />{post.commentsCount || 0}</span>
 								<span><Share className="me-1 text-success" size={12} />{post.sharesCount || 0}</span>
 								<span><Eye className="me-1 text-info" size={12} />{post.viewsCount || 0}</span>
 							</div>
@@ -276,7 +276,7 @@ const AnalyticsPage = () => {
 					</Col>
 					<Col xs={6} lg={3}>
 						<StatCard
-							icon={TrendingUp}
+							icon={GraphUp}
 							title="Engagement Rate"
 							value={`${analytics?.engagementRate || 0}%`}
 							color="success"
@@ -290,7 +290,7 @@ const AnalyticsPage = () => {
 					<Col xs={4} sm={4} lg={2}>
 						<Card className="border-0 bg-light h-100">
 							<Card.Body className="text-center p-3">
-								<ChatDots className="text-primary mb-2" size={20} />
+								<MessageCircle className="text-primary mb-2" size={20} />
 								<div className="fw-bold">{analytics?.totalComments || 0}</div>
 								<small className="text-muted">Comments</small>
 							</Card.Body>
@@ -308,7 +308,7 @@ const AnalyticsPage = () => {
 					<Col xs={4} sm={4} lg={2}>
 						<Card className="border-0 bg-light h-100">
 							<Card.Body className="text-center p-3">
-								<People className="text-warning mb-2" size={20} />
+								<Users className="text-warning mb-2" size={20} />
 								<div className="fw-bold">{analytics?.followers || 0}</div>
 								<small className="text-muted">Followers</small>
 							</Card.Body>
@@ -427,7 +427,7 @@ const AnalyticsPage = () => {
 						<Card className="border-0 bg-gradient-primary text-white">
 							<Card.Body className="p-3">
 								<div className="d-flex align-items-center mb-2">
-									<Lightning className="me-2" size={20} />
+									<Zap className="me-2" size={20} />
 									<h6 className="mb-0 fw-bold">Pro Tips</h6>
 								</div>
 								<ul className="small mb-0 ps-3">
