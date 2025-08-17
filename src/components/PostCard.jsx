@@ -177,6 +177,7 @@ const PostCard = ({
 							roundedCircle
 							width="40"
 							height="40"
+							style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
 						/>
 						<div className="flex-grow-1">
 							<div className="d-flex align-items-center justify-content-between">
@@ -472,7 +473,7 @@ const PostCard = ({
 												width="32"
 												height="32"
 												className="comment-avatar"
-												style={{ objectFit: "cover" }}
+												style={{ objectFit: "cover", minWidth: "32px", minHeight: "32px" }}
 											/>
 											<div className="comment-content">
 												<div className="d-flex align-items-center gap-1">

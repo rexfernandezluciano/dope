@@ -299,6 +299,7 @@ const PostDetailPage = () => {
 							roundedCircle
 							width="40"
 							height="40"
+							style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
 						/>
 						<div className="flex-grow-1">
 							<div className="d-flex align-items-center justify-content-between">
@@ -579,6 +580,7 @@ const PostDetailPage = () => {
 									roundedCircle
 									width="40"
 									height="40"
+									style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
 								/>
 								<div className="flex-grow-1">
 									<Form.Control
@@ -645,6 +647,7 @@ const PostDetailPage = () => {
 								width="40"
 								height="40"
 								className="comment-avatar"
+								style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
 							/>
 							<div className="comment-content">
 								<div className="d-flex align-items-center gap-1 mb-1">
