@@ -27,6 +27,7 @@ import {
 } from "react-bootstrap-icons";
 
 import { postAPI, userAPI } from "../config/ApiConfig";
+import PostCard from "../components/PostCard";
 
 const SearchPage = () => {
 	const navigate = useNavigate();
@@ -243,173 +244,26 @@ const SearchPage = () => {
 							</div>
 						) : (
 							posts.map((post) => (
-								<Card
+								<PostCard
 									key={post.id}
-									className="border-0 border-bottom rounded-0 post-card"
-									style={{ cursor: "pointer" }}
-									onClick={(e) => handlePostClick(post.id, e)}
-								>
-									<Card.Body className="px-3">
-										<div className="d-flex gap-2">
-											<Image
-												src={
-													post.author.photoURL ||
-													"https://i.pravatar.cc/150?img=10"
-												}
-												alt="avatar"
-												roundedCircle
-												width="40"
-												height="40"
-											/>
-											<div className="flex-grow-1">
-												<div className="d-flex align-items-center justify-content-between">
-													<div className="d-flex align-items-center gap-1">
-														<span
-															className="fw-bold"
-															style={{ cursor: "pointer", color: "inherit" }}
-															onClick={(e) => {
-																e.stopPropagation();
-																navigate(`/${post.author.username}`);
-															}}
-														>
-															{post.author.name}
-														</span>
-														{post.author.hasBlueCheck && (
-															<CheckCircleFill className="text-primary" size={16} />
-														)}
-														<span className="text-muted">·</span>
-														<span className="text-muted small">
-															{formatTimeAgo(post.createdAt)}
-														</span>
-														<span className="text-muted">·</span>
-														{getPrivacyIcon(post.privacy)}
-													</div>
-												</div>
-
-												{post.content && <p className="mb-2">{post.content}</p>}
-
-												{post.imageUrls && post.imageUrls.length > 0 && (
-													<div className="mb-2">
-														<Image
-															src={post.imageUrls[0]}
-															className="rounded w-100"
-															style={{
-																height: "200px",
-																objectFit: "cover",
-															}}
-														/>
-													</div>
-												)}
-
-												<div className="d-flex align-items-center justify-content-between">
-													{post.likes.length > 0 &&
-														(post.likes[0].user.uid === currentUser.uid ? (
-															<div className="small text-muted">
-																<span className="fw-bold">You</span>{" "}
-																{post.likes.length > 1
-																	? "& " + post.likes.length - 1 + " reacted."
-																	: " reacted."}
-															</div>
-														) : (
-															""
-														))}
-												</div>
-
-												<div
-													className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
-													style={{ maxWidth: "400px" }}
-												>
-													<Button
-														variant="link"
-														size="sm"
-														className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle ${!canComment(post) ? 'opacity-50' : 'text-muted'}`}
-														onClick={(e) => {
-															e.stopPropagation();
-															if (canComment(post)) {
-																navigate(`/post/${post.id}`);
-															}
-														}}
-														disabled={!canComment(post)}
-														title={!canComment(post) ? "You cannot comment on this post" : "Comment"}
-													>
-														<ChatDots size={20} />
-														{post.stats?.comments > 0 && (
-															<span className="small">
-																{post.stats?.comments}
-															</span>
-														)}
-													</Button>
-
-													<Button
-														variant="link"
-														size="sm"
-														className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-														style={{
-															color: post?.likes.some(
-																(like) => like.user.uid === currentUser.uid,
-															)
-																? "#dc3545"
-																: "#6c757d",
-															transition: "all 0.2s",
-															minWidth: "40px",
-															height: "36px",
-														}}
-														onClick={(e) => {
-															e.stopPropagation();
-															handleLikePost(post.id);
-														}}
-														onMouseEnter={(e) => {
-															if (
-																!post.likes.some(
-																	(like) => like.user.uid === currentUser.uid,
-																)
-															) {
-																e.target.closest(
-																	".action-btn",
-																).style.backgroundColor =
-																	"rgba(220, 53, 69, 0.1)";
-																e.target.closest(".action-btn").style.color =
-																	"#dc3545";
-															}
-														}}
-														onMouseLeave={(e) => {
-															if (
-																!post.likes.some(
-																	(like) => like.user.uid === currentUser.uid,
-																)
-															) {
-																e.target.closest(
-																	".action-btn",
-																).style.backgroundColor = "transparent";
-																e.target.closest(".action-btn").style.color =
-																	"#6c757d";
-															}
-														}}
-													>
-														{post.likes.some(
-															(like) => like.user.uid === currentUser.uid,
-														) ? (
-															<HeartFill size={20} style={{ flexShrink: 0 }} />
-														) : (
-															<Heart size={20} style={{ flexShrink: 0 }} />
-														)}
-														{(post.stats?.likes || 0) > 0 && (
-															<span className="small">{post.stats?.likes || 0}</span>
-														)}
-													</Button>
-
-													<Button
-														variant="link"
-														size="sm"
-														className="text-muted p-2 border-0 rounded-circle"
-													>
-														<Share size={20} />
-													</Button>
-												</div>
-											</div>
-										</div>
-									</Card.Body>
-								</Card>
+									post={post}
+									currentUser={currentUser}
+									onLike={handleLikePost}
+									onShare={(postId) => {
+										const postUrl = `${window.location.origin}/post/${postId}`;
+										if (navigator.share) {
+											navigator.share({
+												title: "Check out this post",
+												url: postUrl,
+											}).catch(() => {
+												navigator.clipboard.writeText(postUrl);
+											});
+										} else {
+											navigator.clipboard.writeText(postUrl);
+										}
+									}}
+									onPostClick={handlePostClick}
+								/>
 							))
 						)}
 					</Tab>
