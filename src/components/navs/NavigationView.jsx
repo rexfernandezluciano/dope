@@ -14,7 +14,13 @@ import {
 	InputGroup,
 	Button,
 } from "react-bootstrap";
-import { House, Person, Gear, BoxArrowRight, Search } from "react-bootstrap-icons";
+import {
+	House,
+	Person,
+	Gear,
+	BoxArrowRight,
+	Search,
+} from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../utils/app-utils";
@@ -64,8 +70,6 @@ const NavigationView = ({ children, user }) => {
 		return `nav-link px-3 py-2 rounded-end-5 ${isActive ? "bg-primary text-white" : "text-dark"}`;
 	};
 
-	
-
 	const handleSearch = (e) => {
 		e.preventDefault();
 		if (searchQuery.trim()) {
@@ -103,10 +107,10 @@ const NavigationView = ({ children, user }) => {
 						</Navbar.Brand>
 
 						{/* Mobile Search Icon */}
-						<Button 
-							variant="link" 
-							className="p-0" 
-							onClick={() => navigate('/search')}
+						<Button
+							variant="link"
+							className="p-0"
+							onClick={() => navigate("/search")}
 						>
 							<Search size={24} className="text-primary" />
 						</Button>
@@ -135,10 +139,19 @@ const NavigationView = ({ children, user }) => {
 									/>
 									<h6 className="mt-2">{user?.name}</h6>
 									<small className="text-muted">{user?.email}</small>
-									{user?.hasBlueCheck && (
-										<div className="mt-1">
-											<span className="text-primary">✓ Verified</span>
-										</div>
+									{user.subscription && user.subscription !== "free" && (
+										<span
+											className={`badge ${
+												user.subscription === "premium"
+													? "bg-warning text-dark"
+													: user.subscription === "pro"
+														? "bg-primary"
+														: "bg-secondary"
+											}`}
+											style={{ fontSize: "0.7rem" }}
+										>
+											{user.subscription.toUpperCase()}
+										</span>
 									)}
 								</div>
 								<Nav className="flex-column">
@@ -172,8 +185,8 @@ const NavigationView = ({ children, user }) => {
 			<div className="d-none d-md-block">
 				<Navbar expand={false} className="bg-white border-bottom sticky-top">
 					<Container fluid>
-						<Navbar.Brand 
-							href="/home" 
+						<Navbar.Brand
+							href="/home"
 							className="fw-bold d-flex align-items-center gap-2"
 						>
 							<Image
@@ -187,7 +200,11 @@ const NavigationView = ({ children, user }) => {
 
 						{/* Search Bar */}
 						<div className="d-none d-md-flex flex-grow-1 mx-4">
-							<Form onSubmit={handleSearch} className="w-100" style={{ maxWidth: '400px' }}>
+							<Form
+								onSubmit={handleSearch}
+								className="w-100"
+								style={{ maxWidth: "400px" }}
+							>
 								<InputGroup>
 									<Form.Control
 										type="text"
@@ -196,11 +213,11 @@ const NavigationView = ({ children, user }) => {
 										onChange={(e) => setSearchQuery(e.target.value)}
 										className="rounded-start-pill border-end-0"
 									/>
-									<Button 
-										variant="outline-secondary" 
+									<Button
+										variant="outline-secondary"
 										type="submit"
 										className="rounded-end-pill border-start-0"
-										style={{ borderColor: '#ced4da' }}
+										style={{ borderColor: "#ced4da" }}
 									>
 										<Search size={16} />
 									</Button>

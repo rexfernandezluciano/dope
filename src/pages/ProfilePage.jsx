@@ -24,7 +24,7 @@ import {
 	X,
 	ThreeDots,
 	Calendar,
-	CheckCircleFill
+	CheckCircleFill,
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
@@ -451,14 +451,6 @@ const ProfilePage = () => {
 						<Calendar size={14} />
 						Joined {formatJoinDate(profileUser.createdAt)}
 					</div>
-					{profileUser.subscription !== "free" && (
-						<div className="d-flex align-items-center gap-1">
-							<span className="badge bg-primary">
-								{profileUser.subscription}
-							</span>
-						</div>
-					)}
-					{/* Email Verification Status */}
 				</div>
 
 				<div className="d-flex gap-4 mb-3">
@@ -534,7 +526,12 @@ const ProfilePage = () => {
 															{post.author.name}
 														</span>
 														{post.author.hasBlueCheck && (
-															<span className="text-primary">✓</span>
+															<span className="text-primary">
+																<CheckCircleFill
+																	className="text-primary"
+																	size={16}
+																/>
+															</span>
 														)}
 														<span className="text-muted">·</span>
 														<span className="text-muted small">
