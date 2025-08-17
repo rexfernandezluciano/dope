@@ -95,20 +95,15 @@ const router = createBrowserRouter([
 		],
 	},
 	{
-		path: "/:username/subscription",
+		path: "/subscription",
 		element: (
 			<RequireAuth>
-				<IndexPage />
+				<NavigationView>
+					<SubscriptionPage />
+				</NavigationView>
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
-		children: [
-			{
-				index: true,
-				element: <SubscriptionPage />,
-				loader: IndexPageLoader,
-			},
-		],
 	},
 	{
 		path: "/search",

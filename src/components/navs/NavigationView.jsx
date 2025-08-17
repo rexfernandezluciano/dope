@@ -67,7 +67,7 @@ const NavigationView = ({ children, user }) => {
 		},
 		{
 			label: "Subscription",
-			href: `/${user?.username}/subscription`,
+			href: "/subscription",
 			icon: <Star size={18} className="me-2" />,
 		},
 	];

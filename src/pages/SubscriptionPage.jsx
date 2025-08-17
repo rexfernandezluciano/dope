@@ -32,7 +32,6 @@ import {
 import { userAPI } from "../config/ApiConfig";
 
 const SubscriptionPage = () => {
-	const { username } = useParams();
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData;
 	const navigate = useNavigate();
@@ -107,16 +106,7 @@ const SubscriptionPage = () => {
 		);
 	}
 
-	// Check if user is trying to access their own subscription
-	if (user.username !== username) {
-		return (
-			<Container className="text-center px-3 py-5">
-				<Alert variant="danger">
-					You can only access your own subscription settings.
-				</Alert>
-			</Container>
-		);
-	}
+	
 
 	const subscriptionPlans = [
 		{
@@ -165,7 +155,7 @@ const SubscriptionPage = () => {
 		try {
 			setLoading(true);
 			// In a real app, this would integrate with Stripe or similar
-			await userAPI.updateUser(username, { 
+			await userAPI.updateUser(user.username, { 
 				subscription: planId,
 				hasBlueCheck: planId !== "free"
 			});
@@ -196,7 +186,7 @@ const SubscriptionPage = () => {
 				updateData.hasBlueCheck = value;
 			}
 			
-			await userAPI.updateUser(username, updateData);
+			await userAPI.updateUser(user.username, updateData);
 			setSubscription(prev => ({
 				...prev,
 				features: { ...prev.features, [feature]: value }
@@ -214,7 +204,7 @@ const SubscriptionPage = () => {
 	const handleCancelSubscription = async () => {
 		try {
 			setLoading(true);
-			await userAPI.updateUser(username, { 
+			await userAPI.updateUser(user.username, { 
 				subscription: "free",
 				hasBlueCheck: false
 			});
