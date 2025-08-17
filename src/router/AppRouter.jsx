@@ -10,9 +10,11 @@ import IndexPage from "../pages/IndexPage";
 import HomePage from "../pages/HomePage";
 import ProfilePage from "../pages/ProfilePage";
 import SettingsPage from "../pages/SettingsPage";
+import SearchPage from "../pages/SearchPage";
 
 import RequireAuth from "./security/RequireAuth";
-import indexPageLoader from "./loader/IndexPageLoader";
+import IndexPageLoader from "./loader/IndexPageLoader";
+import NavigationView from "../components/navs/NavigationView";
 
 import LoadingView from "../components/LoadingView";
 
@@ -90,6 +92,17 @@ const router = createBrowserRouter([
 				loader: indexPageLoader,
 			},
 		],
+	},
+	{
+		path: "/search",
+		element: (
+			<RequireAuth>
+				<NavigationView>
+					<SearchPage />
+				</NavigationView>
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
 	},
 ]);
 

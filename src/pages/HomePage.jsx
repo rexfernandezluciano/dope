@@ -64,7 +64,6 @@ const HomePage = () => {
 	const fileInputRef = useRef(null);
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
 	const [selectedPost, setSelectedPost] = useState(null);
-	const [searchQuery, setSearchQuery] = useState(""); // State for search input
 	const [filterBy, setFilterBy] = useState("for-you"); // State for filter selection
 
 	const loaderData = useLoaderData() || {};
@@ -95,16 +94,10 @@ const HomePage = () => {
 		}
 	};
 
-	// Filter posts based on search query and filterBy
+	// Filter posts based on filterBy
 	const filteredPosts = posts.filter((post) => {
-		const matchesSearch =
-			post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			post.author.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			post.author.username.toLowerCase().includes(searchQuery.toLowerCase());
-
 		const matchesFilter = filterBy === "for-you" || filterBy === "following"; // Add logic for 'following' if implemented
-
-		return matchesSearch && matchesFilter;
+		return matchesFilter;
 	});
 
 	const handleInput = (e) => {
@@ -379,30 +372,7 @@ const HomePage = () => {
 	return (
 		<>
 			<Container className="py-3 px-0 px-0 px-md-3">
-				{/* Search and Filter Controls */}
-				<div className="mb-4">
-					<Row className="g-2">
-						<Col xs={12} md={8}>
-							<Form.Control
-								type="text"
-								placeholder="Search posts, users..."
-								value={searchQuery}
-								onChange={(e) => setSearchQuery(e.target.value)}
-								className="rounded-pill"
-							/>
-						</Col>
-						<Col xs={12} md={4}>
-							<Form.Select
-								value={filterBy}
-								onChange={(e) => setFilterBy(e.target.value)}
-								className="rounded-pill"
-							>
-								<option value="for-you">For You</option>
-								<option value="following">Following</option>
-							</Form.Select>
-						</Col>
-					</Row>
-				</div>
+				
 
 				{error && (
 					<Alert variant="danger" className="mb-3">
@@ -446,24 +416,38 @@ const HomePage = () => {
 					</div>
 				) : (
 					<>
-						<div className="d-flex align-items-center justify-content-between px-3 py-2">
-							<span className="fw-bold fs-3">
-								{filterBy === "for-you" ? "For you" : "Following"}
-							</span>
+						<div className="d-flex align-items-center justify-content-center px-3 py-2 border-bottom">
+							<div className="d-flex">
+								<Button
+									variant="link"
+									className={`px-4 py-2 fw-bold text-decoration-none border-0 ${
+										filterBy === "for-you"
+											? "text-primary border-bottom border-primary border-2"
+											: "text-muted"
+									}`}
+									onClick={() => setFilterBy("for-you")}
+									style={{ borderRadius: 0 }}
+								>
+									For you
+								</Button>
+								<Button
+									variant="link"
+									className={`px-4 py-2 fw-bold text-decoration-none border-0 ${
+										filterBy === "following"
+											? "text-primary border-bottom border-primary border-2"
+											: "text-muted"
+									}`}
+									onClick={() => setFilterBy("following")}
+									style={{ borderRadius: 0 }}
+								>
+									Following
+								</Button>
+							</div>
 						</div>
 						{filteredPosts.length === 0 && !loading ? (
 							<div className="text-center text-muted py-5">
-								{searchQuery ? (
-									<>
-										<h5>No results found</h5>
-										<p>Try adjusting your search terms</p>
-									</>
-								) : (
-									<>
-										<h5>No posts available</h5>
-										<p>Be the first to share something!</p>
-									</>
-								)}
+								<h5>No posts available</h5>
+								<p>Be the first to share something!</p>
 							</div>
 						) : (
 							filteredPosts.map((post) => (

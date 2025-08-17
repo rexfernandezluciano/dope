@@ -1,0 +1,324 @@
+
+/** @format */
+
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+	Container,
+	Image,
+	Form,
+	Button,
+	Card,
+	Spinner,
+	Alert,
+	Row,
+	Col,
+	Tabs,
+	Tab,
+} from "react-bootstrap";
+import {
+	ArrowLeft,
+	Search,
+	Heart,
+	HeartFill,
+	ChatDots,
+	Share,
+	ThreeDots,
+} from "react-bootstrap-icons";
+
+import { postAPI, userAPI } from "../config/ApiConfig";
+
+const SearchPage = () => {
+	const navigate = useNavigate();
+	const [searchParams] = useSearchParams();
+	const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "");
+	const [posts, setPosts] = useState([]);
+	const [users, setUsers] = useState([]);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState("");
+	const [activeTab, setActiveTab] = useState("posts");
+
+	useEffect(() => {
+		if (searchQuery.trim()) {
+			handleSearch();
+		}
+	}, [searchQuery]);
+
+	const handleSearch = async () => {
+		if (!searchQuery.trim()) return;
+
+		try {
+			setLoading(true);
+			setError("");
+
+			// Search posts
+			const postsResponse = await postAPI.getPosts({ search: searchQuery });
+			setPosts(postsResponse.posts || []);
+
+			// Search users (if API exists)
+			try {
+				const usersResponse = await userAPI.searchUsers(searchQuery);
+				setUsers(usersResponse.users || []);
+			} catch (err) {
+				console.log("User search not available");
+				setUsers([]);
+			}
+		} catch (err) {
+			setError(err.message);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const formatTimeAgo = (dateString) => {
+		const date = new Date(dateString);
+		const now = new Date();
+		const diffMs = now - date;
+		const diffMins = Math.floor(diffMs / 60000);
+		const diffHours = Math.floor(diffMs / 3600000);
+		const diffDays = Math.floor(diffMs / 86400000);
+
+		if (diffMins < 1) return "now";
+		if (diffMins < 60) return `${diffMins}m`;
+		if (diffHours < 24) return `${diffHours}h`;
+		return `${diffDays}d`;
+	};
+
+	const handlePostClick = (postId, e) => {
+		if (
+			e.target.closest("button") ||
+			e.target.closest("a") ||
+			e.target.closest(".dropdown")
+		) {
+			return;
+		}
+		navigate(`/post/${postId}`);
+	};
+
+	return (
+		<Container className="py-0 px-0">
+			{/* Header */}
+			<div className="d-flex align-items-center gap-3 p-3 border-bottom bg-white sticky-top">
+				<Button
+					variant="link"
+					size="sm"
+					className="text-dark p-0"
+					onClick={() => navigate(-1)}
+				>
+					<ArrowLeft size={20} />
+				</Button>
+				<div className="flex-grow-1">
+					<Form onSubmit={(e) => { e.preventDefault(); handleSearch(); }}>
+						<div className="d-flex gap-2">
+							<Form.Control
+								type="text"
+								placeholder="Search posts, users..."
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className="rounded-pill"
+								autoFocus
+							/>
+							<Button
+								type="submit"
+								variant="primary"
+								className="rounded-pill px-3"
+								disabled={loading}
+							>
+								{loading ? <Spinner size="sm" /> : <Search size={16} />}
+							</Button>
+						</div>
+					</Form>
+				</div>
+			</div>
+
+			{error && (
+				<Alert variant="danger" className="mx-3 mt-3">
+					{error}
+				</Alert>
+			)}
+
+			{searchQuery && !loading && (
+				<Tabs
+					activeKey={activeTab}
+					onSelect={setActiveTab}
+					className="border-bottom mx-0"
+				>
+					<Tab
+						eventKey="posts"
+						title={`Posts (${posts.length})`}
+						className="px-0"
+					>
+						{posts.length === 0 ? (
+							<div className="text-center py-5 text-muted">
+								<h5>No posts found</h5>
+								<p>Try different keywords</p>
+							</div>
+						) : (
+							posts.map((post) => (
+								<Card
+									key={post.id}
+									className="border-0 border-bottom rounded-0 post-card"
+									style={{ cursor: "pointer" }}
+									onClick={(e) => handlePostClick(post.id, e)}
+								>
+									<Card.Body className="px-3">
+										<div className="d-flex gap-2">
+											<Image
+												src={
+													post.author.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
+												alt="avatar"
+												roundedCircle
+												width="40"
+												height="40"
+											/>
+											<div className="flex-grow-1">
+												<div className="d-flex align-items-center justify-content-between">
+													<div className="d-flex align-items-center gap-1">
+														<span
+															className="fw-bold"
+															style={{ cursor: "pointer", color: "inherit" }}
+															onClick={(e) => {
+																e.stopPropagation();
+																navigate(`/${post.author.username}`);
+															}}
+														>
+															{post.author.name}
+														</span>
+														{post.author.hasBlueCheck && (
+															<span className="text-primary">✓</span>
+														)}
+														<span className="text-muted">·</span>
+														<span className="text-muted small">
+															{formatTimeAgo(post.createdAt)}
+														</span>
+													</div>
+												</div>
+
+												{post.content && <p className="mb-2">{post.content}</p>}
+
+												{post.imageUrls && post.imageUrls.length > 0 && (
+													<div className="mb-2">
+														<Image
+															src={post.imageUrls[0]}
+															className="rounded w-100"
+															style={{
+																height: "200px",
+																objectFit: "cover",
+															}}
+														/>
+													</div>
+												)}
+
+												<div
+													className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
+													style={{ maxWidth: "400px" }}
+												>
+													<Button
+														variant="link"
+														size="sm"
+														className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle"
+														onClick={(e) => {
+															e.stopPropagation();
+															navigate(`/post/${post.id}`);
+														}}
+													>
+														<ChatDots size={20} />
+														{post.stats?.comments > 0 && (
+															<span className="small">
+																{post.stats?.comments}
+															</span>
+														)}
+													</Button>
+
+													<Button
+														variant="link"
+														size="sm"
+														className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle"
+													>
+														<Heart size={20} />
+														{post.stats?.likes > 0 && (
+															<span className="small">{post.stats?.likes}</span>
+														)}
+													</Button>
+
+													<Button
+														variant="link"
+														size="sm"
+														className="text-muted p-2 border-0 rounded-circle"
+													>
+														<Share size={20} />
+													</Button>
+												</div>
+											</div>
+										</div>
+									</Card.Body>
+								</Card>
+							))
+						)}
+					</Tab>
+
+					<Tab
+						eventKey="users"
+						title={`Users (${users.length})`}
+						className="px-0"
+					>
+						{users.length === 0 ? (
+							<div className="text-center py-5 text-muted">
+								<h5>No users found</h5>
+								<p>Try different keywords</p>
+							</div>
+						) : (
+							users.map((user) => (
+								<Card
+									key={user.uid}
+									className="border-0 border-bottom rounded-0"
+									style={{ cursor: "pointer" }}
+									onClick={() => navigate(`/${user.username}`)}
+								>
+									<Card.Body className="px-3 py-3">
+										<div className="d-flex align-items-center gap-3">
+											<Image
+												src={
+													user.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
+												alt="avatar"
+												roundedCircle
+												width="50"
+												height="50"
+											/>
+											<div className="flex-grow-1">
+												<div className="d-flex align-items-center gap-1">
+													<span className="fw-bold">{user.name}</span>
+													{user.hasBlueCheck && (
+														<span className="text-primary">✓</span>
+													)}
+												</div>
+												<p className="text-muted mb-0">@{user.username}</p>
+												{user.bio && (
+													<p className="small text-muted mb-0">{user.bio}</p>
+												)}
+											</div>
+										</div>
+									</Card.Body>
+								</Card>
+							))
+						)}
+					</Tab>
+				</Tabs>
+			)}
+
+			{!searchQuery && (
+				<div className="text-center py-5 text-muted">
+					<Search size={48} className="mb-3" />
+					<h5>Search DOPE Network</h5>
+					<p>Find posts and people</p>
+				</div>
+			)}
+		</Container>
+	);
+};
+
+export default SearchPage;

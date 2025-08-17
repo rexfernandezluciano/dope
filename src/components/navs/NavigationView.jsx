@@ -64,19 +64,12 @@ const NavigationView = ({ children, user }) => {
 		return `nav-link px-3 py-2 rounded-end-5 ${isActive ? "bg-primary text-white" : "text-dark"}`;
 	};
 
-	const handleModal = () => setShowModal(false);
+	
 
 	const handleSearch = (e) => {
 		e.preventDefault();
 		if (searchQuery.trim()) {
-			// If on homepage, trigger search there
-			if (location.pathname === '/home') {
-				// Emit a custom event that HomePage can listen to
-				window.dispatchEvent(new CustomEvent('searchPosts', { detail: searchQuery }));
-			} else {
-				// Navigate to homepage with search query
-				navigate(`/home?search=${encodeURIComponent(searchQuery)}`);
-			}
+			navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
 		}
 	};
 
@@ -112,7 +105,7 @@ const NavigationView = ({ children, user }) => {
 						<Button 
 							variant="link" 
 							className="p-0" 
-							onClick={() => setShowModal(true)}
+							onClick={() => navigate('/search')}
 						>
 							<Search size={24} className="text-primary" />
 						</Button>
