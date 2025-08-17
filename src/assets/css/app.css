@@ -5,10 +5,14 @@ body {
 }
 
 a {
-  text-decoration: none;
-  text-decoration-line: none;
+  text-decoration: none !important;
+  text-decoration-line: none !important;
   outline: none;
   color: #0069B5;
+}
+
+a:hover, a:focus {
+  text-decoration: none !important;
 }
 
 /* Exclude nav links from global link styling */
