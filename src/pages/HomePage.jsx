@@ -13,8 +13,6 @@ import {
 	Card,
 	Spinner,
 	Alert,
-	Row,
-	Col,
 } from "react-bootstrap";
 import {
 	Globe,
@@ -34,8 +32,8 @@ import {
 	CheckCircleFill,
 } from "react-bootstrap-icons";
 
-import { Grid } from "@giphy.react-components";
-import { GiphyFetch } from "@giphy.js-fetch-api";
+import { Grid } from "@giphy/react-components";
+import { GiphyFetch } from "@giphy/js-fetch-api";
 
 import { postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";

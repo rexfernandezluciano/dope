@@ -1,7 +1,6 @@
-
 /** @format */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
 	Container,
@@ -35,41 +34,43 @@ const SearchPage = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [activeTab, setActiveTab] = useState("posts");
-	
+
 	// Get current user from localStorage or context
 	const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
-	useEffect(() => {
-		if (searchQuery.trim()) {
-			handleSearch();
+	const handleSearch = useCallback(async () => {
+		if (!searchQuery.trim()) {
+			setPosts([]);
+			setUsers([]);
+			setLoading(false);
+			return;
 		}
-	}, [searchQuery]);
-
-	const handleSearch = async () => {
-		if (!searchQuery.trim()) return;
 
 		try {
 			setLoading(true);
 			setError("");
 
-			// Search posts
-			const postsResponse = await postAPI.getPosts({ search: searchQuery });
-			setPosts(postsResponse.posts || []);
+			// Search posts and users concurrently
+			const [postsResponse, usersResponse] = await Promise.all([
+				postAPI.getPosts({ search: searchQuery, limit: 20 }),
+				userAPI.searchUsers(searchQuery),
+			]);
 
-			// Search users
-			try {
-				const usersResponse = await userAPI.searchUsers(searchQuery);
-				setUsers(usersResponse || []);
-			} catch (err) {
-				console.log("User search not available");
-				setUsers([]);
-			}
+			setPosts(postsResponse.posts || []);
+			setUsers(usersResponse || []);
 		} catch (err) {
-			setError(err.message);
+			console.error("Search error:", err);
+			setError("Failed to search. Please try again.");
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [searchQuery]);
+
+	useEffect(() => {
+		if (searchQuery.trim()) {
+			handleSearch();
+		}
+	}, [searchQuery, handleSearch]);
 
 	const formatTimeAgo = (dateString) => {
 		const date = new Date(dateString);
