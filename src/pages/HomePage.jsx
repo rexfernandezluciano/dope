@@ -35,7 +35,7 @@ import {
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 
-import { postAPI } from "../config/ApiConfig";
+import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 
 const HomePage = () => {
@@ -64,6 +64,7 @@ const HomePage = () => {
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
 	const [selectedPost, setSelectedPost] = useState(null);
 	const [filterBy, setFilterBy] = useState("for-you"); // State for filter selection
+	const [postComments, setPostComments] = useState({}); // Store comments for each post
 
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData;
@@ -113,8 +114,13 @@ const HomePage = () => {
 			
 			if (cursor) {
 				setPosts((prev) => [...prev, ...processedPosts]);
+				// Fetch comments for new posts only
+				fetchRandomCommentsForPosts(processedPosts);
 			} else {
 				setPosts(processedPosts);
+				// Clear previous comments and fetch new ones
+				setPostComments({});
+				fetchRandomCommentsForPosts(processedPosts);
 			}
 			setHasMore(response.hasMore);
 			setNextCursor(response.nextCursor);
@@ -123,6 +129,33 @@ const HomePage = () => {
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	// Function to fetch random comments for posts
+	const fetchRandomCommentsForPosts = async (posts) => {
+		const commentsData = {};
+		
+		for (const post of posts) {
+			// Randomly decide if post should show comments (70% chance)
+			const shouldShowComments = Math.random() > 0.3;
+			
+			if (shouldShowComments && post.stats?.comments > 0) {
+				try {
+					// Randomly choose 1, 2, or 3 comments to show
+					const commentCount = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
+					const maxToShow = Math.min(commentCount, post.stats.comments, 3);
+					
+					const response = await commentAPI.getComments(post.id, { limit: maxToShow });
+					if (response.comments && response.comments.length > 0) {
+						commentsData[post.id] = response.comments;
+					}
+				} catch (error) {
+					console.error(`Error fetching comments for post ${post.id}:`, error);
+				}
+			}
+		}
+		
+		setPostComments(prev => ({ ...prev, ...commentsData }));
 	};
 
 	// All posts are already filtered by the API, so we don't need to filter here
@@ -801,6 +834,59 @@ const HomePage = () => {
 														<Share size={20} style={{ flexShrink: 0 }} />
 													</Button>
 												</div>
+
+												{/* Random Comments Display */}
+												{postComments[post.id] && postComments[post.id].length > 0 && (
+													<div className="mt-3 pt-2 border-top">
+														{postComments[post.id].map((comment) => (
+															<div key={comment.id} className="d-flex gap-2 mb-2">
+																<Image
+																	src={comment.author.photoURL || "https://i.pravatar.cc/150?img=10"}
+																	alt="avatar"
+																	roundedCircle
+																	width="32"
+																	height="32"
+																	style={{ objectFit: "cover" }}
+																/>
+																<div className="flex-grow-1">
+																	<div className="d-flex align-items-center gap-1">
+																		<span 
+																			className="fw-bold small"
+																			style={{ cursor: "pointer", color: "inherit" }}
+																			onClick={(e) => {
+																				e.stopPropagation();
+																				window.location.href = `/${comment.author.username}`;
+																			}}
+																		>
+																			{comment.author.name}
+																		</span>
+																		{comment.author.hasBlueCheck && (
+																			<CheckCircleFill className="text-primary" size={12} />
+																		)}
+																		<span className="text-muted small">·</span>
+																		<span className="text-muted small">
+																			{formatTimeAgo(comment.createdAt)}
+																		</span>
+																	</div>
+																	<p className="mb-0 small text-muted">{comment.content}</p>
+																</div>
+															</div>
+														))}
+														{post.stats?.comments > (postComments[post.id]?.length || 0) && (
+															<Button
+																variant="link"
+																size="sm"
+																className="text-muted p-0 small text-decoration-none"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	window.location.href = `/post/${post.id}`;
+																}}
+															>
+																View all {post.stats.comments} comments
+															</Button>
+														)}
+													</div>
+												)}
 											</div>
 										</div>
 									</Card.Body>

@@ -216,4 +216,6 @@ export const commentAPI = {
 		})
 };
 
+export { authAPI, postAPI, userAPI, commentAPI };
+
 export default apiRequest;
