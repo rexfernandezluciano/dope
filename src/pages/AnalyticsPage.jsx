@@ -63,10 +63,6 @@ const AnalyticsPage = () => {
 		audienceInsights: {},
 	});
 
-	useEffect(() => {
-		loadAnalytics();
-	}, [loadAnalytics]);
-
 	const loadAnalytics = useCallback(async () => {
 		try {
 			setLoading(true);
@@ -88,6 +84,10 @@ const AnalyticsPage = () => {
 			setLoading(false);
 		}
 	}, [timeRange]);
+
+	useEffect(() => {
+		loadAnalytics();
+	}, [loadAnalytics]);
 
 	// Mock API functions (replace with actual API calls)
 	const getUserAnalytics = async () => {
