@@ -629,7 +629,7 @@ const HomePage = () => {
 														)}
 													</div>
 												)}
-												{post.postType === "live" && post.liveVideoUrl && (
+												{post.postType === "live_video" && post.liveVideoUrl && (
 													<div className="mb-2">
 														{/* Placeholder for live video embed */}
 														<p className="text-danger fw-bold">

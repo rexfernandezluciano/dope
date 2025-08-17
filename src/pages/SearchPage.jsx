@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLoaderData } from "react-router-dom";
 import {
 	Container,
 	Image,
@@ -36,7 +36,7 @@ const SearchPage = () => {
 	const [activeTab, setActiveTab] = useState("posts");
 
 	// Get current user from localStorage or context
-	const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+	const {user: currentUser} = useLoaderData();
 
 	// Update URL when search query changes
 	useEffect(() => {
@@ -264,15 +264,17 @@ const SearchPage = () => {
 												)}
 
 												<div className="d-flex align-items-center justify-content-between">
-													{(post.likes || []).length > 0 &&
-														(post.likes || [])[0]?.user?.uid === currentUser.uid && (
+													{post.likes.length > 0 &&
+														(post.likes[0].user.uid === currentUser.uid ? (
 															<div className="small text-muted">
 																<span className="fw-bold">You</span>{" "}
-																{(post.likes || []).length > 1
-																	? "& " + ((post.likes || []).length - 1) + " reacted."
+																{post.likes.length > 1
+																	? "& " + post.likes.length - 1 + " reacted."
 																	: " reacted."}
 															</div>
-														)}
+														) : (
+															""
+														))}
 												</div>
 
 												<div
@@ -301,7 +303,7 @@ const SearchPage = () => {
 														size="sm"
 														className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 														style={{
-															color: (post.likes || []).some(
+															color: post?.likes.some(
 																(like) => like.user.uid === currentUser.uid,
 															)
 																? "#dc3545"
@@ -316,7 +318,7 @@ const SearchPage = () => {
 														}}
 														onMouseEnter={(e) => {
 															if (
-																!(post.likes || []).some(
+																!post.likes.some(
 																	(like) => like.user.uid === currentUser.uid,
 																)
 															) {
@@ -330,7 +332,7 @@ const SearchPage = () => {
 														}}
 														onMouseLeave={(e) => {
 															if (
-																!(post.likes || []).some(
+																!post.likes.some(
 																	(like) => like.user.uid === currentUser.uid,
 																)
 															) {
@@ -342,7 +344,7 @@ const SearchPage = () => {
 															}
 														}}
 													>
-														{(post.likes || []).some(
+														{post.likes.some(
 															(like) => like.user.uid === currentUser.uid,
 														) ? (
 															<HeartFill size={20} style={{ flexShrink: 0 }} />
