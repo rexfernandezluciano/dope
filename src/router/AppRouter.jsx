@@ -10,7 +10,9 @@ import IndexPage from "../pages/IndexPage";
 import HomePage from "../pages/HomePage";
 import ProfilePage from "../pages/ProfilePage";
 import SettingsPage from "../pages/SettingsPage";
+import SubscriptionPage from "../pages/SubscriptionPage";
 import SearchPage from "../pages/SearchPage";
+import AnalyticsPage from "../pages/AnalyticsPage";
 
 import RequireAuth from "./security/RequireAuth";
 import IndexPageLoader from "./loader/IndexPageLoader";
@@ -103,6 +105,36 @@ const router = createBrowserRouter([
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
+	},
+	{
+		path: "/dashboard",
+		element: (
+			<RequireAuth>
+				<NavigationView>
+					<IndexPage />
+				</NavigationView>
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
+		children: [
+			{
+				index: true,
+				element: <HomePage />,
+				loader: IndexPageLoader,
+			},
+			{
+				path: "subscription",
+				element: <SubscriptionPage />,
+			},
+			{
+				path: "analytics",
+				element: <AnalyticsPage />,
+			},
+			{
+				path: "settings",
+				element: <SettingsPage />,
+			},
+		],
 	},
 ]);
 

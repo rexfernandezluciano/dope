@@ -21,6 +21,7 @@ import {
 	BoxArrowRight,
 	Search,
 	Star,
+	BarChart,
 } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
@@ -70,6 +71,11 @@ const NavigationView = ({ children }) => {
 			label: "Subscription",
 			href: "/subscription",
 			icon: <Star size={18} className="me-2" />,
+		},
+		{
+			label: "Analytics",
+			href: "/analytics",
+			icon: <BarChart size={18} className="me-2" />,
 		},
 	];
 
@@ -275,6 +281,15 @@ const NavigationView = ({ children }) => {
 									>
 										<Star size={16} className="me-2" />
 										Subscription
+									</a>
+								</li>
+								<li>
+									<a
+										className="dropdown-item"
+										href={`/${user?.username}/analytics`}
+									>
+										<BarChart size={16} className="me-2" />
+										Analytics
 									</a>
 								</li>
 								<li>

@@ -60,7 +60,7 @@ const SubscriptionPage = () => {
 	const formatExpiryDate = (value) => {
 		// Remove all non-digits
 		const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-		
+
 		// Add slash after MM
 		if (v.length >= 2) {
 			return v.slice(0, 2) + '/' + v.slice(2, 4);
@@ -233,7 +233,7 @@ const SubscriptionPage = () => {
 
 	const handleUpgrade = async (planId) => {
 		// Check if user is trying to upgrade to a paid plan
-		if (planId !== "free" && paymentMethods.length === 0) {
+		if (planId !== "free" && (!paymentMethods || paymentMethods.length === 0)) {
 			setMessage("Please add a payment method before upgrading to a paid plan.");
 			setMessageType("warning");
 			setShowAddPaymentModal(true);
@@ -421,7 +421,7 @@ const SubscriptionPage = () => {
 													disabled={loading}
 												>
 													{plan.id === "free" ? "Downgrade" : 
-													 (plan.id !== "free" && paymentMethods.length === 0) ? "Add Payment Method" : 
+													 (plan.id !== "free" && (!paymentMethods || paymentMethods.length === 0)) ? "Add Payment Method" : 
 													 "Upgrade"}
 												</Button>
 											)}

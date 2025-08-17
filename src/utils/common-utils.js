@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { postAPI } from '../config/ApiConfig';
@@ -118,32 +117,58 @@ export const handlePostClick = (postId, e) => {
  * Handle post option actions
  * @param {string} action - Action type (copyLink, repost, report, delete)
  * @param {string} postId - Post ID
- * @param {Object} options - Additional options
- * @param {Function} options.onDelete - Delete callback
- * @param {Function} options.onReport - Report callback
- * @param {Function} options.onRepost - Repost callback
+ * @param {Object} callbacks - Callbacks for different actions
+ * @param {Function} callbacks.copyLink - Callback for copying link
+ * @param {Function} callbacks.delete - Callback for deleting post
  */
-export const handlePostOption = (action, postId, options = {}) => {
-	if (!postId) return;
-	
+export const handlePostOption = (action, postId, callbacks) => {
 	switch (action) {
 		case "copyLink":
-			copyPostLink(postId);
-			break;
-		case "repost":
-			if (options.onRepost) options.onRepost(postId);
-			console.log("Reposting post:", postId);
-			break;
-		case "report":
-			if (options.onReport) options.onReport(postId);
-			console.log("Reporting post:", postId);
+			if (callbacks.copyLink) callbacks.copyLink();
 			break;
 		case "delete":
-			if (options.onDelete) options.onDelete(postId);
+			if (callbacks.delete) callbacks.delete();
+			break;
+		case "repost":
+			// Handle repost logic
+			console.log("Repost:", postId);
+			break;
+		case "report":
+			// Handle report logic
+			console.log("Report:", postId);
 			break;
 		default:
-			break;
+			console.log("Unknown action:", action);
 	}
+};
+
+// Analytics utility functions
+export const calculateEngagementRate = (likes, comments, shares, views) => {
+	if (!views || views === 0) return 0;
+	const totalEngagements = (likes || 0) + (comments || 0) + (shares || 0);
+	return ((totalEngagements / views) * 100).toFixed(1);
+};
+
+export const formatCurrency = (amount, currency = 'USD') => {
+	return new Intl.NumberFormat('en-US', {
+		style: 'currency',
+		currency: currency,
+		minimumFractionDigits: 2,
+	}).format(amount);
+};
+
+export const formatNumber = (number) => {
+	if (number >= 1000000) {
+		return (number / 1000000).toFixed(1) + 'M';
+	} else if (number >= 1000) {
+		return (number / 1000).toFixed(1) + 'K';
+	}
+	return number.toString();
+};
+
+export const getGrowthPercentage = (current, previous) => {
+	if (!previous || previous === 0) return 0;
+	return (((current - previous) / previous) * 100).toFixed(1);
 };
 
 /**
