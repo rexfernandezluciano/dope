@@ -86,15 +86,35 @@ const HomePage = () => {
 			// Add filter parameter to API call
 			if (filter === "following") {
 				params.filter = "following";
+				// Exclude current user's own posts in following tab
+				params.excludeOwnPosts = true;
 			} else {
 				params.filter = "for-you"; // Default to random/for-you posts
+				// For "For You" tab, sort by engagement (likes + comments)
+				params.sortBy = "engagement";
 			}
 
 			const response = await postAPI.getPosts(params);
+			
+			let processedPosts = response.posts;
+			
+			// Client-side filtering as backup in case API doesn't support it
+			if (filter === "following") {
+				// Filter out current user's own posts
+				processedPosts = response.posts.filter(post => post.author.uid !== user.uid);
+			} else if (filter === "for-you") {
+				// Sort by engagement (likes + comments) if not already sorted by API
+				processedPosts = response.posts.sort((a, b) => {
+					const engagementA = (a.stats?.likes || 0) + (a.stats?.comments || 0);
+					const engagementB = (b.stats?.likes || 0) + (b.stats?.comments || 0);
+					return engagementB - engagementA; // Higher engagement first
+				});
+			}
+			
 			if (cursor) {
-				setPosts((prev) => [...prev, ...response.posts]);
+				setPosts((prev) => [...prev, ...processedPosts]);
 			} else {
-				setPosts(response.posts);
+				setPosts(processedPosts);
 			}
 			setHasMore(response.hasMore);
 			setNextCursor(response.nextCursor);
