@@ -83,7 +83,7 @@ const HomePage = () => {
 			setLoading(true);
 			const params = { limit: 20 };
 			if (cursor) params.cursor = cursor;
-			
+
 			// Add filter parameter to API call
 			if (filter === "following") {
 				params.filter = "following";
@@ -96,9 +96,9 @@ const HomePage = () => {
 			}
 
 			const response = await postAPI.getPosts(params);
-			
+
 			let processedPosts = response.posts;
-			
+
 			// Client-side filtering as backup in case API doesn't support it
 			if (filter === "following") {
 				// Filter out current user's own posts
@@ -111,7 +111,7 @@ const HomePage = () => {
 					return engagementB - engagementA; // Higher engagement first
 				});
 			}
-			
+
 			if (cursor) {
 				setPosts((prev) => [...prev, ...processedPosts]);
 				// Fetch comments for new posts only
@@ -134,17 +134,17 @@ const HomePage = () => {
 	// Function to fetch random comments for posts
 	const fetchRandomCommentsForPosts = async (posts) => {
 		const commentsData = {};
-		
+
 		for (const post of posts) {
 			// Randomly decide if post should show comments (70% chance)
 			const shouldShowComments = Math.random() > 0.3;
-			
+
 			if (shouldShowComments && post.stats?.comments > 0) {
 				try {
 					// Randomly choose 1, 2, or 3 comments to show
 					const commentCount = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
 					const maxToShow = Math.min(commentCount, post.stats.comments, 3);
-					
+
 					const response = await commentAPI.getComments(post.id, { limit: maxToShow });
 					if (response.comments && response.comments.length > 0) {
 						commentsData[post.id] = response.comments;
@@ -154,7 +154,7 @@ const HomePage = () => {
 				}
 			}
 		}
-		
+
 		setPostComments(prev => ({ ...prev, ...commentsData }));
 	};
 
@@ -837,18 +837,19 @@ const HomePage = () => {
 
 												{/* Random Comments Display */}
 												{postComments[post.id] && postComments[post.id].length > 0 && (
-													<div className="mt-3 pt-2 border-top">
-														{postComments[post.id].map((comment) => (
-															<div key={comment.id} className="d-flex gap-2 mb-2">
+													<div className="mt-3 pt-2 border-top comment-thread">
+														{postComments[post.id].map((comment, index) => (
+															<div key={comment.id} className={`comment-item ${index === postComments[post.id].length - 1 ? 'mb-0' : 'mb-2'}`}>
 																<Image
 																	src={comment.author.photoURL || "https://i.pravatar.cc/150?img=10"}
 																	alt="avatar"
 																	roundedCircle
 																	width="32"
 																	height="32"
+																	className="comment-avatar"
 																	style={{ objectFit: "cover" }}
 																/>
-																<div className="flex-grow-1">
+																<div className="comment-content">
 																	<div className="d-flex align-items-center gap-1">
 																		<span 
 																			className="fw-bold small"
@@ -868,23 +869,10 @@ const HomePage = () => {
 																			{formatTimeAgo(comment.createdAt)}
 																		</span>
 																	</div>
-																	<p className="mb-0 small text-muted">{comment.content}</p>
+																	<p className="mb-0 small">{comment.content}</p>
 																</div>
 															</div>
 														))}
-														{post.stats?.comments > (postComments[post.id]?.length || 0) && (
-															<Button
-																variant="link"
-																size="sm"
-																className="text-muted p-0 small text-decoration-none"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	window.location.href = `/post/${post.id}`;
-																}}
-															>
-																View all {post.stats.comments} comments
-															</Button>
-														)}
 													</div>
 												)}
 											</div>

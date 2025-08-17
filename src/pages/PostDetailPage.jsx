@@ -522,71 +522,77 @@ const PostDetailPage = () => {
 					<p>No comments yet</p>
 				</div>
 			) : (
-				comments.map((comment) => (
-					<Card key={comment.id} className="border-0 border-bottom rounded-0">
-						<Card.Body className="px-3 py-3">
-							<div className="d-flex gap-3">
-								<Image
-									src={
-										comment.author.photoURL ||
-										"https://i.pravatar.cc/150?img=10"
-									}
-									alt="avatar"
-									roundedCircle
-									width="40"
-									height="40"
-								/>
-								<div className="flex-grow-1">
-									<div className="d-flex align-items-center gap-1">
-										<span className="fw-bold">{comment.author.name}</span>
-										{comment.author.hasBlueCheck && (
-											<span className="text-primary">✓</span>
-										)}
-										<span className="text-muted">
-											@{comment.author.username}
-										</span>
-										<span className="text-muted">·</span>
-										<span className="text-muted small">
-											{formatTimeAgo(comment.createdAt)}
-										</span>
-									</div>
+				<div className="comment-thread">
+					{comments.map((comment, index) => (
+						<Card
+							key={comment.id}
+							className="border-0 border-bottom rounded-0"
+						>
+							<Card.Body className="px-3 py-3">
+								<div className={`comment-item ${index === comments.length - 1 ? 'mb-0' : ''}`}>
+									<Image
+										src={
+											comment.author.photoURL ||
+											"https://i.pravatar.cc/150?img=10"
+										}
+										alt="avatar"
+										roundedCircle
+										width="40"
+										height="40"
+										className="comment-avatar"
+									/>
+									<div className="comment-content">
+										<div className="d-flex align-items-center gap-1 mb-1">
+											<span className="fw-bold">{comment.author.name}</span>
+											{comment.author.hasBlueCheck && (
+												<span className="text-primary">✓</span>
+											)}
+											<span className="text-muted">
+												@{comment.author.username}
+											</span>
+											<span className="text-muted">·</span>
+											<span className="text-muted small">
+												{formatTimeAgo(comment.createdAt)}
+											</span>
+										</div>
 
-									<p className="mb-2 mt-1">{comment.content}</p>
+										<p className="mb-2">{comment.content}</p>
 
-									<div className="d-flex gap-4 text-muted">
-										<OverlayTrigger
-											placement="bottom"
-											overlay={<Tooltip>Reply</Tooltip>}
-										>
-											<Button
-												variant="link"
-												size="sm"
-												className="text-muted p-1 border-0 d-flex align-items-center gap-1 rounded-circle"
-												style={{ width: "28px", height: "28px" }}
+										<div className="d-flex gap-4 text-muted">
+											<OverlayTrigger
+												placement="bottom"
+												overlay={<Tooltip>Reply</Tooltip>}
 											>
-												<ChatDots size={14} />
-											</Button>
-										</OverlayTrigger>
+												<Button
+													variant="link"
+													size="sm"
+													className="text-muted p-1 border-0 d-flex align-items-center gap-1 rounded-circle"
+													style={{ width: "28px", height: "28px" }}
+												>
+													<ChatDots size={14} />
+												</Button>
+											</OverlayTrigger>
 
-										<OverlayTrigger
-											placement="bottom"
-											overlay={<Tooltip>Like</Tooltip>}
-										>
-											<Button
-												variant="link"
-												size="sm"
-												className="text-muted p-1 border-0 d-flex align-items-center gap-1 rounded-circle"
-												style={{ width: "28px", height: "28px" }}
+											<OverlayTrigger
+												placement="bottom"
+												overlay={<Tooltip>Like</Tooltip>}
 											>
-												<Heart size={14} />
-											</Button>
-										</OverlayTrigger>
+												<Button
+													variant="link"
+													size="sm"
+													className="text-muted p-1 border-0 d-flex align-items-center gap-1 rounded-circle"
+													style={{ width: "28px", height: "28px" }}
+												>
+													<Heart size={14} />
+												</Button>
+											</OverlayTrigger>
+										</div>
 									</div>
 								</div>
-							</div>
-						</Card.Body>
-					</Card>
-				))
+							</Card.Body>
+						</Card>
+					))}
+				</div>
 			)}
 			{/* Image Viewer Modal */}
 			{showImageViewer && (
