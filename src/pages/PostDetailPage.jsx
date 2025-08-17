@@ -52,25 +52,24 @@ const PostDetailPage = () => {
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
 
 	useEffect(() => {
+		const loadPostAndComments = async () => {
+			try {
+				setLoading(true);
+				const [postResponse, commentsResponse] = await Promise.all([
+					postAPI.getPost(postId),
+					commentAPI.getComments(postId),
+				]);
+
+				setPost(postResponse.post);
+				setComments(commentsResponse.comments || []);
+			} catch (err) {
+				setError(err.message);
+			} finally {
+				setLoading(false);
+			}
+		};
 		loadPostAndComments();
 	}, [postId]);
-
-	const loadPostAndComments = async () => {
-		try {
-			setLoading(true);
-			const [postResponse, commentsResponse] = await Promise.all([
-				postAPI.getPost(postId),
-				commentAPI.getComments(postId),
-			]);
-
-			setPost(postResponse.post);
-			setComments(commentsResponse.comments || []);
-		} catch (err) {
-			setError(err.message);
-		} finally {
-			setLoading(false);
-		}
-	};
 
 	const handleLikePost = async () => {
 		try {
@@ -133,8 +132,9 @@ const PostDetailPage = () => {
 
 			const formData = new FormData();
 			formData.append("public_id", publicId);
-			formData.append("api_key", "YOUR_API_KEY"); // You'll need to add your Cloudinary API key
-			
+			// Replace with your actual Cloudinary API key and upload preset if needed
+			formData.append("api_key", "YOUR_API_KEY"); // TODO: Add your Cloudinary API key
+
 			// Generate signature for deletion (you'll need to implement this on your backend)
 			const response = await fetch(
 				"https://api.cloudinary.com/v1_1/zxpic/image/destroy",
@@ -143,7 +143,7 @@ const PostDetailPage = () => {
 					body: formData,
 				}
 			);
-			
+
 			const data = await response.json();
 			return data.result === "ok";
 		} catch (error) {
@@ -164,7 +164,7 @@ const PostDetailPage = () => {
 					}
 				}
 			}
-			
+
 			// Then delete the post
 			await postAPI.deletePost(postToDelete);
 			navigate(-1); // Go back since post is deleted
@@ -230,7 +230,13 @@ const PostDetailPage = () => {
 			setSubmitting(true);
 			await commentAPI.createComment(postId, newComment.trim());
 			setNewComment("");
-			loadPostAndComments(); // Reload to get updated comments
+			// Reload to get updated comments
+			const [postResponse, commentsResponse] = await Promise.all([
+				postAPI.getPost(postId),
+				commentAPI.getComments(postId),
+			]);
+			setPost(postResponse.post);
+			setComments(commentsResponse.comments || []);
 		} catch (err) {
 			setError(err.message);
 		} finally {
@@ -434,7 +440,7 @@ const PostDetailPage = () => {
 										<div className="small text-muted">
 											<span className="fw-bold">You</span>{" "}
 											{post.likes.length > 1
-												? "& " + post.likes.length - 1 + " reacted."
+												? "& " + (post.likes.length - 1) + " reacted."
 												: " reacted."}
 										</div>
 									) : (

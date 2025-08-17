@@ -23,6 +23,8 @@ import {
 	PersonFill,
 } from "react-bootstrap-icons";
 
+import { postAPI } from "../config/ApiConfig";
+
 const PostCard = ({
 	post,
 	currentUser,
@@ -138,46 +140,9 @@ const PostCard = ({
 		}
 	};
 
-	const deleteFromCloudinary = async (imageUrl) => {
-		try {
-			// Extract public_id from Cloudinary URL
-			const urlParts = imageUrl.split('/');
-			const filename = urlParts[urlParts.length - 1];
-			const publicId = filename.split('.')[0];
-
-			const formData = new FormData();
-			formData.append("public_id", publicId);
-			formData.append("api_key", "YOUR_API_KEY"); // You'll need to add your Cloudinary API key
-
-			// Generate signature for deletion (you'll need to implement this on your backend)
-			const response = await fetch(
-				"https://api.cloudinary.com/v1_1/zxpic/image/destroy",
-				{
-					method: "POST",
-					body: formData,
-				}
-			);
-
-			const data = await response.json();
-			return data.result === "ok";
-		} catch (error) {
-			console.error("Error deleting from Cloudinary:", error);
-			return false;
-		}
-	};
-
 	const handleDeletePost = async (postId) => {
 		try {
-			// Delete associated images from Cloudinary first
-			if (post.imageUrls && post.imageUrls.length > 0) {
-				for (const imageUrl of post.imageUrls) {
-					if (imageUrl.includes('cloudinary.com')) {
-						await deleteFromCloudinary(imageUrl);
-					}
-				}
-			}
-
-			// Then delete the post
+			// Delete the post (backend will handle image cleanup)
 			await postAPI.deletePost(postId);
 			onDeletePost?.(postId);
 		} catch (err) {

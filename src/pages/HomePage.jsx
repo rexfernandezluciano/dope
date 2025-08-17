@@ -22,15 +22,9 @@ import {
 	EmojiSmile,
 	X,
 	Search,
-	Heart,
-	HeartFill,
-	ChatDots,
-	Share,
 	ChevronLeft,
 	ChevronRight,
-	ThreeDots,
 	CheckCircleFill,
-	PersonFill,
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
@@ -64,8 +58,6 @@ const HomePage = () => {
 	const [postToDelete, setPostToDelete] = useState(null);
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
-	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
-	const [selectedPost, setSelectedPost] = useState(null);
 	const [filterBy, setFilterBy] = useState("for-you"); // State for filter selection
 	const [postComments, setPostComments] = useState({}); // Store comments for each post
 
@@ -198,33 +190,7 @@ const HomePage = () => {
 		}
 	};
 
-	const deleteFromCloudinary = async (imageUrl) => {
-		try {
-			// Extract public_id from Cloudinary URL
-			const urlParts = imageUrl.split('/');
-			const filename = urlParts[urlParts.length - 1];
-			const publicId = filename.split('.')[0];
-
-			const formData = new FormData();
-			formData.append("public_id", publicId);
-			formData.append("api_key", "YOUR_API_KEY"); // You'll need to add your Cloudinary API key
-			
-			// Generate signature for deletion (you'll need to implement this on your backend)
-			const response = await fetch(
-				"https://api.cloudinary.com/v1_1/zxpic/image/destroy",
-				{
-					method: "POST",
-					body: formData,
-				}
-			);
-			
-			const data = await response.json();
-			return data.result === "ok";
-		} catch (error) {
-			console.error("Error deleting from Cloudinary:", error);
-			return false;
-		}
-	};
+	
 
 	const handleFileChange = async (e) => {
 		const files = Array.from(e.target.files);
@@ -345,21 +311,8 @@ const HomePage = () => {
 		if (!postToDelete) return;
 
 		try {
-			// Find the post to get its images
-			const postToDeleteObj = posts.find(post => post.id === postToDelete);
-			
-			// Delete the post first
+			// Delete the post (backend will handle image cleanup)
 			await postAPI.deletePost(postToDelete);
-			
-			// Delete associated images from Cloudinary
-			if (postToDeleteObj && postToDeleteObj.imageUrls && postToDeleteObj.imageUrls.length > 0) {
-				for (const imageUrl of postToDeleteObj.imageUrls) {
-					if (imageUrl.includes('cloudinary.com')) {
-						await deleteFromCloudinary(imageUrl);
-					}
-				}
-			}
-			
 			setPosts((prev) => prev.filter((post) => post.id !== postToDelete));
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
@@ -388,7 +341,6 @@ const HomePage = () => {
 			// Fallback to clipboard for browsers that don't support Web Share API
 			try {
 				await navigator.clipboard.writeText(postUrl);
-				// You could show a toast notification here
 			} catch (err) {
 				console.error("Failed to copy to clipboard:", err);
 			}
@@ -405,40 +357,6 @@ const HomePage = () => {
 			return;
 		}
 		window.location.href = `/post/${postId}`;
-	};
-
-	const canComment = (post) => {
-		if (!user) return false;
-		
-		// Post owner can always comment
-		if (post.author.uid === user.uid) return true;
-		
-		// Check privacy settings
-		switch (post.privacy) {
-			case 'public':
-				return true;
-			case 'private':
-				return post.author.uid === user.uid;
-			case 'followers':
-				// Check if current user follows the post author
-				// This would need to be determined by the API or stored in post data
-				return post.author.isFollowedByCurrentUser || false;
-			default:
-				return true;
-		}
-	};
-
-	const getPrivacyIcon = (privacy) => {
-		switch (privacy) {
-			case 'public':
-				return <Globe size={14} className="text-muted" />;
-			case 'private':
-				return <Lock size={14} className="text-muted" />;
-			case 'followers':
-				return <PersonFill size={14} className="text-muted" />;
-			default:
-				return <Globe size={14} className="text-muted" />;
-		}
 	};
 
 	const handleLikePost = async (postId) => {
@@ -470,40 +388,10 @@ const HomePage = () => {
 		}
 	};
 
-	const formatTimeAgo = (dateString) => {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now - date;
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-
-		if (diffMins < 1) return "now";
-		if (diffMins < 60) return `${diffMins}m`;
-		if (diffHours < 24) return `${diffHours}h`;
-		return `${diffDays}d`;
-	};
-
-	const openImageViewer = (images, startIndex = 0) => {
-		setCurrentImages(images);
-		setCurrentImageIndex(startIndex);
-		setShowImageViewer(true);
-	};
-
 	const closeImageViewer = () => {
 		setShowImageViewer(false);
 		setCurrentImages([]);
 		setCurrentImageIndex(0);
-	};
-
-	const openPostOptionsModal = (post) => {
-		setSelectedPost(post);
-		setShowPostOptionsModal(true);
-	};
-
-	const closePostOptionsModal = () => {
-		setShowPostOptionsModal(false);
-		setSelectedPost(null);
 	};
 
 	const privacyOptions = {
@@ -946,81 +834,7 @@ const HomePage = () => {
 				</Modal>
 			)}
 
-			{/* Post Options Modal */}
-			<Modal
-				show={showPostOptionsModal}
-				onHide={closePostOptionsModal}
-				centered
-				size="sm"
-			>
-				<Modal.Header closeButton>
-					<Modal.Title className="fs-4">Post Options</Modal.Title>
-				</Modal.Header>
-				{selectedPost && (
-					<Modal.Body className="p-0">
-						<ul className="list-unstyled mb-0">
-							<li className="border-bottom">
-								<Button
-									variant="link"
-									className="w-100 px-3 post-card text-start text-decoration-none text-dark p-2"
-									onClick={(e) => {
-										e.stopPropagation();
-										navigator.clipboard.writeText(
-											`${window.location.origin}/post/${selectedPost.id}`,
-										);
-										closePostOptionsModal();
-									}}
-								>
-									Copy Link
-								</Button>
-							</li>
-							<li className="border-bottom">
-								<Button
-									variant="link"
-									className="w-100 px-3 post-card text-start text-decoration-none text-dark p-2"
-									onClick={(e) => {
-										e.stopPropagation();
-										// Handle repost logic
-										closePostOptionsModal();
-									}}
-								>
-									Repost
-								</Button>
-							</li>
-							{selectedPost.author.id !== user.uid && (
-								<li className="border-0">
-									<Button
-										variant="link"
-										className="w-100 px-3 post-card text-start text-decoration-none text-danger p-2"
-										onClick={(e) => {
-											e.stopPropagation();
-											// Handle report logic
-											closePostOptionsModal();
-										}}
-									>
-										Report
-									</Button>
-								</li>
-							)}
-							{selectedPost.author.uid === user.uid && (
-								<li className="border-0 border-top">
-									<Button
-										variant="link"
-										className="w-100 px-3 post-card text-start text-decoration-none text-danger p-2"
-										onClick={(e) => {
-											e.stopPropagation();
-											handleDeletePost(selectedPost.id);
-											closePostOptionsModal();
-										}}
-									>
-										Delete Post
-									</Button>
-								</li>
-							)}
-						</ul>
-					</Modal.Body>
-				)}
-			</Modal>
+			
 
 			{/* Delete Post Confirmation Dialog */}
 			<AlertDialog
