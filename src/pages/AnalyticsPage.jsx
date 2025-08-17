@@ -28,7 +28,6 @@ import {
 	Share,
 	Users,
 	Calendar,
-	DollarSign,
 	Target,
 	Gift,
 	Crown,
@@ -39,6 +38,7 @@ import {
 	Star,
 	Zap,
 } from "react-bootstrap-icons";
+import { CurrencyDollar as DollarSign } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
 import { formatTimeAgo } from "../utils/common-utils";
