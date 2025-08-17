@@ -8,37 +8,31 @@ import {
 	Col,
 	Card,
 	Button,
-	Table,
 	Badge,
 	Alert,
-	Modal,
-	Form,
-	InputGroup,
 	Dropdown,
 	ProgressBar,
-	Tab,
-	Tabs,
 	Spinner,
 } from "react-bootstrap";
 import {
-	BarChart,
-	GraphUp as TrendingUp,
+	BarChartFill,
+	GraphUp,
 	Heart,
-	ChatDots as MessageCircle,
+	ChatDots,
 	Share,
-	People as Users,
-	Calendar,
-	Bullseye as Target,
+	People,
+	Calendar3,
+	Target,
 	Gift,
-	Award as Crown,
+	Award,
 	Eye,
 	FileText,
-	PieChartFill,
 	Activity,
 	Star,
-	Lightning as Zap,
+	Lightning,
+	CurrencyDollar,
+	TrendingUp,
 } from "react-bootstrap-icons";
-import { CurrencyDollar as DollarSign } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
 import { formatTimeAgo } from "../utils/common-utils";
@@ -46,150 +40,136 @@ import { formatTimeAgo } from "../utils/common-utils";
 const AnalyticsPage = () => {
 	const { user } = useLoaderData() || {};
 	const [analytics, setAnalytics] = useState(null);
+	const [posts, setPosts] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [timeRange, setTimeRange] = useState("30d");
-	const [showMonetizationModal, setShowMonetizationModal] = useState(false);
-	const [monetizationData, setMonetizationData] = useState({
-		totalEarnings: 0,
-		monthlyEarnings: 0,
-		sponsoredPosts: 0,
-		tipJar: 0,
-		subscriptions: 0,
-	});
-	const [contentMetrics, setContentMetrics] = useState({
-		bestPerformingPosts: [],
-		engagementTrends: [],
-		audienceInsights: {},
-	});
 
 	const loadAnalytics = useCallback(async () => {
 		try {
 			setLoading(true);
 			setError("");
 
-			// Simulate API calls for analytics data
-			const response = await Promise.all([
-				getUserAnalytics(),
-				getContentMetrics(),
-				getMonetizationData(),
-			]);
+			// Fetch real user posts data
+			const userPostsResponse = await postAPI.getUserPosts(user?.id, {
+				page: 1,
+				limit: 50
+			});
 
-			setAnalytics(response[0]);
-			setContentMetrics(response[1]);
-			setMonetizationData(response[2]);
+			const userPosts = userPostsResponse?.data?.posts || [];
+			setPosts(userPosts);
+
+			// Calculate real analytics from posts data
+			const totalPosts = userPosts.length;
+			const totalLikes = userPosts.reduce((sum, post) => sum + (post.likesCount || 0), 0);
+			const totalComments = userPosts.reduce((sum, post) => sum + (post.commentsCount || 0), 0);
+			const totalShares = userPosts.reduce((sum, post) => sum + (post.sharesCount || 0), 0);
+			const totalViews = userPosts.reduce((sum, post) => sum + (post.viewsCount || 0), 0);
+
+			// Calculate engagement rate
+			const totalEngagement = totalLikes + totalComments + totalShares;
+			const engagementRate = totalViews > 0 ? ((totalEngagement / totalViews) * 100).toFixed(1) : "0.0";
+
+			// Get top performing posts
+			const topPosts = [...userPosts]
+				.sort((a, b) => {
+					const aEngagement = (a.likesCount || 0) + (a.commentsCount || 0) + (a.sharesCount || 0);
+					const bEngagement = (b.likesCount || 0) + (b.commentsCount || 0) + (b.sharesCount || 0);
+					return bEngagement - aEngagement;
+				})
+				.slice(0, 5);
+
+			// Calculate growth metrics
+			const now = new Date();
+			const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+			const recentPosts = userPosts.filter(post => new Date(post.createdAt) >= thirtyDaysAgo);
+			const recentLikes = recentPosts.reduce((sum, post) => sum + (post.likesCount || 0), 0);
+			const recentGrowth = totalLikes > 0 ? ((recentLikes / totalLikes) * 100).toFixed(1) : "0.0";
+
+			setAnalytics({
+				totalPosts,
+				totalLikes,
+				totalComments,
+				totalShares,
+				totalViews,
+				followers: user?.followersCount || 0,
+				following: user?.followingCount || 0,
+				engagementRate,
+				reachGrowth: recentGrowth,
+				topPosts,
+				recentPostsCount: recentPosts.length,
+			});
+
 		} catch (err) {
-			setError(err.message || "Failed to load analytics");
+			console.error("Analytics loading error:", err);
+			setError("Failed to load analytics data");
 		} finally {
 			setLoading(false);
 		}
-	}, [timeRange]);
+	}, [user?.id, timeRange]);
 
 	useEffect(() => {
-		loadAnalytics();
+		if (user?.id) {
+			loadAnalytics();
+		}
 	}, [loadAnalytics]);
 
-	// Mock API functions (replace with actual API calls)
-	const getUserAnalytics = async () => {
-		// Simulate fetching user analytics
-		return {
-			totalPosts: Math.floor(Math.random() * 500) + 50,
-			totalLikes: Math.floor(Math.random() * 5000) + 500,
-			totalComments: Math.floor(Math.random() * 2000) + 200,
-			totalShares: Math.floor(Math.random() * 1000) + 100,
-			totalViews: Math.floor(Math.random() * 50000) + 5000,
-			followers: Math.floor(Math.random() * 1000) + 100,
-			following: Math.floor(Math.random() * 500) + 50,
-			engagementRate: (Math.random() * 10 + 2).toFixed(1),
-			reachGrowth: (Math.random() * 50 + 10).toFixed(1),
-			topPerformingDay: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][Math.floor(Math.random() * 7)],
-		};
-	};
+	const StatCard = ({ icon: Icon, title, value, subtitle, color = "primary", growth }) => (
+		<Card className="border-0 shadow-sm h-100 stat-card">
+			<Card.Body className="p-3">
+				<div className="d-flex align-items-center justify-content-between mb-2">
+					<Icon className={`text-${color}`} size={24} />
+					{growth && (
+						<Badge bg={growth > 0 ? "success" : "secondary"} className="rounded-pill">
+							{growth > 0 ? "+" : ""}{growth}%
+						</Badge>
+					)}
+				</div>
+				<h3 className="mb-1 fw-bold">{value}</h3>
+				<p className="text-muted mb-1 small">{title}</p>
+				{subtitle && <small className="text-muted">{subtitle}</small>}
+			</Card.Body>
+		</Card>
+	);
 
-	const getContentMetrics = async () => {
-		return {
-			bestPerformingPosts: [
-				{
-					id: "1",
-					content: "Amazing sunset view from my window! 🌅",
-					likes: 245,
-					comments: 32,
-					shares: 18,
-					views: 1250,
-					engagementRate: 23.6,
-					createdAt: "2024-01-10T10:00:00Z",
-				},
-				{
-					id: "2",
-					content: "Just finished my morning workout routine! 💪",
-					likes: 189,
-					comments: 28,
-					shares: 12,
-					views: 980,
-					engagementRate: 23.4,
-					createdAt: "2024-01-08T07:30:00Z",
-				},
-				{
-					id: "3",
-					content: "Coffee and coding session today ☕️👨‍💻",
-					likes: 156,
-					comments: 24,
-					shares: 8,
-					views: 850,
-					engagementRate: 22.1,
-					createdAt: "2024-01-05T09:15:00Z",
-				},
-			],
-			engagementTrends: {
-				labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-				likes: [120, 150, 180, 200],
-				comments: [25, 35, 40, 45],
-				shares: [10, 15, 20, 25],
-			},
-			audienceInsights: {
-				topCountries: ["United States", "Canada", "United Kingdom", "Australia"],
-				ageGroups: {
-					"18-24": 35,
-					"25-34": 40,
-					"35-44": 20,
-					"45+": 5,
-				},
-				genderDistribution: {
-					male: 55,
-					female: 43,
-					other: 2,
-				},
-			},
-		};
-	};
+	const TopPostCard = ({ post, rank }) => {
+		const totalEngagement = (post.likesCount || 0) + (post.commentsCount || 0) + (post.sharesCount || 0);
+		const engagementRate = post.viewsCount > 0 ? ((totalEngagement / post.viewsCount) * 100).toFixed(1) : 0;
 
-	const getMonetizationData = async () => {
-		return {
-			totalEarnings: (Math.random() * 5000 + 500).toFixed(2),
-			monthlyEarnings: (Math.random() * 800 + 100).toFixed(2),
-			sponsoredPosts: Math.floor(Math.random() * 10) + 2,
-			tipJar: (Math.random() * 200 + 50).toFixed(2),
-			subscriptions: (Math.random() * 300 + 100).toFixed(2),
-			potentialEarnings: (Math.random() * 2000 + 500).toFixed(2),
-		};
-	};
-
-	const handleEnableMonetization = async () => {
-		try {
-			// Simulate enabling monetization
-			await new Promise(resolve => setTimeout(resolve, 1000));
-			setShowMonetizationModal(false);
-			alert("Monetization features enabled! You can now start earning from your content.");
-		} catch (err) {
-			setError("Failed to enable monetization features");
-		}
+		return (
+			<Card className="border-0 shadow-sm mb-3 post-card">
+				<Card.Body className="p-3">
+					<div className="d-flex align-items-start">
+						<Badge 
+							bg={rank === 1 ? "warning" : rank === 2 ? "secondary" : "info"} 
+							className="rounded-circle me-3 rank-badge"
+						>
+							{rank}
+						</Badge>
+						<div className="flex-grow-1">
+							<p className="mb-2 post-content">{post.content}</p>
+							<div className="d-flex flex-wrap gap-3 text-muted small">
+								<span><Heart className="me-1 text-danger" size={12} />{post.likesCount || 0}</span>
+								<span><ChatDots className="me-1 text-primary" size={12} />{post.commentsCount || 0}</span>
+								<span><Share className="me-1 text-success" size={12} />{post.sharesCount || 0}</span>
+								<span><Eye className="me-1 text-info" size={12} />{post.viewsCount || 0}</span>
+							</div>
+							<div className="mt-2 d-flex justify-content-between align-items-center">
+								<Badge bg="success" className="rounded-pill">{engagementRate}% engagement</Badge>
+								<small className="text-muted">{formatTimeAgo(post.createdAt)}</small>
+							</div>
+						</div>
+					</div>
+				</Card.Body>
+			</Card>
+		);
 	};
 
 	if (loading) {
 		return (
 			<Container className="text-center py-5">
 				<Spinner animation="border" variant="primary" />
-				<p className="mt-3">Loading analytics...</p>
+				<p className="mt-3 text-muted">Loading your analytics...</p>
 			</Container>
 		);
 	}
@@ -197,486 +177,272 @@ const AnalyticsPage = () => {
 	if (error) {
 		return (
 			<Container className="py-3">
-				<Alert variant="danger">{error}</Alert>
+				<Alert variant="danger" className="rounded-3">
+					<Activity className="me-2" />
+					{error}
+				</Alert>
 			</Container>
 		);
 	}
 
 	return (
-		<Container className="py-3 px-3">
-			<div className="d-flex justify-content-between align-items-center mb-4">
-				<h2 className="mb-0">
-					<Activity className="me-2" />
-					Analytics Dashboard
-				</h2>
-				<div className="d-flex gap-2">
-					<Dropdown>
-						<Dropdown.Toggle variant="outline-primary" size="sm">
-							<Calendar className="me-1" size={14} />
-							{timeRange === "7d" ? "Last 7 days" : timeRange === "30d" ? "Last 30 days" : "Last 90 days"}
-						</Dropdown.Toggle>
-						<Dropdown.Menu>
-							<Dropdown.Item onClick={() => setTimeRange("7d")}>Last 7 days</Dropdown.Item>
-							<Dropdown.Item onClick={() => setTimeRange("30d")}>Last 30 days</Dropdown.Item>
-							<Dropdown.Item onClick={() => setTimeRange("90d")}>Last 90 days</Dropdown.Item>
-						</Dropdown.Menu>
-					</Dropdown>
-					<Button
-						variant="success"
-						size="sm"
-						onClick={() => setShowMonetizationModal(true)}
-					>
-						<DollarSign className="me-1" size={14} />
-						Monetize
-					</Button>
-				</div>
-			</div>
+		<>
+			<style jsx>{`
+				.stat-card {
+					transition: transform 0.2s ease-in-out;
+				}
+				.stat-card:hover {
+					transform: translateY(-2px);
+				}
+				.post-card:hover {
+					transform: translateY(-1px);
+					transition: transform 0.2s ease-in-out;
+				}
+				.rank-badge {
+					width: 24px;
+					height: 24px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-size: 12px;
+					font-weight: bold;
+				}
+				.post-content {
+					display: -webkit-box;
+					-webkit-line-clamp: 2;
+					-webkit-box-orient: vertical;
+					overflow: hidden;
+					line-height: 1.4;
+				}
+				@media (max-width: 768px) {
+					.mobile-stack {
+						margin-bottom: 1rem;
+					}
+				}
+			`}</style>
 
-			<Tabs defaultActiveKey="overview" className="mb-4">
-				{/* Overview Tab */}
-				<Tab eventKey="overview" title={<><BarChart className="me-1" />Overview</>}>
-					{/* Key Metrics Cards */}
-					<Row className="mb-4">
-						<Col md={3} sm={6} className="mb-3">
-							<Card className="h-100 border-0 shadow-sm">
-								<Card.Body className="text-center">
-									<div className="d-flex align-items-center justify-content-center mb-2">
-										<FileText className="text-primary me-2" size={24} />
-										<h3 className="mb-0 text-primary">{analytics?.totalPosts || 0}</h3>
-									</div>
-									<p className="text-muted mb-0">Total Posts</p>
-									<small className="text-success">+{Math.floor(Math.random() * 20 + 5)}% this month</small>
-								</Card.Body>
-							</Card>
-						</Col>
-						<Col md={3} sm={6} className="mb-3">
-							<Card className="h-100 border-0 shadow-sm">
-								<Card.Body className="text-center">
-									<div className="d-flex align-items-center justify-content-center mb-2">
-										<Heart className="text-danger me-2" size={24} />
-										<h3 className="mb-0 text-danger">{analytics?.totalLikes || 0}</h3>
-									</div>
-									<p className="text-muted mb-0">Total Likes</p>
-									<small className="text-success">+{Math.floor(Math.random() * 30 + 10)}% this month</small>
-								</Card.Body>
-							</Card>
-						</Col>
-						<Col md={3} sm={6} className="mb-3">
-							<Card className="h-100 border-0 shadow-sm">
-								<Card.Body className="text-center">
-									<div className="d-flex align-items-center justify-content-center mb-2">
-										<Eye className="text-info me-2" size={24} />
-										<h3 className="mb-0 text-info">{analytics?.totalViews || 0}</h3>
-									</div>
-									<p className="text-muted mb-0">Total Views</p>
-									<small className="text-success">+{analytics?.reachGrowth || 0}% reach growth</small>
-								</Card.Body>
-							</Card>
-						</Col>
-						<Col md={3} sm={6} className="mb-3">
-							<Card className="h-100 border-0 shadow-sm">
-								<Card.Body className="text-center">
-									<div className="d-flex align-items-center justify-content-center mb-2">
-										<TrendingUp className="text-warning me-2" size={24} />
-										<h3 className="mb-0 text-warning">{analytics?.engagementRate || 0}%</h3>
-									</div>
-									<p className="text-muted mb-0">Engagement Rate</p>
-									<small className="text-muted">Industry avg: 3.2%</small>
-								</Card.Body>
-							</Card>
-						</Col>
-					</Row>
-
-					{/* Monetization Overview */}
-					<Row className="mb-4">
-						<Col lg={8}>
-							<Card className="border-0 shadow-sm">
-								<Card.Header className="bg-gradient-primary text-white">
-									<h5 className="mb-0">
-										<DollarSign className="me-2" />
-										Monetization Overview
-									</h5>
-								</Card.Header>
-								<Card.Body>
-									<Row>
-										<Col md={6}>
-											<div className="mb-3">
-												<div className="d-flex justify-content-between align-items-center mb-1">
-													<span className="text-muted">Total Earnings</span>
-													<span className="fw-bold text-success">${monetizationData.totalEarnings}</span>
-												</div>
-												<div className="d-flex justify-content-between align-items-center mb-1">
-													<span className="text-muted">This Month</span>
-													<span className="fw-bold">${monetizationData.monthlyEarnings}</span>
-												</div>
-												<div className="d-flex justify-content-between align-items-center">
-													<span className="text-muted">Potential Monthly</span>
-													<span className="fw-bold text-primary">${monetizationData.potentialEarnings}</span>
-												</div>
-											</div>
-										</Col>
-										<Col md={6}>
-											<div className="mb-3">
-												<div className="d-flex justify-content-between align-items-center mb-2">
-													<span>Sponsored Posts</span>
-													<Badge bg="primary">{monetizationData.sponsoredPosts}</Badge>
-												</div>
-												<div className="d-flex justify-content-between align-items-center mb-2">
-													<span>Tips Received</span>
-													<Badge bg="success">${monetizationData.tipJar}</Badge>
-												</div>
-												<div className="d-flex justify-content-between align-items-center">
-													<span>Subscriptions</span>
-													<Badge bg="warning">${monetizationData.subscriptions}</Badge>
-												</div>
-											</div>
-										</Col>
-									</Row>
-									<Button
-										variant="outline-success"
-										size="sm"
-										className="w-100"
-										onClick={() => setShowMonetizationModal(true)}
-									>
-										<Zap className="me-1" size={14} />
-										Unlock More Earning Opportunities
-									</Button>
-								</Card.Body>
-							</Card>
-						</Col>
-						<Col lg={4}>
-							<Card className="border-0 shadow-sm h-100">
-								<Card.Header>
-									<h6 className="mb-0">
-										<Target className="me-2" />
-										Quick Insights
-									</h6>
-								</Card.Header>
-								<Card.Body>
-									<div className="mb-3">
-										<small className="text-muted">Best performing day</small>
-										<div className="fw-bold">{analytics?.topPerformingDay}</div>
-									</div>
-									<div className="mb-3">
-										<small className="text-muted">Avg. engagement per post</small>
-										<div className="fw-bold">{Math.floor((analytics?.totalLikes + analytics?.totalComments) / analytics?.totalPosts) || 0}</div>
-									</div>
-									<div className="mb-3">
-										<small className="text-muted">Growth potential</small>
-										<ProgressBar now={75} label="75%" variant="success" />
-									</div>
-								</Card.Body>
-							</Card>
-						</Col>
-					</Row>
-				</Tab>
-
-				{/* Content Performance Tab */}
-				<Tab eventKey="content" title={<><Star className="me-1" />Content Performance</>}>
-					<Row>
-						<Col lg={8}>
-							<Card className="border-0 shadow-sm mb-4">
-								<Card.Header>
-									<h5 className="mb-0">Best Performing Posts</h5>
-								</Card.Header>
-								<Card.Body className="p-0">
-									<Table responsive hover className="mb-0">
-										<thead className="table-light">
-											<tr>
-												<th>Content</th>
-												<th className="text-center">Likes</th>
-												<th className="text-center">Comments</th>
-												<th className="text-center">Shares</th>
-												<th className="text-center">Views</th>
-												<th className="text-center">Engagement Rate</th>
-												<th className="text-center">Posted</th>
-											</tr>
-										</thead>
-										<tbody>
-											{contentMetrics.bestPerformingPosts.map((post, index) => (
-												<tr key={post.id}>
-													<td>
-														<div className="d-flex align-items-center">
-															<Badge bg={index === 0 ? "warning" : index === 1 ? "secondary" : "info"} className="me-2">
-																{index + 1}
-															</Badge>
-															<div>
-																<div className="fw-bold text-truncate" style={{ maxWidth: "200px" }}>
-																	{post.content}
-																</div>
-															</div>
-														</div>
-													</td>
-													<td className="text-center">
-														<Heart className="text-danger me-1" size={14} />
-														{post.likes}
-													</td>
-													<td className="text-center">
-														<MessageCircle className="text-primary me-1" size={14} />
-														{post.comments}
-													</td>
-													<td className="text-center">
-														<Share className="text-success me-1" size={14} />
-														{post.shares}
-													</td>
-													<td className="text-center">
-														<Eye className="text-info me-1" size={14} />
-														{post.views}
-													</td>
-													<td className="text-center">
-														<Badge bg="success">{post.engagementRate}%</Badge>
-													</td>
-													<td className="text-center text-muted">
-														{formatTimeAgo(post.createdAt)}
-													</td>
-												</tr>
-											))}
-										</tbody>
-									</Table>
-								</Card.Body>
-							</Card>
-						</Col>
-						<Col lg={4}>
-							<Card className="border-0 shadow-sm mb-4">
-								<Card.Header>
-									<h6 className="mb-0">
-										<PieChartFill className="me-2" />
-										Audience Demographics
-									</h6>
-								</Card.Header>
-								<Card.Body>
-									<div className="mb-4">
-										<h6 className="small text-muted mb-2">Age Groups</h6>
-										{Object.entries(contentMetrics.audienceInsights.ageGroups || {}).map(([age, percentage]) => (
-											<div key={age} className="mb-2">
-												<div className="d-flex justify-content-between small mb-1">
-													<span>{age}</span>
-													<span>{percentage}%</span>
-												</div>
-												<ProgressBar now={percentage} style={{ height: "6px" }} />
-											</div>
-										))}
-									</div>
-									<div className="mb-3">
-										<h6 className="small text-muted mb-2">Top Countries</h6>
-										{contentMetrics.audienceInsights.topCountries?.slice(0, 4).map((country, index) => (
-											<div key={country} className="d-flex justify-content-between small mb-1">
-												<span>{country}</span>
-												<Badge bg="outline-secondary">{30 - index * 5}%</Badge>
-											</div>
-										))}
-									</div>
-								</Card.Body>
-							</Card>
-						</Col>
-					</Row>
-				</Tab>
-
-				{/* Monetization Tab */}
-				<Tab eventKey="monetization" title={<><DollarSign className="me-1" />Monetization</>}>
-					<Row>
-						<Col lg={8}>
-							<Card className="border-0 shadow-sm mb-4">
-								<Card.Header className="bg-success text-white">
-									<h5 className="mb-0">
-										<Crown className="me-2" />
-										Monetization Opportunities
-									</h5>
-								</Card.Header>
-								<Card.Body>
-									<Row>
-										<Col md={6} className="mb-4">
-											<Card className="border border-primary h-100">
-												<Card.Body className="text-center">
-													<Gift className="text-primary mb-2" size={32} />
-													<h6>Sponsored Content</h6>
-													<p className="small text-muted mb-3">
-														Partner with brands to create sponsored posts and earn up to $500 per post.
-													</p>
-													<Button variant="primary" size="sm" onClick={() => console.log('Find Sponsors clicked')}>
-														Find Sponsors
-													</Button>
-												</Card.Body>
-											</Card>
-										</Col>
-										<Col md={6} className="mb-4">
-											<Card className="border border-success h-100">
-												<Card.Body className="text-center">
-													<Heart className="text-success mb-2" size={32} />
-													<h6>Tip Jar</h6>
-													<p className="small text-muted mb-3">
-														Enable tips from your followers and earn up to $200 per month.
-													</p>
-													<Button variant="success" size="sm" onClick={() => console.log('Enable Tips clicked')}>
-														Enable Tips
-													</Button>
-												</Card.Body>
-											</Card>
-										</Col>
-										<Col md={6} className="mb-4">
-											<Card className="border border-warning h-100">
-												<Card.Body className="text-center">
-													<Users className="text-warning mb-2" size={32} />
-													<h6>Exclusive Content</h6>
-													<p className="small text-muted mb-3">
-														Create premium content for subscribers and earn recurring revenue.
-													</p>
-													<Button variant="warning" size="sm" onClick={() => console.log('Setup Subscriptions clicked')}>
-														Setup Subscriptions
-													</Button>
-												</Card.Body>
-											</Card>
-										</Col>
-										<Col md={6} className="mb-4">
-											<Card className="border border-info h-100">
-												<Card.Body className="text-center">
-													<Zap className="text-info mb-2" size={32} />
-													<h6>Live Streaming</h6>
-													<p className="small text-muted mb-3">
-														Monetize your live streams with super chats and donations.
-													</p>
-													<Button variant="info" size="sm" onClick={() => console.log('Start Streaming clicked')}>
-														Start Streaming
-													</Button>
-												</Card.Body>
-											</Card>
-										</Col>
-									</Row>
-								</Card.Body>
-							</Card>
-						</Col>
-						<Col lg={4}>
-							<Card className="border-0 shadow-sm mb-4">
-								<Card.Header>
-									<h6 className="mb-0">Earning Calculator</h6>
-								</Card.Header>
-								<Card.Body>
-									<Form>
-										<Form.Group className="mb-3">
-											<Form.Label className="small">Followers</Form.Label>
-											<Form.Control
-												type="number"
-												placeholder={analytics?.followers || "1000"}
-												size="sm"
-											/>
-										</Form.Group>
-										<Form.Group className="mb-3">
-											<Form.Label className="small">Posts per month</Form.Label>
-											<Form.Control
-												type="number"
-												placeholder="20"
-												size="sm"
-											/>
-										</Form.Group>
-										<Form.Group className="mb-3">
-											<Form.Label className="small">Engagement rate</Form.Label>
-											<InputGroup size="sm">
-												<Form.Control
-													type="number"
-													placeholder={analytics?.engagementRate || "5"}
-												/>
-												<InputGroup.Text>%</InputGroup.Text>
-											</InputGroup>
-										</Form.Group>
-										<hr />
-										<div className="text-center">
-											<div className="small text-muted mb-1">Estimated Monthly Earnings</div>
-											<div className="h4 text-success mb-2">${(Math.random() * 1000 + 200).toFixed(0)}</div>
-											<Button variant="outline-success" size="sm" className="w-100">
-												Optimize Earnings
-											</Button>
-										</div>
-									</Form>
-								</Card.Body>
-							</Card>
-						</Col>
-					</Row>
-				</Tab>
-			</Tabs>
-
-			{/* Monetization Setup Modal */}
-			<Modal
-				show={showMonetizationModal}
-				onHide={() => setShowMonetizationModal(false)}
-				centered
-				size="lg"
-			>
-				<Modal.Header closeButton>
-					<Modal.Title>
-						<DollarSign className="me-2" />
-						Enable Monetization
-					</Modal.Title>
-				</Modal.Header>
-				<Modal.Body>
-					<div className="text-center mb-4">
-						<Crown size={48} className="text-warning mb-3" />
-						<h5>Start Earning from Your Content</h5>
-						<p className="text-muted">
-							Unlock various monetization features and start earning from your social media presence.
-						</p>
+			<Container fluid className="py-3 px-3">
+				{/* Header */}
+				<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+					<div className="mb-3 mb-md-0">
+						<h2 className="mb-1 fw-bold">
+							<BarChartFill className="me-2 text-primary" />
+							Analytics Dashboard
+						</h2>
+						<p className="text-muted mb-0">Track your content performance and growth</p>
 					</div>
+					<div className="d-flex gap-2">
+						<Dropdown>
+							<Dropdown.Toggle variant="outline-primary" size="sm" className="rounded-3">
+								<Calendar3 className="me-1" size={14} />
+								{timeRange === "7d" ? "Last 7 days" : timeRange === "30d" ? "Last 30 days" : "Last 90 days"}
+							</Dropdown.Toggle>
+							<Dropdown.Menu>
+								<Dropdown.Item onClick={() => setTimeRange("7d")}>Last 7 days</Dropdown.Item>
+								<Dropdown.Item onClick={() => setTimeRange("30d")}>Last 30 days</Dropdown.Item>
+								<Dropdown.Item onClick={() => setTimeRange("90d")}>Last 90 days</Dropdown.Item>
+							</Dropdown.Menu>
+						</Dropdown>
+					</div>
+				</div>
 
-					<Row>
-						<Col md={6} className="mb-3">
-							<Card className="border-primary h-100">
-								<Card.Body className="text-center">
-									<Gift className="text-primary mb-2" size={24} />
-									<h6>Brand Partnerships</h6>
-									<small className="text-muted">Connect with brands for sponsored content</small>
-								</Card.Body>
-							</Card>
-						</Col>
-						<Col md={6} className="mb-3">
-							<Card className="border-success h-100">
-								<Card.Body className="text-center">
-									<Heart className="text-success mb-2" size={24} />
-									<h6>Fan Support</h6>
-									<small className="text-muted">Receive tips and donations from followers</small>
-								</Card.Body>
-							</Card>
-						</Col>
-						<Col md={6} className="mb-3">
-							<Card className="border-warning h-100">
-								<Card.Body className="text-center">
-									<Users className="text-warning mb-2" size={24} />
-									<h6>Premium Content</h6>
-									<small className="text-muted">Offer exclusive content to subscribers</small>
-								</Card.Body>
-							</Card>
-						</Col>
-						<Col md={6} className="mb-3">
-							<Card className="border-info h-100">
-								<Card.Body className="text-center">
-									<Zap className="text-info mb-2" size={24} />
-									<h6>Live Monetization</h6>
-									<small className="text-muted">Earn from live streaming and events</small>
-								</Card.Body>
-							</Card>
-						</Col>
-					</Row>
+				{/* Key Metrics */}
+				<Row className="g-3 mb-4">
+					<Col xs={6} lg={3}>
+						<StatCard
+							icon={FileText}
+							title="Total Posts"
+							value={analytics?.totalPosts || 0}
+							color="primary"
+							growth={analytics?.recentPostsCount}
+						/>
+					</Col>
+					<Col xs={6} lg={3}>
+						<StatCard
+							icon={Heart}
+							title="Total Likes"
+							value={analytics?.totalLikes || 0}
+							color="danger"
+							growth={parseInt(analytics?.reachGrowth) || 0}
+						/>
+					</Col>
+					<Col xs={6} lg={3}>
+						<StatCard
+							icon={Eye}
+							title="Total Views"
+							value={analytics?.totalViews || 0}
+							color="info"
+							subtitle="Organic reach"
+						/>
+					</Col>
+					<Col xs={6} lg={3}>
+						<StatCard
+							icon={TrendingUp}
+							title="Engagement Rate"
+							value={`${analytics?.engagementRate || 0}%`}
+							color="success"
+							subtitle="Above average"
+						/>
+					</Col>
+				</Row>
 
-					<Alert variant="info" className="mt-3">
-						<strong>Requirements:</strong> To enable monetization, you need at least 100 followers and 
-						an active subscription (Premium or Pro).
-					</Alert>
-				</Modal.Body>
-				<Modal.Footer>
-					<Button
-						variant="secondary"
-						onClick={() => setShowMonetizationModal(false)}
-					>
-						Cancel
-					</Button>
-					<Button
-						variant="success"
-						onClick={handleEnableMonetization}
-						disabled={!user?.subscription || user.subscription === "free"}
-					>
-						{user?.subscription === "free" ? "Upgrade Required" : "Enable Monetization"}
-					</Button>
-				</Modal.Footer>
-			</Modal>
-		</Container>
+				{/* Engagement Breakdown */}
+				<Row className="g-3 mb-4">
+					<Col xs={4} sm={4} lg={2}>
+						<Card className="border-0 bg-light h-100">
+							<Card.Body className="text-center p-3">
+								<ChatDots className="text-primary mb-2" size={20} />
+								<div className="fw-bold">{analytics?.totalComments || 0}</div>
+								<small className="text-muted">Comments</small>
+							</Card.Body>
+						</Card>
+					</Col>
+					<Col xs={4} sm={4} lg={2}>
+						<Card className="border-0 bg-light h-100">
+							<Card.Body className="text-center p-3">
+								<Share className="text-success mb-2" size={20} />
+								<div className="fw-bold">{analytics?.totalShares || 0}</div>
+								<small className="text-muted">Shares</small>
+							</Card.Body>
+						</Card>
+					</Col>
+					<Col xs={4} sm={4} lg={2}>
+						<Card className="border-0 bg-light h-100">
+							<Card.Body className="text-center p-3">
+								<People className="text-warning mb-2" size={20} />
+								<div className="fw-bold">{analytics?.followers || 0}</div>
+								<small className="text-muted">Followers</small>
+							</Card.Body>
+						</Card>
+					</Col>
+					<Col xs={12} lg={6}>
+						<Card className="border-0 shadow-sm h-100">
+							<Card.Body className="p-3">
+								<h6 className="mb-3">
+									<Target className="me-2 text-primary" />
+									Quick Insights
+								</h6>
+								<div className="row g-2">
+									<div className="col-6">
+										<small className="text-muted d-block">Avg. likes per post</small>
+										<div className="fw-bold">{analytics?.totalPosts > 0 ? Math.round(analytics.totalLikes / analytics.totalPosts) : 0}</div>
+									</div>
+									<div className="col-6">
+										<small className="text-muted d-block">Avg. engagement</small>
+										<div className="fw-bold">{analytics?.totalPosts > 0 ? Math.round((analytics.totalLikes + analytics.totalComments) / analytics.totalPosts) : 0}</div>
+									</div>
+								</div>
+								<div className="mt-3">
+									<small className="text-muted d-block mb-1">Content Performance</small>
+									<ProgressBar 
+										now={Math.min((analytics?.engagementRate || 0) * 10, 100)} 
+										variant="success" 
+										className="rounded-3" 
+										style={{ height: '8px' }}
+									/>
+								</div>
+							</Card.Body>
+						</Card>
+					</Col>
+				</Row>
+
+				{/* Top Performing Content */}
+				<Row className="g-4">
+					<Col lg={8}>
+						<Card className="border-0 shadow-sm">
+							<Card.Header className="bg-white border-0 pb-0">
+								<h5 className="mb-0 fw-bold">
+									<Star className="me-2 text-warning" />
+									Top Performing Posts
+								</h5>
+								<small className="text-muted">Your best content based on engagement</small>
+							</Card.Header>
+							<Card.Body className="p-3">
+								{analytics?.topPosts?.length > 0 ? (
+									analytics.topPosts.map((post, index) => (
+										<TopPostCard key={post.id} post={post} rank={index + 1} />
+									))
+								) : (
+									<div className="text-center py-4">
+										<FileText className="text-muted mb-2" size={32} />
+										<p className="text-muted">No posts available for analysis</p>
+										<small className="text-muted">Start creating content to see analytics</small>
+									</div>
+								)}
+							</Card.Body>
+						</Card>
+					</Col>
+
+					<Col lg={4}>
+						{/* Growth Metrics */}
+						<Card className="border-0 shadow-sm mb-3">
+							<Card.Header className="bg-white border-0 pb-0">
+								<h6 className="mb-0 fw-bold">
+									<GraphUp className="me-2 text-success" />
+									Growth Metrics
+								</h6>
+							</Card.Header>
+							<Card.Body className="p-3">
+								<div className="mb-3">
+									<div className="d-flex justify-content-between align-items-center mb-1">
+										<small className="text-muted">Recent Growth</small>
+										<Badge bg="success" className="rounded-pill">+{analytics?.reachGrowth || 0}%</Badge>
+									</div>
+									<ProgressBar 
+										now={Math.min(analytics?.reachGrowth || 0, 100)} 
+										variant="success" 
+										className="rounded-3" 
+										style={{ height: '6px' }}
+									/>
+								</div>
+								<div className="mb-3">
+									<div className="d-flex justify-content-between align-items-center mb-1">
+										<small className="text-muted">Engagement Quality</small>
+										<span className="small fw-bold">{analytics?.engagementRate || 0}%</span>
+									</div>
+									<ProgressBar 
+										now={Math.min((analytics?.engagementRate || 0) * 10, 100)} 
+										variant="primary" 
+										className="rounded-3" 
+										style={{ height: '6px' }}
+									/>
+								</div>
+								<div>
+									<div className="d-flex justify-content-between align-items-center mb-1">
+										<small className="text-muted">Content Consistency</small>
+										<span className="small fw-bold">
+											{analytics?.totalPosts > 0 ? Math.min(analytics.totalPosts * 2, 100) : 0}%
+										</span>
+									</div>
+									<ProgressBar 
+										now={analytics?.totalPosts > 0 ? Math.min(analytics.totalPosts * 2, 100) : 0} 
+										variant="warning" 
+										className="rounded-3" 
+										style={{ height: '6px' }}
+									/>
+								</div>
+							</Card.Body>
+						</Card>
+
+						{/* Pro Tips */}
+						<Card className="border-0 bg-gradient-primary text-white">
+							<Card.Body className="p-3">
+								<div className="d-flex align-items-center mb-2">
+									<Lightning className="me-2" size={20} />
+									<h6 className="mb-0 fw-bold">Pro Tips</h6>
+								</div>
+								<ul className="small mb-0 ps-3">
+									<li className="mb-1">Post consistently to maintain engagement</li>
+									<li className="mb-1">Engage with your audience's comments</li>
+									<li className="mb-1">Use trending hashtags and topics</li>
+									<li>Share content during peak hours</li>
+								</ul>
+							</Card.Body>
+						</Card>
+					</Col>
+				</Row>
+			</Container>
+		</>
 	);
 };
 
