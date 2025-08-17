@@ -19,7 +19,9 @@ import {
 	CheckCircle,
 	XCircle,
 	Calendar,
-	Star
+	Star,
+	Image,
+	Paypal
 } from "react-bootstrap-icons";
 
 import { userAPI } from "../config/ApiConfig";
@@ -45,6 +47,42 @@ const SubscriptionPage = () => {
 	const [messageType, setMessageType] = useState("success");
 	const [showCancelModal, setShowCancelModal] = useState(false);
 	const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
+	const [selectedPaymentType, setSelectedPaymentType] = useState("card");
+	const [cardForm, setCardForm] = useState({
+		cardNumber: "",
+		expiryDate: "",
+		cvc: "",
+		cardholderName: "",
+		isDefault: false
+	});
+
+	// Format expiry date as MM/YY
+	const formatExpiryDate = (value) => {
+		// Remove all non-digits
+		const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+		
+		// Add slash after MM
+		if (v.length >= 2) {
+			return v.slice(0, 2) + '/' + v.slice(2, 4);
+		}
+		return v;
+	};
+
+	// Format card number with spaces
+	const formatCardNumber = (value) => {
+		const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+		const matches = v.match(/\d{4,16}/g);
+		const match = matches && matches[0] || '';
+		const parts = [];
+		for (let i = 0, len = match.length; i < len; i += 4) {
+			parts.push(match.substring(i, i + 4));
+		}
+		if (parts.length) {
+			return parts.join(' ');
+		} else {
+			return v;
+		}
+	};
 
 	// Helper functions
 	const getImageLimit = (plan) => {
@@ -232,7 +270,7 @@ const SubscriptionPage = () => {
 									<h6>Current Features:</h6>
 									<ul className="list-unstyled">
 										<li className="d-flex align-items-center gap-2 mb-1">
-											<span className="fw-bold">📷</span>
+											<Image size={16} className="text-primary" />
 											{subscription.features.imageLimit === "unlimited"
 												? "Unlimited images per post"
 												: `${subscription.features.imageLimit} images per post`}
@@ -486,55 +524,154 @@ const SubscriptionPage = () => {
 			{/* Add Payment Method Modal */}
 			<Modal
 				show={showAddPaymentModal}
-				onHide={() => setShowAddPaymentModal(false)}
+				onHide={() => {
+					setShowAddPaymentModal(false);
+					setSelectedPaymentType("card");
+					setCardForm({
+						cardNumber: "",
+						expiryDate: "",
+						cvc: "",
+						cardholderName: "",
+						isDefault: false
+					});
+				}}
 				centered
 			>
 				<Modal.Header closeButton>
 					<Modal.Title>Add Payment Method</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
-					<Form>
-						<Form.Group className="mb-3">
-							<Form.Label>Card Number</Form.Label>
-							<Form.Control
-								type="text"
-								placeholder="1234 5678 9012 3456"
-								maxLength="19"
+					{/* Payment Method Type Selection */}
+					<Form.Group className="mb-4">
+						<Form.Label>Payment Method Type</Form.Label>
+						<div className="d-flex gap-3">
+							<Form.Check
+								type="radio"
+								name="paymentType"
+								id="card"
+								label={
+									<div className="d-flex align-items-center gap-2">
+										<CreditCard size={20} />
+										<span>Credit/Debit Card</span>
+									</div>
+								}
+								checked={selectedPaymentType === "card"}
+								onChange={() => setSelectedPaymentType("card")}
 							/>
-						</Form.Group>
-						<Row>
-							<Col>
-								<Form.Group className="mb-3">
-									<Form.Label>Expiry Date</Form.Label>
-									<Form.Control type="text" placeholder="MM/YY" maxLength="5" />
-								</Form.Group>
-							</Col>
-							<Col>
-								<Form.Group className="mb-3">
-									<Form.Label>CVC</Form.Label>
-									<Form.Control type="text" placeholder="123" maxLength="4" />
-								</Form.Group>
-							</Col>
-						</Row>
-						<Form.Group className="mb-3">
-							<Form.Label>Cardholder Name</Form.Label>
-							<Form.Control type="text" placeholder="John Doe" />
-						</Form.Group>
-						<Form.Check
-							type="checkbox"
-							label="Set as default payment method"
-							className="mb-3"
-						/>
-					</Form>
+							<Form.Check
+								type="radio"
+								name="paymentType"
+								id="paypal"
+								label={
+									<div className="d-flex align-items-center gap-2">
+										<Paypal size={20} />
+										<span>PayPal</span>
+									</div>
+								}
+								checked={selectedPaymentType === "paypal"}
+								onChange={() => setSelectedPaymentType("paypal")}
+							/>
+						</div>
+					</Form.Group>
+
+					{selectedPaymentType === "card" ? (
+						<Form>
+							<Form.Group className="mb-3">
+								<Form.Label>Card Number</Form.Label>
+								<Form.Control
+									type="text"
+									placeholder="1234 5678 9012 3456"
+									value={cardForm.cardNumber}
+									onChange={(e) => {
+										const formatted = formatCardNumber(e.target.value);
+										setCardForm(prev => ({ ...prev, cardNumber: formatted }));
+									}}
+									maxLength="19"
+								/>
+							</Form.Group>
+							<Row>
+								<Col>
+									<Form.Group className="mb-3">
+										<Form.Label>Expiry Date</Form.Label>
+										<Form.Control 
+											type="text" 
+											placeholder="MM/YY" 
+											value={cardForm.expiryDate}
+											onChange={(e) => {
+												const formatted = formatExpiryDate(e.target.value);
+												setCardForm(prev => ({ ...prev, expiryDate: formatted }));
+											}}
+											maxLength="5" 
+										/>
+									</Form.Group>
+								</Col>
+								<Col>
+									<Form.Group className="mb-3">
+										<Form.Label>CVC</Form.Label>
+										<Form.Control 
+											type="text" 
+											placeholder="123" 
+											value={cardForm.cvc}
+											onChange={(e) => {
+												const value = e.target.value.replace(/[^0-9]/g, '');
+												setCardForm(prev => ({ ...prev, cvc: value }));
+											}}
+											maxLength="4" 
+										/>
+									</Form.Group>
+								</Col>
+							</Row>
+							<Form.Group className="mb-3">
+								<Form.Label>Cardholder Name</Form.Label>
+								<Form.Control 
+									type="text" 
+									placeholder="John Doe" 
+									value={cardForm.cardholderName}
+									onChange={(e) => setCardForm(prev => ({ ...prev, cardholderName: e.target.value }))}
+								/>
+							</Form.Group>
+							<Form.Check
+								type="checkbox"
+								label="Set as default payment method"
+								checked={cardForm.isDefault}
+								onChange={(e) => setCardForm(prev => ({ ...prev, isDefault: e.target.checked }))}
+								className="mb-3"
+							/>
+						</Form>
+					) : (
+						<div className="text-center py-4">
+							<Paypal size={48} className="text-primary mb-3" />
+							<p className="text-muted mb-3">
+								You'll be redirected to PayPal to complete the setup
+							</p>
+							<div className="bg-light p-3 rounded">
+								<small className="text-muted">
+									By continuing, you agree to PayPal's terms and conditions
+								</small>
+							</div>
+						</div>
+					)}
 				</Modal.Body>
 				<Modal.Footer>
 					<Button
 						variant="secondary"
-						onClick={() => setShowAddPaymentModal(false)}
+						onClick={() => {
+							setShowAddPaymentModal(false);
+							setSelectedPaymentType("card");
+							setCardForm({
+								cardNumber: "",
+								expiryDate: "",
+								cvc: "",
+								cardholderName: "",
+								isDefault: false
+							});
+						}}
 					>
 						Cancel
 					</Button>
-					<Button variant="primary">Add Payment Method</Button>
+					<Button variant="primary">
+						{selectedPaymentType === "card" ? "Add Card" : "Connect PayPal"}
+					</Button>
 				</Modal.Footer>
 			</Modal>
 		</Container>
