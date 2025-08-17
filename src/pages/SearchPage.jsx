@@ -56,10 +56,10 @@ const SearchPage = () => {
 			const postsResponse = await postAPI.getPosts({ search: searchQuery });
 			setPosts(postsResponse.posts || []);
 
-			// Search users (if API exists)
+			// Search users
 			try {
 				const usersResponse = await userAPI.searchUsers(searchQuery);
-				setUsers(usersResponse.users || []);
+				setUsers(usersResponse || []);
 			} catch (err) {
 				console.log("User search not available");
 				setUsers([]);

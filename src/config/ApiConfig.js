@@ -103,6 +103,11 @@ export const userAPI = {
 	getFollowing: (username) =>
 		apiRequest(`/users/${username}/following`, {
 			method: 'GET'
+		}),
+
+	searchUsers: (searchQuery) =>
+		apiRequest(`/users?search=${encodeURIComponent(searchQuery)}`, {
+			method: 'GET'
 		})
 };
 

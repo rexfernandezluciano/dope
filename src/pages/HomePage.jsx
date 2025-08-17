@@ -31,10 +31,11 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	ThreeDots,
+	CheckCircleFill,
 } from "react-bootstrap-icons";
 
-import { Grid } from "@giphy/react-components";
-import { GiphyFetch } from "@giphy/js-fetch-api";
+import { Grid } from "@giphy.react-components";
+import { GiphyFetch } from "@giphy.js-fetch-api";
 
 import { postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -372,7 +373,7 @@ const HomePage = () => {
 	return (
 		<>
 			<Container className="py-3 px-0 px-0 px-md-3">
-				
+
 
 				{error && (
 					<Alert variant="danger" className="mb-3">
@@ -399,7 +400,7 @@ const HomePage = () => {
 								<div className="d-flex align-items-center gap-1 mb-2">
 									<span className="fw-bold">{user?.name}</span>
 									{user?.hasBlueCheck && (
-										<span className="text-primary">✓</span>
+										<CheckCircleFill className="text-primary" size={16} />
 									)}
 								</div>
 								<div className="w-100 text-start text-muted border-1 bg-transparent">
@@ -483,7 +484,7 @@ const HomePage = () => {
 															{post.author.name}
 														</span>
 														{post.author.hasBlueCheck && (
-															<span className="text-primary">✓</span>
+															<CheckCircleFill className="text-primary" size={16} />
 														)}
 														<span className="text-muted">·</span>
 														<span className="text-muted small">
@@ -827,7 +828,7 @@ const HomePage = () => {
 								<div className="d-flex align-items-center gap-1 mb-2">
 									<span className="fw-bold">{user?.name}</span>
 									{user?.hasBlueCheck && (
-										<span className="text-primary">✓</span>
+										<CheckCircleFill className="text-primary" size={16} />
 									)}
 								</div>
 
