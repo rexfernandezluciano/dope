@@ -27,7 +27,7 @@ import { postAPI, userAPI } from "../config/ApiConfig";
 
 const SearchPage = () => {
 	const navigate = useNavigate();
-	const [searchParams] = useSearchParams();
+	const [searchParams, setSearchParams] = useSearchParams();
 	const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "");
 	const [posts, setPosts] = useState([]);
 	const [users, setUsers] = useState([]);
@@ -37,6 +37,23 @@ const SearchPage = () => {
 
 	// Get current user from localStorage or context
 	const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+	// Update URL when search query changes
+	useEffect(() => {
+		if (searchQuery.trim()) {
+			setSearchParams({ q: searchQuery });
+		} else {
+			setSearchParams({});
+		}
+	}, [searchQuery, setSearchParams]);
+
+	// Listen for URL parameter changes (back/forward navigation)
+	useEffect(() => {
+		const urlQuery = searchParams.get('q') || "";
+		if (urlQuery !== searchQuery) {
+			setSearchQuery(urlQuery);
+		}
+	}, [searchParams]);
 
 	const handleSearch = useCallback(async () => {
 		if (!searchQuery.trim()) {
@@ -69,6 +86,9 @@ const SearchPage = () => {
 	useEffect(() => {
 		if (searchQuery.trim()) {
 			handleSearch();
+		} else {
+			setPosts([]);
+			setUsers([]);
 		}
 	}, [searchQuery, handleSearch]);
 
