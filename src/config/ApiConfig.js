@@ -142,24 +142,15 @@ const postAPI = {
 			body: postData
 		}),
 
-	// deletePost is already present in the original code, no changes needed here based on the provided snippet.
-	// If the intention was to add a new method with the same name, the snippet would need to be different.
-	// Assuming the snippet indicates a modification or confirmation of an existing method if it were present.
-	// The provided snippet suggests adding a deletePost method, but it's already defined.
-	// For the purpose of this exercise, if the snippet intends to replace or confirm it,
-	// and if the original already had it, we keep the original.
-	// If the original did NOT have it, we would add it.
-	// Since it IS present, and the snippet provides a new implementation, this indicates a potential conflict.
-	// However, following the instructions to ONLY apply the changes from the snippet, and seeing the snippet
-	// provides an implementation for `deletePost`, we will integrate it.
-	// If the `deletePost` in the original was different or missing, this would be the integration.
-	// Given the provided snippet is about `deletePost`, and it's already in the original,
-	// we will assume the snippet is providing a new implementation.
-	// The snippet adds a deletePost method to postAPI
-	async deletePost(postId) {
+	deletePost: (postId) =>
+		apiRequest(`/posts/${postId}`, {
+			method: 'DELETE'
+		}),
+
+	deletePostWithImages: async (postId) => {
 		try {
 			const token = getAuthToken();
-			const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
+			const response = await fetch(`${API_BASE_URL}/posts/${postId}/with-images`, {
 				method: 'DELETE',
 				headers: {
 					'Authorization': `Bearer ${token}`
@@ -168,7 +159,7 @@ const postAPI = {
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				throw new Error(errorData.message || 'Failed to delete post');
+				throw new Error(errorData.message || 'Failed to delete post with images');
 			}
 
 			return { success: true };

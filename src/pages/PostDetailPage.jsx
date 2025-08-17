@@ -124,10 +124,48 @@ const PostDetailPage = () => {
 		setShowDeleteDialog(true);
 	};
 
+	const deleteFromCloudinary = async (imageUrl) => {
+		try {
+			// Extract public_id from Cloudinary URL
+			const urlParts = imageUrl.split('/');
+			const filename = urlParts[urlParts.length - 1];
+			const publicId = filename.split('.')[0];
+
+			const formData = new FormData();
+			formData.append("public_id", publicId);
+			formData.append("api_key", "YOUR_API_KEY"); // You'll need to add your Cloudinary API key
+			
+			// Generate signature for deletion (you'll need to implement this on your backend)
+			const response = await fetch(
+				"https://api.cloudinary.com/v1_1/zxpic/image/destroy",
+				{
+					method: "POST",
+					body: formData,
+				}
+			);
+			
+			const data = await response.json();
+			return data.result === "ok";
+		} catch (error) {
+			console.error("Error deleting from Cloudinary:", error);
+			return false;
+		}
+	};
+
 	const confirmDeletePost = async () => {
 		if (!postToDelete) return;
 
 		try {
+			// Delete associated images from Cloudinary first
+			if (post && post.imageUrls && post.imageUrls.length > 0) {
+				for (const imageUrl of post.imageUrls) {
+					if (imageUrl.includes('cloudinary.com')) {
+						await deleteFromCloudinary(imageUrl);
+					}
+				}
+			}
+			
+			// Then delete the post
 			await postAPI.deletePost(postToDelete);
 			navigate(-1); // Go back since post is deleted
 		} catch (err) {

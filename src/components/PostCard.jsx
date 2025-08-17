@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState } from "react";
@@ -56,10 +55,10 @@ const PostCard = ({
 
 	const canComment = (post) => {
 		if (!currentUser) return false;
-		
+
 		// Post owner can always comment
 		if (post.author.uid === currentUser.uid) return true;
-		
+
 		// Check privacy settings
 		switch (post.privacy) {
 			case 'public':
@@ -110,7 +109,7 @@ const PostCard = ({
 		) {
 			return;
 		}
-		
+
 		if (onPostClick) {
 			onPostClick(post.id, e);
 		} else {
@@ -139,11 +138,51 @@ const PostCard = ({
 		}
 	};
 
-	const handleDeletePost = () => {
-		if (onDeletePost) {
-			onDeletePost(post.id);
+	const deleteFromCloudinary = async (imageUrl) => {
+		try {
+			// Extract public_id from Cloudinary URL
+			const urlParts = imageUrl.split('/');
+			const filename = urlParts[urlParts.length - 1];
+			const publicId = filename.split('.')[0];
+
+			const formData = new FormData();
+			formData.append("public_id", publicId);
+			formData.append("api_key", "YOUR_API_KEY"); // You'll need to add your Cloudinary API key
+
+			// Generate signature for deletion (you'll need to implement this on your backend)
+			const response = await fetch(
+				"https://api.cloudinary.com/v1_1/zxpic/image/destroy",
+				{
+					method: "POST",
+					body: formData,
+				}
+			);
+
+			const data = await response.json();
+			return data.result === "ok";
+		} catch (error) {
+			console.error("Error deleting from Cloudinary:", error);
+			return false;
 		}
-		setShowPostOptionsModal(false);
+	};
+
+	const handleDeletePost = async (postId) => {
+		try {
+			// Delete associated images from Cloudinary first
+			if (post.imageUrls && post.imageUrls.length > 0) {
+				for (const imageUrl of post.imageUrls) {
+					if (imageUrl.includes('cloudinary.com')) {
+						await deleteFromCloudinary(imageUrl);
+					}
+				}
+			}
+
+			// Then delete the post
+			await postAPI.deletePost(postId);
+			onDeletePost?.(postId);
+		} catch (err) {
+			console.error("Error deleting post:", err);
+		}
 	};
 
 	const openPostOptionsModal = (e) => {
@@ -609,7 +648,7 @@ const PostCard = ({
 						{post.author.uid === currentUser.uid && (
 							<button
 								className="list-group-item list-group-item-action border-0 text-danger"
-								onClick={handleDeletePost}
+								onClick={() => handleDeletePost(post.id)}
 							>
 								Delete Post
 							</button>

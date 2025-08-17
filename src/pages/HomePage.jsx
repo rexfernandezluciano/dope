@@ -35,6 +35,7 @@ import {
 
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
+import heic2any from "heic2any";
 
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -197,6 +198,34 @@ const HomePage = () => {
 		}
 	};
 
+	const deleteFromCloudinary = async (imageUrl) => {
+		try {
+			// Extract public_id from Cloudinary URL
+			const urlParts = imageUrl.split('/');
+			const filename = urlParts[urlParts.length - 1];
+			const publicId = filename.split('.')[0];
+
+			const formData = new FormData();
+			formData.append("public_id", publicId);
+			formData.append("api_key", "YOUR_API_KEY"); // You'll need to add your Cloudinary API key
+			
+			// Generate signature for deletion (you'll need to implement this on your backend)
+			const response = await fetch(
+				"https://api.cloudinary.com/v1_1/zxpic/image/destroy",
+				{
+					method: "POST",
+					body: formData,
+				}
+			);
+			
+			const data = await response.json();
+			return data.result === "ok";
+		} catch (error) {
+			console.error("Error deleting from Cloudinary:", error);
+			return false;
+		}
+	};
+
 	const handleFileChange = async (e) => {
 		const files = Array.from(e.target.files);
 		if (files.length) {
@@ -212,9 +241,22 @@ const HomePage = () => {
 
 			const uploadedUrls = [];
 			for (const file of filesToUpload) {
-				const url = await uploadToCloudinary(file);
-				if (url) {
-					uploadedUrls.push(url);
+				try {
+					let finalFile = file;
+
+					// Handle HEIC files
+					if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+						const blob = await heic2any({ blob: file, toType: "image/jpeg" });
+						finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+					}
+
+					const url = await uploadToCloudinary(finalFile);
+					if (url) {
+						uploadedUrls.push(url);
+					}
+				} catch (err) {
+					console.error("Error processing file:", err);
+					setError("Failed to process one or more images.");
 				}
 			}
 			setPhotos((prev) => [...(prev || []), ...uploadedUrls]);
@@ -303,7 +345,21 @@ const HomePage = () => {
 		if (!postToDelete) return;
 
 		try {
+			// Find the post to get its images
+			const postToDeleteObj = posts.find(post => post.id === postToDelete);
+			
+			// Delete the post first
 			await postAPI.deletePost(postToDelete);
+			
+			// Delete associated images from Cloudinary
+			if (postToDeleteObj && postToDeleteObj.imageUrls && postToDeleteObj.imageUrls.length > 0) {
+				for (const imageUrl of postToDeleteObj.imageUrls) {
+					if (imageUrl.includes('cloudinary.com')) {
+						await deleteFromCloudinary(imageUrl);
+					}
+				}
+			}
+			
 			setPosts((prev) => prev.filter((post) => post.id !== postToDelete));
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
