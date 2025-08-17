@@ -416,8 +416,8 @@ const HomePage = () => {
 					</div>
 				) : (
 					<>
-						<div className="d-flex align-items-center justify-content-center px-3 py-2 border-bottom">
-							<div className="d-flex">
+						<div className="d-flex align-items-center justify-content-center px-3 pt-4 border-bottom bg-white sticky-top">
+							<div className="d-flex justify-content-between">
 								<Button
 									variant="link"
 									className={`px-4 py-2 fw-bold text-decoration-none border-0 ${
