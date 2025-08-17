@@ -416,13 +416,13 @@ const HomePage = () => {
 					</div>
 				) : (
 					<>
-						<div className="d-flex align-items-center justify-content-center px-3 pt-4 border-bottom bg-white sticky-top">
+						<div className="d-flex align-items-center justify-content-center px-3 pt-3 border-bottom bg-white sticky-top">
 							<div className="d-flex justify-content-between">
 								<Button
 									variant="link"
 									className={`px-4 py-2 fw-bold text-decoration-none border-0 ${
 										filterBy === "for-you"
-											? "text-primary border-bottom border-primary border-2"
+											? "text-primary border-bottom border-primary pb-3 border-2"
 											: "text-muted"
 									}`}
 									onClick={() => setFilterBy("for-you")}
@@ -434,7 +434,7 @@ const HomePage = () => {
 									variant="link"
 									className={`px-4 py-2 fw-bold text-decoration-none border-0 ${
 										filterBy === "following"
-											? "text-primary border-bottom border-primary border-2"
+											? "text-primary border-bottom border-primary pb-3 border-2"
 											: "text-muted"
 									}`}
 									onClick={() => setFilterBy("following")}
