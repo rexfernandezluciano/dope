@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLoaderData } from "react-router-dom";
 import {
 	Container,
@@ -36,7 +36,7 @@ import {
 	PieChartFill,
 	Activity,
 	Star,
-	Zap,
+	Lightning as Zap,
 } from "react-bootstrap-icons";
 import { CurrencyDollar as DollarSign } from "react-bootstrap-icons";
 
@@ -65,9 +65,9 @@ const AnalyticsPage = () => {
 
 	useEffect(() => {
 		loadAnalytics();
-	}, [timeRange]);
+	}, [loadAnalytics]);
 
-	const loadAnalytics = async () => {
+	const loadAnalytics = useCallback(async () => {
 		try {
 			setLoading(true);
 			setError("");
@@ -87,7 +87,7 @@ const AnalyticsPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [timeRange]);
 
 	// Mock API functions (replace with actual API calls)
 	const getUserAnalytics = async () => {
