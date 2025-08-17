@@ -33,6 +33,7 @@ import {
 import { userAPI, postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
+import { formatTimeAgo, formatJoinDate, deletePost as deletePostUtil, sharePost, handlePostClick, handlePostOption } from "../utils/common-utils";
 
 const ProfilePage = () => {
 	const { username } = useParams();
@@ -226,7 +227,7 @@ const ProfilePage = () => {
 		try {
 			setUploadingProfileImage(true);
 			let updateData = { ...editForm };
-			
+
 			// Upload profile image if a new file was selected
 			if (editForm.profileImageFile) {
 				const uploadedUrl = await uploadProfileImageToCloudinary(editForm.profileImageFile);
@@ -236,7 +237,7 @@ const ProfilePage = () => {
 				// Remove the file from update data
 				delete updateData.profileImageFile;
 			}
-			
+
 			await userAPI.updateUser(username, updateData);
 			setProfileUser((prev) => ({ ...prev, ...updateData }));
 			setShowEditModal(false);
@@ -257,32 +258,10 @@ const ProfilePage = () => {
 				setProfileImagePreview(e.target.result);
 			};
 			reader.readAsDataURL(file);
-			
+
 			// Store file for later upload
 			setEditForm((prev) => ({ ...prev, profileImageFile: file }));
 		}
-	};
-
-	const formatTimeAgo = (dateString) => {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now - date;
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-
-		if (diffMins < 1) return "now";
-		if (diffMins < 60) return `${diffMins}m`;
-		if (diffHours < 24) return `${diffHours}h`;
-		return `${diffDays}d`;
-	};
-
-	const formatJoinDate = (dateString) => {
-		const date = new Date(dateString);
-		return date.toLocaleDateString("en-US", {
-			year: "numeric",
-			month: "long",
-		});
 	};
 
 	const openImageViewer = (images, startIndex = 0) => {
@@ -306,7 +285,7 @@ const ProfilePage = () => {
 		if (!postToDelete) return;
 
 		try {
-			await postAPI.deletePost(postToDelete);
+			await deletePostUtil(postToDelete); // Use the utility function
 			setPosts((prev) => prev.filter((post) => post.id !== postToDelete));
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
@@ -318,82 +297,31 @@ const ProfilePage = () => {
 		}
 	};
 
-	const handleSharePost = async (postId) => {
-		const postUrl = `${window.location.origin}/post/${postId}`;
-
-		if (navigator.share) {
-			try {
-				await navigator.share({
-					title: "Check out this post",
-					url: postUrl,
-				});
-			} catch (err) {
-				navigator.clipboard.writeText(postUrl);
-			}
-		} else {
-			try {
-				await navigator.clipboard.writeText(postUrl);
-			} catch (err) {
-				console.error("Failed to copy to clipboard:", err);
-			}
-		}
+	const handleShare = async (postId) => {
+		sharePost(postId); // Use the utility function
 	};
 
-	const handlePostClick = (postId, e) => {
-		// Don't navigate if clicking on buttons, links, dropdowns, or images
-		if (
-			e.target.closest("button") ||
-			e.target.closest("a") ||
-			e.target.closest(".dropdown") ||
-			e.target.closest("img") ||
-			e.target.tagName === "IMG"
-		) {
-			return;
-		}
-		window.location.href = `/post/${postId}`;
-	};
-
-	const openPostOptionsModal = (post) => {
+	const handleOptionsClick = (post) => {
 		setSelectedPostForOptions(post);
 		setShowPostOptionsModal(true);
 	};
 
-	const closePostOptionsModal = () => {
-		setShowPostOptionsModal(false);
-		setSelectedPostForOptions(null);
-	};
-
 	const handleOptionAction = (action, postId) => {
-		if (!postId) return;
-		switch (action) {
-			case "copyLink":
-				navigator.clipboard.writeText(
-					`${window.location.origin}/post/${postId}`,
-				);
-				break;
-			case "repost":
-				// Implement repost logic
-				console.log("Reposting post:", postId);
-				break;
-			case "report":
-				// Implement report logic
-				console.log("Reporting post:", postId);
-				break;
-			case "delete":
-				handleDeletePost(postId);
-				break;
-			default:
-				break;
-		}
+		handlePostOption(action, postId, {
+			copyLink: () => navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`),
+			delete: () => handleDeletePost(postId),
+			// Add other actions as needed
+		});
 		closePostOptionsModal();
 	};
 
+
 	const canComment = (post) => {
 		if (!currentUser) return false;
-		
+
 		// Post owner can always comment
 		if (post.author.uid === currentUser.uid) return true;
-		
+
 		// Check privacy settings
 		switch (post.privacy) {
 			case 'public':
@@ -575,9 +503,10 @@ const ProfilePage = () => {
 									post={post}
 									currentUser={currentUser}
 									onLike={handleLikePost}
-									onShare={handleSharePost}
-									onDeletePost={handleDeletePost}
-									onPostClick={handlePostClick}
+									onShare={() => handleShare(post.id)} // Use utility
+									onDeletePost={() => handleDeletePost(post.id)} // Use utility
+									onPostClick={(e) => handlePostClick(post.id, e)} // Use utility
+									onOpenOptions={handleOptionsClick}
 								/>
 							))
 						)}

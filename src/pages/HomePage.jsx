@@ -28,12 +28,13 @@ import {
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
-import { GiphyFetch } from "@giphy/js-fetch-api";
+import { GiphyFetch } from "@giphy.js-fetch-api";
 import heic2any from "heic2any";
 
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
+import { deletePost as deletePostUtil, sharePost, handlePostClick } from "../utils/common-utils";
 
 const HomePage = () => {
 	const [showComposerModal, setShowComposerModal] = useState(false);
@@ -194,12 +195,13 @@ const HomePage = () => {
 
 		const formData = new FormData();
 		formData.append("file", finalFile);
-		formData.append("upload_preset", "dope-network");
-		formData.append("folder", "posts");
+		formData.append("upload_preset", "dope-network"); // Replace with your actual upload preset
+		formData.append("folder", "posts"); // Replace with your desired folder
+		formData.append("api_key", "552259847565352"); // Add the Cloudinary API key
 
 		try {
 			const response = await fetch(
-				"https://api.cloudinary.com/v1_1/zxpic/image/upload",
+				"https://api.cloudinary.com/v1_1/zxpic/image/upload", // Replace zxpic with your Cloudinary cloud name
 				{
 					method: "POST",
 					body: formData,
@@ -344,9 +346,8 @@ const HomePage = () => {
 		if (!postToDelete) return;
 
 		try {
-			// Delete the post (backend will handle image cleanup)
-			await postAPI.deletePost(postToDelete);
-			setPosts((prev) => prev.filter((post) => post.id !== postToDelete));
+			// Use the reusable utility for deleting the post
+			await deletePostUtil(postToDelete, setPosts, setError); // Pass state setters and setError to the utility
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
 		} catch (err) {
@@ -357,40 +358,45 @@ const HomePage = () => {
 		}
 	};
 
-	const handleSharePost = async (postId) => {
-		const postUrl = `${window.location.origin}/post/${postId}`;
+	// const handleSharePost = async (postId) => {
+	// 	const postUrl = `${window.location.origin}/post/${postId}`;
 
-		if (navigator.share) {
-			try {
-				await navigator.share({
-					title: "Check out this post",
-					url: postUrl,
-				});
-			} catch (err) {
-				// Fallback to clipboard if sharing fails
-				navigator.clipboard.writeText(postUrl);
-			}
-		} else {
-			// Fallback to clipboard for browsers that don't support Web Share API
-			try {
-				await navigator.clipboard.writeText(postUrl);
-			} catch (err) {
-				console.error("Failed to copy to clipboard:", err);
-			}
-		}
-	};
+	// 	if (navigator.share) {
+	// 		try {
+	// 			await navigator.share({
+	// 				title: "Check out this post",
+	// 				url: postUrl,
+	// 			});
+	// 		} catch (err) {
+	// 			// Fallback to clipboard if sharing fails
+	// 			navigator.clipboard.writeText(postUrl);
+	// 		}
+	// 	} else {
+	// 		// Fallback to clipboard for browsers that don't support Web Share API
+	// 		try {
+	// 			await navigator.clipboard.writeText(postUrl);
+	// 		} catch (err) {
+	// 			console.error("Failed to copy to clipboard:", err);
+	// 		}
+	// 	}
+	// };
 
-	const handlePostClick = (postId, e) => {
-		// Don't navigate if clicking on interactive elements
-		if (
-			e.target.closest("button") ||
-			e.target.closest("a") ||
-			e.target.closest(".dropdown")
-		) {
-			return;
-		}
-		window.location.href = `/post/${postId}`;
-	};
+	// Use the reusable sharePost utility
+	// const handleSharePost = (postId) => {
+	// 	sharePost(postId);
+	// };
+
+	// const handlePostClick = (postId, e) => {
+	// 	// Don't navigate if clicking on interactive elements
+	// 	if (
+	// 		e.target.closest("button") ||
+	// 		e.target.closest("a") ||
+	// 		e.target.closest(".dropdown")
+	// 	) {
+	// 		return;
+	// 	}
+	// 	window.location.href = `/post/${postId}`;
+	// };
 
 	const handleLikePost = async (postId) => {
 		try {
@@ -530,9 +536,9 @@ const HomePage = () => {
 									post={post}
 									currentUser={user}
 									onLike={handleLikePost}
-									onShare={handleSharePost}
+									onShare={() => sharePost(post.id)} // Use reusable sharePost utility
 									onDeletePost={handleDeletePost}
-									onPostClick={handlePostClick}
+									onPostClick={(e) => handlePostClick(post.id, e)} // Use reusable handlePostClick utility
 									showComments={postComments[post.id] && postComments[post.id].length > 0}
 									comments={postComments[post.id] || []}
 								/>

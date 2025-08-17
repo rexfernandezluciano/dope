@@ -1,11 +1,10 @@
 /** @format */
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
+	Card,
 	Image,
 	Button,
-	Card,
 	Modal,
 } from "react-bootstrap";
 import {
@@ -13,8 +12,6 @@ import {
 	HeartFill,
 	ChatDots,
 	Share,
-	ChevronLeft,
-	ChevronRight,
 	X,
 	ThreeDots,
 	CheckCircleFill,
@@ -24,6 +21,12 @@ import {
 } from "react-bootstrap-icons";
 
 import { postAPI } from "../config/ApiConfig";
+import {
+	formatTimeAgo,
+	deletePost as deletePostUtil,
+	sharePost,
+	handlePostClick as handlePostClickUtil,
+} from "../utils/common-utils";
 
 const PostCard = ({
 	post,
@@ -40,20 +43,6 @@ const PostCard = ({
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
-
-	const formatTimeAgo = (dateString) => {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now - date;
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-
-		if (diffMins < 1) return "now";
-		if (diffMins < 60) return `${diffMins}m`;
-		if (diffHours < 24) return `${diffHours}h`;
-		return `${diffDays}d`;
-	};
 
 	const canComment = (post) => {
 		if (!currentUser) return false;
@@ -101,22 +90,7 @@ const PostCard = ({
 	};
 
 	const handlePostClick = (e) => {
-		// Don't navigate if clicking on interactive elements
-		if (
-			e.target.closest("button") ||
-			e.target.closest("a") ||
-			e.target.closest(".dropdown") ||
-			e.target.closest("img") ||
-			e.target.tagName === "IMG"
-		) {
-			return;
-		}
-
-		if (onPostClick) {
-			onPostClick(post.id, e);
-		} else {
-			navigate(`/post/${post.id}`);
-		}
+		handlePostClickUtil(post.id, e, onPostClick, navigate);
 	};
 
 	const handleLike = (e) => {
@@ -128,6 +102,7 @@ const PostCard = ({
 
 	const handleShare = (e) => {
 		e.stopPropagation();
+		sharePost(post.id); // Use the utility function
 		if (onShare) {
 			onShare(post.id);
 		}
@@ -141,14 +116,8 @@ const PostCard = ({
 	};
 
 	const handleDeletePost = async (postId) => {
-		try {
-			// Delete the post (backend will handle image cleanup)
-			await postAPI.deletePost(postId);
-			onDeletePost?.(postId);
-		} catch (error) {
-			console.error("Error deleting post:", error.message || error);
-			// Optionally show user-friendly error message
-		}
+		await deletePostUtil(postId, postAPI.deletePost); // Use the utility function
+		onDeletePost?.(postId);
 	};
 
 	const openPostOptionsModal = (e) => {
@@ -478,7 +447,7 @@ const PostCard = ({
 											/>
 											<div className="comment-content">
 												<div className="d-flex align-items-center gap-1">
-													<span 
+													<span
 														className="fw-bold small"
 														style={{ cursor: "pointer", color: "inherit" }}
 														onClick={(e) => {

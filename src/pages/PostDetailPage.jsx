@@ -1,37 +1,35 @@
 /** @format */
 
-import { useState, useEffect } from "react";
-import { useParams, useLoaderData, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import {
 	Container,
+	Card,
 	Image,
 	Button,
-	Card,
 	Form,
-	Spinner,
 	Alert,
-	OverlayTrigger,
-	Tooltip,
+	Spinner,
 	Modal,
+	Badge,
 } from "react-bootstrap";
 import {
+	ArrowLeft,
 	Heart,
 	HeartFill,
 	ChatDots,
 	Share,
-	ArrowLeft,
-	ThreeDots,
-	ChevronLeft,
-	ChevronRight,
-	X,
-	Globe,
-	Lock,
-	PersonFill,
 	CheckCircleFill,
+	Globe,
+	PeopleFill,
+	PersonFill,
+	ArrowRight,
+	X,
 } from "react-bootstrap-icons";
-
+import { useParams, useNavigate } from "react-router-dom";
 import { postAPI, commentAPI } from "../config/ApiConfig";
+import { getUser } from "../utils/app-utils";
 import AlertDialog from "../components/dialogs/AlertDialog";
+import { formatTimeAgo, deletePost as deletePostUtil, sharePost } from "../utils/common-utils";
 
 const PostDetailPage = () => {
 	const { postId } = useParams();
@@ -97,25 +95,10 @@ const PostDetailPage = () => {
 		}
 	};
 
+	// Replaced handleSharePost with the reusable sharePost utility
 	const handleSharePost = async (postId) => {
 		const postUrl = `${window.location.origin}/post/${postId}`;
-
-		if (navigator.share) {
-			try {
-				await navigator.share({
-					title: "Check out this post",
-					url: postUrl,
-				});
-			} catch (err) {
-				navigator.clipboard.writeText(postUrl);
-			}
-		} else {
-			try {
-				await navigator.clipboard.writeText(postUrl);
-			} catch (err) {
-				console.error("Failed to copy to clipboard:", err);
-			}
-		}
+		await sharePost(postUrl);
 	};
 
 	const handleDeletePost = (postId) => {
@@ -123,35 +106,7 @@ const PostDetailPage = () => {
 		setShowDeleteDialog(true);
 	};
 
-	const deleteFromCloudinary = async (imageUrl) => {
-		try {
-			// Extract public_id from Cloudinary URL
-			const urlParts = imageUrl.split('/');
-			const filename = urlParts[urlParts.length - 1];
-			const publicId = filename.split('.')[0];
-
-			const formData = new FormData();
-			formData.append("public_id", publicId);
-			// Replace with your actual Cloudinary API key and upload preset if needed
-			formData.append("api_key", "YOUR_API_KEY"); // TODO: Add your Cloudinary API key
-
-			// Generate signature for deletion (you'll need to implement this on your backend)
-			const response = await fetch(
-				"https://api.cloudinary.com/v1_1/zxpic/image/destroy",
-				{
-					method: "POST",
-					body: formData,
-				}
-			);
-
-			const data = await response.json();
-			return data.result === "ok";
-		} catch (error) {
-			console.error("Error deleting from Cloudinary:", error);
-			return false;
-		}
-	};
-
+	// Replaced deleteFromCloudinary with the reusable deletePostUtil
 	const confirmDeletePost = async () => {
 		if (!postToDelete) return;
 
@@ -160,7 +115,7 @@ const PostDetailPage = () => {
 			if (post && post.imageUrls && post.imageUrls.length > 0) {
 				for (const imageUrl of post.imageUrls) {
 					if (imageUrl.includes('cloudinary.com')) {
-						await deleteFromCloudinary(imageUrl);
+						await deletePostUtil(imageUrl);
 					}
 				}
 			}
@@ -244,19 +199,7 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const formatTimeAgo = (dateString) => {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now - date;
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-
-		if (diffMins < 1) return "now";
-		if (diffMins < 60) return `${diffMins}m`;
-		if (diffHours < 24) return `${diffHours}h`;
-		return `${diffDays}d`;
-	};
+	// formatTimeAgo is now imported from common-utils
 
 	if (loading) {
 		return (
