@@ -11,8 +11,6 @@ import {
 	Card,
 	Spinner,
 	Alert,
-	Row,
-	Col,
 	Tabs,
 	Tab,
 } from "react-bootstrap";
@@ -23,7 +21,6 @@ import {
 	HeartFill,
 	ChatDots,
 	Share,
-	ThreeDots,
 	CheckCircleFill,
 } from "react-bootstrap-icons";
 
@@ -95,14 +92,15 @@ const SearchPage = () => {
 			setPosts((prev) =>
 				prev.map((post) => {
 					if (post.id === postId) {
-						const isLiked = (post.likes || []).some(
+						const likes = post.likes || [];
+						const isLiked = likes.some(
 							(like) => like.user.uid === currentUser.uid,
 						);
 						return {
 							...post,
 							likes: isLiked
-								? (post.likes || []).filter((like) => like.user.uid !== currentUser.uid)
-								: [...(post.likes || []), { user: {uid: currentUser.uid }}],
+								? likes.filter((like) => like.user.uid !== currentUser.uid)
+								: [...likes, { user: {uid: currentUser.uid }}],
 							stats: {
 								...post.stats,
 								likes: isLiked ? (post.stats?.likes || 0) - 1 : (post.stats?.likes || 0) + 1,
@@ -246,16 +244,14 @@ const SearchPage = () => {
 
 												<div className="d-flex align-items-center justify-content-between">
 													{(post.likes || []).length > 0 &&
-														((post.likes || [])[0]?.user?.uid === currentUser.uid ? (
+														(post.likes || [])[0]?.user?.uid === currentUser.uid && (
 															<div className="small text-muted">
 																<span className="fw-bold">You</span>{" "}
 																{(post.likes || []).length > 1
 																	? "& " + ((post.likes || []).length - 1) + " reacted."
 																	: " reacted."}
 															</div>
-														) : (
-															""
-														))}
+														)}
 												</div>
 
 												<div
