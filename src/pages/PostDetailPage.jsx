@@ -588,7 +588,7 @@ const PostDetailPage = () => {
 					<p>No comments yet</p>
 				</div>
 			) : (
-				<div className="comment-thread">
+				<div className="comment-thread px-3 py-4">
 					{comments.map((comment, index) => (
 						<div key={comment.id} className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""}`}>
 							<Image

@@ -109,7 +109,7 @@ const NavigationView = ({ children, user }) => {
 						{/* Mobile Search Icon */}
 						<Button
 							variant="link"
-							className="p-0"
+							className="p-0 me-1"
 							onClick={() => navigate("/search")}
 						>
 							<Search size={24} className="text-primary" />
@@ -138,10 +138,10 @@ const NavigationView = ({ children, user }) => {
 										height={70}
 									/>
 									<h6 className="mt-2">{user?.name}</h6>
-									<small className="text-muted">{user?.email}</small>
+									<small className="text-muted">@{user?. username}</small>
 									{user.subscription && user.subscription !== "free" && (
 										<span
-											className={`badge ${
+											className={`ms-1 badge ${
 												user.subscription === "premium"
 													? "bg-warning text-dark"
 													: user.subscription === "pro"

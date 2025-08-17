@@ -513,7 +513,7 @@ const HomePage = () => {
 					</div>
 				) : (
 					<>
-						<div className="d-flex align-items-center justify-content-center px-0 pt-3 border-bottom bg-white sticky-top">
+						<div className="d-flex align-items-center justify-content-center px-0 pt-2 border-bottom bg-white sticky-top">
 							<div className="d-flex w-100">
 								<Button
 									variant="link"
