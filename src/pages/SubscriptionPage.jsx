@@ -2,7 +2,7 @@
 /** @format */
 
 import { useState, useEffect } from "react";
-import { useLoaderData, useNavigate, useParams } from "react-router-dom";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import { 
 	Container, 
 	Card, 
@@ -19,12 +19,9 @@ import {
 } from "react-bootstrap";
 import { 
 	CreditCard, 
-	Shield, 
-	Star, 
 	CheckCircle, 
 	XCircle, 
 	Calendar,
-	Gift,
 	Crown,
 	Image as ImageIcon
 } from "react-bootstrap-icons";
