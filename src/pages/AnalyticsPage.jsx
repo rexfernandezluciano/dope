@@ -50,7 +50,7 @@ const AnalyticsPage = () => {
 			setError("");
 
 			// Fetch real user posts data
-			const userPostsResponse = await postAPI.getUserPosts(user?.id, {
+			const userPostsResponse = await postAPI.getUserPosts(user?.uid, {
 				page: 1,
 				limit: 50
 			});
