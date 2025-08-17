@@ -10,6 +10,7 @@ import IndexPage from "../pages/IndexPage";
 import HomePage from "../pages/HomePage";
 import ProfilePage from "../pages/ProfilePage";
 import SettingsPage from "../pages/SettingsPage";
+import SubscriptionPage from "../pages/SubscriptionPage";
 import SearchPage from "../pages/SearchPage";
 
 import RequireAuth from "./security/RequireAuth";
@@ -89,6 +90,11 @@ const router = createBrowserRouter([
 			{
 				index: true,
 				element: <SettingsPage />,
+				loader: IndexPageLoader,
+			},
+			{
+				path: "/:username/subscription",
+				element: <SubscriptionPage />,
 				loader: IndexPageLoader,
 			},
 		],

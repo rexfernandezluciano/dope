@@ -20,6 +20,7 @@ import {
 	Gear,
 	BoxArrowRight,
 	Search,
+	Star,
 } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
@@ -62,6 +63,11 @@ const NavigationView = ({ children, user }) => {
 			label: "Settings",
 			href: `/${user?.username}/settings`,
 			icon: <Gear size={18} className="me-2" />,
+		},
+		{
+			label: "Subscription",
+			href: `/${user?.username}/subscription`,
+			icon: <Star size={18} className="me-2" />,
 		},
 	];
 
@@ -250,6 +256,15 @@ const NavigationView = ({ children, user }) => {
 									>
 										<Gear size={16} className="me-2" />
 										Settings
+									</a>
+								</li>
+								<li>
+									<a
+										className="dropdown-item"
+										href={`/${user?.username}/subscription`}
+									>
+										<Star size={16} className="me-2" />
+										Subscription
 									</a>
 								</li>
 								<li>

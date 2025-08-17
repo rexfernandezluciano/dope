@@ -41,7 +41,7 @@ const HomePage = () => {
 	const [privacy, setPrivacy] = useState("Public");
 	const [showStickerModal, setShowStickerModal] = useState(false);
 	const [photos, setPhotos] = useState(null);
-	const MAX_IMAGES = 4;
+	const MAX_IMAGES = 4; // This is a general placeholder, actual limit is determined by subscription
 	const [searchTerm, setSearchTerm] = useState("");
 	const [posts, setPosts] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -169,10 +169,33 @@ const HomePage = () => {
 		fileInputRef.current.click();
 	};
 
-	const uploadToCloudinary = async (file) => {
+	// Function to get the image upload limit based on subscription plan
+	const getImageUploadLimit = (subscription) => {
+		switch (subscription) {
+			case "premium": return 10;
+			case "pro": return Infinity;
+			default: return 3;
+		}
+	};
+
+	const uploadImageToCloudinary = async (file) => {
+		// Handle HEIC files
+		let finalFile = file;
+		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+			try {
+				const heic2any = (await import("heic2any")).default;
+				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
+				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+			} catch (err) {
+				console.error("Error converting HEIC:", err);
+				return null;
+			}
+		}
+
 		const formData = new FormData();
-		formData.append("file", file);
+		formData.append("file", finalFile);
 		formData.append("upload_preset", "dope-network");
+		formData.append("folder", "posts");
 
 		try {
 			const response = await fetch(
@@ -190,43 +213,51 @@ const HomePage = () => {
 		}
 	};
 
-	
+
 
 	const handleFileChange = async (e) => {
 		const files = Array.from(e.target.files);
-		if (files.length) {
-			const currentPhotos = photos || [];
-			const remainingSlots = MAX_IMAGES - currentPhotos.length;
-			const filesToUpload = files.slice(0, remainingSlots);
+		const imageLimit = getImageUploadLimit(user?.subscription);
 
-			if (filesToUpload.length < files.length) {
-				alert(
-					`You can only upload up to ${MAX_IMAGES} images. Only the first ${filesToUpload.length} will be uploaded.`,
-				);
-			}
-
-			const uploadedUrls = [];
-			for (const file of filesToUpload) {
-				try {
-					let finalFile = file;
-
-					// Handle HEIC files
-					if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
-						const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-						finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
-					}
-
-					const url = await uploadToCloudinary(finalFile);
-					if (url) {
-						uploadedUrls.push(url);
-					}
-				} catch (err) {
-					console.error("Error processing file:", err);
-					setError("Failed to process one or more images.");
-				}
-			}
-			setPhotos((prev) => [...(prev || []), ...uploadedUrls]);
+		if (files.length > imageLimit) {
+			alert(`You can only upload ${imageLimit === Infinity ? 'unlimited' : imageLimit} images per post. ${imageLimit === 3 ? 'Upgrade to Premium or Pro for more uploads.' : ''}`);
+			e.target.value = '';
+			return;
 		}
+
+		// This part of the code was previously `setPhotos(files)` but is now `setPhotos((prev) => [...(prev || []), ...uploadedUrls]);`
+		// The following logic reflects the original intention of uploading and setting photos.
+		const currentPhotos = photos || [];
+		const remainingSlots = imageLimit - currentPhotos.length;
+		const filesToUpload = files.slice(0, remainingSlots);
+
+		if (filesToUpload.length < files.length) {
+			alert(
+				`You can only upload up to ${imageLimit} images. Only the first ${filesToUpload.length} will be uploaded.`,
+			);
+		}
+
+		const uploadedUrls = [];
+		for (const file of filesToUpload) {
+			try {
+				let finalFile = file;
+
+				// Handle HEIC files
+				if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+					const blob = await heic2any({ blob: file, toType: "image/jpeg" });
+					finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+				}
+
+				const url = await uploadImageToCloudinary(finalFile);
+				if (url) {
+					uploadedUrls.push(url);
+				}
+			} catch (err) {
+				console.error("Error processing file:", err);
+				setError("Failed to process one or more images.");
+			}
+		}
+		setPhotos((prev) => [...(prev || []), ...uploadedUrls]);
 	};
 
 	const handleRemovePhoto = (index) => {
@@ -235,8 +266,10 @@ const HomePage = () => {
 
 	const handleSelectGif = (gif) => {
 		const currentPhotos = photos || [];
-		if (currentPhotos.length >= MAX_IMAGES) {
-			alert(`You can only add up to ${MAX_IMAGES} images/GIFs.`);
+		const imageLimit = getImageUploadLimit(user?.subscription);
+
+		if (currentPhotos.length >= imageLimit) {
+			alert(`You can only add up to ${imageLimit === Infinity ? 'unlimited' : imageLimit} images/GIFs. ${imageLimit === 3 ? 'Upgrade to Premium or Pro for more uploads.' : ''}`);
 			return;
 		}
 
@@ -653,12 +686,12 @@ const HomePage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-1 ${photos?.length >= MAX_IMAGES ? "text-secondary" : "text-muted"}`}
+									className={`p-1 ${photos?.length >= getImageUploadLimit(user?.subscription) ? "text-secondary" : "text-muted"}`}
 									onClick={handlePhotoClick}
-									disabled={photos?.length >= MAX_IMAGES}
+									disabled={photos?.length >= getImageUploadLimit(user?.subscription)}
 									title={
-										photos?.length >= MAX_IMAGES
-											? `Maximum ${MAX_IMAGES} images allowed`
+										photos?.length >= getImageUploadLimit(user?.subscription)
+											? `Maximum ${getImageUploadLimit(user?.subscription)} images allowed`
 											: "Add photo"
 									}
 								>
@@ -675,12 +708,12 @@ const HomePage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-1 ${photos?.length >= MAX_IMAGES ? "text-secondary" : "text-muted"}`}
+									className={`p-1 ${photos?.length >= getImageUploadLimit(user?.subscription) ? "text-secondary" : "text-muted"}`}
 									onClick={() => setShowStickerModal(true)}
-									disabled={photos?.length >= MAX_IMAGES}
+									disabled={photos?.length >= getImageUploadLimit(user?.subscription)}
 									title={
-										photos?.length >= MAX_IMAGES
-											? `Maximum ${MAX_IMAGES} images allowed`
+										photos?.length >= getImageUploadLimit(user?.subscription)
+											? `Maximum ${getImageUploadLimit(user?.subscription)} images allowed`
 											: "Add GIF"
 									}
 								>
@@ -834,7 +867,7 @@ const HomePage = () => {
 				</Modal>
 			)}
 
-			
+
 
 			{/* Delete Post Confirmation Dialog */}
 			<AlertDialog

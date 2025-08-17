@@ -66,11 +66,33 @@ const SettingsPage = () => {
 		);
 	}
 
+	const checkNameChangeLimit = (lastChange) => {
+		if (!lastChange) return false;
+		const fourteenDaysAgo = new Date();
+		fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+		return new Date(lastChange) > fourteenDaysAgo;
+	};
+
 	const handleSaveSettings = async () => {
 		try {
 			setLoading(true);
 			setUploadingProfileImage(true);
 			let updateData = { ...settings };
+			
+			// Check name change limit
+			if (settings.name !== user.name && checkNameChangeLimit(user.lastNameChange)) {
+				const daysLeft = Math.ceil((new Date(user.lastNameChange).getTime() + (14 * 24 * 60 * 60 * 1000) - Date.now()) / (24 * 60 * 60 * 1000));
+				setMessage(`You can only change your name once every 14 days. Please wait ${daysLeft} more days.`);
+				setMessageType("warning");
+				setLoading(false);
+				setUploadingProfileImage(false);
+				return;
+			}
+			
+			// Add timestamp if name was changed
+			if (settings.name !== user.name) {
+				updateData.lastNameChange = new Date().toISOString();
+			}
 			
 			// Upload profile image if a new file was selected
 			if (settings.profileImageFile) {
