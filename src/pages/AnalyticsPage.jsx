@@ -26,7 +26,7 @@ import {
 	Heart,
 	ChatDots as MessageCircle,
 	Share,
-	Users,
+	People as Users,
 	Calendar,
 	Bullseye as Target,
 	Gift,
