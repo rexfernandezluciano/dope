@@ -24,7 +24,7 @@ import {
 	BarChart,
 	GraphUp as TrendingUp,
 	Heart,
-	MessageCircle,
+	ChatDots as MessageCircle,
 	Share,
 	Users,
 	Calendar,
