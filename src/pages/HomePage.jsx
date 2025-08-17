@@ -72,11 +72,23 @@ const HomePage = () => {
 		loadPosts();
 	}, []);
 
-	const loadPosts = async (cursor = null) => {
+	// Reload posts when filter changes
+	useEffect(() => {
+		loadPosts(null, filterBy);
+	}, [filterBy]);
+
+	const loadPosts = async (cursor = null, filter = filterBy) => {
 		try {
 			setLoading(true);
 			const params = { limit: 20 };
 			if (cursor) params.cursor = cursor;
+			
+			// Add filter parameter to API call
+			if (filter === "following") {
+				params.filter = "following";
+			} else {
+				params.filter = "for-you"; // Default to random/for-you posts
+			}
 
 			const response = await postAPI.getPosts(params);
 			if (cursor) {
@@ -93,11 +105,8 @@ const HomePage = () => {
 		}
 	};
 
-	// Filter posts based on filterBy
-	const filteredPosts = posts.filter((post) => {
-		const matchesFilter = filterBy === "for-you" || filterBy === "following"; // Add logic for 'following' if implemented
-		return matchesFilter;
-	});
+	// All posts are already filtered by the API, so we don't need to filter here
+	const filteredPosts = posts;
 
 	const handleInput = (e) => {
 		const textarea = textareaRef.current;
@@ -415,11 +424,11 @@ const HomePage = () => {
 					</div>
 				) : (
 					<>
-						<div className="d-flex align-items-center justify-content-center px-3 pt-3 border-bottom bg-white sticky-top">
-							<div className="d-flex justify-content-between">
+						<div className="d-flex align-items-center justify-content-center px-0 pt-3 border-bottom bg-white sticky-top">
+							<div className="d-flex w-100">
 								<Button
 									variant="link"
-									className={`px-4 py-2 fw-bold text-decoration-none border-0 ${
+									className={`flex-fill px-4 py-2 fw-bold text-decoration-none border-0 ${
 										filterBy === "for-you"
 											? "text-primary border-bottom border-primary pb-3 border-2"
 											: "text-muted"
@@ -431,7 +440,7 @@ const HomePage = () => {
 								</Button>
 								<Button
 									variant="link"
-									className={`px-4 py-2 fw-bold text-decoration-none border-0 ${
+									className={`flex-fill px-4 py-2 fw-bold text-decoration-none border-0 ${
 										filterBy === "following"
 											? "text-primary border-bottom border-primary pb-3 border-2"
 											: "text-muted"
@@ -783,7 +792,7 @@ const HomePage = () => {
 							<div className="text-center py-3">
 								<Button
 									variant="outline-primary"
-									onClick={() => loadPosts(nextCursor)}
+									onClick={() => loadPosts(nextCursor, filterBy)}
 									disabled={loading}
 								>
 									{loading ? (
