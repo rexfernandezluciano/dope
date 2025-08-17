@@ -37,7 +37,7 @@ const SubscriptionPage = () => {
 		features: {
 			blueCheck: false,
 			imageLimit: 3,
-			nameChangeLimit: true,
+			nameChangeLimit: false,
 			lastNameChange: null
 		}
 	});
@@ -58,36 +58,22 @@ const SubscriptionPage = () => {
 		}
 	};
 
-	const checkNameChangeLimit = (lastChange) => {
-		if (!lastChange) return false;
-		const fourteenDaysAgo = new Date();
-		fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-		return new Date(lastChange) > fourteenDaysAgo;
-	};
-
-	const getDaysUntilNameChange = (lastChange) => {
-		if (!lastChange) return 0;
-		const changeDate = new Date(lastChange);
-		const fourteenDaysLater = new Date(changeDate);
-		fourteenDaysLater.setDate(fourteenDaysLater.getDate() + 14);
-		const now = new Date();
-		const diffTime = fourteenDaysLater - now;
-		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-		return Math.max(0, diffDays);
+	const getBlueCheckStatus = (plan) => {
+		return plan === "premium" || plan === "pro";
 	};
 
 	useEffect(() => {
 		if (user && typeof user === 'object') {
-			const userSubscription = user?.subscription || "free";
+			const userSubscription = user.subscription || "free";
 			setSubscription({
 				plan: userSubscription,
 				status: "active",
-				nextBilling: user?.nextBilling || null,
+				nextBilling: userSubscription !== "free" ? "2024-02-15" : null, // Mock next billing date
 				features: {
-					blueCheck: user?.hasBlueCheck || false,
+					blueCheck: getBlueCheckStatus(userSubscription),
 					imageLimit: getImageLimit(userSubscription),
-					nameChangeLimit: checkNameChangeLimit(user.lastNameChange),
-					lastNameChange: user?.lastNameChange || null
+					nameChangeLimit: false, // Simplified - no name change tracking
+					lastNameChange: null
 				}
 			});
 		}
@@ -100,8 +86,6 @@ const SubscriptionPage = () => {
 			</Container>
 		);
 	}
-
-	
 
 	const subscriptionPlans = [
 		{
@@ -149,47 +133,23 @@ const SubscriptionPage = () => {
 	const handleUpgrade = async (planId) => {
 		try {
 			setLoading(true);
-			// In a real app, this would integrate with Stripe or similar
 			await userAPI.updateUser(user.username, { 
-				subscription: planId,
-				hasBlueCheck: planId !== "free"
+				subscription: planId
 			});
 			setMessage(`Successfully upgraded to ${planId} plan!`);
 			setMessageType("success");
-			// Refresh user data
-			window.location.reload();
-		} catch (err) {
-			setMessage(err.message || 'Failed to upgrade subscription');
-			setMessageType("danger");
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const handleFeatureToggle = async (feature, value) => {
-		try {
-			setLoading(true);
-			const updateData = {};
-			
-			if (feature === "blueCheck") {
-				// Only allow blue check for premium/pro users
-				if (subscription.plan === "free" && value) {
-					setMessage("Blue check is only available for Premium and Pro users");
-					setMessageType("warning");
-					return;
-				}
-				updateData.hasBlueCheck = value;
-			}
-			
-			await userAPI.updateUser(user.username, updateData);
+			// Update local state
 			setSubscription(prev => ({
 				...prev,
-				features: { ...prev.features, [feature]: value }
+				plan: planId,
+				features: {
+					...prev.features,
+					blueCheck: getBlueCheckStatus(planId),
+					imageLimit: getImageLimit(planId)
+				}
 			}));
-			setMessage("Feature updated successfully!");
-			setMessageType("success");
 		} catch (err) {
-			setMessage(err.message || 'Failed to update feature');
+			setMessage(err.message || 'Failed to upgrade subscription');
 			setMessageType("danger");
 		} finally {
 			setLoading(false);
@@ -200,14 +160,21 @@ const SubscriptionPage = () => {
 		try {
 			setLoading(true);
 			await userAPI.updateUser(user.username, { 
-				subscription: "free",
-				hasBlueCheck: false
+				subscription: "free"
 			});
 			setMessage("Subscription cancelled successfully. You'll retain access until the end of your billing period.");
 			setMessageType("info");
 			setShowCancelModal(false);
-			// Refresh user data
-			window.location.reload();
+			// Update local state
+			setSubscription(prev => ({
+				...prev,
+				plan: "free",
+				features: {
+					...prev.features,
+					blueCheck: false,
+					imageLimit: 3
+				}
+			}));
 		} catch (err) {
 			setMessage(err.message || 'Failed to cancel subscription');
 			setMessageType("danger");
@@ -231,240 +198,224 @@ const SubscriptionPage = () => {
 			)}
 
 			<div className="mb-4">
-				{/* Subscription Section */}
-				<div>
-					{/* Current Plan */}
-					<Card className="mb-4">
-						<Card.Header className="d-flex align-items-center justify-content-between">
-							<div className="d-flex align-items-center gap-2">
-								<Crown size={20} />
-								<h5 className="mb-0">Current Plan</h5>
-							</div>
-							<Badge bg={subscriptionPlans.find(p => p.id === subscription.plan)?.color || "secondary"}>
-								{subscription.plan.toUpperCase()}
-							</Badge>
-						</Card.Header>
-						<Card.Body className="px-3">
-							<Row>
-								<Col md={8}>
-									<h4 className="text-capitalize mb-2">{subscription.plan} Plan</h4>
-									<p className="text-muted mb-3">
-										{subscription.plan === "free" 
-											? "Enjoy basic features at no cost"
-											: `Next billing: ${subscription.nextBilling || "Not set"}`
-										}
-									</p>
-									<div className="mb-3">
-										<h6>Current Features:</h6>
-										<ul className="list-unstyled">
-											<li className="d-flex align-items-center gap-2 mb-1">
-												<span className="fw-bold">📷</span>
-												{subscription.features.imageLimit === "unlimited" 
-													? "Unlimited images per post"
-													: `${subscription.features.imageLimit} images per post`
-												}
-											</li>
-											<li className="d-flex align-items-center gap-2 mb-1">
-												{subscription.features.blueCheck ? 
-													<CheckCircle size={16} className="text-success" /> :
-													<XCircle size={16} className="text-muted" />
-												}
-												Blue check verification
-											</li>
-											<li className="d-flex align-items-center gap-2 mb-1">
-												<Calendar size={16} />
-												Name changes: {subscription.features.nameChangeLimit 
-													? `Available in ${getDaysUntilNameChange(subscription.features.lastNameChange)} days`
-													: "Available now"
-												}
-											</li>
-										</ul>
-									</div>
-								</Col>
-								<Col md={4} className="text-md-end">
-									{subscription.plan !== "free" && (
-										<Button 
-											variant="outline-danger" 
-											size="sm"
-											onClick={() => setShowCancelModal(true)}
-										>
-											Cancel Subscription
-										</Button>
-									)}
-								</Col>
-							</Row>
-						</Card.Body>
-					</Card>
+				{/* Current Plan */}
+				<Card className="mb-4">
+					<Card.Header className="d-flex align-items-center justify-content-between">
+						<div className="d-flex align-items-center gap-2">
+							<Crown size={20} />
+							<h5 className="mb-0">Current Plan</h5>
+						</div>
+						<Badge bg={subscriptionPlans.find(p => p.id === subscription.plan)?.color || "secondary"}>
+							{subscription.plan.toUpperCase()}
+						</Badge>
+					</Card.Header>
+					<Card.Body className="px-3">
+						<Row>
+							<Col md={8}>
+								<h4 className="text-capitalize mb-2">{subscription.plan} Plan</h4>
+								<p className="text-muted mb-3">
+									{subscription.plan === "free" 
+										? "Enjoy basic features at no cost"
+										: `Next billing: ${subscription.nextBilling || "Not set"}`
+									}
+								</p>
+								<div className="mb-3">
+									<h6>Current Features:</h6>
+									<ul className="list-unstyled">
+										<li className="d-flex align-items-center gap-2 mb-1">
+											<span className="fw-bold">📷</span>
+											{subscription.features.imageLimit === "unlimited" 
+												? "Unlimited images per post"
+												: `${subscription.features.imageLimit} images per post`
+											}
+										</li>
+										<li className="d-flex align-items-center gap-2 mb-1">
+											{subscription.features.blueCheck ? 
+												<CheckCircle size={16} className="text-success" /> :
+												<XCircle size={16} className="text-muted" />
+											}
+											Blue check verification
+										</li>
+										<li className="d-flex align-items-center gap-2 mb-1">
+											<Calendar size={16} />
+											Name changes: Available now
+										</li>
+									</ul>
+								</div>
+							</Col>
+							<Col md={4} className="text-md-end">
+								{subscription.plan !== "free" && (
+									<Button 
+										variant="outline-danger" 
+										size="sm"
+										onClick={() => setShowCancelModal(true)}
+									>
+										Cancel Subscription
+									</Button>
+								)}
+							</Col>
+						</Row>
+					</Card.Body>
+				</Card>
 
-					{/* Available Plans */}
-					<Card className="mb-4">
-						<Card.Header>
-							<h5 className="mb-0">Available Plans</h5>
-						</Card.Header>
-						<Card.Body className="px-3">
-							<Row>
-								{subscriptionPlans.map(plan => (
-									<Col md={4} key={plan.id} className="mb-3">
-										<Card className={`h-100 ${subscription.plan === plan.id ? 'border-primary' : ''}`}>
-											<Card.Header className="text-center">
-												<h5 className="mb-1">{plan.name}</h5>
-												<h3 className="text-primary mb-0">
-													{plan.price}
-													{plan.period !== "forever" && (
-														<small className="text-muted">/{plan.period}</small>
-													)}
-												</h3>
-											</Card.Header>
-											<Card.Body>
-												<ul className="list-unstyled">
-													{plan.features.map((feature, idx) => (
-														<li key={idx} className="d-flex align-items-center gap-2 mb-2">
-															<CheckCircle size={16} className="text-success" />
-															<small>{feature}</small>
-														</li>
-													))}
-												</ul>
-											</Card.Body>
-											<Card.Footer className="text-center">
-												{subscription.plan === plan.id ? (
-													<Badge bg="success">Current Plan</Badge>
-												) : (
-													<Button 
-														variant={plan.color}
-														size="sm"
-														onClick={() => handleUpgrade(plan.id)}
-														disabled={loading}
-													>
-														{plan.id === "free" ? "Downgrade" : "Upgrade"}
-													</Button>
+				{/* Available Plans */}
+				<Card className="mb-4">
+					<Card.Header>
+						<h5 className="mb-0">Available Plans</h5>
+					</Card.Header>
+					<Card.Body className="px-3">
+						<Row>
+							{subscriptionPlans.map(plan => (
+								<Col md={4} key={plan.id} className="mb-3">
+									<Card className={`h-100 ${subscription.plan === plan.id ? 'border-primary' : ''}`}>
+										<Card.Header className="text-center">
+											<h5 className="mb-1">{plan.name}</h5>
+											<h3 className="text-primary mb-0">
+												{plan.price}
+												{plan.period !== "forever" && (
+													<small className="text-muted">/{plan.period}</small>
 												)}
-											</Card.Footer>
-										</Card>
-									</Col>
-								))}
-							</Row>
-						</Card.Body>
-					</Card>
-				</div>
+											</h3>
+										</Card.Header>
+										<Card.Body>
+											<ul className="list-unstyled">
+												{plan.features.map((feature, idx) => (
+													<li key={idx} className="d-flex align-items-center gap-2 mb-2">
+														<CheckCircle size={16} className="text-success" />
+														<small>{feature}</small>
+													</li>
+												))}
+											</ul>
+										</Card.Body>
+										<Card.Footer className="text-center">
+											{subscription.plan === plan.id ? (
+												<Badge bg="success">Current Plan</Badge>
+											) : (
+												<Button 
+													variant={plan.color}
+													size="sm"
+													onClick={() => handleUpgrade(plan.id)}
+													disabled={loading}
+												>
+													{plan.id === "free" ? "Downgrade" : "Upgrade"}
+												</Button>
+											)}
+										</Card.Footer>
+									</Card>
+								</Col>
+							))}
+						</Row>
+					</Card.Body>
+				</Card>
 
 				{/* Features Section */}
-				<div className="mt-4">
-					<Card className="mb-4">
-						<Card.Header>
-							<h5 className="mb-0">Feature Controls</h5>
-						</Card.Header>
-						<Card.Body className="px-3">
-							<ListGroup variant="flush">
-								<ListGroup.Item className="d-flex justify-content-between align-items-center">
-									<div>
-										<h6 className="mb-1">Blue Check Verification</h6>
-										<small className="text-muted">
-											{subscription.plan === "free" 
-												? "Upgrade to Premium or Pro to enable"
-												: "Show verification badge on your profile"
-											}
-										</small>
-									</div>
-									<Form.Check
-										type="switch"
-										checked={subscription.features.blueCheck}
-										onChange={(e) => handleFeatureToggle("blueCheck", e.target.checked)}
-										disabled={subscription.plan === "free" || loading}
-									/>
-								</ListGroup.Item>
-								
-								<ListGroup.Item>
-									<div>
-										<h6 className="mb-1">Image Upload Limit</h6>
-										<small className="text-muted">
-											Current limit: {subscription.features.imageLimit === "unlimited" 
-												? "Unlimited"
-												: `${subscription.features.imageLimit} images`
-											} per post
-										</small>
-										{subscription.plan === "free" && (
-											<div className="mt-2">
-												<small className="text-warning">
-													Upgrade to Premium (10 images) or Pro (unlimited) for more uploads
-												</small>
-											</div>
-										)}
-									</div>
-								</ListGroup.Item>
-
-								<ListGroup.Item>
-									<div>
-										<h6 className="mb-1">Name Change</h6>
-										<small className="text-muted">
-											{subscription.features.nameChangeLimit 
-												? `You can change your name again in ${getDaysUntilNameChange(subscription.features.lastNameChange)} days`
-												: "You can change your display name now"
-											}
-										</small>
+				<Card className="mb-4">
+					<Card.Header>
+						<h5 className="mb-0">Feature Overview</h5>
+					</Card.Header>
+					<Card.Body className="px-3">
+						<ListGroup variant="flush">
+							<ListGroup.Item className="d-flex justify-content-between align-items-center">
+								<div>
+									<h6 className="mb-1">Blue Check Verification</h6>
+									<small className="text-muted">
+										{subscription.plan === "free" 
+											? "Upgrade to Premium or Pro to enable"
+											: "Verification badge enabled for your profile"
+										}
+									</small>
+								</div>
+								<div>
+									{subscription.features.blueCheck ? 
+										<CheckCircle size={20} className="text-success" /> :
+										<XCircle size={20} className="text-muted" />
+									}
+								</div>
+							</ListGroup.Item>
+							
+							<ListGroup.Item>
+								<div>
+									<h6 className="mb-1">Image Upload Limit</h6>
+									<small className="text-muted">
+										Current limit: {subscription.features.imageLimit === "unlimited" 
+											? "Unlimited"
+											: `${subscription.features.imageLimit} images`
+										} per post
+									</small>
+									{subscription.plan === "free" && (
 										<div className="mt-2">
-											<small className="text-info">
-												Name changes are limited to once every 14 days
+											<small className="text-warning">
+												Upgrade to Premium (10 images) or Pro (unlimited) for more uploads
 											</small>
 										</div>
-									</div>
-								</ListGroup.Item>
-							</ListGroup>
-						</Card.Body>
-					</Card>
-				</div>
+									)}
+								</div>
+							</ListGroup.Item>
+
+							<ListGroup.Item>
+								<div>
+									<h6 className="mb-1">Priority Support</h6>
+									<small className="text-muted">
+										{subscription.plan !== "free" 
+											? "Get faster response times for support requests"
+											: "Standard support response times"
+										}
+									</small>
+								</div>
+							</ListGroup.Item>
+						</ListGroup>
+					</Card.Body>
+				</Card>
 
 				{/* Payment Methods Section */}
-				<div className="mt-4"></div>
-				<div className="mt-4">
-					<Card className="mb-4">
-						<Card.Header className="d-flex justify-content-between align-items-center">
-							<h5 className="mb-0">Payment Methods</h5>
-							<Button 
-								variant="primary" 
-								size="sm"
-								onClick={() => setShowAddPaymentModal(true)}
-							>
-								Add Payment Method
-							</Button>
-						</Card.Header>
-						<Card.Body className="px-3">
-							{paymentMethods.length === 0 ? (
-								<div className="text-center py-4">
-									<CreditCard size={48} className="text-muted mb-3" />
-									<p className="text-muted">No payment methods added yet</p>
-									<Button 
-										variant="outline-primary"
-										onClick={() => setShowAddPaymentModal(true)}
-									>
-										Add Your First Payment Method
-									</Button>
-								</div>
-							) : (
-								<ListGroup variant="flush">
-									{paymentMethods.map((method, idx) => (
-										<ListGroup.Item key={idx} className="d-flex justify-content-between align-items-center">
-											<div className="d-flex align-items-center gap-3">
-												<CreditCard size={24} />
-												<div>
-													<h6 className="mb-0">**** **** **** {method.last4}</h6>
-													<small className="text-muted">{method.brand} • Expires {method.expiry}</small>
-												</div>
+				<Card className="mb-4">
+					<Card.Header className="d-flex justify-content-between align-items-center">
+						<h5 className="mb-0">Payment Methods</h5>
+						<Button 
+							variant="primary" 
+							size="sm"
+							onClick={() => setShowAddPaymentModal(true)}
+						>
+							Add Payment Method
+						</Button>
+					</Card.Header>
+					<Card.Body className="px-3">
+						{paymentMethods.length === 0 ? (
+							<div className="text-center py-4">
+								<CreditCard size={48} className="text-muted mb-3" />
+								<p className="text-muted">No payment methods added yet</p>
+								<Button 
+									variant="outline-primary"
+									onClick={() => setShowAddPaymentModal(true)}
+								>
+									Add Your First Payment Method
+								</Button>
+							</div>
+						) : (
+							<ListGroup variant="flush">
+								{paymentMethods.map((method, idx) => (
+									<ListGroup.Item key={idx} className="d-flex justify-content-between align-items-center">
+										<div className="d-flex align-items-center gap-3">
+											<CreditCard size={24} />
+											<div>
+												<h6 className="mb-0">**** **** **** {method.last4}</h6>
+												<small className="text-muted">{method.brand} • Expires {method.expiry}</small>
 											</div>
-											<div className="d-flex gap-2">
-												{method.isDefault && (
-													<Badge bg="success">Default</Badge>
-												)}
-												<Button variant="outline-danger" size="sm">
-													Remove
-												</Button>
-											</div>
-										</ListGroup.Item>
-									))}
-								</ListGroup>
-							)}
-						</Card.Body>
-					</Card>
-				</div>
+										</div>
+										<div className="d-flex gap-2">
+											{method.isDefault && (
+												<Badge bg="success">Default</Badge>
+											)}
+											<Button variant="outline-danger" size="sm">
+												Remove
+											</Button>
+										</div>
+									</ListGroup.Item>
+								))}
+							</ListGroup>
+						)}
+					</Card.Body>
+				</Card>
 			</div>
 
 			{/* Cancel Subscription Modal */}
