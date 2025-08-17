@@ -83,14 +83,15 @@ const SubscriptionPage = () => {
 	};
 
 	useEffect(() => {
-		if (user) {
+		if (user && typeof user === 'object') {
+			const userSubscription = user.subscription || "free";
 			setSubscription({
-				plan: user.subscription || "free",
+				plan: userSubscription,
 				status: "active",
 				nextBilling: user.nextBilling || null,
 				features: {
 					blueCheck: user.hasBlueCheck || false,
-					imageLimit: getImageLimit(user.subscription),
+					imageLimit: getImageLimit(userSubscription),
 					nameChangeLimit: checkNameChangeLimit(user.lastNameChange),
 					lastNameChange: user.lastNameChange || null
 				}
@@ -98,10 +99,10 @@ const SubscriptionPage = () => {
 		}
 	}, [user]);
 
-	if (!user) {
+	if (!user || typeof user !== 'object') {
 		return (
 			<Container className="text-center py-5">
-				<div>Loading...</div>
+				<div>Loading user data...</div>
 			</Container>
 		);
 	}
