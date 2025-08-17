@@ -178,11 +178,11 @@ const HomePage = () => {
 	const uploadToCloudinary = async (file) => {
 		const formData = new FormData();
 		formData.append("file", file);
-		formData.append("upload_preset", "dope_network"); // You'll need to set this up in Cloudinary
+		formData.append("upload_preset", "dope-network");
 
 		try {
 			const response = await fetch(
-				"https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
+				"https://api.cloudinary.com/v1_1/zxpic/image/upload",
 				{
 					method: "POST",
 					body: formData,

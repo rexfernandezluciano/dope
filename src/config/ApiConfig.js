@@ -158,7 +158,7 @@ const postAPI = {
 	// The snippet adds a deletePost method to postAPI
 	async deletePost(postId) {
 		try {
-			const token = await getAuthToken();
+			const token = getAuthToken();
 			const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
 				method: 'DELETE',
 				headers: {
