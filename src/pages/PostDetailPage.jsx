@@ -590,7 +590,7 @@ const PostDetailPage = () => {
 			) : (
 				<div className="comment-thread">
 					{comments.map((comment, index) => (
-						<Card key={comment.id} className="border-0 rounded-0">
+						<Card key={comment.id} className="border-0 border-bottom rounded-0">
 							<Card.Body className="px-3 py-3">
 								<div
 									className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""}`}
