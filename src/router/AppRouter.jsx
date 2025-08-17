@@ -43,12 +43,12 @@ const router = createBrowserRouter([
 				<IndexPage />
 			</RequireAuth>
 		),
-		loader: indexPageLoader,
+		loader: IndexPageLoader,
 		children: [
 			{
 				index: true,
 				element: <HomePage />,
-				loader: indexPageLoader,
+				loader: IndexPageLoader,
 			},
 		],
 	},
@@ -59,7 +59,7 @@ const router = createBrowserRouter([
 				<IndexPage />
 			</RequireAuth>
 		),
-		loader: indexPageLoader,
+		loader: IndexPageLoader,
 	},
 	{
 		path: "/:username",
@@ -68,12 +68,12 @@ const router = createBrowserRouter([
 				<IndexPage />
 			</RequireAuth>
 		),
-		loader: indexPageLoader,
+		loader: IndexPageLoader,
 		children: [
 			{
 				index: true,
 				element: <ProfilePage />,
-				loader: indexPageLoader,
+				loader: IndexPageLoader,
 			},
 		],
 	},
@@ -84,12 +84,12 @@ const router = createBrowserRouter([
 				<IndexPage />
 			</RequireAuth>
 		),
-		loader: indexPageLoader,
+		loader: IndexPageLoader,
 		children: [
 			{
 				index: true,
 				element: <SettingsPage />,
-				loader: indexPageLoader,
+				loader: IndexPageLoader,
 			},
 		],
 	},
