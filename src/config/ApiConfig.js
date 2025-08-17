@@ -35,7 +35,7 @@ const getAuthToken = () => {
 };
 
 
-export const authAPI = {
+const authAPI = {
 	login: async (email, password) => {
 		const response = await apiRequest('/auth/login', {
 			method: 'POST',
@@ -73,7 +73,7 @@ export const authAPI = {
 	}
 };
 
-export const userAPI = {
+const userAPI = {
 	getUsers: () =>
 		apiRequest('/users', {
 			method: 'GET'
@@ -111,7 +111,7 @@ export const userAPI = {
 		})
 };
 
-export const postAPI = {
+const postAPI = {
 	getPosts: (params = {}) => {
 		const searchParams = new URLSearchParams();
 		Object.keys(params).forEach(key => {
@@ -184,7 +184,7 @@ export const postAPI = {
 		})
 };
 
-export const commentAPI = {
+const commentAPI = {
 	getComments: (postId, params = {}) => {
 		const searchParams = new URLSearchParams();
 		Object.keys(params).forEach(key => {
