@@ -107,6 +107,17 @@ const router = createBrowserRouter([
 		loader: IndexPageLoader,
 	},
 	{
+		path: "/analytics",
+		element: (
+			<RequireAuth>
+				<NavigationView>
+					<AnalyticsPage />
+				</NavigationView>
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
+	},
+	{
 		path: "/dashboard",
 		element: (
 			<RequireAuth>

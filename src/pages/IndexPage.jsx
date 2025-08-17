@@ -7,6 +7,7 @@ import HomePage from "./HomePage";
 import ProfilePage from "./ProfilePage";
 import SettingsPage from "./SettingsPage";
 import SubscriptionPage from "./SubscriptionPage";
+import AnalyticsPage from "./AnalyticsPage";
 import PostDetailPage from "./PostDetailPage";
 
 const IndexPage = () => {
@@ -38,6 +39,15 @@ const IndexPage = () => {
 		return (
 			<NavigationView user={user}>
 				<SubscriptionPage />
+			</NavigationView>
+		);
+	}
+
+	// Check if it's analytics page
+	if (pathname === '/analytics') {
+		return (
+			<NavigationView user={user}>
+				<AnalyticsPage />
 			</NavigationView>
 		);
 	}
