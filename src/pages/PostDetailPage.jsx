@@ -590,45 +590,39 @@ const PostDetailPage = () => {
 			) : (
 				<div className="comment-thread">
 					{comments.map((comment, index) => (
-						<Card key={comment.id} className="border-0 border-bottom rounded-0">
-							<Card.Body className="px-3 py-3">
-								<div
-									className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""}`}
-								>
-									<Image
-										src={
-											comment.author.photoURL ||
-											"https://i.pravatar.cc/150?img=10"
-										}
-										alt="avatar"
-										roundedCircle
-										width="40"
-										height="40"
-										className="comment-avatar"
-									/>
-									<div className="comment-content">
-										<div className="d-flex align-items-center gap-1 mb-1">
-											<span className="fw-bold">{comment.author.name}</span>
-											{comment.author.hasBlueCheck && (
-												<span className="text-primary">
-													<CheckCircleFill className="text-primary" size={16} />
-												</span>
-											)}
-											<span className="text-muted">·</span>
-											<span className="text-muted small">
-												{formatTimeAgo(comment.createdAt)}
-											</span>
-										</div>
-
-										<p className="mb-2">{comment.content}</p>
-
-										<div className="d-flex gap-4 text-muted">
-											{/* For future use */}
-										</div>
-									</div>
+						<div key={comment.id} className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""}`}>
+							<Image
+								src={
+									comment.author.photoURL ||
+									"https://i.pravatar.cc/150?img=10"
+								}
+								alt="avatar"
+								roundedCircle
+								width="40"
+								height="40"
+								className="comment-avatar"
+							/>
+							<div className="comment-content">
+								<div className="d-flex align-items-center gap-1 mb-1">
+									<span className="fw-bold">{comment.author.name}</span>
+									{comment.author.hasBlueCheck && (
+										<span className="text-primary">
+											<CheckCircleFill className="text-primary" size={16} />
+										</span>
+									)}
+									<span className="text-muted">·</span>
+									<span className="text-muted small">
+										{formatTimeAgo(comment.createdAt)}
+									</span>
 								</div>
-							</Card.Body>
-						</Card>
+
+								<p className="mb-2">{comment.content}</p>
+
+								<div className="d-flex gap-4 text-muted">
+									{/* For future use */}
+								</div>
+							</div>
+						</div>
 					))}
 				</div>
 			)}
