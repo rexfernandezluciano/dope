@@ -28,7 +28,7 @@ import {
 	Share,
 	Users,
 	Calendar,
-	Target,
+	Bullseye as Target,
 	Gift,
 	Crown,
 	Eye,
