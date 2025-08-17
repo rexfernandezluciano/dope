@@ -84,6 +84,69 @@ const SubscriptionPage = () => {
 		}
 	};
 
+	// Handle adding payment method
+	const handleAddPaymentMethod = async () => {
+		if (selectedPaymentType === "card") {
+			// Validate card form
+			if (!cardForm.cardNumber || !cardForm.expiryDate || !cardForm.cvc || !cardForm.cardholderName) {
+				setMessage("Please fill in all card details.");
+				setMessageType("warning");
+				return;
+			}
+
+			// Mock adding card - in real app, you'd integrate with payment processor
+			const newCard = {
+				id: Date.now().toString(),
+				type: 'card',
+				brand: 'Visa', // In real app, detect from card number
+				last4: cardForm.cardNumber.replace(/\s/g, '').slice(-4),
+				expiry: cardForm.expiryDate,
+				cardholderName: cardForm.cardholderName,
+				isDefault: cardForm.isDefault || paymentMethods.length === 0
+			};
+
+			// Set as default if it's the first payment method
+			if (paymentMethods.length === 0) {
+				newCard.isDefault = true;
+			}
+
+			setPaymentMethods(prev => [...prev, newCard]);
+			setMessage("Payment method added successfully!");
+			setMessageType("success");
+		} else if (selectedPaymentType === "paypal") {
+			// Mock adding PayPal - in real app, you'd integrate with PayPal
+			const newPayPal = {
+				id: Date.now().toString(),
+				type: 'paypal',
+				brand: 'PayPal',
+				email: 'user@example.com', // Would get from PayPal API
+				isDefault: paymentMethods.length === 0
+			};
+
+			setPaymentMethods(prev => [...prev, newPayPal]);
+			setMessage("PayPal connected successfully!");
+			setMessageType("success");
+		}
+
+		// Close modal and reset form
+		setShowAddPaymentModal(false);
+		setSelectedPaymentType("card");
+		setCardForm({
+			cardNumber: "",
+			expiryDate: "",
+			cvc: "",
+			cardholderName: "",
+			isDefault: false
+		});
+	};
+
+	// Handle removing payment method
+	const handleRemovePaymentMethod = (methodId) => {
+		setPaymentMethods(prev => prev.filter(method => method.id !== methodId));
+		setMessage("Payment method removed successfully!");
+		setMessageType("info");
+	};
+
 	// Helper functions
 	const getImageLimit = (plan) => {
 		switch (plan) {
@@ -169,6 +232,14 @@ const SubscriptionPage = () => {
 	];
 
 	const handleUpgrade = async (planId) => {
+		// Check if user is trying to upgrade to a paid plan
+		if (planId !== "free" && paymentMethods.length === 0) {
+			setMessage("Please add a payment method before upgrading to a paid plan.");
+			setMessageType("warning");
+			setShowAddPaymentModal(true);
+			return;
+		}
+
 		try {
 			setLoading(true);
 			await userAPI.updateUser(user.username, {
@@ -349,7 +420,9 @@ const SubscriptionPage = () => {
 													onClick={() => handleUpgrade(plan.id)}
 													disabled={loading}
 												>
-													{plan.id === "free" ? "Downgrade" : "Upgrade"}
+													{plan.id === "free" ? "Downgrade" : 
+													 (plan.id !== "free" && paymentMethods.length === 0) ? "Add Payment Method" : 
+													 "Upgrade"}
 												</Button>
 											)}
 										</Card.Footer>
@@ -452,17 +525,36 @@ const SubscriptionPage = () => {
 										className="d-flex justify-content-between align-items-center"
 									>
 										<div className="d-flex align-items-center gap-3">
-											<CreditCard size={24} />
+											{method.type === 'paypal' ? (
+												<Paypal size={24} className="text-primary" />
+											) : (
+												<CreditCard size={24} />
+											)}
 											<div>
-												<h6 className="mb-0">**** **** **** {method.last4}</h6>
-												<small className="text-muted">
-													{method.brand} • Expires {method.expiry}
-												</small>
+												{method.type === 'paypal' ? (
+													<>
+														<h6 className="mb-0">PayPal</h6>
+														<small className="text-muted">
+															{method.email}
+														</small>
+													</>
+												) : (
+													<>
+														<h6 className="mb-0">**** **** **** {method.last4}</h6>
+														<small className="text-muted">
+															{method.brand} • Expires {method.expiry}
+														</small>
+													</>
+												)}
 											</div>
 										</div>
 										<div className="d-flex gap-2">
 											{method.isDefault && <Badge bg="success">Default</Badge>}
-											<Button variant="outline-danger" size="sm">
+											<Button 
+												variant="outline-danger" 
+												size="sm"
+												onClick={() => handleRemovePaymentMethod(method.id)}
+											>
 												Remove
 											</Button>
 										</div>
@@ -669,7 +761,7 @@ const SubscriptionPage = () => {
 					>
 						Cancel
 					</Button>
-					<Button variant="primary">
+					<Button variant="primary" onClick={handleAddPaymentMethod}>
 						{selectedPaymentType === "card" ? "Add Card" : "Connect PayPal"}
 					</Button>
 				</Modal.Footer>

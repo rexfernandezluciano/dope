@@ -31,6 +31,10 @@ import {
 	handlePostClick as handlePostClickUtil,
 } from "../utils/common-utils";
 
+// Giphy imports temporarily removed due to module issues
+// import { GifIcon } from '@giphy/js-fetch-api';
+// import { Gif } from '@giphy/react-components';
+
 const PostCard = ({
 	post,
 	currentUser,
