@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useLoaderData } from "react-router-dom";
 import {
 	Navbar,
 	Container,
@@ -30,9 +30,11 @@ import { removeAuthToken } from "../../utils/app-utils";
 import logo from "../../assets/images/dope.png";
 import dopeImage from "../../assets/images/dope.png";
 
-const NavigationView = ({ children, user }) => {
+const NavigationView = ({ children }) => {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const loaderData = useLoaderData() || {};
+	const { user } = loaderData;
 	const [showModal, setShowModal] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 
@@ -83,6 +85,14 @@ const NavigationView = ({ children, user }) => {
 			navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
 		}
 	};
+
+	if (!user) {
+		return (
+			<div className="d-flex justify-content-center align-items-center vh-100">
+				<div>Loading...</div>
+			</div>
+		);
+	}
 
 	return (
 		<>
