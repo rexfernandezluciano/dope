@@ -231,7 +231,7 @@ const SubscriptionPage = () => {
 	};
 
 	return (
-		<Container className="py-3 px-0 px-md-3">
+		<Container className="py-3 px-3 px-md-3">
 			<h2 className="px-3 mb-4">Subscription & Billing</h2>
 
 			{message && (
