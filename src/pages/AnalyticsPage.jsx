@@ -60,10 +60,10 @@ const AnalyticsPage = () => {
 
 			// Calculate real analytics from DOPE API posts data
 			const totalPosts = userPosts.length;
-			const totalLikes = userPosts.reduce((sum, post) => sum + (post._count?.likes || 0), 0);
-			const totalComments = userPosts.reduce((sum, post) => sum + (post._count?.comments || 0), 0);
-			const totalShares = userPosts.reduce((sum, post) => sum + (post.sharesCount || 0), 0);
-			const totalViews = userPosts.reduce((sum, post) => sum + (post.viewsCount || totalLikes + totalComments), 0);
+			const totalLikes = userPosts.reduce((sum, post) => sum + (post.stats?.likes || 0), 0);
+			const totalComments = userPosts.reduce((sum, post) => sum + (post.stats?.comments || 0), 0);
+			const totalShares = userPosts.reduce((sum, post) => sum + (post?.sharesCount || 0), 0);
+			const totalViews = userPosts.reduce((sum, post) => sum + (post?.viewsCount || totalLikes + totalComments), 0);
 
 			// Calculate engagement rate
 			const totalEngagement = totalLikes + totalComments + totalShares;
@@ -72,8 +72,8 @@ const AnalyticsPage = () => {
 			// Get top performing posts based on real API data
 			const topPosts = [...userPosts]
 				.sort((a, b) => {
-					const aEngagement = (a._count?.likes || 0) + (a._count?.comments || 0) + (a.sharesCount || 0);
-					const bEngagement = (b._count?.likes || 0) + (b._count?.comments || 0) + (b.sharesCount || 0);
+					const aEngagement = (a.stats?.likes || 0) + (a.stats?.comments || 0) + (a.stats || 0);
+					const bEngagement = (b.stats?.likes || 0) + (b.stats?.comments || 0) + (b?.sharesCount || 0);
 					return bEngagement - aEngagement;
 				})
 				.slice(0, 5);
@@ -82,7 +82,7 @@ const AnalyticsPage = () => {
 			const now = new Date();
 			const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 			const recentPosts = userPosts.filter(post => new Date(post.createdAt) >= thirtyDaysAgo);
-			const recentLikes = recentPosts.reduce((sum, post) => sum + (post._count?.likes || 0), 0);
+			const recentLikes = recentPosts.reduce((sum, post) => sum + (post.stats?.likes || 0), 0);
 			const recentGrowth = totalLikes > 0 ? ((recentLikes / totalLikes) * 100).toFixed(1) : "0.0";
 
 			setAnalytics({
