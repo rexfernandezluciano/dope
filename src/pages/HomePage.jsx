@@ -42,7 +42,6 @@ const HomePage = () => {
 	const [privacy, setPrivacy] = useState("Public");
 	const [showStickerModal, setShowStickerModal] = useState(false);
 	const [photos, setPhotos] = useState(null);
-	const MAX_IMAGES = 4; // This is a general placeholder, actual limit is determined by subscription
 	const [searchTerm, setSearchTerm] = useState("");
 	const [posts, setPosts] = useState([]);
 	const [loading, setLoading] = useState(true);
@@ -67,12 +66,12 @@ const HomePage = () => {
 
 	useEffect(() => {
 		loadPosts();
-	}, []);
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Reload posts when filter changes
 	useEffect(() => {
 		loadPosts(null, filterBy);
-	}, [filterBy]);
+	}, [filterBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const loadPosts = async (cursor = null, filter = filterBy) => {
 		try {

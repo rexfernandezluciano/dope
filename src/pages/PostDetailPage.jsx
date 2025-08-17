@@ -1,6 +1,7 @@
 /** @format */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useLoaderData } from "react-router-dom";
 import {
 	Container,
 	Card,
@@ -10,7 +11,6 @@ import {
 	Alert,
 	Spinner,
 	Modal,
-	Badge,
 } from "react-bootstrap";
 import {
 	ArrowLeft,
@@ -20,14 +20,14 @@ import {
 	Share,
 	CheckCircleFill,
 	Globe,
-	PeopleFill,
+	Lock,
 	PersonFill,
-	ArrowRight,
 	X,
+	ThreeDots,
+	ChevronLeft,
+	ChevronRight,
 } from "react-bootstrap-icons";
-import { useParams, useNavigate } from "react-router-dom";
 import { postAPI, commentAPI } from "../config/ApiConfig";
-import { getUser } from "../utils/app-utils";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import { formatTimeAgo, deletePost as deletePostUtil, sharePost } from "../utils/common-utils";
 

@@ -15,14 +15,9 @@ import {
 	Alert,
 } from "react-bootstrap";
 import {
-	Heart,
-	HeartFill,
-	ChatDots,
-	Share,
 	ChevronLeft,
 	ChevronRight,
 	X,
-	ThreeDots,
 	Calendar,
 	CheckCircleFill,
 	Globe,
@@ -33,7 +28,7 @@ import {
 import { userAPI, postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
-import { formatTimeAgo, formatJoinDate, deletePost as deletePostUtil, sharePost, handlePostClick, handlePostOption } from "../utils/common-utils";
+import { formatJoinDate, deletePost as deletePostUtil, sharePost, handlePostClick, handlePostOption } from "../utils/common-utils";
 
 const ProfilePage = () => {
 	const { username } = useParams();
@@ -138,7 +133,7 @@ const ProfilePage = () => {
 
 	useEffect(() => {
 		loadProfile();
-	}, [username]);
+	}, [username]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const handleFollow = async () => {
 		try {
@@ -304,6 +299,11 @@ const ProfilePage = () => {
 	const handleOptionsClick = (post) => {
 		setSelectedPostForOptions(post);
 		setShowPostOptionsModal(true);
+	};
+
+	const closePostOptionsModal = () => {
+		setShowPostOptionsModal(false);
+		setSelectedPostForOptions(null);
 	};
 
 	const handleOptionAction = (action, postId) => {

@@ -1,6 +1,7 @@
 /** @format */
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
 	Card,
 	Image,
@@ -18,6 +19,8 @@ import {
 	Globe,
 	Lock,
 	PersonFill,
+	ChevronLeft,
+	ChevronRight,
 } from "react-bootstrap-icons";
 
 import { postAPI } from "../config/ApiConfig";

@@ -154,7 +154,7 @@ const NavigationView = ({ children }) => {
 										height={70}
 									/>
 									<h6 className="mt-2">{user?.name}</h6>
-									<small className="text-muted">@{user?. username}</small>
+									<small className="text-muted">@{user?.username}</small>
 									{user.subscription && user.subscription !== "free" && (
 										<span
 											className={`ms-1 badge ${
