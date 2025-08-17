@@ -145,8 +145,9 @@ const PostCard = ({
 			// Delete the post (backend will handle image cleanup)
 			await postAPI.deletePost(postId);
 			onDeletePost?.(postId);
-		} catch (err) {
-			console.error("Error deleting post:", err);
+		} catch (error) {
+			console.error("Error deleting post:", error.message || error);
+			// Optionally show user-friendly error message
 		}
 	};
 

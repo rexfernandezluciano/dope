@@ -169,8 +169,8 @@ const PostDetailPage = () => {
 			await postAPI.deletePost(postToDelete);
 			navigate(-1); // Go back since post is deleted
 		} catch (err) {
-			console.error("Error deleting post:", err);
-			setError("Failed to delete post.");
+			console.error("Error deleting post:", err.message || err);
+			// Optionally show user-friendly error message
 		} finally {
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
