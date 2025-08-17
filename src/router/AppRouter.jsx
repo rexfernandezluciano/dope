@@ -98,9 +98,7 @@ const router = createBrowserRouter([
 		path: "/subscription",
 		element: (
 			<RequireAuth>
-				<NavigationView>
-					<SubscriptionPage />
-				</NavigationView>
+				<IndexPage />
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
