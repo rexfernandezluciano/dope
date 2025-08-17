@@ -8,6 +8,12 @@ a {
   text-decoration: none;
   text-decoration-line: none;
   outline: none;
+  color: #0069B5;
+}
+
+/* Exclude nav links from global link styling */
+.nav-link {
+  color: inherit !important;
 }
 
 .btn-primary {
