@@ -120,12 +120,13 @@ const SignUpPage = () => {
 				subscription: "free"
 			};
 
-			await authAPI.register(userData);
+			const result = await authAPI.register(userData);
 			
 			await verifyUser(email);
-			setShowDialog(true);
-			setDialogTitle("Account Created Successfully!");
-			setDialogMessage("Verification link was sent to your email address. You will be redirected to login.");
+			
+			// Redirect to verification page with verification ID and email
+			const verificationId = result.verificationId || 'verify';
+			navigate(`/auth/verify/${verificationId}?email=${encodeURIComponent(email)}`);
 		} catch (err) {
 			setError(err.message);
 		} finally {

@@ -9,17 +9,22 @@ import {
 	Nav,
 	Row,
 	Col,
+	Form,
+	InputGroup,
 } from "react-bootstrap";
-import { House, Person, Gear, BoxArrowRight } from "react-bootstrap-icons";
+import { House, Person, Gear, BoxArrowRight, Search } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../utils/app-utils";
 
 import logo from "../../assets/images/dope.png";
+import dopeImage from "../../assets/images/dope.png";
 
 const NavigationView = ({ children, user }) => {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const [showModal, setShowModal] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
 
 	const handleLogout = async () => {
 		try {
@@ -57,6 +62,22 @@ const NavigationView = ({ children, user }) => {
 		return `nav-link px-3 py-2 rounded-end-5 ${isActive ? "bg-primary text-white" : "text-dark"}`;
 	};
 
+	const handleModal = () => setShowModal(false);
+
+	const handleSearch = (e) => {
+		e.preventDefault();
+		if (searchQuery.trim()) {
+			// If on homepage, trigger search there
+			if (location.pathname === '/home') {
+				// Emit a custom event that HomePage can listen to
+				window.dispatchEvent(new CustomEvent('searchPosts', { detail: searchQuery }));
+			} else {
+				// Navigate to homepage with search query
+				navigate(`/home?search=${encodeURIComponent(searchQuery)}`);
+			}
+		}
+	};
+
 	return (
 		<>
 			{/* Mobile Navbar */}
@@ -84,53 +105,24 @@ const NavigationView = ({ children, user }) => {
 								}}
 							></div>
 						</Navbar.Brand>
-						<div className="dropdown">
-							<Image
-								src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
-								alt="avatar"
-								roundedCircle
-								width="35"
-								height="35"
-								style={{ cursor: "pointer" }}
-								data-bs-toggle="dropdown"
-								aria-expanded="false"
-							/>
-							<ul className="dropdown-menu dropdown-menu-end">
-								<li>
-									<a className="dropdown-item" href={`/${user?.username}`}>
-										<Person size={16} className="me-2" />
-										Profile
-									</a>
-								</li>
-								<li>
-									<a
-										className="dropdown-item"
-										href={`/${user?.username}/settings`}
-									>
-										<Gear size={16} className="me-2" />
-										Settings
-									</a>
-								</li>
-								<li>
-									<hr className="dropdown-divider" />
-								</li>
-								<li>
-									<button
-										className="dropdown-item px-3 text-danger"
-										onClick={handleLogout}
-									>
-										<BoxArrowRight size={16} className="me-2" />
-										Logout
-									</button>
-								</li>
-							</ul>
-						</div>
+
+						{/* Mobile Search Icon */}
+						<Button 
+							variant="link" 
+							className="p-0" 
+							onClick={() => setShowModal(true)}
+						>
+							<Search size={24} className="text-primary" />
+						</Button>
+
 						<Navbar.Offcanvas
 							id="offcanvasNavbar"
 							aria-labelledby="offcanvasNavbarLabel"
 							placement="start"
 							backdrop="static"
 							style={{ maxWidth: "260px" }}
+							show={showModal}
+							onHide={() => setShowModal(false)}
 						>
 							<Offcanvas.Header closeButton>
 								<Offcanvas.Title id="offcanvasNavbarLabel">
@@ -184,9 +176,83 @@ const NavigationView = ({ children, user }) => {
 			<div className="d-none d-md-block">
 				<Navbar expand={false} className="bg-white border-bottom sticky-top">
 					<Container fluid>
-						<Navbar.Brand href="/" className="text-primary">
-							DOPE Network
+						<Navbar.Brand 
+							href="/home" 
+							className="fw-bold d-flex align-items-center gap-2"
+						>
+							<Image
+								src={dopeImage}
+								alt="DOPE Network"
+								width={32}
+								height={32}
+							/>
+							<span className="d-none d-sm-inline">DOPE Network</span>
 						</Navbar.Brand>
+
+						{/* Search Bar */}
+						<div className="d-none d-md-flex flex-grow-1 mx-4">
+							<Form onSubmit={handleSearch} className="w-100" style={{ maxWidth: '400px' }}>
+								<InputGroup>
+									<Form.Control
+										type="text"
+										placeholder="Search posts, users..."
+										value={searchQuery}
+										onChange={(e) => setSearchQuery(e.target.value)}
+										className="rounded-start-pill border-end-0"
+									/>
+									<Button 
+										variant="outline-secondary" 
+										type="submit"
+										className="rounded-end-pill border-start-0"
+										style={{ borderColor: '#ced4da' }}
+									>
+										<Search size={16} />
+									</Button>
+								</InputGroup>
+							</Form>
+						</div>
+
+						<div className="dropdown">
+							<Image
+								src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
+								alt="avatar"
+								roundedCircle
+								width="40"
+								height="40"
+								style={{ cursor: "pointer" }}
+								data-bs-toggle="dropdown"
+								aria-expanded="false"
+							/>
+							<ul className="dropdown-menu dropdown-menu-end">
+								<li>
+									<a className="dropdown-item" href={`/${user?.username}`}>
+										<Person size={16} className="me-2" />
+										Profile
+									</a>
+								</li>
+								<li>
+									<a
+										className="dropdown-item"
+										href={`/${user?.username}/settings`}
+									>
+										<Gear size={16} className="me-2" />
+										Settings
+									</a>
+								</li>
+								<li>
+									<hr className="dropdown-divider" />
+								</li>
+								<li>
+									<button
+										className="dropdown-item px-3 text-danger"
+										onClick={handleLogout}
+									>
+										<BoxArrowRight size={16} className="me-2" />
+										Logout
+									</button>
+								</li>
+							</ul>
+						</div>
 					</Container>
 				</Navbar>
 				<div

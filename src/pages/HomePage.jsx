@@ -13,6 +13,8 @@ import {
 	Card,
 	Spinner,
 	Alert,
+	Row,
+	Col,
 } from "react-bootstrap";
 import {
 	Globe,
@@ -62,6 +64,8 @@ const HomePage = () => {
 	const fileInputRef = useRef(null);
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
 	const [selectedPost, setSelectedPost] = useState(null);
+	const [searchQuery, setSearchQuery] = useState(""); // State for search input
+	const [filterBy, setFilterBy] = useState("for-you"); // State for filter selection
 
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData;
@@ -90,6 +94,18 @@ const HomePage = () => {
 			setLoading(false);
 		}
 	};
+
+	// Filter posts based on search query and filterBy
+	const filteredPosts = posts.filter((post) => {
+		const matchesSearch =
+			post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			post.author.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			post.author.username.toLowerCase().includes(searchQuery.toLowerCase());
+
+		const matchesFilter = filterBy === "for-you" || filterBy === "following"; // Add logic for 'following' if implemented
+
+		return matchesSearch && matchesFilter;
+	});
 
 	const handleInput = (e) => {
 		const textarea = textareaRef.current;
@@ -363,8 +379,33 @@ const HomePage = () => {
 	return (
 		<>
 			<Container className="py-3 px-0 px-0 px-md-3">
+				{/* Search and Filter Controls */}
+				<div className="mb-4">
+					<Row className="g-2">
+						<Col xs={12} md={8}>
+							<Form.Control
+								type="text"
+								placeholder="Search posts, users..."
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								className="rounded-pill"
+							/>
+						</Col>
+						<Col xs={12} md={4}>
+							<Form.Select
+								value={filterBy}
+								onChange={(e) => setFilterBy(e.target.value)}
+								className="rounded-pill"
+							>
+								<option value="for-you">For You</option>
+								<option value="following">Following</option>
+							</Form.Select>
+						</Col>
+					</Row>
+				</div>
+
 				{error && (
-					<Alert variant="danger" className="mx-3">
+					<Alert variant="danger" className="mb-3">
 						{error}
 					</Alert>
 				)}
@@ -406,141 +447,140 @@ const HomePage = () => {
 				) : (
 					<>
 						<div className="d-flex align-items-center justify-content-between px-3 py-2">
-							<span className="fw-bold fs-3">For you</span>
+							<span className="fw-bold fs-3">
+								{filterBy === "for-you" ? "For you" : "Following"}
+							</span>
 						</div>
-						{posts.map((post) => (
-							<Card
-								key={post.id}
-								className="border-0 border-bottom rounded-0 mb-0 post-card"
-								style={{ cursor: "pointer" }}
-								onClick={(e) => handlePostClick(post.id, e)}
-							>
-								<Card.Body className="px-3">
-									<div className="d-flex gap-2">
-										<Image
-											src={
-												post.author.photoURL ||
-												"https://i.pravatar.cc/150?img=10"
-											}
-											alt="avatar"
-											roundedCircle
-											width="40"
-											height="40"
-										/>
-										<div className="flex-grow-1">
-											<div className="d-flex align-items-center justify-content-between">
-												<div className="d-flex align-items-center gap-1">
-													<span
-														className="fw-bold"
-														style={{ cursor: "pointer", color: "inherit" }}
-														onClick={(e) => {
-															e.stopPropagation();
-															window.location.href = `/${post.author.username}`;
-														}}
-													>
-														{post.author.name}
-													</span>
-													{post.author.hasBlueCheck && (
-														<span className="text-primary">✓</span>
-													)}
-													<span className="text-muted">·</span>
-													<span className="text-muted small">
-														{formatTimeAgo(post.createdAt)}
-													</span>
-												</div>
-												<Button
-													variant="link"
-													className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
-													style={{
-														width: "32px",
-														height: "32px",
-														background: "none",
-														border: "none !important",
-														boxShadow: "none !important",
-													}}
-													onClick={(e) => {
-														e.stopPropagation();
-														openPostOptionsModal(post);
-													}}
-												>
-													<ThreeDots size={16} />
-												</Button>
-											</div>
-
-											{post.content && <p className="mb-2">{post.content}</p>}
-
-											{post.imageUrls && post.imageUrls.length > 0 && (
-												<div className="mb-2">
-													{post.imageUrls.length === 1 ? (
-														// Single image - full width
-														<Image
-															src={post.imageUrls[0]}
-															className="rounded w-100"
-															style={{
-																height: "300px",
-																objectFit: "cover",
-																cursor: "pointer",
-															}}
+						{filteredPosts.length === 0 && !loading ? (
+							<div className="text-center text-muted py-5">
+								{searchQuery ? (
+									<>
+										<h5>No results found</h5>
+										<p>Try adjusting your search terms</p>
+									</>
+								) : (
+									<>
+										<h5>No posts available</h5>
+										<p>Be the first to share something!</p>
+									</>
+								)}
+							</div>
+						) : (
+							filteredPosts.map((post) => (
+								<Card
+									key={post.id}
+									className="border-0 border-bottom rounded-0 mb-0 post-card"
+									style={{ cursor: "pointer" }}
+									onClick={(e) => handlePostClick(post.id, e)}
+								>
+									<Card.Body className="px-3">
+										<div className="d-flex gap-2">
+											<Image
+												src={
+													post.author.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
+												alt="avatar"
+												roundedCircle
+												width="40"
+												height="40"
+											/>
+											<div className="flex-grow-1">
+												<div className="d-flex align-items-center justify-content-between">
+													<div className="d-flex align-items-center gap-1">
+														<span
+															className="fw-bold"
+															style={{ cursor: "pointer", color: "inherit" }}
 															onClick={(e) => {
 																e.stopPropagation();
-																openImageViewer(post.imageUrls, 0);
+																window.location.href = `/${post.author.username}`;
 															}}
-														/>
-													) : (
-														// Multiple images - box layout
-														<div
-															className="d-flex gap-2"
-															style={{ height: "300px" }}
 														>
-															{/* Main image on the left */}
-															<div style={{ flex: "2" }}>
-																<Image
-																	src={post.imageUrls[0]}
-																	className="rounded w-100 h-100"
-																	style={{
-																		objectFit: "cover",
-																		cursor: "pointer",
-																	}}
-																	onClick={(e) => {
-																		e.stopPropagation();
-																		openImageViewer(post.imageUrls, 0);
-																	}}
-																/>
-															</div>
-															{/* Right side with stacked images */}
-															{post.imageUrls.length > 1 && (
-																<div
-																	className="d-flex flex-column gap-2"
-																	style={{ flex: "1" }}
-																>
-																	<div
+															{post.author.name}
+														</span>
+														{post.author.hasBlueCheck && (
+															<span className="text-primary">✓</span>
+														)}
+														<span className="text-muted">·</span>
+														<span className="text-muted small">
+															{formatTimeAgo(post.createdAt)}
+														</span>
+													</div>
+													<Button
+														variant="link"
+														className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
+														style={{
+															width: "32px",
+															height: "32px",
+															background: "none",
+															border: "none !important",
+															boxShadow: "none !important",
+														}}
+														onClick={(e) => {
+															e.stopPropagation();
+															openPostOptionsModal(post);
+														}}
+													>
+														<ThreeDots size={16} />
+													</Button>
+												</div>
+
+												{post.content && <p className="mb-2">{post.content}</p>}
+
+												{post.imageUrls && post.imageUrls.length > 0 && (
+													<div className="mb-2">
+														{post.imageUrls.length === 1 ? (
+															// Single image - full width
+															<Image
+																src={post.imageUrls[0]}
+																className="rounded w-100"
+																style={{
+																	height: "300px",
+																	objectFit: "cover",
+																	cursor: "pointer",
+																}}
+																onClick={(e) => {
+																	e.stopPropagation();
+																	openImageViewer(post.imageUrls, 0);
+																}}
+															/>
+														) : (
+															// Multiple images - box layout
+															<div
+																className="d-flex gap-2"
+																style={{ height: "300px" }}
+															>
+																{/* Main image on the left */}
+																<div style={{ flex: "2" }}>
+																	<Image
+																		src={post.imageUrls[0]}
+																		className="rounded w-100 h-100"
 																		style={{
-																			height:
-																				post.imageUrls.length > 2
-																					? "calc(50% - 4px)"
-																					: "100%",
+																			objectFit: "cover",
+																			cursor: "pointer",
 																		}}
+																		onClick={(e) => {
+																			e.stopPropagation();
+																			openImageViewer(post.imageUrls, 0);
+																		}}
+																	/>
+																</div>
+																{/* Right side with stacked images */}
+																{post.imageUrls.length > 1 && (
+																	<div
+																		className="d-flex flex-column gap-2"
+																		style={{ flex: "1" }}
 																	>
-																		<Image
-																			src={post.imageUrls[1]}
-																			className="rounded w-100 h-100"
-																			style={{
-																				objectFit: "cover",
-																				cursor: "pointer",
-																			}}
-																			onClick={(e) => {
-																				e.stopPropagation();
-																				openImageViewer(post.imageUrls, 1);
-																			}}
-																		/>
-																	</div>
-																	{post.imageUrls.length > 2 && (
 																		<div
-																			style={{ height: "calc(50% - 4px)" }}
-																			className="position-relative"
+																			style={{
+																				height:
+																					post.imageUrls.length > 2
+																						? "calc(50% - 4px)"
+																						: "100%",
+																			}}
 																		>
 																			<Image
-																				src={post.imageUrls[2]}
+																				src={post.imageUrls[1]}
 																				className="rounded w-100 h-100"
 																				style={{
 																					objectFit: "cover",
@@ -548,194 +588,213 @@ const HomePage = () => {
 																				}}
 																				onClick={(e) => {
 																					e.stopPropagation();
-																					openImageViewer(post.imageUrls, 2);
+																					openImageViewer(post.imageUrls, 1);
 																				}}
 																			/>
-																			{/* Show more indicator */}
-																			{post.imageUrls.length > 3 && (
-																				<div
-																					className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
+																		</div>
+																		{post.imageUrls.length > 2 && (
+																			<div
+																				style={{ height: "calc(50% - 4px)" }}
+																				className="position-relative"
+																			>
+																				<Image
+																					src={post.imageUrls[2]}
+																					className="rounded w-100 h-100"
 																					style={{
-																						backgroundColor:
-																							"rgba(0, 0, 0, 0.7)",
+																						objectFit: "cover",
 																						cursor: "pointer",
-																						color: "white",
-																						fontWeight: "bold",
-																						fontSize: "1.2rem",
 																					}}
 																					onClick={(e) => {
 																						e.stopPropagation();
 																						openImageViewer(post.imageUrls, 2);
 																					}}
-																				>
-																					+{post.imageUrls.length - 3}
-																				</div>
-																			)}
-																		</div>
-																	)}
-																</div>
-															)}
-														</div>
-													)}
-												</div>
-											)}
-											{post.postType === "live" && post.liveVideoUrl && (
-												<div className="mb-2">
-													{/* Placeholder for live video embed */}
-													<p className="text-danger fw-bold">
-														Live Video: {post.liveVideoUrl}
-													</p>
-												</div>
-											)}
+																				/>
+																				{/* Show more indicator */}
+																				{post.imageUrls.length > 3 && (
+																					<div
+																						className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
+																						style={{
+																							backgroundColor:
+																								"rgba(0, 0, 0, 0.7)",
+																							cursor: "pointer",
+																							color: "white",
+																							fontWeight: "bold",
+																							fontSize: "1.2rem",
+																						}}
+																						onClick={(e) => {
+																							e.stopPropagation();
+																							openImageViewer(post.imageUrls, 2);
+																						}}
+																					>
+																						+{post.imageUrls.length - 3}
+																					</div>
+																				)}
+																			</div>
+																		)}
+																	</div>
+																)}
+															</div>
+														)}
+													</div>
+												)}
+												{post.postType === "live" && post.liveVideoUrl && (
+													<div className="mb-2">
+														{/* Placeholder for live video embed */}
+														<p className="text-danger fw-bold">
+															Live Video: {post.liveVideoUrl}
+														</p>
+													</div>
+												)}
 
-											<div className="d-flex align-items-center justify-content-between">
-												{post.likes.length > 0 &&
-													(post.likes[0].user.uid === user.uid ? (
-														<div className="small text-muted">
-															<span className="fw-bold">You</span>{" "}
-															{post.likes.length > 1
-																? "& " + post.likes.length - 1 + " reacted."
-																: " reacted."}
-														</div>
-													) : (
-														""
-													))}
-											</div>
+												<div className="d-flex align-items-center justify-content-between">
+													{post.likes.length > 0 &&
+														(post.likes[0].user.uid === user.uid ? (
+															<div className="small text-muted">
+																<span className="fw-bold">You</span>{" "}
+																{post.likes.length > 1
+																	? "& " + post.likes.length - 1 + " reacted."
+																	: " reacted."}
+															</div>
+														) : (
+															""
+														))}
+												</div>
 
-											<div
-												className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
-												style={{ maxWidth: "400px" }}
-											>
-												<Button
-													variant="link"
-													size="sm"
-													className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-													style={{
-														transition: "all 0.2s",
-														minWidth: "40px",
-														height: "36px",
-													}}
-													onClick={(e) => {
-														e.stopPropagation();
-														window.location.href = `/post/${post.id}`;
-													}}
-													onMouseEnter={(e) => {
-														e.target.closest(
-															".action-btn",
-														).style.backgroundColor = "rgba(29, 161, 242, 0.1)";
-														e.target.closest(".action-btn").style.color =
-															"#1da1f2";
-													}}
-													onMouseLeave={(e) => {
-														e.target.closest(
-															".action-btn",
-														).style.backgroundColor = "transparent";
-														e.target.closest(".action-btn").style.color =
-															"#6c757d";
-													}}
+												<div
+													className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
+													style={{ maxWidth: "400px" }}
 												>
-													<ChatDots size={20} style={{ flexShrink: 0 }} />
-													{post.stats?.comments > 0 && (
-														<span className="small">
-															{post.stats?.comments}
-														</span>
-													)}
-												</Button>
-
-												<Button
-													variant="link"
-													size="sm"
-													className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-													style={{
-														color: post?.likes.some(
-															(like) => like.user.uid === user.uid,
-														)
-															? "#dc3545"
-															: "#6c757d",
-														transition: "all 0.2s",
-														minWidth: "40px",
-														height: "36px",
-													}}
-													onClick={(e) => {
-														e.stopPropagation();
-														handleLikePost(post.id);
-													}}
-													onMouseEnter={(e) => {
-														if (
-															!post?.likes.some(
-																(like) => like.user.uid === user.uid,
-															)
-														) {
+													<Button
+														variant="link"
+														size="sm"
+														className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+														style={{
+															transition: "all 0.2s",
+															minWidth: "40px",
+															height: "36px",
+														}}
+														onClick={(e) => {
+															e.stopPropagation();
+															window.location.href = `/post/${post.id}`;
+														}}
+														onMouseEnter={(e) => {
 															e.target.closest(
 																".action-btn",
-															).style.backgroundColor =
-																"rgba(220, 53, 69, 0.1)";
+															).style.backgroundColor = "rgba(29, 161, 242, 0.1)";
 															e.target.closest(".action-btn").style.color =
-																"#dc3545";
-														}
-													}}
-													onMouseLeave={(e) => {
-														if (
-															!post.likes.some(
-																(like) => like.user.uid === user.uid,
-															)
-														) {
+																"#1da1f2";
+														}}
+														onMouseLeave={(e) => {
 															e.target.closest(
 																".action-btn",
 															).style.backgroundColor = "transparent";
 															e.target.closest(".action-btn").style.color =
 																"#6c757d";
-														}
-													}}
-												>
-													{post.likes.some(
-														(like) => like.user.uid === user.uid,
-													) ? (
-														<HeartFill size={20} style={{ flexShrink: 0 }} />
-													) : (
-														<Heart size={20} style={{ flexShrink: 0 }} />
-													)}
-													{post.stats.likes > 0 && (
-														<span className="small">{post.stats.likes}</span>
-													)}
-												</Button>
+														}}
+													>
+														<ChatDots size={20} style={{ flexShrink: 0 }} />
+														{post.stats?.comments > 0 && (
+															<span className="small">
+																{post.stats?.comments}
+															</span>
+														)}
+													</Button>
 
-												<Button
-													variant="link"
-													size="sm"
-													className="text-muted p-2 border-0 rounded-circle action-btn"
-													style={{
-														transition: "all 0.2s",
-														minWidth: "40px",
-														height: "36px",
-													}}
-													onClick={(e) => {
-														e.stopPropagation();
-														handleSharePost(post.id);
-													}}
-													onMouseEnter={(e) => {
-														e.target.closest(
-															".action-btn",
-														).style.backgroundColor = "rgba(23, 191, 99, 0.1)";
-														e.target.closest(".action-btn").style.color =
-															"#17bf63";
-													}}
-													onMouseLeave={(e) => {
-														e.target.closest(
-															".action-btn",
-														).style.backgroundColor = "transparent";
-														e.target.closest(".action-btn").style.color =
-															"#6c757d";
-													}}
-												>
-													<Share size={20} style={{ flexShrink: 0 }} />
-												</Button>
+													<Button
+														variant="link"
+														size="sm"
+														className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+														style={{
+															color: post?.likes.some(
+																(like) => like.user.uid === user.uid,
+															)
+																? "#dc3545"
+																: "#6c757d",
+															transition: "all 0.2s",
+															minWidth: "40px",
+															height: "36px",
+														}}
+														onClick={(e) => {
+															e.stopPropagation();
+															handleLikePost(post.id);
+														}}
+														onMouseEnter={(e) => {
+															if (
+																!post?.likes.some(
+																	(like) => like.user.uid === user.uid,
+																)
+															) {
+																e.target.closest(
+																	".action-btn",
+																).style.backgroundColor =
+																	"rgba(220, 53, 69, 0.1)";
+																e.target.closest(".action-btn").style.color =
+																	"#dc3545";
+															}
+														}}
+														onMouseLeave={(e) => {
+															if (
+																!post.likes.some(
+																	(like) => like.user.uid === user.uid,
+																)
+															) {
+																e.target.closest(
+																	".action-btn",
+																).style.backgroundColor = "transparent";
+																e.target.closest(".action-btn").style.color =
+																	"#6c757d";
+															}
+														}}
+													>
+														{post.likes.some(
+															(like) => like.user.uid === user.uid,
+														) ? (
+															<HeartFill size={20} style={{ flexShrink: 0 }} />
+														) : (
+															<Heart size={20} style={{ flexShrink: 0 }} />
+														)}
+														{post.stats.likes > 0 && (
+															<span className="small">{post.stats.likes}</span>
+														)}
+													</Button>
+
+													<Button
+														variant="link"
+														size="sm"
+														className="text-muted p-2 border-0 rounded-circle action-btn"
+														style={{
+															transition: "all 0.2s",
+															minWidth: "40px",
+															height: "36px",
+														}}
+														onClick={(e) => {
+															e.stopPropagation();
+															handleSharePost(post.id);
+														}}
+														onMouseEnter={(e) => {
+															e.target.closest(
+																".action-btn",
+															).style.backgroundColor = "rgba(23, 191, 99, 0.1)";
+															e.target.closest(".action-btn").style.color =
+																"#17bf63";
+														}}
+														onMouseLeave={(e) => {
+															e.target.closest(
+																".action-btn",
+															).style.backgroundColor = "transparent";
+															e.target.closest(".action-btn").style.color =
+																"#6c757d";
+														}}
+													>
+														<Share size={20} style={{ flexShrink: 0 }} />
+													</Button>
+												</div>
 											</div>
 										</div>
-									</div>
-								</Card.Body>
-							</Card>
-						))}
+									</Card.Body>
+								</Card>
+							))
+						)}
 
 						{hasMore && (
 							<div className="text-center py-3">
