@@ -172,7 +172,20 @@ const postAPI = {
 	likePost: (postId) =>
 		apiRequest(`/posts/${postId}/like`, {
 			method: 'POST'
-		})
+		}),
+
+	getUserPosts: (userId, params = {}) => {
+		const searchParams = new URLSearchParams();
+		Object.keys(params).forEach(key => {
+			if (params[key] !== undefined && params[key] !== null) {
+				searchParams.append(key, params[key]);
+			}
+		});
+		const queryString = searchParams.toString();
+		return apiRequest(`/posts${queryString ? `?${queryString}` : ''}`, {
+			method: 'GET'
+		});
+	}
 };
 
 const commentAPI = {
