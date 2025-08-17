@@ -13,9 +13,7 @@ import {
 	Row, 
 	Col, 
 	Badge, 
-	ListGroup,
-	Tab,
-	Tabs 
+	ListGroup
 } from "react-bootstrap";
 import { 
 	CreditCard, 
@@ -232,9 +230,9 @@ const SubscriptionPage = () => {
 				</Alert>
 			)}
 
-			<Tabs defaultActiveKey="subscription" className="mb-4">
-				{/* Subscription Tab */}
-				<Tab eventKey="subscription" title="Subscription">
+			<div className="mb-4">
+				{/* Subscription Section */}
+				<div>
 					{/* Current Plan */}
 					<Card className="mb-4">
 						<Card.Header className="d-flex align-items-center justify-content-between">
@@ -347,10 +345,10 @@ const SubscriptionPage = () => {
 							</Row>
 						</Card.Body>
 					</Card>
-				</Tab>
+				</div>
 
-				{/* Features Tab */}
-				<Tab eventKey="features" title="Features">
+				{/* Features Section */}
+				<div className="mt-4">
 					<Card className="mb-4">
 						<Card.Header>
 							<h5 className="mb-0">Feature Controls</h5>
@@ -413,10 +411,11 @@ const SubscriptionPage = () => {
 							</ListGroup>
 						</Card.Body>
 					</Card>
-				</Tab>
+				</div>
 
-				{/* Payment Methods Tab */}
-				<Tab eventKey="payment" title="Payment Methods">
+				{/* Payment Methods Section */}
+				<div className="mt-4"></div>
+				<div className="mt-4">
 					<Card className="mb-4">
 						<Card.Header className="d-flex justify-content-between align-items-center">
 							<h5 className="mb-0">Payment Methods</h5>
@@ -465,8 +464,8 @@ const SubscriptionPage = () => {
 							)}
 						</Card.Body>
 					</Card>
-				</Tab>
-			</Tabs>
+				</div>
+			</div>
 
 			{/* Cancel Subscription Modal */}
 			<Modal show={showCancelModal} onHide={() => setShowCancelModal(false)} centered>

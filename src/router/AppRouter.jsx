@@ -95,15 +95,6 @@ const router = createBrowserRouter([
 		],
 	},
 	{
-		path: "/subscription",
-		element: (
-			<RequireAuth>
-				<SubscriptionPage />
-			</RequireAuth>
-		),
-		loader: IndexPageLoader,
-	},
-	{
 		path: "/search",
 		element: (
 			<RequireAuth>
