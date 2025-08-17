@@ -33,7 +33,7 @@ import {
 	Crown,
 	Eye,
 	FileText,
-	PieChart,
+	PieChartFill,
 	Activity,
 	Star,
 	Zap,
@@ -440,7 +440,7 @@ const AnalyticsPage = () => {
 							<Card className="border-0 shadow-sm mb-4">
 								<Card.Header>
 									<h6 className="mb-0">
-										<PieChart className="me-2" />
+										<PieChartFill className="me-2" />
 										Audience Demographics
 									</h6>
 								</Card.Header>
