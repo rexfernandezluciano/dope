@@ -30,7 +30,7 @@ import {
 	Calendar,
 	Bullseye as Target,
 	Gift,
-	Crown,
+	Award as Crown,
 	Eye,
 	FileText,
 	PieChartFill,
