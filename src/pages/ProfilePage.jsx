@@ -24,6 +24,7 @@ import {
 	X,
 	ThreeDots,
 	Calendar,
+	CheckCircleFill
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
@@ -402,7 +403,7 @@ const ProfilePage = () => {
 									className="text-primary fs-5"
 									style={{ fontSize: "1.2rem" }}
 								>
-									✓
+									<CheckCircleFill className="text-primary" size={16} />
 								</span>
 							)}
 							{profileUser.subscription &&
