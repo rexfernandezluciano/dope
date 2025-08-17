@@ -67,7 +67,7 @@ const NavigationView = ({ children, user }) => {
 		},
 		{
 			label: "Subscription",
-			href: "/subscription", // Corrected to a relative path as per the thinking
+			href: `/${user?.username}/subscription`,
 			icon: <Star size={18} className="me-2" />,
 		},
 	];

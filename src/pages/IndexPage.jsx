@@ -6,6 +6,7 @@ import NavigationView from "../components/navs/NavigationView";
 import HomePage from "./HomePage";
 import ProfilePage from "./ProfilePage";
 import SettingsPage from "./SettingsPage";
+import SubscriptionPage from "./SubscriptionPage";
 import PostDetailPage from "./PostDetailPage";
 
 const IndexPage = () => {
@@ -28,6 +29,15 @@ const IndexPage = () => {
 		return (
 			<NavigationView user={user}>
 				<SettingsPage />
+			</NavigationView>
+		);
+	}
+
+	// Check if it's subscription page
+	if (pathname.endsWith('/subscription')) {
+		return (
+			<NavigationView user={user}>
+				<SubscriptionPage />
 			</NavigationView>
 		);
 	}

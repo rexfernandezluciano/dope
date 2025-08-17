@@ -92,8 +92,19 @@ const router = createBrowserRouter([
 				element: <SettingsPage />,
 				loader: IndexPageLoader,
 			},
+		],
+	},
+	{
+		path: "/:username/subscription",
+		element: (
+			<RequireAuth>
+				<IndexPage />
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
+		children: [
 			{
-				path: "subscription",
+				index: true,
 				element: <SubscriptionPage />,
 				loader: IndexPageLoader,
 			},
