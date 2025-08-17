@@ -28,7 +28,7 @@ import {
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
-import { GiphyFetch } from "@giphy.js-fetch-api";
+import { GiphyFetch } from "@giphy/js-fetch-api";
 import heic2any from "heic2any";
 
 import { postAPI, commentAPI } from "../config/ApiConfig";
