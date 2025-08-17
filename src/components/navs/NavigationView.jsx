@@ -82,6 +82,7 @@ const NavigationView = ({ children, user }) => {
 						<Navbar.Toggle
 							aria-controls="offcanvasNavbar"
 							className="shadow-none border-0"
+							onClick={() => setShowModal(true)}
 						/>
 						<Navbar.Brand href="/" className="text-primary">
 							<div
