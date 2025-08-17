@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
@@ -494,7 +493,7 @@ const AnalyticsPage = () => {
 													<p className="small text-muted mb-3">
 														Partner with brands to create sponsored posts and earn up to $500 per post.
 													</p>
-													<Button variant="primary" size="sm">
+													<Button variant="primary" size="sm" onClick={() => console.log('Find Sponsors clicked')}>
 														Find Sponsors
 													</Button>
 												</Card.Body>
@@ -508,7 +507,7 @@ const AnalyticsPage = () => {
 													<p className="small text-muted mb-3">
 														Enable tips from your followers and earn up to $200 per month.
 													</p>
-													<Button variant="success" size="sm">
+													<Button variant="success" size="sm" onClick={() => console.log('Enable Tips clicked')}>
 														Enable Tips
 													</Button>
 												</Card.Body>
@@ -522,7 +521,7 @@ const AnalyticsPage = () => {
 													<p className="small text-muted mb-3">
 														Create premium content for subscribers and earn recurring revenue.
 													</p>
-													<Button variant="warning" size="sm">
+													<Button variant="warning" size="sm" onClick={() => console.log('Setup Subscriptions clicked')}>
 														Setup Subscriptions
 													</Button>
 												</Card.Body>
@@ -536,7 +535,7 @@ const AnalyticsPage = () => {
 													<p className="small text-muted mb-3">
 														Monetize your live streams with super chats and donations.
 													</p>
-													<Button variant="info" size="sm">
+													<Button variant="info" size="sm" onClick={() => console.log('Start Streaming clicked')}>
 														Start Streaming
 													</Button>
 												</Card.Body>
@@ -616,7 +615,7 @@ const AnalyticsPage = () => {
 							Unlock various monetization features and start earning from your social media presence.
 						</p>
 					</div>
-					
+
 					<Row>
 						<Col md={6} className="mb-3">
 							<Card className="border-primary h-100">
