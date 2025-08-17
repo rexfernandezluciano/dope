@@ -22,7 +22,6 @@ import {
 	Search,
 	Star,
 } from "react-bootstrap-icons";
-import { CreditCard2Back } from "react-bootstrap-icons"; // Assuming CreditCard2Back is intended for subscription
 
 import { authAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../utils/app-utils";

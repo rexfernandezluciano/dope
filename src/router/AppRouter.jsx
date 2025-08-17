@@ -1,6 +1,6 @@
 /** @format */
 
-import { createBrowserRouter, RouterProvider, Route } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import StartPage from "../pages/StartPage";
 import LoginPage from "../pages/auth/LoginPage";
@@ -98,7 +98,7 @@ const router = createBrowserRouter([
 		path: "/subscription",
 		element: (
 			<RequireAuth>
-				<IndexPage />
+				<SubscriptionPage />
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
