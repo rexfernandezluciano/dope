@@ -24,6 +24,10 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	X,
+	Globe,
+	Lock,
+	PersonFill,
+	CheckCircleFill,
 } from "react-bootstrap-icons";
 
 import { postAPI, commentAPI } from "../config/ApiConfig";
@@ -147,6 +151,39 @@ const PostDetailPage = () => {
 		setCurrentImageIndex(0);
 	};
 
+	const canComment = (post) => {
+		if (!user) return false;
+		
+		// Post owner can always comment
+		if (post.author.uid === user.uid) return true;
+		
+		// Check privacy settings
+		switch (post.privacy) {
+			case 'public':
+				return true;
+			case 'private':
+				return post.author.uid === user.uid;
+			case 'followers':
+				// Check if current user follows the post author
+				return post.author.isFollowedByCurrentUser || false;
+			default:
+				return true;
+		}
+	};
+
+	const getPrivacyIcon = (privacy) => {
+		switch (privacy) {
+			case 'public':
+				return <Globe size={14} className="text-muted" />;
+			case 'private':
+				return <Lock size={14} className="text-muted" />;
+			case 'followers':
+				return <PersonFill size={14} className="text-muted" />;
+			default:
+				return <Globe size={14} className="text-muted" />;
+		}
+	};
+
 	const handleSubmitComment = async (e) => {
 		e.preventDefault();
 		if (!newComment.trim()) return;
@@ -230,12 +267,14 @@ const PostDetailPage = () => {
 										{post.author.name}
 									</span>
 									{post.author.hasBlueCheck && (
-										<span className="text-primary">✓</span>
+										<CheckCircleFill className="text-primary" size={16} />
 									)}
 									<span className="text-muted">·</span>
 									<span className="text-muted small">
 										{formatTimeAgo(post.createdAt)}
 									</span>
+									<span className="text-muted">·</span>
+									{getPrivacyIcon(post.privacy)}
 								</div>
 								<Button
 									variant="link"
@@ -372,21 +411,27 @@ const PostDetailPage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+									className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn ${!canComment(post) ? 'opacity-50' : 'text-muted'}`}
 									style={{
 										transition: "all 0.2s",
 										minWidth: "40px",
 										height: "36px",
 									}}
+									disabled={!canComment(post)}
+									title={!canComment(post) ? "You cannot comment on this post" : "Comment"}
 									onMouseEnter={(e) => {
-										e.target.closest(".action-btn").style.backgroundColor =
-											"rgba(29, 161, 242, 0.1)";
-										e.target.closest(".action-btn").style.color = "#1da1f2";
+										if (canComment(post)) {
+											e.target.closest(".action-btn").style.backgroundColor =
+												"rgba(29, 161, 242, 0.1)";
+											e.target.closest(".action-btn").style.color = "#1da1f2";
+										}
 									}}
 									onMouseLeave={(e) => {
-										e.target.closest(".action-btn").style.backgroundColor =
-											"transparent";
-										e.target.closest(".action-btn").style.color = "#6c757d";
+										if (canComment(post)) {
+											e.target.closest(".action-btn").style.backgroundColor =
+												"transparent";
+											e.target.closest(".action-btn").style.color = "#6c757d";
+										}
 									}}
 								>
 									<ChatDots size={24} style={{ flexShrink: 0 }} />
@@ -475,46 +520,63 @@ const PostDetailPage = () => {
 			</Card>
 
 			{/* Comment Form */}
-			<Card className="border-0 border-bottom rounded-0">
-				<Card.Body className="px-3 py-3">
-					<Form onSubmit={handleSubmitComment}>
-						<div className="d-flex gap-3">
-							<Image
-								src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
-								alt="avatar"
-								roundedCircle
-								width="40"
-								height="40"
-							/>
-							<div className="flex-grow-1">
-								<Form.Control
-									as="textarea"
-									rows={2}
-									value={newComment}
-									onChange={(e) => setNewComment(e.target.value)}
-									placeholder="Post your reply"
-									className="border-0 shadow-none resize-none"
-									style={{ fontSize: "1.1rem" }}
+			{canComment(post) ? (
+				<Card className="border-0 border-bottom rounded-0">
+					<Card.Body className="px-3 py-3">
+						<Form onSubmit={handleSubmitComment}>
+							<div className="d-flex gap-3">
+								<Image
+									src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
+									alt="avatar"
+									roundedCircle
+									width="40"
+									height="40"
 								/>
-								<div className="d-flex justify-content-end mt-2">
-									<Button
-										type="submit"
-										size="sm"
-										disabled={!newComment.trim() || submitting}
-										className="rounded-pill px-3"
-									>
-										{submitting ? (
-											<Spinner size="sm" animation="border" />
-										) : (
-											"Reply"
-										)}
-									</Button>
+								<div className="flex-grow-1">
+									<Form.Control
+										as="textarea"
+										rows={2}
+										value={newComment}
+										onChange={(e) => setNewComment(e.target.value)}
+										placeholder="Post your reply"
+										className="border-0 shadow-none resize-none"
+										style={{ fontSize: "1.1rem" }}
+									/>
+									<div className="d-flex justify-content-end mt-2">
+										<Button
+											type="submit"
+											size="sm"
+											disabled={!newComment.trim() || submitting}
+											className="rounded-pill px-3"
+										>
+											{submitting ? (
+												<Spinner size="sm" animation="border" />
+											) : (
+												"Reply"
+											)}
+										</Button>
+									</div>
 								</div>
 							</div>
+						</Form>
+					</Card.Body>
+				</Card>
+			) : (
+				<Card className="border-0 border-bottom rounded-0">
+					<Card.Body className="px-3 py-3 text-center text-muted">
+						<div className="d-flex align-items-center justify-content-center gap-2">
+							{getPrivacyIcon(post.privacy)}
+							<span>
+								{post.privacy === 'private' 
+									? "Only the author can comment on this post"
+									: post.privacy === 'followers'
+									? "Only followers can comment on this post"
+									: "Comments are restricted"}
+							</span>
 						</div>
-					</Form>
-				</Card.Body>
-			</Card>
+					</Card.Body>
+				</Card>
+			)}
 
 			{/* Comments */}
 			{comments.length === 0 ? (

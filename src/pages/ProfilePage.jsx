@@ -25,6 +25,9 @@ import {
 	ThreeDots,
 	Calendar,
 	CheckCircleFill,
+	Globe,
+	Lock,
+	PersonFill,
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
@@ -347,6 +350,39 @@ const ProfilePage = () => {
 		closePostOptionsModal();
 	};
 
+	const canComment = (post) => {
+		if (!currentUser) return false;
+		
+		// Post owner can always comment
+		if (post.author.uid === currentUser.uid) return true;
+		
+		// Check privacy settings
+		switch (post.privacy) {
+			case 'public':
+				return true;
+			case 'private':
+				return post.author.uid === currentUser.uid;
+			case 'followers':
+				// Check if current user follows the post author
+				return post.author.isFollowedByCurrentUser || false;
+			default:
+				return true;
+		}
+	};
+
+	const getPrivacyIcon = (privacy) => {
+		switch (privacy) {
+			case 'public':
+				return <Globe size={14} className="text-muted" />;
+			case 'private':
+				return <Lock size={14} className="text-muted" />;
+			case 'followers':
+				return <PersonFill size={14} className="text-muted" />;
+			default:
+				return <Globe size={14} className="text-muted" />;
+		}
+	};
+
 	if (loading || !currentUser) {
 		return (
 			<Container className="text-center py-5">
@@ -537,6 +573,8 @@ const ProfilePage = () => {
 														<span className="text-muted small">
 															{formatTimeAgo(post.createdAt)}
 														</span>
+														<span className="text-muted">·</span>
+														{getPrivacyIcon(post.privacy)}
 													</div>
 
 													<Button
@@ -695,7 +733,7 @@ const ProfilePage = () => {
 													<Button
 														variant="link"
 														size="sm"
-														className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+														className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn ${!canComment(post) ? 'opacity-50' : 'text-muted'}`}
 														style={{
 															transition: "all 0.2s",
 															minWidth: "40px",
@@ -703,22 +741,30 @@ const ProfilePage = () => {
 														}}
 														onClick={(e) => {
 															e.stopPropagation();
-															window.location.href = `/post/${post.id}`;
+															if (canComment(post)) {
+																window.location.href = `/post/${post.id}`;
+															}
 														}}
+														disabled={!canComment(post)}
+														title={!canComment(post) ? "You cannot comment on this post" : "Comment"}
 														onMouseEnter={(e) => {
-															e.target.closest(
-																".action-btn",
-															).style.backgroundColor =
-																"rgba(29, 161, 242, 0.1)";
-															e.target.closest(".action-btn").style.color =
-																"#1da1f2";
+															if (canComment(post)) {
+																e.target.closest(
+																	".action-btn",
+																).style.backgroundColor =
+																	"rgba(29, 161, 242, 0.1)";
+																e.target.closest(".action-btn").style.color =
+																	"#1da1f2";
+															}
 														}}
 														onMouseLeave={(e) => {
-															e.target.closest(
-																".action-btn",
-															).style.backgroundColor = "transparent";
-															e.target.closest(".action-btn").style.color =
-																"#6c757d";
+															if (canComment(post)) {
+																e.target.closest(
+																	".action-btn",
+																).style.backgroundColor = "transparent";
+																e.target.closest(".action-btn").style.color =
+																	"#6c757d";
+															}
 														}}
 													>
 														<ChatDots size={20} style={{ flexShrink: 0 }} />

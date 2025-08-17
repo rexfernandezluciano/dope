@@ -21,6 +21,9 @@ import {
 	ChatDots,
 	Share,
 	CheckCircleFill,
+	Globe,
+	Lock,
+	PersonFill,
 } from "react-bootstrap-icons";
 
 import { postAPI, userAPI } from "../config/ApiConfig";
@@ -147,6 +150,39 @@ const SearchPage = () => {
 		navigate(`/post/${postId}`);
 	};
 
+	const canComment = (post) => {
+		if (!currentUser) return false;
+		
+		// Post owner can always comment
+		if (post.author.uid === currentUser.uid) return true;
+		
+		// Check privacy settings
+		switch (post.privacy) {
+			case 'public':
+				return true;
+			case 'private':
+				return post.author.uid === currentUser.uid;
+			case 'followers':
+				// Check if current user follows the post author
+				return post.author.isFollowedByCurrentUser || false;
+			default:
+				return true;
+		}
+	};
+
+	const getPrivacyIcon = (privacy) => {
+		switch (privacy) {
+			case 'public':
+				return <Globe size={14} className="text-muted" />;
+			case 'private':
+				return <Lock size={14} className="text-muted" />;
+			case 'followers':
+				return <PersonFill size={14} className="text-muted" />;
+			default:
+				return <Globe size={14} className="text-muted" />;
+		}
+	};
+
 	return (
 		<Container className="py-0 px-0">
 			{/* Header */}
@@ -245,6 +281,8 @@ const SearchPage = () => {
 														<span className="text-muted small">
 															{formatTimeAgo(post.createdAt)}
 														</span>
+														<span className="text-muted">·</span>
+														{getPrivacyIcon(post.privacy)}
 													</div>
 												</div>
 
@@ -284,11 +322,15 @@ const SearchPage = () => {
 													<Button
 														variant="link"
 														size="sm"
-														className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle"
+														className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle ${!canComment(post) ? 'opacity-50' : 'text-muted'}`}
 														onClick={(e) => {
 															e.stopPropagation();
-															navigate(`/post/${post.id}`);
+															if (canComment(post)) {
+																navigate(`/post/${post.id}`);
+															}
 														}}
+														disabled={!canComment(post)}
+														title={!canComment(post) ? "You cannot comment on this post" : "Comment"}
 													>
 														<ChatDots size={20} />
 														{post.stats?.comments > 0 && (
