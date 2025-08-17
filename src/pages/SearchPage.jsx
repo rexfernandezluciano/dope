@@ -24,6 +24,7 @@ import {
 	ChatDots,
 	Share,
 	ThreeDots,
+	CheckCircleFill,
 } from "react-bootstrap-icons";
 
 import { postAPI, userAPI } from "../config/ApiConfig";
@@ -37,6 +38,9 @@ const SearchPage = () => {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [activeTab, setActiveTab] = useState("posts");
+	
+	// Get current user from localStorage or context
+	const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
 	useEffect(() => {
 		if (searchQuery.trim()) {
@@ -82,6 +86,35 @@ const SearchPage = () => {
 		if (diffMins < 60) return `${diffMins}m`;
 		if (diffHours < 24) return `${diffHours}h`;
 		return `${diffDays}d`;
+	};
+
+	const handleLikePost = async (postId) => {
+		try {
+			await postAPI.likePost(postId);
+			// Update posts state to reflect like change
+			setPosts((prev) =>
+				prev.map((post) => {
+					if (post.id === postId) {
+						const isLiked = (post.likes || []).some(
+							(like) => like.user.uid === currentUser.uid,
+						);
+						return {
+							...post,
+							likes: isLiked
+								? (post.likes || []).filter((like) => like.user.uid !== currentUser.uid)
+								: [...(post.likes || []), { user: {uid: currentUser.uid }}],
+							stats: {
+								...post.stats,
+								likes: isLiked ? (post.stats?.likes || 0) - 1 : (post.stats?.likes || 0) + 1,
+							},
+						};
+					}
+					return post;
+				}),
+			);
+		} catch (err) {
+			console.error("Error liking post:", err);
+		}
 	};
 
 	const handlePostClick = (postId, e) => {
@@ -187,7 +220,7 @@ const SearchPage = () => {
 															{post.author.name}
 														</span>
 														{post.author.hasBlueCheck && (
-															<span className="text-primary">✓</span>
+															<CheckCircleFill className="text-primary" size={16} />
 														)}
 														<span className="text-muted">·</span>
 														<span className="text-muted small">
@@ -210,6 +243,20 @@ const SearchPage = () => {
 														/>
 													</div>
 												)}
+
+												<div className="d-flex align-items-center justify-content-between">
+													{(post.likes || []).length > 0 &&
+														((post.likes || [])[0]?.user?.uid === currentUser.uid ? (
+															<div className="small text-muted">
+																<span className="fw-bold">You</span>{" "}
+																{(post.likes || []).length > 1
+																	? "& " + ((post.likes || []).length - 1) + " reacted."
+																	: " reacted."}
+															</div>
+														) : (
+															""
+														))}
+												</div>
 
 												<div
 													className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
@@ -235,11 +282,58 @@ const SearchPage = () => {
 													<Button
 														variant="link"
 														size="sm"
-														className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle"
+														className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
+														style={{
+															color: (post.likes || []).some(
+																(like) => like.user.uid === currentUser.uid,
+															)
+																? "#dc3545"
+																: "#6c757d",
+															transition: "all 0.2s",
+															minWidth: "40px",
+															height: "36px",
+														}}
+														onClick={(e) => {
+															e.stopPropagation();
+															handleLikePost(post.id);
+														}}
+														onMouseEnter={(e) => {
+															if (
+																!(post.likes || []).some(
+																	(like) => like.user.uid === currentUser.uid,
+																)
+															) {
+																e.target.closest(
+																	".action-btn",
+																).style.backgroundColor =
+																	"rgba(220, 53, 69, 0.1)";
+																e.target.closest(".action-btn").style.color =
+																	"#dc3545";
+															}
+														}}
+														onMouseLeave={(e) => {
+															if (
+																!(post.likes || []).some(
+																	(like) => like.user.uid === currentUser.uid,
+																)
+															) {
+																e.target.closest(
+																	".action-btn",
+																).style.backgroundColor = "transparent";
+																e.target.closest(".action-btn").style.color =
+																	"#6c757d";
+															}
+														}}
 													>
-														<Heart size={20} />
-														{post.stats?.likes > 0 && (
-															<span className="small">{post.stats?.likes}</span>
+														{(post.likes || []).some(
+															(like) => like.user.uid === currentUser.uid,
+														) ? (
+															<HeartFill size={20} style={{ flexShrink: 0 }} />
+														) : (
+															<Heart size={20} style={{ flexShrink: 0 }} />
+														)}
+														{(post.stats?.likes || 0) > 0 && (
+															<span className="small">{post.stats?.likes || 0}</span>
 														)}
 													</Button>
 
@@ -293,7 +387,7 @@ const SearchPage = () => {
 												<div className="d-flex align-items-center gap-1">
 													<span className="fw-bold">{user.name}</span>
 													{user.hasBlueCheck && (
-														<span className="text-primary">✓</span>
+														<CheckCircleFill className="text-primary" size={16} />
 													)}
 												</div>
 												<p className="text-muted mb-0">@{user.username}</p>
