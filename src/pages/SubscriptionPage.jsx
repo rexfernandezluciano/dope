@@ -23,7 +23,7 @@ import {
 	XCircle, 
 	Calendar,
 	Crown,
-	Image as ImageIcon
+	ImageFill
 } from "react-bootstrap-icons";
 
 import { userAPI } from "../config/ApiConfig";
@@ -261,7 +261,7 @@ const SubscriptionPage = () => {
 										<h6>Current Features:</h6>
 										<ul className="list-unstyled">
 											<li className="d-flex align-items-center gap-2 mb-1">
-												<ImageIcon size={16} />
+												<ImageFill size={16} />
 												{subscription.features.imageLimit === "unlimited" 
 													? "Unlimited images per post"
 													: `${subscription.features.imageLimit} images per post`
