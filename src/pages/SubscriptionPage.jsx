@@ -84,16 +84,16 @@ const SubscriptionPage = () => {
 
 	useEffect(() => {
 		if (user && typeof user === 'object') {
-			const userSubscription = user.subscription || "free";
+			const userSubscription = user?.subscription || "free";
 			setSubscription({
 				plan: userSubscription,
 				status: "active",
-				nextBilling: user.nextBilling || null,
+				nextBilling: user?.nextBilling || null,
 				features: {
-					blueCheck: user.hasBlueCheck || false,
+					blueCheck: user?.hasBlueCheck || false,
 					imageLimit: getImageLimit(userSubscription),
 					nameChangeLimit: checkNameChangeLimit(user.lastNameChange),
-					lastNameChange: user.lastNameChange || null
+					lastNameChange: user?.lastNameChange || null
 				}
 			});
 		}
