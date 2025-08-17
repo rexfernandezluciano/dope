@@ -84,9 +84,9 @@ const PostDetailPage = () => {
 					...prev,
 					likes: isLiked
 						? prev.likes.filter((like) => like.user.uid !== user.uid)
-						: [...(prev.likes || []), { user: { uid: user.uid }}],
-					_count: {
-						...prev._count,
+						: [...(prev.likes || []), { user: { uid: user.uid } }],
+					stats: {
+						...prev.stats,
 						likes: isLiked
 							? (prev.stats?.likes || 1) - 1
 							: (prev.stats?.likes || 0) + 1,
@@ -153,17 +153,17 @@ const PostDetailPage = () => {
 
 	const canComment = (post) => {
 		if (!user) return false;
-		
+
 		// Post owner can always comment
 		if (post.author.uid === user.uid) return true;
-		
+
 		// Check privacy settings
 		switch (post.privacy) {
-			case 'public':
+			case "public":
 				return true;
-			case 'private':
+			case "private":
 				return post.author.uid === user.uid;
-			case 'followers':
+			case "followers":
 				// Check if current user follows the post author
 				return post.author.isFollowedByCurrentUser || false;
 			default:
@@ -173,11 +173,11 @@ const PostDetailPage = () => {
 
 	const getPrivacyIcon = (privacy) => {
 		switch (privacy) {
-			case 'public':
+			case "public":
 				return <Globe size={14} className="text-muted" />;
-			case 'private':
+			case "private":
 				return <Lock size={14} className="text-muted" />;
-			case 'followers':
+			case "followers":
 				return <PersonFill size={14} className="text-muted" />;
 			default:
 				return <Globe size={14} className="text-muted" />;
@@ -411,14 +411,18 @@ const PostDetailPage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn ${!canComment(post) ? 'opacity-50' : 'text-muted'}`}
+									className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn ${!canComment(post) ? "opacity-50" : "text-muted"}`}
 									style={{
 										transition: "all 0.2s",
 										minWidth: "40px",
 										height: "36px",
 									}}
 									disabled={!canComment(post)}
-									title={!canComment(post) ? "You cannot comment on this post" : "Comment"}
+									title={
+										!canComment(post)
+											? "You cannot comment on this post"
+											: "Comment"
+									}
 									onMouseEnter={(e) => {
 										if (canComment(post)) {
 											e.target.closest(".action-btn").style.backgroundColor =
@@ -567,11 +571,11 @@ const PostDetailPage = () => {
 						<div className="d-flex align-items-center justify-content-center gap-2">
 							{getPrivacyIcon(post.privacy)}
 							<span>
-								{post.privacy === 'private' 
+								{post.privacy === "private"
 									? "Only the author can comment on this post"
-									: post.privacy === 'followers'
-									? "Only followers can comment on this post"
-									: "Comments are restricted"}
+									: post.privacy === "followers"
+										? "Only followers can comment on this post"
+										: "Comments are restricted"}
 							</span>
 						</div>
 					</Card.Body>
@@ -586,12 +590,11 @@ const PostDetailPage = () => {
 			) : (
 				<div className="comment-thread">
 					{comments.map((comment, index) => (
-						<Card
-							key={comment.id}
-							className="border-0 border-bottom rounded-0"
-						>
+						<Card key={comment.id} className="border-0 rounded-0">
 							<Card.Body className="px-3 py-3">
-								<div className={`comment-item ${index === comments.length - 1 ? 'mb-0' : ''}`}>
+								<div
+									className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""}`}
+								>
 									<Image
 										src={
 											comment.author.photoURL ||
@@ -607,11 +610,10 @@ const PostDetailPage = () => {
 										<div className="d-flex align-items-center gap-1 mb-1">
 											<span className="fw-bold">{comment.author.name}</span>
 											{comment.author.hasBlueCheck && (
-												<span className="text-primary">✓</span>
+												<span className="text-primary">
+													<CheckCircleFill className="text-primary" size={16} />
+												</span>
 											)}
-											<span className="text-muted">
-												@{comment.author.username}
-											</span>
 											<span className="text-muted">·</span>
 											<span className="text-muted small">
 												{formatTimeAgo(comment.createdAt)}
@@ -621,33 +623,7 @@ const PostDetailPage = () => {
 										<p className="mb-2">{comment.content}</p>
 
 										<div className="d-flex gap-4 text-muted">
-											<OverlayTrigger
-												placement="bottom"
-												overlay={<Tooltip>Reply</Tooltip>}
-											>
-												<Button
-													variant="link"
-													size="sm"
-													className="text-muted p-1 border-0 d-flex align-items-center gap-1 rounded-circle"
-													style={{ width: "28px", height: "28px" }}
-												>
-													<ChatDots size={14} />
-												</Button>
-											</OverlayTrigger>
-
-											<OverlayTrigger
-												placement="bottom"
-												overlay={<Tooltip>Like</Tooltip>}
-											>
-												<Button
-													variant="link"
-													size="sm"
-													className="text-muted p-1 border-0 d-flex align-items-center gap-1 rounded-circle"
-													style={{ width: "28px", height: "28px" }}
-												>
-													<Heart size={14} />
-												</Button>
-											</OverlayTrigger>
+											{/* For future use */}
 										</div>
 									</div>
 								</div>
