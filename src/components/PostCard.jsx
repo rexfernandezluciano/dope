@@ -618,7 +618,7 @@ const PostCard = ({
 				<Modal.Header closeButton>
 					<Modal.Title>Post Options</Modal.Title>
 				</Modal.Header>
-				<Modal.Body className="p-0">
+				<Modal.Body className="px-0 pt-0 pb-2">
 					<div className="list-group list-group-flush">
 						<button
 							className="list-group-item list-group-item-action border-0"
