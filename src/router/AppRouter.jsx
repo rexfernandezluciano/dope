@@ -13,10 +13,13 @@ import SettingsPage from "../pages/SettingsPage";
 import RequireAuth from "./security/RequireAuth";
 import indexPageLoader from "./loader/IndexPageLoader";
 
+import LoadingView from "../components/LoadingView";
+
 const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <StartPage />,
+		hydrateFallbackElement: <LoadingView />,
 	},
 	{
 		path: "/auth/login",

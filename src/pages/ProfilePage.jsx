@@ -67,18 +67,18 @@ const ProfilePage = () => {
 			}
 
 			// Handle response structure - the API returns user data directly
-			setProfileUser(userResponse);
+			setProfileUser(userResponse.user);
 
 			// Set edit form data
 			setEditForm({
-				name: userResponse.name || "",
-				bio: userResponse.bio || "",
-				photoURL: userResponse.photoURL || "",
+				name: userResponse.user.name || "",
+				bio: userResponse.user.bio || "",
+				photoURL: userResponse.user.photoURL || "",
 			});
 
 			// Set posts from user response if available
-			if (userResponse.posts) {
-				setPosts(userResponse.posts);
+			if (userResponse.user.posts) {
+				setPosts(userResponse.user.posts);
 			} else {
 				// Fallback to separate posts API call
 				try {
@@ -91,9 +91,9 @@ const ProfilePage = () => {
 			}
 
 			// Use counts from user response if available
-			if (userResponse._count) {
-				setFollowers(new Array(userResponse._count.followers).fill({}));
-				setFollowing(new Array(userResponse._count.following).fill({}));
+			if (userResponse.user.stats) {
+				setFollowers(new Array(userResponse.user.stats.followers).fill({}));
+				setFollowing(new Array(userResponse.user.stats.following).fill({}));
 			} else {
 				try {
 					const followersResponse = await userAPI.getFollowers(username);
@@ -156,18 +156,19 @@ const ProfilePage = () => {
 					if (post.id === postId) {
 						const likes = post.likes || [];
 						const isLiked = likes.some(
-							(like) => like.userId === currentUser.uid,
+							(like) => like.user.uid === currentUser.uid,
 						);
+
 						return {
 							...post,
 							likes: isLiked
-								? likes.filter((like) => like.userId !== currentUser.uid)
-								: [...likes, { userId: currentUser.uid }],
-							_count: {
-								...post._count,
+								? likes.filter((like) => like.user.uid !== currentUser.uid)
+								: [...likes, { user: { uid: currentUser.uid } }],
+							stats: {
+								...post.stats,
 								likes: isLiked
-									? (post._count?.likes || 1) - 1
-									: (post._count?.likes || 0) + 1,
+									? (post.stats?.likes || 1) - 1
+									: (post.stats?.likes || 0) + 1,
 							},
 						};
 					}
@@ -675,6 +676,20 @@ const ProfilePage = () => {
 													</div>
 												)}
 
+												<div className="d-flex align-items-center justify-content-between">
+													{post.likes.length > 0 &&
+														(post.likes[0].user.uid === currentUser.uid ? (
+															<div className="small text-muted">
+																<span className="fw-bold">You</span>{" "}
+																{post.likes.length > 1
+																	? "& " + post.likes.length - 1 + " reacted."
+																	: " reacted."}
+															</div>
+														) : (
+															""
+														))}
+												</div>
+
 												<div
 													className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
 													style={{ maxWidth: "400px" }}
@@ -709,9 +724,9 @@ const ProfilePage = () => {
 														}}
 													>
 														<ChatDots size={20} style={{ flexShrink: 0 }} />
-														{post._count.comments > 0 && (
+														{post.stats.comments > 0 && (
 															<span className="small">
-																{post._count.comments}
+																{post.stats.comments}
 															</span>
 														)}
 													</Button>
@@ -722,7 +737,7 @@ const ProfilePage = () => {
 														className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 														style={{
 															color: (post.likes || []).some(
-																(like) => like.userId === currentUser.uid,
+																(like) => like.user.uid === currentUser.uid,
 															)
 																? "#dc3545"
 																: "#6c757d",
@@ -737,7 +752,7 @@ const ProfilePage = () => {
 														onMouseEnter={(e) => {
 															if (
 																!(post.likes || []).some(
-																	(like) => like.userId === currentUser.uid,
+																	(like) => like.user.uid === currentUser.uid,
 																)
 															) {
 																e.target.closest(
@@ -751,7 +766,7 @@ const ProfilePage = () => {
 														onMouseLeave={(e) => {
 															if (
 																!(post.likes || []).some(
-																	(like) => like.userId === currentUser.uid,
+																	(like) => like.user.uid === currentUser.uid,
 																)
 															) {
 																e.target.closest(
@@ -763,15 +778,15 @@ const ProfilePage = () => {
 														}}
 													>
 														{(post.likes || []).some(
-															(like) => like.userId === currentUser.uid,
+															(like) => like.user.uid === currentUser.uid,
 														) ? (
 															<HeartFill size={20} style={{ flexShrink: 0 }} />
 														) : (
 															<Heart size={20} style={{ flexShrink: 0 }} />
 														)}
-														{(post._count?.likes || 0) > 0 && (
+														{(post.stats?.likes || 0) > 0 && (
 															<span className="small">
-																{post._count?.likes || 0}
+																{post.stats?.likes || 0}
 															</span>
 														)}
 													</Button>

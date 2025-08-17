@@ -1,11 +1,21 @@
 /** @format */
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { Navbar, Container, Image, Offcanvas, Nav, Row, Col } from "react-bootstrap";
+import {
+	Navbar,
+	Container,
+	Image,
+	Offcanvas,
+	Nav,
+	Row,
+	Col,
+} from "react-bootstrap";
 import { House, Person, Gear, BoxArrowRight } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../utils/app-utils";
+
+import logo from "../../assets/images/dope.png";
 
 const NavigationView = ({ children, user }) => {
 	const navigate = useNavigate();
@@ -17,7 +27,7 @@ const NavigationView = ({ children, user }) => {
 			removeAuthToken();
 			navigate("/");
 		} catch (err) {
-			console.error('Logout error:', err);
+			console.error("Logout error:", err);
 			// Force logout even if API call fails
 			removeAuthToken();
 			navigate("/");
@@ -42,7 +52,7 @@ const NavigationView = ({ children, user }) => {
 		},
 	];
 
-	const navItemClass = href => {
+	const navItemClass = (href) => {
 		const isActive = location.pathname === href;
 		return `nav-link px-3 py-2 rounded-end-5 ${isActive ? "bg-primary text-white" : "text-dark"}`;
 	};
@@ -58,7 +68,21 @@ const NavigationView = ({ children, user }) => {
 							className="shadow-none border-0"
 						/>
 						<Navbar.Brand href="/" className="text-primary">
-							DOPE
+							<div
+								style={{
+									width: "200px",
+									height: "30px",
+									backgroundColor: "#0069B5",
+									WebkitMaskImage: `url(${logo})`,
+									WebkitMaskRepeat: "no-repeat",
+									WebkitMaskPosition: "center",
+									WebkitMaskSize: "contain",
+									maskImage: `url(${logo})`,
+									maskRepeat: "no-repeat",
+									maskPosition: "center",
+									maskSize: "contain",
+								}}
+							></div>
 						</Navbar.Brand>
 						<div className="dropdown">
 							<Image
@@ -67,7 +91,7 @@ const NavigationView = ({ children, user }) => {
 								roundedCircle
 								width="35"
 								height="35"
-								style={{ cursor: 'pointer' }}
+								style={{ cursor: "pointer" }}
 								data-bs-toggle="dropdown"
 								aria-expanded="false"
 							/>
@@ -79,14 +103,22 @@ const NavigationView = ({ children, user }) => {
 									</a>
 								</li>
 								<li>
-									<a className="dropdown-item" href={`/${user?.username}/settings`}>
+									<a
+										className="dropdown-item"
+										href={`/${user?.username}/settings`}
+									>
 										<Gear size={16} className="me-2" />
 										Settings
 									</a>
 								</li>
-								<li><hr className="dropdown-divider" /></li>
 								<li>
-									<button className="dropdown-item px-3 text-danger" onClick={handleLogout}>
+									<hr className="dropdown-divider" />
+								</li>
+								<li>
+									<button
+										className="dropdown-item px-3 text-danger"
+										onClick={handleLogout}
+									>
 										<BoxArrowRight size={16} className="me-2" />
 										Logout
 									</button>
@@ -98,9 +130,12 @@ const NavigationView = ({ children, user }) => {
 							aria-labelledby="offcanvasNavbarLabel"
 							placement="start"
 							backdrop="static"
-							style={{ maxWidth: "260px" }}>
+							style={{ maxWidth: "260px" }}
+						>
 							<Offcanvas.Header closeButton>
-								<Offcanvas.Title id="offcanvasNavbarLabel">Menu</Offcanvas.Title>
+								<Offcanvas.Title id="offcanvasNavbarLabel">
+									Menu
+								</Offcanvas.Title>
 							</Offcanvas.Header>
 							<Offcanvas.Body className="ps-0 pe-3">
 								<div className="text-center mb-4">
@@ -123,7 +158,8 @@ const NavigationView = ({ children, user }) => {
 										<Nav.Link
 											key={idx}
 											href={item.href}
-											className={navItemClass(item.href)}>
+											className={navItemClass(item.href)}
+										>
 											{item.icon}
 											{item.label}
 										</Nav.Link>
@@ -131,7 +167,8 @@ const NavigationView = ({ children, user }) => {
 									<Nav.Link
 										onClick={handleLogout}
 										className="nav-link px-3 text-danger"
-										style={{ cursor: "pointer" }}>
+										style={{ cursor: "pointer" }}
+									>
 										<BoxArrowRight size={18} className="me-2" />
 										Logout
 									</Nav.Link>
@@ -154,7 +191,8 @@ const NavigationView = ({ children, user }) => {
 				</Navbar>
 				<div
 					className="bg-white border-end vh-100 shadow-sm"
-					style={{ width: "250px", position: "fixed" }}>
+					style={{ width: "250px", position: "fixed" }}
+				>
 					<Container className="ps-0 pe-3 py-4">
 						<Row className="justify-content-center mb-3">
 							<Col xs="auto">
@@ -176,7 +214,8 @@ const NavigationView = ({ children, user }) => {
 								<Nav.Link
 									key={idx}
 									href={item.href}
-									className={navItemClass(item.href)}>
+									className={navItemClass(item.href)}
+								>
 									{item.icon}
 									{item.label}
 								</Nav.Link>
@@ -184,7 +223,8 @@ const NavigationView = ({ children, user }) => {
 							<Nav.Link
 								onClick={handleLogout}
 								className="nav-link text-danger mt-3 px-3 py-2 rounded-pill"
-								style={{ cursor: "pointer" }}>
+								style={{ cursor: "pointer" }}
+							>
 								<BoxArrowRight size={18} className="me-2" />
 								Logout
 							</Nav.Link>

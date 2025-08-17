@@ -12,8 +12,7 @@ import {
 	Alert,
 	OverlayTrigger,
 	Tooltip,
-	Dropdown,
-	Modal
+	Modal,
 } from "react-bootstrap";
 import {
 	Heart,
@@ -24,7 +23,7 @@ import {
 	ThreeDots,
 	ChevronLeft,
 	ChevronRight,
-	X
+	X,
 } from "react-bootstrap-icons";
 
 import { postAPI, commentAPI } from "../config/ApiConfig";
@@ -57,10 +56,10 @@ const PostDetailPage = () => {
 			setLoading(true);
 			const [postResponse, commentsResponse] = await Promise.all([
 				postAPI.getPost(postId),
-				commentAPI.getComments(postId)
+				commentAPI.getComments(postId),
 			]);
 
-			setPost(postResponse);
+			setPost(postResponse.post);
 			setComments(commentsResponse.comments || []);
 		} catch (err) {
 			setError(err.message);
@@ -72,33 +71,37 @@ const PostDetailPage = () => {
 	const handleLikePost = async () => {
 		try {
 			await postAPI.likePost(postId);
-			setPost(prev => {
+			setPost((prev) => {
 				if (!prev) return prev;
-				const isLiked = (prev.likes || []).some(like => like.userId === user.uid);
+				const isLiked = (prev.likes || []).some(
+					(like) => like.user.uid === user.uid,
+				);
 				return {
 					...prev,
 					likes: isLiked
-						? prev.likes.filter(like => like.userId !== user.uid)
-						: [...(prev.likes || []), { userId: user.uid }],
+						? prev.likes.filter((like) => like.user.uid !== user.uid)
+						: [...(prev.likes || []), { user: { uid: user.uid }}],
 					_count: {
 						...prev._count,
-						likes: isLiked ? (prev._count?.likes || 1) - 1 : (prev._count?.likes || 0) + 1
-					}
+						likes: isLiked
+							? (prev.stats?.likes || 1) - 1
+							: (prev.stats?.likes || 0) + 1,
+					},
 				};
 			});
 		} catch (err) {
-			console.error('Error liking post:', err);
+			console.error("Error liking post:", err);
 		}
 	};
 
 	const handleSharePost = async (postId) => {
 		const postUrl = `${window.location.origin}/post/${postId}`;
-		
+
 		if (navigator.share) {
 			try {
 				await navigator.share({
-					title: 'Check out this post',
-					url: postUrl
+					title: "Check out this post",
+					url: postUrl,
 				});
 			} catch (err) {
 				navigator.clipboard.writeText(postUrl);
@@ -107,7 +110,7 @@ const PostDetailPage = () => {
 			try {
 				await navigator.clipboard.writeText(postUrl);
 			} catch (err) {
-				console.error('Failed to copy to clipboard:', err);
+				console.error("Failed to copy to clipboard:", err);
 			}
 		}
 	};
@@ -124,8 +127,8 @@ const PostDetailPage = () => {
 			await postAPI.deletePost(postToDelete);
 			navigate(-1); // Go back since post is deleted
 		} catch (err) {
-			console.error('Error deleting post:', err);
-			setError('Failed to delete post.');
+			console.error("Error deleting post:", err);
+			setError("Failed to delete post.");
 		} finally {
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
@@ -168,7 +171,7 @@ const PostDetailPage = () => {
 		const diffHours = Math.floor(diffMs / 3600000);
 		const diffDays = Math.floor(diffMs / 86400000);
 
-		if (diffMins < 1) return 'now';
+		if (diffMins < 1) return "now";
 		if (diffMins < 60) return `${diffMins}m`;
 		if (diffHours < 24) return `${diffHours}h`;
 		return `${diffDays}d`;
@@ -177,7 +180,7 @@ const PostDetailPage = () => {
 	if (loading) {
 		return (
 			<Container className="text-center py-5">
-				<Spinner animation="border" />
+				<Spinner animation="border" variant="primary" />
 			</Container>
 		);
 	}
@@ -198,7 +201,8 @@ const PostDetailPage = () => {
 					variant="link"
 					size="sm"
 					className="text-dark p-0"
-					onClick={() => navigate(-1)}>
+					onClick={() => navigate(-1)}
+				>
 					<ArrowLeft size={20} />
 				</Button>
 				<h5 className="mb-0">Post</h5>
@@ -229,17 +233,19 @@ const PostDetailPage = () => {
 										<span className="text-primary">✓</span>
 									)}
 									<span className="text-muted">·</span>
-									<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
+									<span className="text-muted small">
+										{formatTimeAgo(post.createdAt)}
+									</span>
 								</div>
 								<Button
-									variant="link" 
+									variant="link"
 									className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
 									style={{
-										width: '32px',
-										height: '32px',
-										background: 'none',
-										border: 'none !important',
-										boxShadow: 'none !important'
+										width: "32px",
+										height: "32px",
+										background: "none",
+										border: "none !important",
+										boxShadow: "none !important",
 									}}
 									onClick={() => setShowPostOptionsModal(true)}
 								>
@@ -247,9 +253,7 @@ const PostDetailPage = () => {
 								</Button>
 							</div>
 
-							{post.content && (
-								<p className="mb-2 mt-2 fs-5">{post.content}</p>
-							)}
+							{post.content && <p className="mb-2 mt-2 fs-5">{post.content}</p>}
 
 							{post.imageUrls && post.imageUrls.length > 0 && (
 								<div className="mb-2">
@@ -261,7 +265,7 @@ const PostDetailPage = () => {
 											style={{
 												height: "300px",
 												objectFit: "cover",
-												cursor: "pointer"
+												cursor: "pointer",
 											}}
 											onClick={() => openImageViewer(post.imageUrls, 0)}
 										/>
@@ -275,35 +279,50 @@ const PostDetailPage = () => {
 													className="rounded w-100 h-100"
 													style={{
 														objectFit: "cover",
-														cursor: "pointer"
+														cursor: "pointer",
 													}}
 													onClick={() => openImageViewer(post.imageUrls, 0)}
 												/>
 											</div>
 											{/* Right side with stacked images */}
 											{post.imageUrls.length > 1 && (
-												<div className="d-flex flex-column gap-2" style={{ flex: "1" }}>
-													<div style={{ height: post.imageUrls.length > 2 ? "calc(50% - 4px)" : "100%" }}>
+												<div
+													className="d-flex flex-column gap-2"
+													style={{ flex: "1" }}
+												>
+													<div
+														style={{
+															height:
+																post.imageUrls.length > 2
+																	? "calc(50% - 4px)"
+																	: "100%",
+														}}
+													>
 														<Image
 															src={post.imageUrls[1]}
 															className="rounded w-100 h-100"
 															style={{
 																objectFit: "cover",
-																cursor: "pointer"
+																cursor: "pointer",
 															}}
 															onClick={() => openImageViewer(post.imageUrls, 1)}
 														/>
 													</div>
 													{post.imageUrls.length > 2 && (
-														<div style={{ height: "calc(50% - 4px)" }} className="position-relative">
+														<div
+															style={{ height: "calc(50% - 4px)" }}
+															className="position-relative"
+														>
 															<Image
 																src={post.imageUrls[2]}
 																className="rounded w-100 h-100"
 																style={{
 																	objectFit: "cover",
-																	cursor: "pointer"
+																	cursor: "pointer",
 																}}
-																onClick={() => openImageViewer(post.imageUrls, 2)}
+																onClick={() =>
+																	openImageViewer(post.imageUrls, 2)
+																}
 															/>
 															{/* Show more indicator */}
 															{post.imageUrls.length > 3 && (
@@ -314,9 +333,11 @@ const PostDetailPage = () => {
 																		cursor: "pointer",
 																		color: "white",
 																		fontWeight: "bold",
-																		fontSize: "1.2rem"
+																		fontSize: "1.2rem",
 																	}}
-																	onClick={() => openImageViewer(post.imageUrls, 2)}
+																	onClick={() =>
+																		openImageViewer(post.imageUrls, 2)
+																	}
 																>
 																	+{post.imageUrls.length - 3}
 																</div>
@@ -330,28 +351,47 @@ const PostDetailPage = () => {
 								</div>
 							)}
 
-							<div className="d-flex justify-content-around text-muted mt-3 pt-2 border-top" style={{ maxWidth: '400px' }}>
+							<div className="d-flex align-items-center justify-content-between">
+								{post.likes.length > 0 &&
+									(post.likes[0].user.uid === user.uid ? (
+										<div className="small text-muted">
+											<span className="fw-bold">You</span>{" "}
+											{post.likes.length > 1
+												? "& " + post.likes.length - 1 + " reacted."
+												: " reacted."}
+										</div>
+									) : (
+										""
+									))}
+							</div>
+
+							<div
+								className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
+								style={{ maxWidth: "400px" }}
+							>
 								<Button
 									variant="link"
 									size="sm"
 									className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-									style={{ 
-										transition: 'all 0.2s',
-										minWidth: '40px',
-										height: '36px'
+									style={{
+										transition: "all 0.2s",
+										minWidth: "40px",
+										height: "36px",
 									}}
 									onMouseEnter={(e) => {
-										e.target.closest('.action-btn').style.backgroundColor = 'rgba(29, 161, 242, 0.1)';
-										e.target.closest('.action-btn').style.color = '#1da1f2';
+										e.target.closest(".action-btn").style.backgroundColor =
+											"rgba(29, 161, 242, 0.1)";
+										e.target.closest(".action-btn").style.color = "#1da1f2";
 									}}
 									onMouseLeave={(e) => {
-										e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-										e.target.closest('.action-btn').style.color = '#6c757d';
+										e.target.closest(".action-btn").style.backgroundColor =
+											"transparent";
+										e.target.closest(".action-btn").style.color = "#6c757d";
 									}}
 								>
 									<ChatDots size={24} style={{ flexShrink: 0 }} />
-									{post._count.comments > 0 && (
-										<span className="small">{post._count.comments}</span>
+									{post.stats.comments > 0 && (
+										<span className="small">{post.stats.comments}</span>
 									)}
 								</Button>
 
@@ -360,32 +400,48 @@ const PostDetailPage = () => {
 									size="sm"
 									className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 									style={{
-										color: (post.likes || []).some(like => like.userId === user.uid) ? '#dc3545' : '#6c757d',
-										transition: 'all 0.2s',
-										minWidth: '40px',
-										height: '36px'
+										color: (post.likes || []).some(
+											(like) => like.user.uid === user.uid,
+										)
+											? "#dc3545"
+											: "#6c757d",
+										transition: "all 0.2s",
+										minWidth: "40px",
+										height: "36px",
 									}}
 									onClick={handleLikePost}
 									onMouseEnter={(e) => {
-										if (!(post.likes || []).some(like => like.userId === user.uid)) {
-											e.target.closest('.action-btn').style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
-											e.target.closest('.action-btn').style.color = '#dc3545';
+										if (
+											!(post.likes || []).some(
+												(like) => like.user.uid === user.uid,
+											)
+										) {
+											e.target.closest(".action-btn").style.backgroundColor =
+												"rgba(220, 53, 69, 0.1)";
+											e.target.closest(".action-btn").style.color = "#dc3545";
 										}
 									}}
 									onMouseLeave={(e) => {
-										if (!(post.likes || []).some(like => like.userId === user.uid)) {
-											e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-											e.target.closest('.action-btn').style.color = '#6c757d';
+										if (
+											!(post.likes || []).some(
+												(like) => like.user.uid === user.uid,
+											)
+										) {
+											e.target.closest(".action-btn").style.backgroundColor =
+												"transparent";
+											e.target.closest(".action-btn").style.color = "#6c757d";
 										}
 									}}
 								>
-									{(post.likes || []).some(like => like.userId === user.uid) ? (
+									{(post.likes || []).some(
+										(like) => like.user.uid === user.uid,
+									) ? (
 										<HeartFill size={24} style={{ flexShrink: 0 }} />
 									) : (
 										<Heart size={24} style={{ flexShrink: 0 }} />
 									)}
-									{post._count.likes > 0 && (
-										<span className="small">{post._count.likes}</span>
+									{post.stats.likes > 0 && (
+										<span className="small">{post.stats.likes}</span>
 									)}
 								</Button>
 
@@ -393,19 +449,21 @@ const PostDetailPage = () => {
 									variant="link"
 									size="sm"
 									className="text-muted p-2 border-0 rounded-circle action-btn"
-									style={{ 
-										transition: 'all 0.2s',
-										minWidth: '40px',
-										height: '36px'
+									style={{
+										transition: "all 0.2s",
+										minWidth: "40px",
+										height: "36px",
 									}}
 									onClick={() => handleSharePost(post.id)}
 									onMouseEnter={(e) => {
-										e.target.closest('.action-btn').style.backgroundColor = 'rgba(23, 191, 99, 0.1)';
-										e.target.closest('.action-btn').style.color = '#17bf63';
+										e.target.closest(".action-btn").style.backgroundColor =
+											"rgba(23, 191, 99, 0.1)";
+										e.target.closest(".action-btn").style.color = "#17bf63";
 									}}
 									onMouseLeave={(e) => {
-										e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-										e.target.closest('.action-btn').style.color = '#6c757d';
+										e.target.closest(".action-btn").style.backgroundColor =
+											"transparent";
+										e.target.closest(".action-btn").style.color = "#6c757d";
 									}}
 								>
 									<Share size={24} style={{ flexShrink: 0 }} />
@@ -443,8 +501,13 @@ const PostDetailPage = () => {
 										type="submit"
 										size="sm"
 										disabled={!newComment.trim() || submitting}
-										className="rounded-pill px-3">
-										{submitting ? <Spinner size="sm" animation="border" /> : "Reply"}
+										className="rounded-pill px-3"
+									>
+										{submitting ? (
+											<Spinner size="sm" animation="border" />
+										) : (
+											"Reply"
+										)}
 									</Button>
 								</div>
 							</div>
@@ -464,7 +527,10 @@ const PostDetailPage = () => {
 						<Card.Body className="px-3 py-3">
 							<div className="d-flex gap-3">
 								<Image
-									src={comment.author.photoURL || "https://i.pravatar.cc/150?img=10"}
+									src={
+										comment.author.photoURL ||
+										"https://i.pravatar.cc/150?img=10"
+									}
 									alt="avatar"
 									roundedCircle
 									width="40"
@@ -476,31 +542,41 @@ const PostDetailPage = () => {
 										{comment.author.hasBlueCheck && (
 											<span className="text-primary">✓</span>
 										)}
-										<span className="text-muted">@{comment.author.username}</span>
+										<span className="text-muted">
+											@{comment.author.username}
+										</span>
 										<span className="text-muted">·</span>
-										<span className="text-muted small">{formatTimeAgo(comment.createdAt)}</span>
+										<span className="text-muted small">
+											{formatTimeAgo(comment.createdAt)}
+										</span>
 									</div>
 
 									<p className="mb-2 mt-1">{comment.content}</p>
 
 									<div className="d-flex gap-4 text-muted">
-										<OverlayTrigger placement="bottom" overlay={<Tooltip>Reply</Tooltip>}>
+										<OverlayTrigger
+											placement="bottom"
+											overlay={<Tooltip>Reply</Tooltip>}
+										>
 											<Button
 												variant="link"
 												size="sm"
 												className="text-muted p-1 border-0 d-flex align-items-center gap-1 rounded-circle"
-												style={{ width: '28px', height: '28px' }}
+												style={{ width: "28px", height: "28px" }}
 											>
 												<ChatDots size={14} />
 											</Button>
 										</OverlayTrigger>
 
-										<OverlayTrigger placement="bottom" overlay={<Tooltip>Like</Tooltip>}>
+										<OverlayTrigger
+											placement="bottom"
+											overlay={<Tooltip>Like</Tooltip>}
+										>
 											<Button
 												variant="link"
 												size="sm"
 												className="text-muted p-1 border-0 d-flex align-items-center gap-1 rounded-circle"
-												style={{ width: '28px', height: '28px' }}
+												style={{ width: "28px", height: "28px" }}
 											>
 												<Heart size={14} />
 											</Button>
@@ -512,21 +588,23 @@ const PostDetailPage = () => {
 					</Card>
 				))
 			)}
-		{/* Image Viewer Modal */}
+			{/* Image Viewer Modal */}
 			{showImageViewer && (
 				<Modal
 					show={showImageViewer}
 					onHide={closeImageViewer}
 					centered
 					size="lg"
-					className="image-viewer-modal">
+					className="image-viewer-modal"
+				>
 					<Modal.Body className="p-0 bg-dark text-center">
 						<div className="position-relative">
 							<Button
 								variant="link"
 								className="position-absolute top-0 end-0 m-2 text-white"
 								style={{ zIndex: 10 }}
-								onClick={closeImageViewer}>
+								onClick={closeImageViewer}
+							>
 								<X size={24} />
 							</Button>
 
@@ -537,7 +615,10 @@ const PostDetailPage = () => {
 										className="position-absolute top-50 start-0 translate-middle-y text-white ms-2"
 										style={{ zIndex: 10 }}
 										disabled={currentImageIndex === 0}
-										onClick={() => setCurrentImageIndex(prev => Math.max(0, prev - 1))}>
+										onClick={() =>
+											setCurrentImageIndex((prev) => Math.max(0, prev - 1))
+										}
+									>
 										<ChevronLeft size={32} />
 									</Button>
 
@@ -546,7 +627,12 @@ const PostDetailPage = () => {
 										className="position-absolute top-50 end-0 translate-middle-y text-white me-2"
 										style={{ zIndex: 10 }}
 										disabled={currentImageIndex === currentImages.length - 1}
-										onClick={() => setCurrentImageIndex(prev => Math.min(currentImages.length - 1, prev + 1))}>
+										onClick={() =>
+											setCurrentImageIndex((prev) =>
+												Math.min(currentImages.length - 1, prev + 1),
+											)
+										}
+									>
 										<ChevronRight size={32} />
 									</Button>
 								</>
@@ -557,7 +643,7 @@ const PostDetailPage = () => {
 								className="w-100"
 								style={{
 									maxHeight: "80vh",
-									objectFit: "contain"
+									objectFit: "contain",
 								}}
 							/>
 
@@ -582,31 +668,33 @@ const PostDetailPage = () => {
 				</Modal.Header>
 				<Modal.Body className="p-0">
 					<div className="list-group list-group-flush">
-						<button 
+						<button
 							className="list-group-item list-group-item-action border-0"
 							onClick={() => {
-								navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+								navigator.clipboard.writeText(
+									`${window.location.origin}/post/${post.id}`,
+								);
 								setShowPostOptionsModal(false);
 							}}
 						>
 							Copy Link
 						</button>
-						<button 
+						<button
 							className="list-group-item list-group-item-action border-0"
 							onClick={() => setShowPostOptionsModal(false)}
 						>
 							Repost
 						</button>
 						{post.author.id !== user.uid && (
-							<button 
+							<button
 								className="list-group-item list-group-item-action border-0 text-danger"
 								onClick={() => setShowPostOptionsModal(false)}
 							>
 								Report
 							</button>
 						)}
-						{post.author.id === user.uid && (
-							<button 
+						{post.author.uid === user.uid && (
+							<button
 								className="list-group-item list-group-item-action border-0 text-danger"
 								onClick={() => {
 									setShowPostOptionsModal(false);

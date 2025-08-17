@@ -12,7 +12,7 @@ import {
 	InputGroup,
 	Card,
 	Spinner,
-	Alert
+	Alert,
 } from "react-bootstrap";
 import {
 	Globe,
@@ -28,7 +28,7 @@ import {
 	Share,
 	ChevronLeft,
 	ChevronRight,
-	ThreeDots
+	ThreeDots,
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
@@ -173,7 +173,7 @@ const HomePage = () => {
 			const postData = {
 				content: postText,
 				privacy: privacy.toLowerCase(),
-				postType: isLive ? "live" : "text",
+				postType: isLive ? "live_video" : "text",
 			};
 
 			if (liveVideoUrl && isLive) {
@@ -249,8 +249,8 @@ const HomePage = () => {
 		if (navigator.share) {
 			try {
 				await navigator.share({
-					title: 'Check out this post',
-					url: postUrl
+					title: "Check out this post",
+					url: postUrl,
 				});
 			} catch (err) {
 				// Fallback to clipboard if sharing fails
@@ -262,14 +262,18 @@ const HomePage = () => {
 				await navigator.clipboard.writeText(postUrl);
 				// You could show a toast notification here
 			} catch (err) {
-				console.error('Failed to copy to clipboard:', err);
+				console.error("Failed to copy to clipboard:", err);
 			}
 		}
 	};
 
 	const handlePostClick = (postId, e) => {
 		// Don't navigate if clicking on interactive elements
-		if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.dropdown')) {
+		if (
+			e.target.closest("button") ||
+			e.target.closest("a") ||
+			e.target.closest(".dropdown")
+		) {
 			return;
 		}
 		window.location.href = `/post/${postId}`;
@@ -282,15 +286,17 @@ const HomePage = () => {
 			setPosts((prev) =>
 				prev.map((post) => {
 					if (post.id === postId) {
-						const isLiked = post.likes.some((like) => like.userId === user.uid);
+						const isLiked = post.likes.some(
+							(like) => like.user.uid === user.uid,
+						);
 						return {
 							...post,
 							likes: isLiked
-								? post.likes.filter((like) => like.userId !== user.uid)
-								: [...post.likes, { userId: user.uid }],
-							_count: {
-								...post._count,
-								likes: isLiked ? post._count.likes - 1 : post._count.likes + 1,
+								? post.likes.filter((like) => like.user.uid !== user.uid)
+								: [...post.likes, { user: {uid: user.uid }}],
+							stats: {
+								...post.stats,
+								likes: isLiked ? post.stats.likes - 1 : post.stats.likes + 1,
 							},
 						};
 					}
@@ -399,11 +405,14 @@ const HomePage = () => {
 					</div>
 				) : (
 					<>
+						<div className="d-flex align-items-center justify-content-between px-3 py-2">
+							<span className="fw-bold fs-3">For you</span>
+						</div>
 						{posts.map((post) => (
 							<Card
 								key={post.id}
 								className="border-0 border-bottom rounded-0 mb-0 post-card"
-								style={{ cursor: 'pointer' }}
+								style={{ cursor: "pointer" }}
 								onClick={(e) => handlePostClick(post.id, e)}
 							>
 								<Card.Body className="px-3">
@@ -440,14 +449,14 @@ const HomePage = () => {
 													</span>
 												</div>
 												<Button
-													variant="link" 
+													variant="link"
 													className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
 													style={{
-														width: '32px',
-														height: '32px',
-														background: 'none',
-														border: 'none !important',
-														boxShadow: 'none !important'
+														width: "32px",
+														height: "32px",
+														background: "none",
+														border: "none !important",
+														boxShadow: "none !important",
 													}}
 													onClick={(e) => {
 														e.stopPropagation();
@@ -579,32 +588,57 @@ const HomePage = () => {
 												</div>
 											)}
 
-											<div className="d-flex justify-content-around text-muted mt-3 pt-2 border-top" style={{ maxWidth: '400px' }}>
+											<div className="d-flex align-items-center justify-content-between">
+												{post.likes.length > 0 &&
+													(post.likes[0].user.uid === user.uid ? (
+														<div className="small text-muted">
+															<span className="fw-bold">You</span>{" "}
+															{post.likes.length > 1
+																? "& " + post.likes.length - 1 + " reacted."
+																: " reacted."}
+														</div>
+													) : (
+														""
+													))}
+											</div>
+
+											<div
+												className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
+												style={{ maxWidth: "400px" }}
+											>
 												<Button
 													variant="link"
 													size="sm"
 													className="text-muted p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-													style={{ 
-														transition: 'all 0.2s',
-														minWidth: '40px',
-														height: '36px'
+													style={{
+														transition: "all 0.2s",
+														minWidth: "40px",
+														height: "36px",
 													}}
 													onClick={(e) => {
 														e.stopPropagation();
 														window.location.href = `/post/${post.id}`;
 													}}
 													onMouseEnter={(e) => {
-														e.target.closest('.action-btn').style.backgroundColor = 'rgba(29, 161, 242, 0.1)';
-														e.target.closest('.action-btn').style.color = '#1da1f2';
+														e.target.closest(
+															".action-btn",
+														).style.backgroundColor = "rgba(29, 161, 242, 0.1)";
+														e.target.closest(".action-btn").style.color =
+															"#1da1f2";
 													}}
 													onMouseLeave={(e) => {
-														e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-														e.target.closest('.action-btn').style.color = '#6c757d';
+														e.target.closest(
+															".action-btn",
+														).style.backgroundColor = "transparent";
+														e.target.closest(".action-btn").style.color =
+															"#6c757d";
 													}}
 												>
 													<ChatDots size={20} style={{ flexShrink: 0 }} />
-													{post._count.comments > 0 && (
-														<span className="small">{post._count.comments}</span>
+													{post.stats?.comments > 0 && (
+														<span className="small">
+															{post.stats?.comments}
+														</span>
 													)}
 												</Button>
 
@@ -612,36 +646,57 @@ const HomePage = () => {
 													variant="link"
 													size="sm"
 													className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
-													style={{ 
-														color: post.likes.some((like) => like.userId === user.uid) ? "#dc3545" : "#6c757d",
-														transition: 'all 0.2s',
-														minWidth: '40px',
-														height: '36px'
+													style={{
+														color: post?.likes.some(
+															(like) => like.user.uid === user.uid,
+														)
+															? "#dc3545"
+															: "#6c757d",
+														transition: "all 0.2s",
+														minWidth: "40px",
+														height: "36px",
 													}}
 													onClick={(e) => {
 														e.stopPropagation();
 														handleLikePost(post.id);
 													}}
 													onMouseEnter={(e) => {
-														if (!post.likes.some((like) => like.userId === user.uid)) {
-															e.target.closest('.action-btn').style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
-															e.target.closest('.action-btn').style.color = '#dc3545';
+														if (
+															!post?.likes.some(
+																(like) => like.user.uid === user.uid,
+															)
+														) {
+															e.target.closest(
+																".action-btn",
+															).style.backgroundColor =
+																"rgba(220, 53, 69, 0.1)";
+															e.target.closest(".action-btn").style.color =
+																"#dc3545";
 														}
 													}}
 													onMouseLeave={(e) => {
-														if (!post.likes.some((like) => like.userId === user.uid)) {
-															e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-															e.target.closest('.action-btn').style.color = '#6c757d';
+														if (
+															!post.likes.some(
+																(like) => like.user.uid === user.uid,
+															)
+														) {
+															e.target.closest(
+																".action-btn",
+															).style.backgroundColor = "transparent";
+															e.target.closest(".action-btn").style.color =
+																"#6c757d";
 														}
 													}}
 												>
-													{post.likes.some((like) => like.userId === user.uid) ? (
+													{post.likes.some(
+														(like) => like.user.uid === user.uid,
+													) ? (
 														<HeartFill size={20} style={{ flexShrink: 0 }} />
 													) : (
 														<Heart size={20} style={{ flexShrink: 0 }} />
 													)}
-													{post._count.likes > 0 && (
-														<span className="small">{post._count.likes}</span>
+													{post.stats.likes > 0 && (
+														<span className="small">{post.stats.likes}</span>
 													)}
 												</Button>
 
@@ -649,22 +704,28 @@ const HomePage = () => {
 													variant="link"
 													size="sm"
 													className="text-muted p-2 border-0 rounded-circle action-btn"
-													style={{ 
-														transition: 'all 0.2s',
-														minWidth: '40px',
-														height: '36px'
+													style={{
+														transition: "all 0.2s",
+														minWidth: "40px",
+														height: "36px",
 													}}
 													onClick={(e) => {
 														e.stopPropagation();
 														handleSharePost(post.id);
 													}}
 													onMouseEnter={(e) => {
-														e.target.closest('.action-btn').style.backgroundColor = 'rgba(23, 191, 99, 0.1)';
-														e.target.closest('.action-btn').style.color = '#17bf63';
+														e.target.closest(
+															".action-btn",
+														).style.backgroundColor = "rgba(23, 191, 99, 0.1)";
+														e.target.closest(".action-btn").style.color =
+															"#17bf63";
 													}}
 													onMouseLeave={(e) => {
-														e.target.closest('.action-btn').style.backgroundColor = 'transparent';
-														e.target.closest('.action-btn').style.color = '#6c757d';
+														e.target.closest(
+															".action-btn",
+														).style.backgroundColor = "transparent";
+														e.target.closest(".action-btn").style.color =
+															"#6c757d";
 													}}
 												>
 													<Share size={20} style={{ flexShrink: 0 }} />
@@ -739,7 +800,6 @@ const HomePage = () => {
 											fontSize: "0.875rem",
 											fontWeight: "600",
 										}}
-										onClick={(e) => e.stopPropagation()}
 									>
 										{privacyOptions[privacy]} {privacy}
 									</Dropdown.Toggle>
@@ -841,7 +901,7 @@ const HomePage = () => {
 									onChange={handleFileChange}
 									accept="image/*"
 									multiple
-									style={{ display: 'none' }}
+									style={{ display: "none" }}
 								/>
 								<Button
 									variant="link"
@@ -1024,7 +1084,9 @@ const HomePage = () => {
 									className="w-100 px-3 post-card text-start text-decoration-none text-dark p-2"
 									onClick={(e) => {
 										e.stopPropagation();
-										navigator.clipboard.writeText(`${window.location.origin}/post/${selectedPost.id}`);
+										navigator.clipboard.writeText(
+											`${window.location.origin}/post/${selectedPost.id}`,
+										);
 										closePostOptionsModal();
 									}}
 								>
