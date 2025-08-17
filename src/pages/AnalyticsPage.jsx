@@ -31,7 +31,6 @@ import {
 	Star,
 	Lightning,
 	CurrencyDollar,
-	TrendingUp,
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
