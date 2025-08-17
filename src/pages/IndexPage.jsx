@@ -33,6 +33,15 @@ const IndexPage = () => {
 		);
 	}
 
+	// Check if it's subscription page
+	if (pathname === '/subscription') {
+		return (
+			<NavigationView user={user}>
+				<SubscriptionPage />
+			</NavigationView>
+		);
+	}
+
 	
 
 	// Check if it's a profile page (username path)
