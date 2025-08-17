@@ -58,7 +58,7 @@ const SettingsPage = () => {
 	// Check if user is trying to access their own settings
 	if (user.username !== username) {
 		return (
-			<Container className="text-center py-5">
+			<Container className="text-center px-3 py-5">
 				<Alert variant="danger">
 					You can only access your own settings.
 				</Alert>
@@ -183,7 +183,7 @@ const SettingsPage = () => {
 					variant={messageType}
 					dismissible
 					onClose={() => setMessage("")}
-					className="mb-4">
+					className="mx-3'mb-4">
 					{message}
 				</Alert>
 			)}
@@ -194,7 +194,7 @@ const SettingsPage = () => {
 					<Shield size={20} />
 					<h5 className="mb-0">Profile Settings</h5>
 				</Card.Header>
-				<Card.Body>
+				<Card.Body className="px-3">
 					<Form>
 						<Row>
 							<Col md={6}>
@@ -274,7 +274,7 @@ const SettingsPage = () => {
 				<Card.Header className="d-flex align-items-center gap-2">
 					<h5 className="mb-0">Posts</h5>
 				</Card.Header>
-				<Card.Body>
+				<Card.Body className="px-3">
 					{user.posts && user.posts.length > 0 ? (
 						user.posts.map(post => (
 							<div key={post.id} className="mb-3 pb-3 border-bottom">
@@ -306,7 +306,7 @@ const SettingsPage = () => {
 								<div className="d-flex justify-content-between">
 									<small className="text-muted">{new Date(post.createdAt).toLocaleString()}</small>
 									<div>
-										{post._count.likes} Likes {/* Placeholder for like functionality */}
+										{post.stats.likes} Likes {/* Placeholder for like functionality */}
 										{/* Placeholder for comment count and functionality */}
 									</div>
 								</div>
@@ -325,7 +325,7 @@ const SettingsPage = () => {
 					<Eye size={20} />
 					<h5 className="mb-0">Privacy Settings</h5>
 				</Card.Header>
-				<Card.Body>
+				<Card.Body className="px-3">
 					<Form>
 						<Form.Group className="mb-3">
 							<Form.Label>Profile Visibility</Form.Label>
@@ -405,7 +405,7 @@ const SettingsPage = () => {
 					<Bell size={20} />
 					<h5 className="mb-0">Account Settings</h5>
 				</Card.Header>
-				<Card.Body>
+				<Card.Body className="px-3">
 					<div className="d-flex flex-column gap-3">
 						<div className="d-flex justify-content-between align-items-center">
 							<div>
