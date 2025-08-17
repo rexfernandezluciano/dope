@@ -22,7 +22,7 @@ import {
 } from "react-bootstrap";
 import {
 	BarChart,
-	TrendingUp,
+	GraphUp as TrendingUp,
 	Heart,
 	MessageCircle,
 	Share,
