@@ -56,6 +56,33 @@ const SubscriptionPage = () => {
 	const [showCancelModal, setShowCancelModal] = useState(false);
 	const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
 
+	// Helper functions
+	const getImageLimit = (plan) => {
+		switch (plan) {
+			case "premium": return 10;
+			case "pro": return "unlimited";
+			default: return 3;
+		}
+	};
+
+	const checkNameChangeLimit = (lastChange) => {
+		if (!lastChange) return false;
+		const fourteenDaysAgo = new Date();
+		fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+		return new Date(lastChange) > fourteenDaysAgo;
+	};
+
+	const getDaysUntilNameChange = (lastChange) => {
+		if (!lastChange) return 0;
+		const changeDate = new Date(lastChange);
+		const fourteenDaysLater = new Date(changeDate);
+		fourteenDaysLater.setDate(fourteenDaysLater.getDate() + 14);
+		const now = new Date();
+		const diffTime = fourteenDaysLater - now;
+		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+		return Math.max(0, diffDays);
+	};
+
 	useEffect(() => {
 		if (user) {
 			setSubscription({
@@ -90,32 +117,6 @@ const SubscriptionPage = () => {
 			</Container>
 		);
 	}
-
-	const getImageLimit = (plan) => {
-		switch (plan) {
-			case "premium": return 10;
-			case "pro": return "unlimited";
-			default: return 3;
-		}
-	};
-
-	const checkNameChangeLimit = (lastChange) => {
-		if (!lastChange) return false;
-		const fourteenDaysAgo = new Date();
-		fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-		return new Date(lastChange) > fourteenDaysAgo;
-	};
-
-	const getDaysUntilNameChange = (lastChange) => {
-		if (!lastChange) return 0;
-		const changeDate = new Date(lastChange);
-		const fourteenDaysLater = new Date(changeDate);
-		fourteenDaysLater.setDate(fourteenDaysLater.getDate() + 14);
-		const now = new Date();
-		const diffTime = fourteenDaysLater - now;
-		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-		return Math.max(0, diffDays);
-	};
 
 	const subscriptionPlans = [
 		{
