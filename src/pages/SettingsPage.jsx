@@ -28,6 +28,8 @@ const SettingsPage = () => {
 	const [message, setMessage] = useState("");
 	const [messageType, setMessageType] = useState("success");
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [profileImagePreview, setProfileImagePreview] = useState("");
+	const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
 
 	useEffect(() => {
 		if (user) {
@@ -67,15 +69,30 @@ const SettingsPage = () => {
 	const handleSaveSettings = async () => {
 		try {
 			setLoading(true);
-			await userAPI.updateUser(username, settings);
+			setUploadingProfileImage(true);
+			let updateData = { ...settings };
+			
+			// Upload profile image if a new file was selected
+			if (settings.profileImageFile) {
+				const uploadedUrl = await uploadProfileImageToCloudinary(settings.profileImageFile);
+				if (uploadedUrl) {
+					updateData.photoURL = uploadedUrl;
+				}
+				// Remove the file from update data
+				delete updateData.profileImageFile;
+			}
+			
+			await userAPI.updateUser(username, updateData);
 			setMessage("Settings updated successfully!");
 			setMessageType("success");
+			setProfileImagePreview("");
 		} catch (err) {
 			console.error('Error updating settings:', err);
 			setMessage(err.message || 'Failed to update settings');
 			setMessageType("danger");
 		} finally {
 			setLoading(false);
+			setUploadingProfileImage(false);
 		}
 	};
 
@@ -83,6 +100,56 @@ const SettingsPage = () => {
 		authAPI.logout();
 		removeAuthToken();
 		navigate("/");
+	};
+
+	const uploadProfileImageToCloudinary = async (file) => {
+		// Handle HEIC files
+		let finalFile = file;
+		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+			try {
+				const heic2any = (await import("heic2any")).default;
+				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
+				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+			} catch (err) {
+				console.error("Error converting HEIC:", err);
+				return null;
+			}
+		}
+
+		const formData = new FormData();
+		formData.append("file", finalFile);
+		formData.append("upload_preset", "dope-network");
+		formData.append("folder", "profile_pictures");
+
+		try {
+			const response = await fetch(
+				"https://api.cloudinary.com/v1_1/zxpic/image/upload",
+				{
+					method: "POST",
+					body: formData,
+				},
+			);
+			const data = await response.json();
+			return data.secure_url;
+		} catch (error) {
+			console.error("Error uploading to Cloudinary:", error);
+			return null;
+		}
+	};
+
+	const handleProfileImageUpload = (e) => {
+		const file = e.target.files[0];
+		if (file) {
+			// Create preview
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				setProfileImagePreview(e.target.result);
+			};
+			reader.readAsDataURL(file);
+			
+			// Store file for later upload
+			setSettings((prev) => ({ ...prev, profileImageFile: file }));
+		}
 	};
 
 	const handleDeleteAccount = async () => {
@@ -143,12 +210,42 @@ const SettingsPage = () => {
 							</Col>
 							<Col md={6}>
 								<Form.Group className="mb-3">
-									<Form.Label>Profile Picture URL</Form.Label>
-									<Form.Control
-										type="url"
-										value={settings.photoURL}
-										onChange={(e) => setSettings(prev => ({ ...prev, photoURL: e.target.value }))}
-										placeholder="https://example.com/photo.jpg"
+									<Form.Label>Profile Picture</Form.Label>
+									<div className="d-flex flex-column align-items-center gap-3">
+										<div className="position-relative">
+											<img
+												src={profileImagePreview || settings.photoURL || "https://i.pravatar.cc/150?img=10"}
+												alt="Profile Preview"
+												className="rounded-circle"
+												width={80}
+												height={80}
+												style={{ objectFit: "cover", cursor: "pointer" }}
+												onClick={() => document.getElementById("settings-profile-upload").click()}
+											/>
+											<Button
+												variant="primary"
+												size="sm"
+												className="position-absolute bottom-0 end-0 rounded-circle p-1"
+												style={{ width: "25px", height: "25px", fontSize: "12px" }}
+												onClick={() => document.getElementById("settings-profile-upload").click()}
+											>
+												📷
+											</Button>
+										</div>
+										<Button
+											variant="outline-primary"
+											size="sm"
+											onClick={() => document.getElementById("settings-profile-upload").click()}
+										>
+											Change Photo
+										</Button>
+									</div>
+									<input
+										id="settings-profile-upload"
+										type="file"
+										accept="image/*,.heic"
+										onChange={handleProfileImageUpload}
+										style={{ display: "none" }}
 									/>
 								</Form.Group>
 							</Col>
@@ -350,8 +447,8 @@ const SettingsPage = () => {
 					variant="primary"
 					size="md"
 					onClick={handleSaveSettings}
-					disabled={loading}>
-					{loading ? "Saving..." : "Save Settings"}
+					disabled={loading || uploadingProfileImage}>
+					{uploadingProfileImage ? "Uploading..." : loading ? "Saving..." : "Save Settings"}
 				</Button>
 
 				<Button

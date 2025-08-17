@@ -59,6 +59,8 @@ const ProfilePage = () => {
 	});
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
 	const [selectedPostForOptions, setSelectedPostForOptions] = useState(null);
+	const [profileImagePreview, setProfileImagePreview] = useState("");
+	const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
 
 	const loadProfile = async () => {
 		try {
@@ -186,9 +188,23 @@ const ProfilePage = () => {
 	};
 
 	const uploadProfileImageToCloudinary = async (file) => {
+		// Handle HEIC files
+		let finalFile = file;
+		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+			try {
+				const heic2any = (await import("heic2any")).default;
+				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
+				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+			} catch (err) {
+				console.error("Error converting HEIC:", err);
+				return null;
+			}
+		}
+
 		const formData = new FormData();
-		formData.append("file", file);
+		formData.append("file", finalFile);
 		formData.append("upload_preset", "dope-network");
+		formData.append("folder", "profile_pictures");
 
 		try {
 			const response = await fetch(
@@ -208,21 +224,42 @@ const ProfilePage = () => {
 
 	const handleUpdateProfile = async () => {
 		try {
-			await userAPI.updateUser(username, editForm);
-			setProfileUser((prev) => ({ ...prev, ...editForm }));
+			setUploadingProfileImage(true);
+			let updateData = { ...editForm };
+			
+			// Upload profile image if a new file was selected
+			if (editForm.profileImageFile) {
+				const uploadedUrl = await uploadProfileImageToCloudinary(editForm.profileImageFile);
+				if (uploadedUrl) {
+					updateData.photoURL = uploadedUrl;
+				}
+				// Remove the file from update data
+				delete updateData.profileImageFile;
+			}
+			
+			await userAPI.updateUser(username, updateData);
+			setProfileUser((prev) => ({ ...prev, ...updateData }));
 			setShowEditModal(false);
+			setProfileImagePreview("");
 		} catch (err) {
 			setError(err.message);
+		} finally {
+			setUploadingProfileImage(false);
 		}
 	};
 
-	const handleProfileImageUpload = async (e) => {
+	const handleProfileImageUpload = (e) => {
 		const file = e.target.files[0];
 		if (file) {
-			const url = await uploadProfileImageToCloudinary(file);
-			if (url) {
-				setEditForm((prev) => ({ ...prev, photoURL: url }));
-			}
+			// Create preview
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				setProfileImagePreview(e.target.result);
+			};
+			reader.readAsDataURL(file);
+			
+			// Store file for later upload
+			setEditForm((prev) => ({ ...prev, profileImageFile: file }));
 		}
 	};
 
@@ -653,35 +690,44 @@ const ProfilePage = () => {
 						<Form>
 							<Form.Group className="mb-3">
 								<Form.Label>Profile Picture</Form.Label>
-								<div className="d-flex gap-2">
-									<Form.Control
-										type="url"
-										value={editForm.photoURL}
-										onChange={(e) =>
-											setEditForm((prev) => ({
-												...prev,
-												photoURL: e.target.value,
-											}))
-										}
-										placeholder="https://example.com/photo.jpg"
-										className="form-control-no-shadow"
-									/>
+								<div className="d-flex flex-column align-items-center gap-3">
+									<div className="position-relative">
+										<Image
+											src={profileImagePreview || editForm.photoURL || "https://i.pravatar.cc/150?img=10"}
+											alt="Profile Preview"
+											roundedCircle
+											width={120}
+											height={120}
+											style={{ objectFit: "cover", cursor: "pointer" }}
+											onClick={() => document.getElementById("profile-image-upload").click()}
+										/>
+										<Button
+											variant="primary"
+											size="sm"
+											className="position-absolute bottom-0 end-0 rounded-circle p-2"
+											style={{ width: "35px", height: "35px" }}
+											onClick={() => document.getElementById("profile-image-upload").click()}
+										>
+											📷
+										</Button>
+									</div>
 									<Button
-										variant="outline-secondary"
-										onClick={() =>
-											document.getElementById("profile-image-upload").click()
-										}
+										variant="outline-primary"
+										onClick={() => document.getElementById("profile-image-upload").click()}
 									>
-										Upload
+										Choose Photo
 									</Button>
 								</div>
 								<input
 									id="profile-image-upload"
 									type="file"
-									accept="image/*"
+									accept="image/*,.heic"
 									onChange={handleProfileImageUpload}
 									style={{ display: "none" }}
 								/>
+								<Form.Text className="text-muted d-block text-center mt-2">
+									Click on the avatar or button to upload a new profile picture
+								</Form.Text>
 							</Form.Group>
 							<Form.Group className="mb-3">
 								<Form.Label>Name</Form.Label>
@@ -711,11 +757,22 @@ const ProfilePage = () => {
 						</Form>
 					</Modal.Body>
 					<Modal.Footer>
-						<Button variant="secondary" onClick={() => setShowEditModal(false)}>
+						<Button 
+							variant="secondary" 
+							onClick={() => {
+								setShowEditModal(false);
+								setProfileImagePreview("");
+							}}
+							disabled={uploadingProfileImage}
+						>
 							Cancel
 						</Button>
-						<Button variant="primary" onClick={handleUpdateProfile}>
-							Save Changes
+						<Button 
+							variant="primary" 
+							onClick={handleUpdateProfile}
+							disabled={uploadingProfileImage}
+						>
+							{uploadingProfileImage ? "Uploading..." : "Save Changes"}
 						</Button>
 					</Modal.Footer>
 				</Modal>
