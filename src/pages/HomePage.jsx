@@ -62,7 +62,7 @@ const HomePage = () => {
 	const [postComments, setPostComments] = useState({}); // Store comments for each post
 
 	const loaderData = useLoaderData() || {};
-	const { user } = loaderData;
+	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
 
 	useEffect(() => {
 		loadPosts();
@@ -76,6 +76,7 @@ const HomePage = () => {
 	const loadPosts = async (cursor = null, filter = filterBy) => {
 		try {
 			setLoading(true);
+			setError("");
 			const params = { limit: 20 };
 			if (cursor) params.cursor = cursor;
 
@@ -97,7 +98,7 @@ const HomePage = () => {
 			// Client-side filtering as backup in case API doesn't support it
 			if (filter === "following") {
 				// Filter out current user's own posts
-				processedPosts = response.posts.filter(post => post.author.uid !== user.uid);
+				processedPosts = response.posts.filter(post => post.author.uid !== currentUser.uid);
 			} else if (filter === "for-you") {
 				// Sort by engagement (likes + comments) if not already sorted by API
 				processedPosts = response.posts.sort((a, b) => {
@@ -107,15 +108,38 @@ const HomePage = () => {
 				});
 			}
 
+			// Filter posts based on profile privacy settings
+			const privacyFilteredPosts = processedPosts.filter(post => {
+				const authorPrivacy = post.author.privacy?.profile || 'public';
+
+				// Always show public posts
+				if (authorPrivacy === 'public') return true;
+
+				// Don't show private posts unless it's the current user's post
+				if (authorPrivacy === 'private') {
+					return post.author.uid === currentUser.uid;
+				}
+
+				// Show followers-only posts if current user follows the author or is the author
+				if (authorPrivacy === 'followers') {
+					// Assuming `post.author.isFollowedByCurrentUser` is provided by the API
+					// If not, this logic might need to be adjusted based on how follow status is checked
+					return post.author.uid === currentUser.uid || post.author.isFollowedByCurrentUser;
+				}
+
+				return false;
+			});
+
+
 			if (cursor) {
-				setPosts((prev) => [...prev, ...processedPosts]);
+				setPosts((prev) => [...prev, ...privacyFilteredPosts]);
 				// Fetch comments for new posts only
-				fetchRandomCommentsForPosts(processedPosts);
+				fetchRandomCommentsForPosts(privacyFilteredPosts);
 			} else {
-				setPosts(processedPosts);
+				setPosts(privacyFilteredPosts);
 				// Clear previous comments and fetch new ones
 				setPostComments({});
-				fetchRandomCommentsForPosts(processedPosts);
+				fetchRandomCommentsForPosts(privacyFilteredPosts);
 			}
 			setHasMore(response.hasMore);
 			setNextCursor(response.nextCursor);
@@ -218,7 +242,7 @@ const HomePage = () => {
 
 	const handleFileChange = async (e) => {
 		const files = Array.from(e.target.files);
-		const imageLimit = getImageUploadLimit(user?.subscription);
+		const imageLimit = getImageUploadLimit(currentUser?.subscription);
 
 		if (files.length > imageLimit) {
 			alert(`You can only upload ${imageLimit === Infinity ? 'unlimited' : imageLimit} images per post. ${imageLimit === 3 ? 'Upgrade to Premium or Pro for more uploads.' : ''}`);
@@ -267,7 +291,7 @@ const HomePage = () => {
 
 	const handleSelectGif = (gif) => {
 		const currentPhotos = photos || [];
-		const imageLimit = getImageUploadLimit(user?.subscription);
+		const imageLimit = getImageUploadLimit(currentUser?.subscription);
 
 		if (currentPhotos.length >= imageLimit) {
 			alert(`You can only add up to ${imageLimit === Infinity ? 'unlimited' : imageLimit} images/GIFs. ${imageLimit === 3 ? 'Upgrade to Premium or Pro for more uploads.' : ''}`);
@@ -405,13 +429,13 @@ const HomePage = () => {
 				prev.map((post) => {
 					if (post.id === postId) {
 						const isLiked = post.likes.some(
-							(like) => like.user.uid === user.uid,
+							(like) => like.user.uid === currentUser.uid,
 						);
 						return {
 							...post,
 							likes: isLiked
-								? post.likes.filter((like) => like.user.uid !== user.uid)
-								: [...post.likes, { user: {uid: user.uid }}],
+								? post.likes.filter((like) => like.user.uid !== currentUser.uid)
+								: [...post.likes, { user: {uid: currentUser.uid }}],
 							stats: {
 								...post.stats,
 								likes: isLiked ? post.stats.likes - 1 : post.stats.likes + 1,
@@ -467,7 +491,7 @@ const HomePage = () => {
 					<Card.Body className="px-3 py-3">
 						<div className="d-flex gap-3">
 							<Image
-								src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
+								src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
 								alt="avatar"
 								roundedCircle
 								width="45"
@@ -476,8 +500,8 @@ const HomePage = () => {
 							/>
 							<div className="flex-grow-1">
 								<div className="d-flex align-items-center gap-1 mb-2">
-									<span className="fw-bold">{user?.name}</span>
-									{user?.hasBlueCheck && (
+									<span className="fw-bold">{currentUser?.name}</span>
+									{currentUser?.hasBlueCheck && (
 										<CheckCircleFill className="text-primary" size={16} />
 									)}
 								</div>
@@ -533,7 +557,7 @@ const HomePage = () => {
 								<PostCard
 									key={post.id}
 									post={post}
-									currentUser={user}
+									currentUser={currentUser}
 									onLike={handleLikePost}
 									onShare={() => sharePost(post.id)} // Use reusable sharePost utility
 									onDeletePost={handleDeletePost}
@@ -580,7 +604,7 @@ const HomePage = () => {
 					<Modal.Body className="overflow-x-hidden">
 						<div className="d-flex gap-3 mb-3">
 							<Image
-								src={user?.photoURL ?? "https://i.pravatar.cc/150?img=10"}
+								src={currentUser?.photoURL ?? "https://i.pravatar.cc/150?img=10"}
 								alt="avatar"
 								roundedCircle
 								width="48"
@@ -589,8 +613,8 @@ const HomePage = () => {
 
 							<div className="flex-grow-1">
 								<div className="d-flex align-items-center gap-1 mb-2">
-									<span className="fw-bold">{user?.name}</span>
-									{user?.hasBlueCheck && (
+									<span className="fw-bold">{currentUser?.name}</span>
+									{currentUser?.hasBlueCheck && (
 										<CheckCircleFill className="text-primary" size={16} />
 									)}
 								</div>
@@ -691,12 +715,12 @@ const HomePage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-1 ${photos?.length >= getImageUploadLimit(user?.subscription) ? "text-secondary" : "text-muted"}`}
+									className={`p-1 ${photos?.length >= getImageUploadLimit(currentUser?.subscription) ? "text-secondary" : "text-muted"}`}
 									onClick={handlePhotoClick}
-									disabled={photos?.length >= getImageUploadLimit(user?.subscription)}
+									disabled={photos?.length >= getImageUploadLimit(currentUser?.subscription)}
 									title={
-										photos?.length >= getImageUploadLimit(user?.subscription)
-											? `Maximum ${getImageUploadLimit(user?.subscription)} images allowed`
+										photos?.length >= getImageUploadLimit(currentUser?.subscription)
+											? `Maximum ${getImageUploadLimit(currentUser?.subscription)} images allowed`
 											: "Add photo"
 									}
 								>
@@ -713,12 +737,12 @@ const HomePage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-1 ${photos?.length >= getImageUploadLimit(user?.subscription) ? "text-secondary" : "text-muted"}`}
+									className={`p-1 ${photos?.length >= getImageUploadLimit(currentUser?.subscription) ? "text-secondary" : "text-muted"}`}
 									onClick={() => setShowStickerModal(true)}
-									disabled={photos?.length >= getImageUploadLimit(user?.subscription)}
+									disabled={photos?.length >= getImageUploadLimit(currentUser?.subscription)}
 									title={
-										photos?.length >= getImageUploadLimit(user?.subscription)
-											? `Maximum ${getImageUploadLimit(user?.subscription)} images allowed`
+										photos?.length >= getImageUploadLimit(currentUser?.subscription)
+											? `Maximum ${getImageUploadLimit(currentUser?.subscription)} images allowed`
 											: "Add GIF"
 									}
 								>

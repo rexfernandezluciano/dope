@@ -70,7 +70,33 @@ const ProfilePage = () => {
 			}
 
 			// Handle response structure - the API returns user data directly
-			setProfileUser(userResponse.user);
+			const profileUserData = userResponse.user;
+			const profilePrivacy = profileUserData.privacy?.profile || 'public';
+			
+			// Check if current user can view this profile
+			const canViewProfile = () => {
+				// Profile owner can always view their own profile
+				if (profileUserData.uid === currentUser.uid) return true;
+				
+				// Public profiles are visible to everyone
+				if (profilePrivacy === 'public') return true;
+				
+				// Private profiles are only visible to the owner
+				if (profilePrivacy === 'private') return false;
+				
+				// Followers-only profiles are visible to followers
+				if (profilePrivacy === 'followers') {
+					return profileUserData.isFollowedByCurrentUser || false;
+				}
+				
+				return false;
+			};
+			
+			if (!canViewProfile()) {
+				throw new Error("This profile is private");
+			}
+
+			setProfileUser(profileUserData);
 
 			// Set edit form data
 			setEditForm({
@@ -81,12 +107,47 @@ const ProfilePage = () => {
 
 			// Set posts from user response if available
 			if (userResponse.user.posts) {
-				setPosts(userResponse.user.posts);
+				// Filter posts based on profile privacy
+				const filteredPosts = userResponse.user.posts.filter(post => {
+					// Profile owner can see all their posts
+					if (post.author.uid === currentUser.uid) return true;
+					
+					// For other users, respect the profile privacy settings
+					const authorPrivacy = post.author.privacy?.profile || 'public';
+					
+					if (authorPrivacy === 'public') return true;
+					if (authorPrivacy === 'private') return false;
+					if (authorPrivacy === 'followers') {
+						return post.author.isFollowedByCurrentUser || false;
+					}
+					
+					return false;
+				});
+				
+				setPosts(filteredPosts);
 			} else {
 				// Fallback to separate posts API call
 				try {
 					const postsResponse = await postAPI.getPosts({ author: username });
-					setPosts(postsResponse.posts || []);
+					
+					// Filter posts based on profile privacy
+					const filteredPosts = (postsResponse.posts || []).filter(post => {
+						// Profile owner can see all their posts
+						if (post.author.uid === currentUser.uid) return true;
+						
+						// For other users, respect the profile privacy settings
+						const authorPrivacy = post.author.privacy?.profile || 'public';
+						
+						if (authorPrivacy === 'public') return true;
+						if (authorPrivacy === 'private') return false;
+						if (authorPrivacy === 'followers') {
+							return post.author.isFollowedByCurrentUser || false;
+						}
+						
+						return false;
+					});
+					
+					setPosts(filteredPosts);
 				} catch (err) {
 					console.error("Error loading posts:", err);
 					setPosts([]);

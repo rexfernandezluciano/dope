@@ -34,7 +34,7 @@ import { formatTimeAgo, deletePost as deletePostUtil, sharePost } from "../utils
 const PostDetailPage = () => {
 	const { postId } = useParams();
 	const loaderData = useLoaderData() || {};
-	const { user } = loaderData;
+	const { user: currentUser } = loaderData; // Renamed to avoid conflict with 'user' in post.author
 	const navigate = useNavigate();
 	const [post, setPost] = useState(null);
 	const [comments, setComments] = useState([]);
@@ -75,13 +75,13 @@ const PostDetailPage = () => {
 			setPost((prev) => {
 				if (!prev) return prev;
 				const isLiked = (prev.likes || []).some(
-					(like) => like.user.uid === user.uid,
+					(like) => like.user.uid === currentUser.uid,
 				);
 				return {
 					...prev,
 					likes: isLiked
-						? prev.likes.filter((like) => like.user.uid !== user.uid)
-						: [...(prev.likes || []), { user: { uid: user.uid } }],
+						? prev.likes.filter((like) => like.user.uid !== currentUser.uid)
+						: [...(prev.likes || []), { user: { uid: currentUser.uid } }],
 					stats: {
 						...prev.stats,
 						likes: isLiked
@@ -145,17 +145,17 @@ const PostDetailPage = () => {
 	};
 
 	const canComment = (post) => {
-		if (!user) return false;
+		if (!currentUser) return false;
 
 		// Post owner can always comment
-		if (post.author.uid === user.uid) return true;
+		if (post.author.uid === currentUser.uid) return true;
 
 		// Check privacy settings
 		switch (post.privacy) {
 			case "public":
 				return true;
 			case "private":
-				return post.author.uid === user.uid;
+				return post.author.uid === currentUser.uid;
 			case "followers":
 				// Check if current user follows the post author
 				return post.author.isFollowedByCurrentUser || false;
@@ -380,7 +380,7 @@ const PostDetailPage = () => {
 
 							<div className="d-flex align-items-center justify-content-between">
 								{post.likes.length > 0 &&
-									(post.likes[0].user.uid === user.uid ? (
+									(post.likes[0].user.uid === currentUser.uid ? (
 										<div className="small text-muted">
 											<span className="fw-bold">You</span>{" "}
 											{post.likes.length > 1
@@ -438,7 +438,7 @@ const PostDetailPage = () => {
 									className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 									style={{
 										color: (post.likes || []).some(
-											(like) => like.user.uid === user.uid,
+											(like) => like.user.uid === currentUser.uid,
 										)
 											? "#dc3545"
 											: "#6c757d",
@@ -450,7 +450,7 @@ const PostDetailPage = () => {
 									onMouseEnter={(e) => {
 										if (
 											!(post.likes || []).some(
-												(like) => like.user.uid === user.uid,
+												(like) => like.user.uid === currentUser.uid,
 											)
 										) {
 											e.target.closest(".action-btn").style.backgroundColor =
@@ -461,7 +461,7 @@ const PostDetailPage = () => {
 									onMouseLeave={(e) => {
 										if (
 											!(post.likes || []).some(
-												(like) => like.user.uid === user.uid,
+												(like) => like.user.uid === currentUser.uid,
 											)
 										) {
 											e.target.closest(".action-btn").style.backgroundColor =
@@ -471,7 +471,7 @@ const PostDetailPage = () => {
 									}}
 								>
 									{(post.likes || []).some(
-										(like) => like.user.uid === user.uid,
+										(like) => like.user.uid === currentUser.uid,
 									) ? (
 										<HeartFill size={24} style={{ flexShrink: 0 }} />
 									) : (
@@ -518,7 +518,7 @@ const PostDetailPage = () => {
 						<Form onSubmit={handleSubmitComment}>
 							<div className="d-flex gap-3">
 								<Image
-									src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
+									src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
 									alt="avatar"
 									roundedCircle
 									width="40"
@@ -713,7 +713,7 @@ const PostDetailPage = () => {
 						>
 							Repost
 						</button>
-						{post.author.id !== user.uid && (
+						{post.author.id !== currentUser.uid && (
 							<button
 								className="list-group-item list-group-item-action border-0 text-danger"
 								onClick={() => setShowPostOptionsModal(false)}
@@ -721,7 +721,7 @@ const PostDetailPage = () => {
 								Report
 							</button>
 						)}
-						{post.author.uid === user.uid && (
+						{post.author.uid === currentUser.uid && (
 							<button
 								className="list-group-item list-group-item-action border-0 text-danger"
 								onClick={() => {

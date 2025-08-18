@@ -78,7 +78,7 @@ const SettingsPage = () => {
 			setLoading(true);
 			setUploadingProfileImage(true);
 			let updateData = { ...settings };
-			
+
 			// Check name change limit
 			if (settings.name !== user.name && checkNameChangeLimit(user.lastNameChange)) {
 				const daysLeft = Math.ceil((new Date(user.lastNameChange).getTime() + (14 * 24 * 60 * 60 * 1000) - Date.now()) / (24 * 60 * 60 * 1000));
@@ -88,12 +88,12 @@ const SettingsPage = () => {
 				setUploadingProfileImage(false);
 				return;
 			}
-			
+
 			// Add timestamp if name was changed
 			if (settings.name !== user.name) {
 				updateData.lastNameChange = new Date().toISOString();
 			}
-			
+
 			// Upload profile image if a new file was selected
 			if (settings.profileImageFile) {
 				const uploadedUrl = await uploadProfileImageToCloudinary(settings.profileImageFile);
@@ -103,7 +103,7 @@ const SettingsPage = () => {
 				// Remove the file from update data
 				delete updateData.profileImageFile;
 			}
-			
+
 			await userAPI.updateUser(username, updateData);
 			setMessage("Settings updated successfully!");
 			setMessageType("success");
@@ -168,7 +168,7 @@ const SettingsPage = () => {
 				setProfileImagePreview(e.target.result);
 			};
 			reader.readAsDataURL(file);
-			
+
 			// Store file for later upload
 			setSettings((prev) => ({ ...prev, profileImageFile: file }));
 		}

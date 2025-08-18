@@ -77,7 +77,27 @@ const SearchPage = () => {
 				userAPI.searchUsers(searchQuery),
 			]);
 
-			setPosts(postsResponse.posts || []);
+			// Filter search results based on profile privacy
+			const filteredPosts = postsResponse.posts.filter(post => {
+				const authorPrivacy = post.author.privacy?.profile || 'public';
+
+				// Always show public posts
+				if (authorPrivacy === 'public') return true;
+
+				// Don't show private posts unless it's the current user's post
+				if (authorPrivacy === 'private') {
+					return post.author.uid === currentUser.uid;
+				}
+
+				// Show followers-only posts if current user follows the author or is the author
+				if (authorPrivacy === 'followers') {
+					return post.author.uid === currentUser.uid || post.author.isFollowedByCurrentUser;
+				}
+
+				return false;
+			});
+
+			setPosts(filteredPosts || []);
 			setUsers(usersResponse.users || []);
 		} catch (err) {
 			console.error("Search error:", err);
@@ -85,7 +105,7 @@ const SearchPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [searchQuery]);
+	}, [searchQuery, currentUser]); // Added currentUser dependency
 
 	useEffect(() => {
 		if (searchQuery.trim()) {
@@ -153,10 +173,10 @@ const SearchPage = () => {
 
 	const canComment = (post) => {
 		if (!currentUser) return false;
-		
+
 		// Post owner can always comment
 		if (post.author.uid === currentUser.uid) return true;
-		
+
 		// Check privacy settings
 		switch (post.privacy) {
 			case 'public':
