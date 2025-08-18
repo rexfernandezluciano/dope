@@ -627,6 +627,8 @@ const SubscriptionPage = () => {
 						isDefault: false
 					});
 				}}
+				fullscreen="md-down"
+				size="md"
 				centered
 			>
 				<Modal.Header closeButton>
