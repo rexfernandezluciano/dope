@@ -464,7 +464,7 @@ const SettingsPage = () => {
 			</Card>
 
 			{/* Action Buttons */}
-			<div className="px-3 d-grid gap-2">
+			<div className="px-3 px-md-0 d-grid gap-2">
 				<Button
 					variant="primary"
 					size="md"
