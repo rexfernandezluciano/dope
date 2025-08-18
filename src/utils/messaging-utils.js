@@ -1,4 +1,3 @@
-
 import { getToken, onMessage } from "firebase/messaging";
 import { messaging } from "../config/FirebaseConfig";
 import { postAPI } from "../config/ApiConfig";
@@ -9,38 +8,38 @@ import { postAPI } from "../config/ApiConfig";
  */
 export const requestNotificationPermission = async () => {
 	try {
-		if (!messaging || typeof window === 'undefined') return null;
+		if (!messaging || typeof window === "undefined") return null;
 
 		// Check if notifications are supported
-		if (!('Notification' in window)) {
-			console.log('This browser does not support notifications');
+		if (!("Notification" in window)) {
+			console.log("This browser does not support notifications");
 			return null;
 		}
 
 		// Request permission
 		const permission = await Notification.requestPermission();
-		
-		if (permission === 'granted') {
+
+		if (permission === "granted") {
 			// Get FCM token
 			const token = await getToken(messaging, {
-				vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY || 'your-vapid-key'
+				vapidKey: process.env.REACT_APP_FIREBASE_VAPID_KEY || "your-vapid-key",
 			});
-			
+
 			if (token) {
-				console.log('FCM Token:', token);
+				console.log("FCM Token:", token);
 				// Save token to user's profile
 				await saveTokenToServer(token);
 				return token;
 			} else {
-				console.log('No registration token available.');
+				console.log("No registration token available.");
 				return null;
 			}
 		} else {
-			console.log('Notification permission denied');
+			console.log("Notification permission denied");
 			return null;
 		}
 	} catch (error) {
-		console.error('Error getting FCM token:', error);
+		console.error("Error getting FCM token:", error);
 		return null;
 	}
 };
@@ -54,7 +53,7 @@ const saveTokenToServer = async (token) => {
 		// Send token to your backend API
 		await postAPI.saveFCMToken({ token });
 	} catch (error) {
-		console.error('Error saving FCM token:', error);
+		console.error("Error saving FCM token:", error);
 	}
 };
 
@@ -63,16 +62,16 @@ const saveTokenToServer = async (token) => {
  * @param {Function} callback - Callback function to handle messages
  */
 export const setupMessageListener = (callback) => {
-	if (!messaging || typeof window === 'undefined') return;
+	if (!messaging || typeof window === "undefined") return;
 
 	return onMessage(messaging, (payload) => {
-		console.log('Message received in foreground:', payload);
-		
+		console.log("Message received in foreground:", payload);
+
 		// Show notification
 		if (payload.notification) {
 			showNotification(payload.notification);
 		}
-		
+
 		// Call callback with payload
 		if (callback) {
 			callback(payload);
@@ -85,28 +84,28 @@ export const setupMessageListener = (callback) => {
  * @param {Object} notification - Notification payload
  */
 const showNotification = (notification) => {
-	if ('Notification' in window && Notification.permission === 'granted') {
+	if ("Notification" in window && Notification.permission === "granted") {
 		const options = {
 			body: notification.body,
-			icon: notification.icon || '/logo192.png',
+			icon: notification.icon || "/logo192.png",
 			image: notification.image,
-			badge: '/logo192.png',
-			tag: notification.tag || 'dope-network',
+			badge: "/logo192.png",
+			tag: notification.tag || "dope-network",
 			requireInteraction: false,
 			actions: [
 				{
-					action: 'view',
-					title: 'View Post'
+					action: "view",
+					title: "View Post",
 				},
 				{
-					action: 'close',
-					title: 'Close'
-				}
-			]
+					action: "close",
+					title: "Close",
+				},
+			],
 		};
 
 		const notif = new Notification(notification.title, options);
-		
+
 		// Auto close after 5 seconds
 		setTimeout(() => {
 			notif.close();
@@ -134,13 +133,15 @@ export const notifyFollowersOfNewPost = async (postId, postData) => {
 		await postAPI.sendPostNotification({
 			postId,
 			title: `${postData.author.name} shared a new post`,
-			body: postData.content ? postData.content.substring(0, 100) + '...' : 'New post from someone you follow',
+			body: postData.content
+				? postData.content.substring(0, 100) + "..."
+				: "New post from someone you follow",
 			clickAction: `/post/${postId}`,
 			authorId: postData.author.uid,
 			authorName: postData.author.name,
-			authorPhoto: postData.author.photoURL
+			authorPhoto: postData.author.photoURL,
 		});
 	} catch (error) {
-		console.error('Error sending post notification:', error);
+		console.error("Error sending post notification:", error);
 	}
 };

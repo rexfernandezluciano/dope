@@ -66,28 +66,6 @@ const extractMentions = (text) => {
 	return Array.from(matches, match => match[1]);
 };
 
-// Utility function to parse text with hashtags, links, and mentions
-const parseTextContent = (text) => {
-	if (!text) return text;
-
-	// Handle line breaks by converting them to <br />
-	const textWithBreaks = text.replace(/(\r\n|\n|\r)/g, '<br />');
-
-	// Regex for URLs
-	const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
-	const textWithLinks = textWithBreaks.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-
-	// Regex for hashtags
-	const hashtagRegex = /(#[\w]+)/g;
-	const textWithHashtags = textWithLinks.replace(hashtagRegex, '<a href="/search?query=$1" onClick="event.stopPropagation();">$1</a>');
-
-	// Regex for mentions
-	const mentionRegex = /(@[\w]+)/g;
-	const textWithMentions = textWithHashtags.replace(mentionRegex, '<a href="/profile/$1" onClick="event.stopPropagation();">$1</a>');
-
-	return textWithMentions;
-};
-
 const HomePage = () => {
 	const [showComposerModal, setShowComposerModal] = useState(false);
 	const [postText, setPostText] = useState("");
