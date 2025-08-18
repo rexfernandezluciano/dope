@@ -56,9 +56,24 @@
 		<link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 		<script src="//cdn.jsdelivr.net/npm/eruda"></script>
 		<script>
-			if (window.location.hostname === 'localhost' || window.location.hostname.includes('.replit.dev')) {
+			if (
+				window.location.hostname === "localhost" ||
+				window.location.hostname.includes(".replit.dev")
+			) {
 				eruda.init();
 			}
+		</script>
+		<script
+			src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+			defer
+		></script>
+		<script>
+			window.OneSignalDeferred = window.OneSignalDeferred || [];
+			OneSignalDeferred.push(async function (OneSignal) {
+				await OneSignal.init({
+					appId: "a313df37-646d-4d1c-8cc3-76cdb6ac3129",
+				});
+			});
 		</script>
 		<title>DOPE Network - Social Media Platform</title>
 	</head>
