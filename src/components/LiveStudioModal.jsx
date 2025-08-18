@@ -20,7 +20,7 @@ import {
 	MicMute,
 	Palette,
 	Sun,
-	Contrast,
+	Circle,
 	Globe,
 	People,
 	Lock,
@@ -360,7 +360,7 @@ const LiveStudioModal = ({
 									<Col sm={6}>
 										<div className="mb-3">
 											<div className="d-flex align-items-center gap-2 mb-2">
-												<Contrast size={14} />
+												<Circle size={14} />
 												<small className="fw-bold">Contrast: {contrast}%</small>
 											</div>
 											<Form.Range
