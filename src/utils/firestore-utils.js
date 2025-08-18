@@ -1,11 +1,12 @@
 
 /** @format */
 
-import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
-import { database } from '../config/FirebaseConfig';
+import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { firestore } from "../config/FirebaseConfig";
 
 // Initialize Firestore
-const db = getFirestore();
+const db = firestore;
+
 
 /**
  * Check if email already exists in waiting list
