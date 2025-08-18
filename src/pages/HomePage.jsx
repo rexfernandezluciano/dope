@@ -281,7 +281,7 @@ const HomePage = () => {
 		try {
 			// Create Agora client
 			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
-			
+
 			// Set client role as host
 			await client.setClientRole('host');
 
@@ -354,7 +354,7 @@ const HomePage = () => {
 				}
 				setMediaRecorder(null);
 			}
-			
+
 			if (mediaStream) {
 				// Leave Agora channel and clean up client
 				await mediaStream.leave();
@@ -363,7 +363,7 @@ const HomePage = () => {
 
 			setIsStreaming(false);
 			setLiveVideoUrl("");
-			
+
 			if (videoRef.current) {
 				videoRef.current.innerHTML = '';
 			}
@@ -372,7 +372,7 @@ const HomePage = () => {
 		}
 	};
 
-	
+
 
 	const toggleLiveMode = () => {
 		if (isLive && !isStreaming) {
@@ -448,7 +448,7 @@ const HomePage = () => {
 			setIsLive(false);
 			setLiveVideoUrl("");
 			setShowComposerModal(false);
-			
+
 			// Stop live stream if active
 			if (isStreaming) {
 				stopLiveStream();
@@ -779,106 +779,183 @@ const HomePage = () => {
 						)}
 
 						{isLive && (
-							<div className="mb-3">
-								<div className="d-flex justify-content-between align-items-center mb-2">
-									<Form.Label className="mb-0">Live Video Studio</Form.Label>
-									{!isStreaming ? (
-										<Button
-											variant="success"
-											size="sm"
-											onClick={startLiveStream}
-											className="d-flex align-items-center gap-1"
-										>
-											<span
-												style={{
-													width: "8px",
-													height: "8px",
-													borderRadius: "50%",
-													backgroundColor: "#fff",
-													display: "inline-block",
-												}}
-											></span>
-											Start Streaming
-										</Button>
-									) : (
-										<Button
-											variant="outline-danger"
-											size="sm"
-											onClick={stopLiveStream}
-											className="d-flex align-items-center gap-1"
-										>
-											<span
-												style={{
-													width: "8px",
-													height: "8px",
-													borderRadius: "50%",
-													backgroundColor: "#dc3545",
-													display: "inline-block",
-													animation: "pulse 1s infinite"
-												}}
-											></span>
-											Stop Stream
-										</Button>
-									)}
+						<Card className="mb-3 live-studio-card border-0 shadow-sm">
+							<Card.Header className="bg-gradient-primary text-white border-0">
+								<div className="d-flex justify-content-between align-items-center">
+									<div className="d-flex align-items-center gap-2">
+										<div
+											className="rounded-circle bg-white"
+											style={{ width: "12px", height: "12px", opacity: 0.9 }}
+										></div>
+										<h6 className="mb-0 fw-bold">Live Studio</h6>
+									</div>
+									<div className="d-flex align-items-center gap-2">
+										{isStreaming && (
+											<small className="opacity-75">
+												🔴 Broadcasting
+											</small>
+										)}
+										{!isStreaming ? (
+											<Button
+												variant="light"
+												size="sm"
+												onClick={startLiveStream}
+												className="d-flex align-items-center gap-2 px-3"
+											>
+												<div
+													className="rounded-circle bg-success"
+													style={{ width: "8px", height: "8px" }}
+												></div>
+												Go Live
+											</Button>
+										) : (
+											<Button
+												variant="outline-light"
+												size="sm"
+												onClick={stopLiveStream}
+												className="d-flex align-items-center gap-2 px-3"
+											>
+												<div
+													className="rounded-circle bg-danger"
+													style={{ 
+														width: "8px", 
+														height: "8px",
+														animation: "pulse 1.5s infinite"
+													}}
+												></div>
+												End Stream
+											</Button>
+										)}
+									</div>
 								</div>
+							</Card.Header>
 
+							<Card.Body className="p-3">
 								{/* Live Video Preview */}
-								<div className="position-relative mb-2">
+								<div className="position-relative mb-3 live-video-preview">
 									<video
 										ref={videoRef}
 										autoPlay
 										muted
 										playsInline
-										className="w-100 rounded"
+										className="w-100 rounded-3"
 										style={{
-											maxHeight: "300px",
+											height: "240px",
 											objectFit: "cover",
-											backgroundColor: "#000"
+											backgroundColor: "#1a1a1a",
+											border: isStreaming ? "2px solid #dc3545" : "2px solid #e9ecef"
 										}}
 									/>
+
+									{/* Live indicator overlay */}
 									{isStreaming && (
-										<div
-											className="position-absolute top-0 start-0 m-2 px-2 py-1 rounded"
-											style={{
-												backgroundColor: "rgba(220, 53, 69, 0.9)",
-												color: "white",
-												fontSize: "0.75rem",
-												fontWeight: "bold"
-											}}
-										>
-											<span
-												style={{
-													width: "6px",
-													height: "6px",
-													borderRadius: "50%",
-													backgroundColor: "#fff",
-													display: "inline-block",
-													marginRight: "4px",
-													animation: "pulse 1s infinite"
-												}}
-											></span>
-											LIVE
+										<div className="position-absolute top-0 start-0 end-0 bottom-0 d-flex align-items-start justify-content-between p-3">
+											<div className="live-indicator px-3 py-2 rounded-pill">
+												<div className="d-flex align-items-center gap-2">
+													<div
+														className="rounded-circle bg-white"
+														style={{
+															width: "8px",
+															height: "8px",
+															animation: "pulse 1s infinite"
+														}}
+													></div>
+													<span className="text-white fw-bold small">LIVE</span>
+												</div>
+											</div>
+											<div 
+												className="stream-controls rounded-3 px-3 py-2"
+												style={{ backdropFilter: "blur(10px)" }}
+											>
+												<small className="text-white opacity-75">
+													📹 Recording
+												</small>
+											</div>
+										</div>
+									)}
+
+									{/* Placeholder when not streaming */}
+									{!isStreaming && (
+										<div className="position-absolute top-0 start-0 end-0 bottom-0 d-flex align-items-center justify-content-center">
+											<div className="text-center text-muted">
+												<div className="mb-2" style={{ fontSize: "2rem" }}>📹</div>
+												<h6 className="mb-1">Camera Preview</h6>
+												<small>Click "Go Live" to start streaming</small>
+											</div>
 										</div>
 									)}
 								</div>
 
-								{liveVideoUrl && (
-									<Form.Group className="mb-2">
-										<Form.Label className="small text-muted">Stream URL</Form.Label>
-										<Form.Control
-											type="text"
-											value={liveVideoUrl}
-											readOnly
-											className="shadow-none small"
-											style={{ fontSize: "0.875rem" }}
-										/>
-										<Form.Text className="text-muted">
-											Share this URL with your audience to watch the live stream
-										</Form.Text>
-									</Form.Group>
-								)}
-							</div>
-						)}
+								{/* Stream controls and info */}
+								<div className="row g-3">
+									{/* Stream URL */}
+									{liveVideoUrl && (
+										<div className="col-12">
+											<Form.Group>
+												<Form.Label className="small fw-semibold text-muted mb-2">
+													📡 Stream URL
+												</Form.Label>
+												<div className="input-group">
+													<Form.Control
+														type="text"
+														value={liveVideoUrl}
+														readOnly
+														className="shadow-none border-end-0"
+														style={{ 
+															fontSize: "0.875rem",
+															backgroundColor: "#f8f9fa",
+															fontFamily: "monospace"
+														}}
+													/>
+													<Button
+														variant="outline-secondary"
+														size="sm"
+														onClick={() => {
+															navigator.clipboard.writeText(liveVideoUrl);
+															// You could add a toast notification here
+														}}
+														className="border-start-0"
+													>
+														📋
+													</Button>
+												</div>
+												<Form.Text className="text-muted d-flex align-items-center gap-1 mt-2">
+													<span>🔗</span>
+													Share this URL with your audience to watch the live stream
+												</Form.Text>
+											</Form.Group>
+										</div>
+									)}
+
+									{/* Stream stats */}
+									{isStreaming && (
+										<div className="col-12">
+											<div className="row g-2">
+												<div className="col-4">
+													<div className="text-center p-2 bg-light rounded-3">
+														<div className="fw-bold text-success small">ONLINE</div>
+														<small className="text-muted">Status</small>
+													</div>
+												</div>
+												<div className="col-4">
+													<div className="text-center p-2 bg-light rounded-3">
+														<div className="fw-bold text-primary small">720p</div>
+														<small className="text-muted">Quality</small>
+													</div>
+												</div>
+												<div className="col-4">
+													<div className="text-center p-2 bg-light rounded-3">
+														<div className="fw-bold text-info small">0</div>
+														<small className="text-muted">Viewers</small>
+													</div>
+												</div>
+											</div>
+										</div>
+									)}
+								</div>
+							</Card.Body>
+						</Card>
+					)}
 
 						<div className="d-flex justify-content-between align-items-center">
 							<div className="d-flex gap-2">

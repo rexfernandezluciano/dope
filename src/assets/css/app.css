@@ -394,20 +394,106 @@ button, [role="button"] {
   animation: slideIn 0.3s ease-out;
 }
 
-/* Live video preview styling */
+/* Enhanced Live Studio Styles */
+.live-studio-card {
+  border: 2px solid transparent;
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(135deg, #0069B5, #00a8ff) border-box;
+  transition: all 0.3s ease;
+}
+
+.live-studio-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 105, 181, 0.15) !important;
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0069B5, #00a8ff) !important;
+}
+
 .live-video-preview {
   position: relative;
-  border-radius: 0.375rem;
+  border-radius: 0.75rem;
   overflow: hidden;
-  background: #000;
+  background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  transition: all 0.3s ease;
+}
+
+.live-video-preview video {
+  transition: all 0.3s ease;
+}
+
+.live-video-preview:hover video {
+  transform: scale(1.02);
 }
 
 .live-indicator {
   background: linear-gradient(45deg, #dc3545, #ff6b6b);
-  animation: pulse 1s infinite;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
 }
 
 .stream-controls {
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(15px);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced button animations */
+.live-studio-card .btn {
+  transition: all 0.3s ease;
+  border-radius: 0.5rem;
+  font-weight: 500;
+}
+
+.live-studio-card .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.live-studio-card .btn-light:hover {
+  background: #f8f9fa;
+  border-color: #f8f9fa;
+}
+
+.live-studio-card .btn-outline-light:hover {
   background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Status indicators */
+.live-studio-card .bg-light {
+  background: linear-gradient(145deg, #f8f9fa, #e9ecef) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.live-studio-card .bg-light:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Input group enhancements */
+.live-studio-card .input-group .form-control {
+  border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.live-studio-card .input-group .btn {
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .live-studio-card .card-header h6 {
+    font-size: 0.875rem;
+  }
+  
+  .live-video-preview video {
+    height: 180px !important;
+  }
+  
+  .live-studio-card .row.g-2 > * {
+    margin-bottom: 0.5rem;
+  }
 }
