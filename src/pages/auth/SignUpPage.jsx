@@ -7,7 +7,7 @@ import "animate.css";
 import heic2any from "heic2any";
 
 import { authAPI } from "../../config/ApiConfig";
-import { verifyUser, userExistByEmail, getGravatar, createUsername, setAuthToken } from "../../utils/app-utils";
+import { userExistByEmail, getGravatar, createUsername, setAuthToken } from "../../utils/app-utils";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
 import { initializeGoogleAuth, renderGoogleButton, handleGoogleSignIn } from "../../utils/google-auth-utils";
 
@@ -186,8 +186,6 @@ const SignUpPage = () => {
 			};
 
 			const result = await authAPI.register(userData);
-
-			await verifyUser(email);
 
 			// Redirect to verification page with verification ID and email
 			const verificationId = result.verificationId || 'verify';

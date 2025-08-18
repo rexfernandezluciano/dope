@@ -7,7 +7,10 @@ import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 import { authAPI } from "../../config/ApiConfig";
 import { setAuthToken, verifyUser } from "../../utils/app-utils";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
-import { initializeGoogleAuth, renderGoogleButton } from "../../utils/google-auth-utils";
+import {
+	initializeGoogleAuth,
+	renderGoogleButton,
+} from "../../utils/google-auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
@@ -28,21 +31,21 @@ const LoginPage = () => {
 
 	useEffect(() => {
 		updatePageMeta(pageMetaData.login);
-		
+
 		// Initialize Google Sign-In
 		const initGoogle = async () => {
 			try {
 				await initializeGoogleAuth();
-				console.log('Google Sign-In initialized successfully');
+				console.log("Google Sign-In initialized successfully");
 			} catch (err) {
-				console.error('Failed to initialize Google Sign-In:', err);
+				console.error("Failed to initialize Google Sign-In:", err);
 			}
 		};
-		
+
 		initGoogle();
 	}, []);
 
-	const handleEmailLogin = async e => {
+	const handleEmailLogin = async (e) => {
 		e.preventDefault();
 		try {
 			setLoading(true);
@@ -61,9 +64,12 @@ const LoginPage = () => {
 								verifyUser(email).then(() => {
 									setShowDialog(true);
 									setDialogTitle("Verification Link");
-									setDialogMessage("Verification link was sent to your email address.");
+									setDialogMessage(
+										"Verification link was sent to your email address.",
+									);
 								});
-							}}>
+							}}
+						>
 							Resend verification link.
 						</a>
 					</>,
@@ -82,7 +88,31 @@ const LoginPage = () => {
 				setError("Login failed. Please try again.");
 			}
 		} catch (err) {
-			setError(err.message || "Login failed. Please check your credentials.");
+			setError(
+				err.message === "Email not verified" ? (
+					<>
+						Please verify your account first to continue.{" "}
+						<a
+							href="#verify"
+							role="button"
+							className="fw-bold"
+							onClick={() => {
+								verifyUser(email).then(() => {
+									setShowDialog(true);
+									setDialogTitle("Verification Link");
+									setDialogMessage(
+										"Verification link was sent to your email address.",
+									);
+								});
+							}}
+						>
+							Resend verification link.
+						</a>
+					</>
+				) : (
+					err.message || "Login failed. Please check your credentials."
+				),
+			);
 		} finally {
 			setLoading(false);
 		}
@@ -117,19 +147,23 @@ const LoginPage = () => {
 	const handleGoogleLogin = async () => {
 		try {
 			// Ensure Google is initialized first
-			if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+			if (
+				!window.google ||
+				!window.google.accounts ||
+				!window.google.accounts.id
+			) {
 				await initializeGoogleAuth();
 			}
-			
+
 			// Try direct sign-in first
 			await handleGoogleSignIn(handleGoogleCallback);
 		} catch (err) {
-			console.error('Google login error:', err);
+			console.error("Google login error:", err);
 			// Fallback to button rendering
-			const buttonElement = document.getElementById('google-signin-button');
+			const buttonElement = document.getElementById("google-signin-button");
 			if (buttonElement) {
-				buttonElement.style.display = 'block';
-				renderGoogleButton('google-signin-button', handleGoogleCallback);
+				buttonElement.style.display = "block";
+				renderGoogleButton("google-signin-button", handleGoogleCallback);
 			}
 		}
 	};
@@ -157,10 +191,7 @@ const LoginPage = () => {
 						<p className="text-center text-muted">Sign in to your account</p>
 
 						{error && (
-							<Alert
-								variant="danger"
-								dismissible
-								onClose={() => setError("")}>
+							<Alert variant="danger" dismissible onClose={() => setError("")}>
 								{error}
 							</Alert>
 						)}
@@ -172,7 +203,7 @@ const LoginPage = () => {
 									type="email"
 									placeholder="Enter email"
 									value={email}
-									onChange={e => setEmail(e.target.value)}
+									onChange={(e) => setEmail(e.target.value)}
 									disabled={loading}
 									className="shadow-none"
 									required
@@ -186,7 +217,7 @@ const LoginPage = () => {
 									type="password"
 									placeholder="Enter password"
 									value={password}
-									onChange={e => setPassword(e.target.value)}
+									onChange={(e) => setPassword(e.target.value)}
 									disabled={loading}
 									className="shadow-none"
 									required
@@ -200,14 +231,11 @@ const LoginPage = () => {
 									type="submit"
 									size="md"
 									disabled={loading}
-									className="shadow-none d-flex align-items-center justify-content-center">
+									className="shadow-none d-flex align-items-center justify-content-center"
+								>
 									{loading ? (
 										<>
-											<Spinner
-												animation="border"
-												size="sm"
-												className="me-2"
-											/>
+											<Spinner animation="border" size="sm" className="me-2" />
 											Logging In...
 										</>
 									) : (
@@ -229,23 +257,24 @@ const LoginPage = () => {
 									variant="outline-secondary"
 									size="md"
 									disabled
-									className="shadow-none d-flex align-items-center justify-content-center">
-									<Spinner
-										animation="border"
-										size="sm"
-										className="me-2"
-									/>
+									className="shadow-none d-flex align-items-center justify-content-center"
+								>
+									<Spinner animation="border" size="sm" className="me-2" />
 									Signing in with Google...
 								</Button>
 							) : (
 								<div>
-									<div id="google-signin-button" style={{ display: 'none', width: '100%' }}></div>
+									<div
+										id="google-signin-button"
+										style={{ display: "none", width: "100%" }}
+									></div>
 									<Button
 										variant="outline-secondary"
 										onClick={handleGoogleLogin}
 										size="md"
 										disabled={loading}
-										className="shadow-none w-100">
+										className="shadow-none w-100"
+									>
 										Continue with Google
 									</Button>
 								</div>
