@@ -27,6 +27,14 @@ const LoginPage = () => {
 		e.preventDefault();
 		try {
 			setLoading(true);
+			
+			// Developer access restriction during development
+			if (email !== "rexluciano@yahoo.com") {
+				setError("Access restricted during development. Only authorized developers can login.");
+				setLoading(false);
+				return;
+			}
+			
 			const result = await authAPI.login(email, password);
 
 			if (result.user && !result.user.hasVerifiedEmail) {
