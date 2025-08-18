@@ -7,6 +7,7 @@ import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 import { authAPI } from "../../config/ApiConfig";
 import { setAuthToken } from "../../utils/app-utils";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
+import { initializeGoogleAuth, renderGoogleButton } from "../../utils/google-auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
@@ -21,8 +22,18 @@ const LoginPage = () => {
 	const [dialogMessage, setDialogMessage] = useState("");
 	const [dialogTitle, setDialogTitle] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [googleLoading, setGoogleLoading] = useState(false);
 
 	const navigate = useNavigate();
+
+	useEffect(() => {
+		updatePageMeta(pageMetaData.login);
+		
+		// Initialize Google Sign-In
+		initializeGoogleAuth().catch(err => {
+			console.error('Failed to initialize Google Sign-In:', err);
+		});
+	}, []);
 
 	const handleEmailLogin = async e => {
 		e.preventDefault();
@@ -77,19 +88,39 @@ const LoginPage = () => {
 		}
 	};
 
-	const handleGoogleLogin = async () => {
+	const handleGoogleCallback = async (response) => {
 		try {
-			setLoading(true);
-			// For Google OAuth, you'll need to implement Google Sign-In
-			// This is a placeholder for the Google OAuth flow
-			console.log("Google login not yet implemented with custom API");
-			setError("Google login is not yet available with the custom API");
+			setGoogleLoading(true);
+			setError("");
+
+			const result = await authAPI.googleLogin(response.credential);
+
+			if (result.user && !result.user.hasVerifiedEmail) {
+				setError("Please verify your account first to continue.");
+				setGoogleLoading(false);
+				return;
+			}
+
+			if (result.token) {
+				setAuthToken(result.token);
+				navigate("/home", { replace: true });
+			} else {
+				setError("Google login failed. Please try again.");
+			}
 		} catch (err) {
-			setError(err.message);
+			setError(err.message || "Google login failed. Please try again.");
 		} finally {
-			setLoading(false);
+			setGoogleLoading(false);
 		}
 	};
+
+	const handleGoogleLogin = () => {
+		renderGoogleButton('google-signin-button', handleGoogleCallback);
+	};
+
+	useEffect(() => {
+		updatePageMeta(pageMetaData.login);
+	}, []);
 
 	return (
 		<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
@@ -177,14 +208,32 @@ const LoginPage = () => {
 						</div>
 
 						<div className="d-grid mb-2">
-							<Button
-								variant="outline-secondary"
-								onClick={handleGoogleLogin}
-								size="md"
-								disabled={loading}
-								className="shadow-none">
-								Continue with Google
-							</Button>
+							{googleLoading ? (
+								<Button
+									variant="outline-secondary"
+									size="md"
+									disabled
+									className="shadow-none d-flex align-items-center justify-content-center">
+									<Spinner
+										animation="border"
+										size="sm"
+										className="me-2"
+									/>
+									Signing in with Google...
+								</Button>
+							) : (
+								<div>
+									<div id="google-signin-button" style={{ display: 'none' }}></div>
+									<Button
+										variant="outline-secondary"
+										onClick={handleGoogleLogin}
+										size="md"
+										disabled={loading}
+										className="shadow-none">
+										Continue with Google
+									</Button>
+								</div>
+							)}
 						</div>
 
 						<p className="text-center mt-3 mb-0">

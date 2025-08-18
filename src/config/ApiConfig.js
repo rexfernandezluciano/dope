@@ -186,6 +186,23 @@ const authAPI = {
 	logout: () => {
 		removeAuthToken();
 		return Promise.resolve();
+	},
+
+	googleLogin: async (idToken) => {
+		if (!idToken || typeof idToken !== 'string') {
+			throw new Error('Invalid Google ID token');
+		}
+
+		const response = await apiRequest('/auth/google', {
+			method: 'POST',
+			body: { idToken }
+		});
+
+		if (response.token) {
+			setAuthToken(response.token);
+		}
+
+		return response;
 	}
 };
 

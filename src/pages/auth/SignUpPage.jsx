@@ -1,13 +1,14 @@
 /** @format */
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 import heic2any from "heic2any";
 
 import { authAPI } from "../../config/ApiConfig";
-import { verifyUser, userExistByEmail, getGravatar, createUsername } from "../../utils/app-utils";
+import { verifyUser, userExistByEmail, getGravatar, createUsername, setAuthToken } from "../../utils/app-utils";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
+import { initializeGoogleAuth, renderGoogleButton } from "../../utils/google-auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
@@ -32,6 +33,7 @@ const SignUpPage = () => {
 	const [dialogTitle] = useState("");
 	const [showDialog, setShowDialog] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [googleLoading, setGoogleLoading] = useState(false);
 
 	const navigate = useNavigate();
 
@@ -134,22 +136,40 @@ const SignUpPage = () => {
 		}
 	};
 
-	const handleGoogleSignup = async () => {
+	const handleGoogleSignUp = async () => {
+		setGoogleLoading(true);
 		try {
-			setLoading(true);
-			// Google OAuth implementation would go here
-			console.log("Google signup not yet implemented with custom API");
-			setError("Google signup is not yet available with the custom API");
+			const googleAuthResponse = await renderGoogleButton();
+			if (googleAuthResponse && googleAuthResponse.credential && googleAuthResponse.credential.idToken) {
+				const idToken = googleAuthResponse.credential.idToken;
+				const response = await authAPI.googleAuth({ idToken });
+
+				if (response.token) {
+					setAuthToken(response.token);
+					navigate("/home");
+				} else if (response.error) {
+					setError(response.error);
+				} else {
+					setError("An unknown error occurred during Google sign-in.");
+				}
+			} else {
+				setError("Failed to get ID token from Google.");
+			}
 		} catch (err) {
 			setError(err.message);
 		} finally {
-			setLoading(false);
+			setGoogleLoading(false);
 		}
 	};
 
 	useEffect(() => {
 		// Update page meta data
 		updatePageMeta(pageMetaData.signup);
+
+		// Initialize Google Sign-In
+		initializeGoogleAuth().catch(err => {
+			console.error('Failed to initialize Google Sign-In:', err);
+		});
 
 		// Redirect if already authenticated
 		const token = localStorage.getItem("authToken");
@@ -239,13 +259,32 @@ const SignUpPage = () => {
 								</Button>
 							</Form>
 							<hr />
-							<Button
-								variant="outline-secondary"
-								onClick={handleGoogleSignup}
-								className="w-100 mt-2"
-								disabled={loading}>
-								Continue with Google
-							</Button>
+							{googleLoading ? (
+								<Button
+									variant="outline-secondary"
+									size="md"
+									disabled
+									className="shadow-none d-flex align-items-center justify-content-center w-100 mt-2">
+									<Spinner
+										animation="border"
+										size="sm"
+										className="me-2"
+									/>
+									Signing up with Google...
+								</Button>
+							) : (
+								<div>
+									<div id="google-signup-button" style={{ display: 'none' }}></div>
+									<Button
+										variant="outline-secondary"
+										onClick={handleGoogleSignUp}
+										size="md"
+										disabled={loading}
+										className="w-100 mt-2">
+										Continue with Google
+									</Button>
+								</div>
+							)}
 							<p className="text-center mt-3 mb-0">
 								Already have an account? <Link to="/auth/login">Login</Link>
 							</p>
