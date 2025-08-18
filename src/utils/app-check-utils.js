@@ -1,5 +1,6 @@
 
 import { getAppCheck, getToken } from "firebase/app-check";
+import { app } from "../config/FirebaseConfig";
 
 /**
  * Get App Check token for API requests
@@ -9,7 +10,7 @@ export const getAppCheckToken = async () => {
 	try {
 		if (typeof window === 'undefined') return null;
 		
-		const appCheck = getAppCheck();
+		const appCheck = getAppCheck(app);
 		const appCheckTokenResponse = await getToken(appCheck, false);
 		return appCheckTokenResponse.token;
 	} catch (error) {

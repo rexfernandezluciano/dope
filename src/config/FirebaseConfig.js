@@ -41,4 +41,4 @@ try {
 	db = null;
 }
 
-export { db };
+export { db, app };
