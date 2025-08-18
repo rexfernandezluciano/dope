@@ -17,7 +17,9 @@ import "./assets/css/app.css";
 // Initialize security measures
 // Placeholder for security initialization, actual implementation would involve
 // importing and calling security utility functions.
-// For example: import { setupCSP } from './utils/security-utils'; setupCSP();
+import { setupCSP } from './utils/security-utils'; 
+
+setupCSP();
 
 // Disable console in production
 if (process.env.NODE_ENV === 'production') {
