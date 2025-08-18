@@ -3,39 +3,39 @@
  * Google Sign-In utility functions
  */
 
-let googleAuth = null;
-
 /**
  * Initialize Google Sign-In
  */
 export const initializeGoogleAuth = () => {
 	return new Promise((resolve, reject) => {
-		if (window.google) {
-			window.google.accounts.id.initialize({
-				client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-				callback: () => {}, // Will be set per component
-				auto_select: false,
-				cancel_on_tap_outside: true
-			});
+		if (window.google && window.google.accounts && window.google.accounts.id) {
+			// Google is already loaded
 			resolve();
-		} else {
-			// Load Google Sign-In script
-			const script = document.createElement('script');
-			script.src = 'https://accounts.google.com/gsi/client';
-			script.async = true;
-			script.defer = true;
-			script.onload = () => {
-				window.google.accounts.id.initialize({
-					client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-					callback: () => {}, // Will be set per component
-					auto_select: false,
-					cancel_on_tap_outside: true
-				});
-				resolve();
-			};
-			script.onerror = reject;
-			document.head.appendChild(script);
+			return;
 		}
+
+		// Load Google Sign-In script
+		const script = document.createElement('script');
+		script.src = 'https://accounts.google.com/gsi/client';
+		script.async = true;
+		script.defer = true;
+		
+		script.onload = () => {
+			// Wait a bit for the script to fully initialize
+			setTimeout(() => {
+				if (window.google && window.google.accounts && window.google.accounts.id) {
+					resolve();
+				} else {
+					reject(new Error('Google Sign-In failed to load properly'));
+				}
+			}, 100);
+		};
+		
+		script.onerror = (error) => {
+			reject(new Error('Failed to load Google Sign-In script'));
+		};
+		
+		document.head.appendChild(script);
 	});
 };
 
@@ -44,15 +44,18 @@ export const initializeGoogleAuth = () => {
  */
 export const handleGoogleSignIn = (callback) => {
 	return new Promise((resolve, reject) => {
-		if (!window.google) {
+		if (!window.google || !window.google.accounts || !window.google.accounts.id) {
 			reject(new Error('Google Sign-In not initialized'));
 			return;
 		}
 
+		const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com";
+
 		window.google.accounts.id.initialize({
-			client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com",
+			client_id: clientId,
 			callback: (response) => {
 				if (response.credential) {
+					if (callback) callback(response);
 					resolve(response.credential);
 				} else {
 					reject(new Error('Google Sign-In failed'));
@@ -62,16 +65,11 @@ export const handleGoogleSignIn = (callback) => {
 			cancel_on_tap_outside: true
 		});
 
+		// Try to show the prompt
 		window.google.accounts.id.prompt((notification) => {
 			if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-				// Fallback to popup if prompt is not displayed
-				window.google.accounts.id.renderButton(
-				document.getElementById('google-signin-button'), 
-				{
-					theme: 'outline',
-					size: 'large',
-					width: '100%'
-				});
+				// Fallback: user needs to click a button
+				console.log('Google prompt not displayed, fallback to button required');
 			}
 		});
 	});
@@ -81,25 +79,30 @@ export const handleGoogleSignIn = (callback) => {
  * Render Google Sign-In button
  */
 export const renderGoogleButton = (elementId, callback) => {
-	if (!window.google) {
+	if (!window.google || !window.google.accounts || !window.google.accounts.id) {
 		console.error('Google Sign-In not initialized');
 		return;
 	}
 
+	const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com";
+	const element = document.getElementById(elementId);
+	
+	if (!element) {
+		console.error(`Element with id ${elementId} not found`);
+		return;
+	}
+
 	window.google.accounts.id.initialize({
-		client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+		client_id: clientId,
 		callback: callback,
 		auto_select: false,
 		cancel_on_tap_outside: true
 	});
 
-	window.google.accounts.id.renderButton(
-		document.getElementById(elementId),
-		{
-			theme: 'outline',
-			size: 'large',
-			width: '100%',
-			text: 'continue_with'
-		}
-	);
+	window.google.accounts.id.renderButton(element, {
+		theme: 'outline',
+		size: 'large',
+		width: '100%',
+		text: 'continue_with'
+	});
 };

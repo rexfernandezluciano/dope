@@ -30,9 +30,16 @@ const LoginPage = () => {
 		updatePageMeta(pageMetaData.login);
 		
 		// Initialize Google Sign-In
-		initializeGoogleAuth().catch(err => {
-			console.error('Failed to initialize Google Sign-In:', err);
-		});
+		const initGoogle = async () => {
+			try {
+				await initializeGoogleAuth();
+				console.log('Google Sign-In initialized successfully');
+			} catch (err) {
+				console.error('Failed to initialize Google Sign-In:', err);
+			}
+		};
+		
+		initGoogle();
 	}, []);
 
 	const handleEmailLogin = async e => {
@@ -107,8 +114,24 @@ const LoginPage = () => {
 		}
 	};
 
-	const handleGoogleLogin = () => {
-		renderGoogleButton('google-signin-button', handleGoogleCallback);
+	const handleGoogleLogin = async () => {
+		try {
+			// Ensure Google is initialized first
+			if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+				await initializeGoogleAuth();
+			}
+			
+			// Try direct sign-in first
+			await handleGoogleSignIn(handleGoogleCallback);
+		} catch (err) {
+			console.error('Google login error:', err);
+			// Fallback to button rendering
+			const buttonElement = document.getElementById('google-signin-button');
+			if (buttonElement) {
+				buttonElement.style.display = 'block';
+				renderGoogleButton('google-signin-button', handleGoogleCallback);
+			}
+		}
 	};
 
 	useEffect(() => {
@@ -216,7 +239,7 @@ const LoginPage = () => {
 								</Button>
 							) : (
 								<div>
-									<div id="google-signin-button" style={{ display: 'none' }}></div>
+									<div id="google-signin-button" style={{ display: 'none', width: '100%' }}></div>
 									<Button
 										variant="outline-secondary"
 										onClick={handleGoogleLogin}

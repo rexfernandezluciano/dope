@@ -9,7 +9,7 @@ import heic2any from "heic2any";
 import { authAPI } from "../../config/ApiConfig";
 import { verifyUser, userExistByEmail, getGravatar, createUsername, setAuthToken } from "../../utils/app-utils";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
-import { initializeGoogleAuth, renderGoogleButton } from "../../utils/google-auth-utils";
+import { initializeGoogleAuth, renderGoogleButton, handleGoogleSignIn } from "../../utils/google-auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
@@ -58,6 +58,68 @@ const SignUpPage = () => {
 			prevStep();
 		}
 		setError("");
+	};
+
+	useEffect(() => {
+		updatePageMeta(pageMetaData.signup);
+		
+		// Initialize Google Sign-In
+		const initGoogle = async () => {
+			try {
+				await initializeGoogleAuth();
+				console.log('Google Sign-In initialized successfully');
+			} catch (err) {
+				console.error('Failed to initialize Google Sign-In:', err);
+			}
+		};
+		
+		initGoogle();
+	}, []);
+
+	const handleGoogleCallback = async (response) => {
+		try {
+			setGoogleLoading(true);
+			setError("");
+
+			const result = await authAPI.googleSignup(response.credential);
+
+			if (result.user && !result.user.hasVerifiedEmail) {
+				setError("Please verify your account first to continue.");
+				setGoogleLoading(false);
+				return;
+			}
+
+			if (result.token) {
+				setAuthToken(result.token);
+				navigate("/home", { replace: true });
+			} else {
+				setError("Google signup failed. Please try again.");
+			}
+		} catch (err) {
+			setError(err.message || "Google signup failed. Please try again.");
+		} finally {
+			setGoogleLoading(false);
+		}
+	};
+
+	const handleGoogleSignUp = async () => {
+		try {
+			// Ensure Google is initialized first
+			if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+				await initializeGoogleAuth();
+			}
+			
+			// Try direct sign-in first
+			await handleGoogleSignIn(handleGoogleCallback);
+		} catch (err) {
+			console.error('Google signup error:', err);
+			// Fallback to button rendering
+			const buttonElement = document.getElementById('google-signup-button');
+			if (buttonElement) {
+				buttonElement.style.display = 'block';
+				renderGoogleButton('google-signup-button', handleGoogleCallback);
+			}
+		}
 	};
 
 	const handleNextEmail = async e => {
