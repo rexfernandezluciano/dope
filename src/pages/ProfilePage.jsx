@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useLoaderData } from "react-router-dom";
 import {
 	Container,
@@ -25,6 +25,9 @@ import {
 
 import { userAPI, postAPI } from "../config/ApiConfig";
 import { deletePost as deletePostUtil, sharePost, handlePostClick, handlePostOption, formatJoinDate } from "../utils/common-utils";
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
+import PostCard from "../components/PostCard";
+import AlertDialog from "../components/dialogs/AlertDialog";
 
 const ProfilePage = () => {
 	const { username } = useParams();
@@ -55,80 +58,58 @@ const ProfilePage = () => {
 	const [profileImagePreview, setProfileImagePreview] = useState("");
 	const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
 
-	const loadProfile = async () => {
-		try {
-			setLoading(true);
-			setError("");
+	useEffect(() => {
+		const loadProfile = async () => {
+			try {
+				setLoading(true);
+				setError("");
 
-			// Load user profile first
-			const userResponse = await userAPI.getUser(username);
-			if (!userResponse) {
-				throw new Error("User not found");
-			}
-
-			// Handle response structure - the API returns user data directly
-			const profileUserData = userResponse.user;
-			const profilePrivacy = profileUserData.privacy?.profile || 'public';
-
-			// Check if current user can view this profile
-			const canViewProfile = () => {
-				// Profile owner can always view their own profile
-				if (profileUserData.uid === currentUser.uid) return true;
-
-				// Public profiles are visible to everyone
-				if (profilePrivacy === 'public') return true;
-
-				// Private profiles are only visible to the owner
-				if (profilePrivacy === 'private') return false;
-
-				// Followers-only profiles are visible to followers
-				if (profilePrivacy === 'followers') {
-					return profileUserData.isFollowedByCurrentUser || false;
+				// Load user profile first
+				const userResponse = await userAPI.getUser(username);
+				if (!userResponse) {
+					throw new Error("User not found");
 				}
 
-				return false;
-			};
+				// Handle response structure - the API returns user data directly
+				const profileUserData = userResponse.user;
+				const profilePrivacy = profileUserData.privacy?.profile || 'public';
 
-			if (!canViewProfile()) {
-				throw new Error("This profile is private");
-			}
+				// Check if current user can view this profile
+				const canViewProfile = () => {
+					// Profile owner can always view their own profile
+					if (profileUserData.uid === currentUser.uid) return true;
 
-			setProfileUser(profileUserData);
+					// Public profiles are visible to everyone
+					if (profilePrivacy === 'public') return true;
 
-			// Set edit form data
-			setEditForm({
-				name: userResponse.user.name || "",
-				bio: userResponse.user.bio || "",
-				photoURL: userResponse.user.photoURL || "",
-			});
+					// Private profiles are only visible to the owner
+					if (profilePrivacy === 'private') return false;
 
-			// Set posts from user response if available
-			if (userResponse.user.posts) {
-				// Filter posts based on profile privacy
-				const filteredPosts = userResponse.user.posts.filter(post => {
-					// Profile owner can see all their posts
-					if (post.author.uid === currentUser.uid) return true;
-
-					// For other users, respect the profile privacy settings
-					const authorPrivacy = post.author.privacy?.profile || 'public';
-
-					if (authorPrivacy === 'public') return true;
-					if (authorPrivacy === 'private') return false;
-					if (authorPrivacy === 'followers') {
-						return post.author.isFollowedByCurrentUser || false;
+					// Followers-only profiles are visible to followers
+					if (profilePrivacy === 'followers') {
+						return profileUserData.isFollowedByCurrentUser || false;
 					}
 
 					return false;
+				};
+
+				if (!canViewProfile()) {
+					throw new Error("This profile is private");
+				}
+
+				setProfileUser(profileUserData);
+
+				// Set edit form data
+				setEditForm({
+					name: userResponse.user.name || "",
+					bio: userResponse.user.bio || "",
+					photoURL: userResponse.user.photoURL || "",
 				});
 
-				setPosts(filteredPosts);
-			} else {
-				// Fallback to separate posts API call
-				try {
-					const postsResponse = await postAPI.getPosts({ author: username });
-
+				// Set posts from user response if available
+				if (userResponse.user.posts) {
 					// Filter posts based on profile privacy
-					const filteredPosts = (postsResponse.posts || []).filter(post => {
+					const filteredPosts = userResponse.user.posts.filter(post => {
 						// Profile owner can see all their posts
 						if (post.author.uid === currentUser.uid) return true;
 
@@ -145,55 +126,77 @@ const ProfilePage = () => {
 					});
 
 					setPosts(filteredPosts);
-				} catch (err) {
-					console.error("Error loading posts:", err);
-					setPosts([]);
-				}
-			}
+				} else {
+					// Fallback to separate posts API call
+					try {
+						const postsResponse = await postAPI.getPosts({ author: username });
 
-			// Use counts from user response if available
-			if (userResponse.user.stats) {
-				setFollowers(new Array(userResponse.user.stats.followers).fill({}));
-				setFollowing(new Array(userResponse.user.stats.following).fill({}));
-			} else {
-				try {
-					const followersResponse = await userAPI.getFollowers(username);
-					setFollowers(followersResponse.followers || []);
+						// Filter posts based on profile privacy
+						const filteredPosts = (postsResponse.posts || []).filter(post => {
+							// Profile owner can see all their posts
+							if (post.author.uid === currentUser.uid) return true;
 
-					// Check if current user is following this profile
-					if (currentUser) {
-						setIsFollowing(
-							(followersResponse.followers || []).some(
-								(f) => f.uid === currentUser.uid,
-							),
-						);
+							// For other users, respect the profile privacy settings
+							const authorPrivacy = post.author.privacy?.profile || 'public';
+
+							if (authorPrivacy === 'public') return true;
+							if (authorPrivacy === 'private') return false;
+							if (authorPrivacy === 'followers') {
+								return post.author.isFollowedByCurrentUser || false;
+							}
+
+							return false;
+						});
+
+						setPosts(filteredPosts);
+					} catch (err) {
+						console.error("Error loading posts:", err);
+						setPosts([]);
 					}
-				} catch (err) {
-					console.error("Error loading followers:", err);
-					setFollowers([]);
 				}
 
-				try {
-					const followingResponse = await userAPI.getFollowing(username);
-					setFollowing(followingResponse.following || []);
-				} catch (err) {
-					console.error("Error loading following:", err);
-					setFollowing([]);
+				// Use counts from user response if available
+				if (userResponse.user.stats) {
+					setFollowers(new Array(userResponse.user.stats.followers).fill({}));
+					setFollowing(new Array(userResponse.user.stats.following).fill({}));
+				} else {
+					try {
+						const followersResponse = await userAPI.getFollowers(username);
+						setFollowers(followersResponse.followers || []);
+
+						// Check if current user is following this profile
+						if (currentUser) {
+							setIsFollowing(
+								(followersResponse.followers || []).some(
+									(f) => f.uid === currentUser.uid,
+								),
+							);
+						}
+					} catch (err) {
+						console.error("Error loading followers:", err);
+						setFollowers([]);
+					}
+
+					try {
+						const followingResponse = await userAPI.getFollowing(username);
+						setFollowing(followingResponse.following || []);
+					} catch (err) {
+						console.error("Error loading following:", err);
+						setFollowing([]);
+					}
 				}
+			} catch (err) {
+				console.error("Error loading profile:", err);
+				setError(err.message || "Failed to load profile");
+			} finally {
+				setLoading(false);
 			}
-		} catch (err) {
-			console.error("Error loading profile:", err);
-			setError(err.message || "Failed to load profile");
-		} finally {
-			setLoading(false);
-		}
-	};
+		};
 
-	useEffect(() => {
-		if (username) {
+		if (username && currentUser) {
 			loadProfile();
 		}
-	}, [username, loadProfile]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [username, currentUser]);
 
 	// Update page meta data when profile user changes
 	useEffect(() => {
