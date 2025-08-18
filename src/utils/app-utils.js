@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { authAPI, userAPI } from '../config/ApiConfig';
@@ -11,7 +10,7 @@ export const getUser = async () => {
 	try {
 		const token = localStorage.getItem('authToken');
 		if (!token) return null;
-		
+
 		const response = await authAPI.getCurrentUser();
 		return response.user || response;
 	} catch (error) {
@@ -64,7 +63,7 @@ export const isAdmin = async () => {
 	try {
 		const user = await getUser();
 		if (!user) return false;
-		
+
 		const result = await userAPI.isAdmin(user.uid);
 		return result.isAdmin;
 	} catch (error) {
@@ -124,17 +123,17 @@ export const verifyUser = async (email) => {
  */
 export const createUsername = async (displayName) => {
 	if (!displayName) return 'user' + Date.now();
-	
+
 	// Generate username from display name
 	let username = displayName.toLowerCase()
 		.replace(/[^a-z0-9]/g, '')
 		.substring(0, 15);
-	
+
 	// Add random number if username is too short
 	if (username.length < 3) {
 		username += Math.floor(Math.random() * 1000);
 	}
-	
+
 	return username;
 };
 
@@ -154,14 +153,26 @@ export const getGravatar = (email) => {
  * @param {string} token - JWT token
  */
 export const setAuthToken = (token) => {
-	localStorage.setItem('authToken', token);
+	try {
+		// Prefer sessionStorage for better security
+		sessionStorage.setItem('authToken', token);
+		// Keep localStorage as fallback for "remember me" functionality
+		localStorage.setItem('authToken', token);
+	} catch (e) {
+		console.error('Failed to store auth token');
+	}
 };
 
 /**
  * Remove authentication token
  */
 export const removeAuthToken = () => {
-	localStorage.removeItem('authToken');
+	try {
+		sessionStorage.removeItem('authToken');
+		localStorage.removeItem('authToken');
+	} catch (e) {
+		console.error('Failed to remove auth token');
+	}
 };
 
 /**
@@ -169,5 +180,10 @@ export const removeAuthToken = () => {
  * @returns {string|null} JWT token or null
  */
 export const getAuthToken = () => {
-	return localStorage.getItem('authToken');
+	try {
+		return sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+	} catch (e) {
+		console.error('Failed to retrieve auth token');
+		return null;
+	}
 };

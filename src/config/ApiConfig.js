@@ -1,17 +1,29 @@
 /** @format */
 
-const API_BASE_URL = 'https://natasha.dopp.eu.org/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://natasha.dopp.eu.org/api';
+
+// Validate API URL is HTTPS
+if (!API_BASE_URL.startsWith('https://')) {
+	console.error('API URL must use HTTPS');
+}
 
 const apiRequest = async (endpoint, options = {}) => {
+	// Validate endpoint to prevent injection
+	if (typeof endpoint !== 'string' || endpoint.includes('..')) {
+		throw new Error('Invalid endpoint');
+	}
+
 	const url = `${API_BASE_URL}${endpoint}`;
-	const token = localStorage.getItem('authToken');
+	const token = getAuthToken();
 
 	const config = {
 		headers: {
 			'Content-Type': 'application/json',
 			...(token && { 'Authorization': `Bearer ${token}` }),
+			'X-Requested-With': 'XMLHttpRequest', // CSRF protection
 			...options.headers,
 		},
+		credentials: 'same-origin', // CSRF protection
 		...options,
 	};
 
@@ -19,14 +31,60 @@ const apiRequest = async (endpoint, options = {}) => {
 		config.body = JSON.stringify(config.body);
 	}
 
-	const response = await fetch(url, config);
+	try {
+		const response = await fetch(url, config);
 
-	if (!response.ok) {
-		const errorData = await response.json().catch(() => ({ message: 'Network error' }));
-		throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+		if (!response.ok) {
+			// Don't expose detailed error messages to prevent information leakage
+			if (response.status === 401) {
+				removeAuthToken();
+				throw new Error('Authentication required');
+			} else if (response.status === 403) {
+				throw new Error('Access denied');
+			} else if (response.status >= 500) {
+				throw new Error('Server error occurred');
+			} else {
+				throw new Error('Request failed');
+			}
+		}
+
+		return response.json();
+	} catch (error) {
+		if (error.name === 'TypeError') {
+			throw new Error('Network connection error');
+		}
+		throw error;
 	}
+};
 
-	return response.json();
+// Secure token storage helper
+const getAuthToken = () => {
+	try {
+		return sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+	} catch (e) {
+		console.error('Failed to retrieve auth token');
+		return null;
+	}
+};
+
+const setAuthToken = (token) => {
+	try {
+		// Prefer sessionStorage for better security
+		sessionStorage.setItem('authToken', token);
+		// Keep localStorage as fallback for "remember me" functionality
+		localStorage.setItem('authToken', token);
+	} catch (e) {
+		console.error('Failed to store auth token');
+	}
+};
+
+const removeAuthToken = () => {
+	try {
+		sessionStorage.removeItem('authToken');
+		localStorage.removeItem('authToken');
+	} catch (e) {
+		console.error('Failed to remove auth token');
+	}
 };
 
 // Helper function to get auth token, assuming it's stored in localStorage
@@ -35,26 +93,88 @@ const getAuthToken = () => {
 };
 
 
+// Input validation helpers
+const validateEmail = (email) => {
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	return emailRegex.test(email) && email.length <= 254;
+};
+
+const validatePassword = (password) => {
+	return typeof password === 'string' && password.length >= 8 && password.length <= 128;
+};
+
+const sanitizeInput = (input) => {
+	if (typeof input !== 'string') return input;
+	return input.trim().replace(/[<>]/g, '');
+};
+
 const authAPI = {
 	login: async (email, password) => {
+		if (!validateEmail(email)) {
+			throw new Error('Invalid email format');
+		}
+		if (!validatePassword(password)) {
+			throw new Error('Invalid password');
+		}
+
 		const response = await apiRequest('/auth/login', {
 			method: 'POST',
-			body: { email, password }
+			body: { 
+				email: sanitizeInput(email), 
+				password: password // Don't sanitize password to preserve special chars
+			}
 		});
+		
+		if (response.token) {
+			setAuthToken(response.token);
+		}
+		
 		return response;
 	},
 
-	register: (userData) =>
-		apiRequest('/auth/register', {
-			method: 'POST',
-			body: userData
-		}),
+	register: (userData) => {
+		// Validate required fields
+		if (!validateEmail(userData.email)) {
+			throw new Error('Invalid email format');
+		}
+		if (!validatePassword(userData.password)) {
+			throw new Error('Password must be 8-128 characters');
+		}
+		if (!userData.username || userData.username.length < 3 || userData.username.length > 30) {
+			throw new Error('Username must be 3-30 characters');
+		}
 
-	verifyEmail: (email, code, verificationId) =>
-		apiRequest('/auth/verify-email', {
+		// Sanitize user inputs
+		const sanitizedData = {
+			...userData,
+			email: sanitizeInput(userData.email),
+			username: sanitizeInput(userData.username),
+			name: sanitizeInput(userData.name)
+		};
+
+		return apiRequest('/auth/register', {
 			method: 'POST',
-			body: { email, code, verificationId }
-		}),
+			body: sanitizedData
+		});
+	},
+
+	verifyEmail: (email, code, verificationId) => {
+		if (!validateEmail(email)) {
+			throw new Error('Invalid email format');
+		}
+		if (!code || code.length !== 6) {
+			throw new Error('Invalid verification code');
+		}
+
+		return apiRequest('/auth/verify-email', {
+			method: 'POST',
+			body: { 
+				email: sanitizeInput(email), 
+				code: sanitizeInput(code), 
+				verificationId: sanitizeInput(verificationId) 
+			}
+		});
+	},
 
 	resendVerification: (email) =>
 		apiRequest('/auth/resend-code', {
@@ -68,7 +188,7 @@ const authAPI = {
 		}),
 
 	logout: () => {
-		localStorage.removeItem('authToken');
+		removeAuthToken();
 		return Promise.resolve();
 	}
 };
@@ -105,10 +225,15 @@ const userAPI = {
 			method: 'GET'
 		}),
 
-	searchUsers: (searchQuery) =>
-		apiRequest(`/users?search=${encodeURIComponent(searchQuery)}`, {
+	searchUsers: (searchQuery) => {
+		if (!searchQuery || typeof searchQuery !== 'string' || searchQuery.length < 1) {
+			throw new Error('Invalid search query');
+		}
+		const sanitizedQuery = sanitizeInput(searchQuery).substring(0, 100); // Limit length
+		return apiRequest(`/users?search=${encodeURIComponent(sanitizedQuery)}`, {
 			method: 'GET'
-		})
+		});
+	}
 };
 
 const postAPI = {
@@ -220,6 +345,6 @@ const commentAPI = {
 		})
 };
 
-export { authAPI, postAPI, userAPI, commentAPI };
+export { authAPI, postAPI, userAPI, commentAPI, setAuthToken, removeAuthToken, validateEmail, sanitizeInput };
 
 export default apiRequest;

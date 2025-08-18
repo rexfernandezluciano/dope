@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 
-import { authAPI } from "../../config/ApiConfig";
+import { authAPI, validateEmail, sanitizeInput } from "../../config/ApiConfig";
 import { verifyUser, setAuthToken } from "../../utils/app-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";

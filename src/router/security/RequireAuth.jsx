@@ -14,8 +14,18 @@ const RequireAuth = ({ children }) => {
 	useEffect(() => {
 		const checkAuth = async () => {
 			try {
-				const token = localStorage.getItem('authToken');
-				if (!token) {
+				const token = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+				if (!token || typeof token !== 'string' || token.length < 10) {
+					setUser(null);
+					setLoading(false);
+					return;
+				}
+
+				// Validate token format (basic JWT structure check)
+				const tokenParts = token.split('.');
+				if (tokenParts.length !== 3) {
+					localStorage.removeItem('authToken');
+					sessionStorage.removeItem('authToken');
 					setUser(null);
 					setLoading(false);
 					return;
@@ -24,7 +34,10 @@ const RequireAuth = ({ children }) => {
 				const currentUser = await getUser();
 				setUser(currentUser);
 			} catch (error) {
-				console.error('Auth check failed:', error);
+				console.error('Auth check failed');
+				// Clear potentially invalid token
+				localStorage.removeItem('authToken');
+				sessionStorage.removeItem('authToken');
 				setUser(null);
 			} finally {
 				setLoading(false);
