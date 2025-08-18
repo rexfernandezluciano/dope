@@ -2,7 +2,6 @@
 
 // Import the real App Check utility
 import { addAppCheckHeaders } from '../utils/app-check-utils';
-import { SecurityMiddleware } from "../utils/security-middleware";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://natasha.dopp.eu.org/api';
 
@@ -12,9 +11,9 @@ if (!API_BASE_URL.startsWith('https://')) {
 }
 
 // Real Firebase App Check implementation
-const addAppCheckHeaders = async (headers) => {
+const addFirebaseAppCheckHeaders = async (headers) => {
 	try {
-		return await addFirebaseAppCheckHeaders(headers);
+		return await addAppCheckHeaders(headers);
 	} catch (error) {
 		console.error('Error adding App Check headers:', error);
 		// Return headers without App Check token on error to maintain functionality
