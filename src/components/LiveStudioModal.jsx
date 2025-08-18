@@ -191,6 +191,7 @@ const LiveStudioModal = ({
 			show={show}
 			onHide={handleClose}
 			size="lg"
+			fullscreen="md-down"
 			centered
 			backdrop="static"
 			className="live-studio-modal"
