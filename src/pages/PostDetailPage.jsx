@@ -25,7 +25,8 @@ import {
 	X,
 	ThreeDots,
 	ChevronLeft,
-	ChevronRight
+	ChevronRight,
+	Trash
 } from "react-bootstrap-icons";
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -52,7 +53,6 @@ const PostDetailPage = () => {
 	const [commentToDelete, setCommentToDelete] = useState(null);
 	const [showCommentOptionsModal, setShowCommentOptionsModal] = useState(false);
 	const [selectedComment, setSelectedComment] = useState(null);
-	const [longPressTimer, setLongPressTimer] = useState(null);
 
 	useEffect(() => {
 		const loadPostAndComments = async () => {
@@ -128,37 +128,9 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const handleCommentLongPress = (comment) => {
+	const handleCommentOptions = (comment) => {
 		setSelectedComment(comment);
 		setShowCommentOptionsModal(true);
-	};
-
-	const handleCommentMouseDown = (comment) => {
-		const timer = setTimeout(() => {
-			handleCommentLongPress(comment);
-		}, 500); // 500ms for long press
-		setLongPressTimer(timer);
-	};
-
-	const handleCommentMouseUp = () => {
-		if (longPressTimer) {
-			clearTimeout(longPressTimer);
-			setLongPressTimer(null);
-		}
-	};
-
-	const handleCommentTouchStart = (comment) => {
-		const timer = setTimeout(() => {
-			handleCommentLongPress(comment);
-		}, 500); // 500ms for long press
-		setLongPressTimer(timer);
-	};
-
-	const handleCommentTouchEnd = () => {
-		if (longPressTimer) {
-			clearTimeout(longPressTimer);
-			setLongPressTimer(null);
-		}
 	};
 
 	const handleCopyComment = () => {
@@ -663,12 +635,6 @@ const PostDetailPage = () => {
 						<div 
 							key={comment.id} 
 							className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""} d-flex gap-2 mb-3`}
-							onMouseDown={() => handleCommentMouseDown(comment)}
-							onMouseUp={handleCommentMouseUp}
-							onMouseLeave={handleCommentMouseUp}
-							onTouchStart={() => handleCommentTouchStart(comment)}
-							onTouchEnd={handleCommentTouchEnd}
-							style={{ cursor: "pointer", userSelect: "none" }}
 						>
 							<Image
 								src={
@@ -696,26 +662,22 @@ const PostDetailPage = () => {
 											{formatTimeAgo(comment.createdAt)}
 										</span>
 									</div>
-									{comment.author.uid === currentUser.uid && (
-										<Button
-											variant="link"
-											size="sm"
-											className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
-											style={{
-												width: "24px",
-												height: "24px",
-												background: "none",
-												border: "none !important",
-												boxShadow: "none !important",
-											}}
-											onClick={(e) => {
-												e.stopPropagation();
-												handleDeleteComment(comment.id);
-											}}
-											title="Delete comment"
-										>
-										</Button>
-									)}
+									<Button
+										variant="link"
+										size="sm"
+										className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
+										style={{
+											width: "24px",
+											height: "24px",
+											background: "none",
+											border: "none !important",
+											boxShadow: "none !important",
+										}}
+										onClick={() => handleCommentOptions(comment)}
+										title="Comment options"
+									>
+										<ThreeDots size={14} />
+									</Button>
 								</div>
 
 								<p className="mb-2">{comment.content}</p>
