@@ -156,7 +156,7 @@ const AppRouter = () => {
 	useEffect(() => {
 		// Configure NProgress
 		NProgress.configure({
-			showSpinner: true,
+			showSpinner: false,
 			speed: 500,
 			minimum: 0.3
 		});
