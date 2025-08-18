@@ -20,9 +20,6 @@ import {
 	X,
 	Calendar,
 	CheckCircleFill,
-	Globe,
-	Lock,
-	PersonFill,
 	Camera,
 } from "react-bootstrap-icons";
 
