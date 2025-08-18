@@ -14,7 +14,6 @@ import {
 	Form,
 	InputGroup,
 	Button,
-	Badge,
 } from "react-bootstrap";
 import {
 	House,
@@ -24,10 +23,7 @@ import {
 	Search,
 	Star,
 	BarChart,
-	Bell,
-	BellFill,
 } from "react-bootstrap-icons";
-import { Search as LucideSearch, MessageCircle, User as LucideUser, Settings as LucideSettings, BarChart3 as LucideBarChart3, CreditCard as LucideCreditCard, Home as LucideHome } from "lucide-react";
 
 
 import { authAPI } from "../../config/ApiConfig";
@@ -51,8 +47,6 @@ const NavigationView = ({ children }) => {
 	const [filterBy, setFilterBy] = useState("for-you"); // Assuming this state is needed for the tabs
 	const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 	const [user, setUser] = useState(null);
-	const [loading, setLoading] = useState(true);
-	const [selectedTab, setSelectedTab] = useState('for-you');
 	const [notifications, setNotifications] = useState([]);
 	const [unreadCount, setUnreadCount] = useState(0);
 
@@ -65,10 +59,9 @@ const NavigationView = ({ children }) => {
 		// Listen to React Router navigation events
 		window.addEventListener("beforeunload", handleStart);
 
-		// Initialize OneSignal with user ID when navigation loads
-		// This block will be updated to handle Firestore initialization
+		// Initialize user and notifications
 		if (loaderUserData && loaderUserData.uid) {
-			setUser(loaderUserData); // Set user from loader data initially
+			setUser(loaderUserData);
 			initializeNotifications(loaderUserData.uid).then((success) => {
 				if (success) {
 					requestNotificationPermission().then((granted) => {
@@ -80,7 +73,6 @@ const NavigationView = ({ children }) => {
 			// If user data is not available from loader, attempt to fetch it
 			const initializeUser = async () => {
 				try {
-					setLoading(true);
 					const userData = await getUser();
 					if (userData) {
 						setUser(userData);
@@ -105,8 +97,6 @@ const NavigationView = ({ children }) => {
 					}
 				} catch (error) {
 					console.error('Error initializing user:', error);
-				} finally {
-					setLoading(false);
 				}
 			};
 			initializeUser();
