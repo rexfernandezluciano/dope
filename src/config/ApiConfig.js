@@ -306,6 +306,19 @@ const postAPI = {
 		return apiRequest(`/posts${queryString ? `?${queryString}` : ''}`, {
 			method: 'GET'
 		});
+	},
+
+	getFollowingFeed: (params = {}) => {
+		const searchParams = new URLSearchParams();
+		Object.keys(params).forEach(key => {
+			if (params[key] !== undefined && params[key] !== null) {
+				searchParams.append(key, params[key]);
+			}
+		});
+		const queryString = searchParams.toString();
+		return apiRequest(`/posts/feed/following${queryString ? `?${queryString}` : ''}`, {
+			method: 'GET'
+		});
 	}
 };
 

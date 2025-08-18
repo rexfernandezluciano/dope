@@ -80,18 +80,16 @@ const HomePage = () => {
 			const params = { limit: 20 };
 			if (cursor) params.cursor = cursor;
 
-			// Add filter parameter to API call
+			let response;
+			
+			// Use specific endpoint for following feed
 			if (filter === "following") {
-				params.filter = "following";
-				// Exclude current user's own posts in following tab
-				params.excludeOwnPosts = true;
+				response = await postAPI.getFollowingFeed(params);
 			} else {
-				params.filter = "for-you"; // Default to random/for-you posts
 				// For "For You" tab, sort by engagement (likes + comments)
 				params.sortBy = "engagement";
+				response = await postAPI.getPosts(params);
 			}
-
-			const response = await postAPI.getPosts(params);
 
 			let processedPosts = response.posts;
 
