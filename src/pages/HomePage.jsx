@@ -35,7 +35,7 @@ import AgoraRTC from 'agora-rtc-sdk-ng';
 import { postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
-import LiveStudioModal from "../components/modals/LiveStudioModal"; // Import the new modal
+import LiveStudioModal from "../components/LiveStudioModal";
 import {
 	deletePost as deletePostUtil,
 	sharePost,
