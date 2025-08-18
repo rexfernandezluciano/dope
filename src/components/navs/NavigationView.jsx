@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useNavigate, useLocation, useLoaderData, Link } from "react-router-dom";
+import NProgress from "nprogress";
 import {
 	Navbar,
 	Container,
@@ -40,6 +41,11 @@ const NavigationView = ({ children }) => {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
+	// Complete NProgress when location changes
+	useEffect(() => {
+		NProgress.done();
+	}, [location]);
+
 	const handleLogout = () => {
 		setShowLogoutDialog(true);
 	};
@@ -48,6 +54,7 @@ const NavigationView = ({ children }) => {
 		authAPI.logout();
 		removeAuthToken();
 		setShowLogoutDialog(false);
+		NProgress.start();
 		navigate("/");
 	};
 
@@ -87,8 +94,15 @@ const NavigationView = ({ children }) => {
 	const handleSearch = (e) => {
 		e.preventDefault();
 		if (searchQuery.trim()) {
+			NProgress.start();
 			navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
 		}
+	};
+
+	const handleNavigate = (href) => {
+		NProgress.start();
+		navigate(href);
+		setShowModal(false);
 	};
 
 	if (!user) {
@@ -183,7 +197,7 @@ const NavigationView = ({ children }) => {
 											to={item.href}
 											className={navItemClass(item.href)}
 											style={{ textDecoration: 'none' }}
-											onClick={() => setShowModal(false)}
+											onClick={() => handleNavigate(item.href)}
 										>
 											{item.icon}
 											{item.label}

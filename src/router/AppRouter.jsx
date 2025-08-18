@@ -1,6 +1,9 @@
 /** @format */
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { useEffect } from "react";
+import NProgress from "nprogress";
+import "nprogress/nprogress.css";
 
 import StartPage from "../pages/StartPage";
 import LoginPage from "../pages/auth/LoginPage";
@@ -150,6 +153,15 @@ const router = createBrowserRouter([
 ]);
 
 const AppRouter = () => {
+	useEffect(() => {
+		// Configure NProgress
+		NProgress.configure({
+			showSpinner: true,
+			speed: 500,
+			minimum: 0.3
+		});
+	}, []);
+
 	return <RouterProvider router={router} />;
 };
 

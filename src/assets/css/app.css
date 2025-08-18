@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+/** @format */
 
 body {
   font-family: 'Poppins', sans-serif;
@@ -251,7 +251,7 @@ a:hover, a:focus {
   body {
     padding-top: 0;
   }
-  
+
   .card-body {
     padding: 0.75rem;
   }
@@ -312,7 +312,7 @@ button, [role="button"] {
 @media (max-width: 480px) {
   .btn { padding: 0.25rem 0.5rem; }
   .card-body { padding: 0.5rem; }
-  
+
   .text-truncate-username {
     max-width: 100px;
   }
@@ -340,4 +340,19 @@ button, [role="button"] {
 /* Custom dropdown toggle styling */
 .dropdown-toggle::after {
   display: none !important;
+}
+
+/* NProgress custom styles */
+#nprogress .bar {
+	background: #0d6efd !important;
+	height: 3px !important;
+}
+
+#nprogress .peg {
+	box-shadow: 0 0 10px #0d6efd, 0 0 5px #0d6efd !important;
+}
+
+#nprogress .spinner-icon {
+	border-top-color: #0d6efd !important;
+	border-left-color: #0d6efd !important;
 }
