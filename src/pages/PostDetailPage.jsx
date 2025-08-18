@@ -832,7 +832,7 @@ const PostDetailPage = () => {
 				<Modal.Header closeButton>
 					<Modal.Title>Comment Options</Modal.Title>
 				</Modal.Header>
-				<Modal.Body className="p-0">
+				<Modal.Body className="p-0 pb-2">
 					<div className="list-group list-group-flush">
 						<button
 							className="list-group-item list-group-item-action border-0"
