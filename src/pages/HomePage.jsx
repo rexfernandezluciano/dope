@@ -64,18 +64,12 @@ const HomePage = () => {
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
 	const [filterBy, setFilterBy] = useState("for-you"); // State for filter selection
-	const [postComments, setPostComments] = useState({}); // Store comments for each post
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
 
 	useEffect(() => {
 		loadPosts();
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-	// Reload posts when filter changes
-	useEffect(() => {
-		loadPosts(null, filterBy);
 	}, [filterBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const loadPosts = async (cursor = null, filter = filterBy) => {
@@ -140,13 +134,8 @@ const HomePage = () => {
 
 			if (cursor) {
 				setPosts((prev) => [...prev, ...privacyFilteredPosts]);
-				// Fetch comments for new posts only
-				fetchRandomCommentsForPosts(privacyFilteredPosts);
 			} else {
 				setPosts(privacyFilteredPosts);
-				// Clear previous comments and fetch new ones
-				setPostComments({});
-				fetchRandomCommentsForPosts(privacyFilteredPosts);
 			}
 			setHasMore(response.hasMore);
 			setNextCursor(response.nextCursor);
@@ -155,35 +144,6 @@ const HomePage = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
-
-	// Function to fetch random comments for posts
-	const fetchRandomCommentsForPosts = async (posts) => {
-		const commentsData = {};
-
-		for (const post of posts) {
-			// Randomly decide if post should show comments (70% chance)
-			const shouldShowComments = Math.random() > 0.3;
-
-			if (shouldShowComments && post.stats?.comments > 0) {
-				try {
-					// Randomly choose 1, 2, or 3 comments to show
-					const commentCount = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
-					const maxToShow = Math.min(commentCount, post.stats.comments, 3);
-
-					const response = await commentAPI.getComments(post.id, {
-						limit: maxToShow,
-					});
-					if (response.comments && response.comments.length > 0) {
-						commentsData[post.id] = response.comments;
-					}
-				} catch (error) {
-					console.error(`Error fetching comments for post ${post.id}:`, error);
-				}
-			}
-		}
-
-		setPostComments((prev) => ({ ...prev, ...commentsData }));
 	};
 
 	// All posts are already filtered by the API, so we don't need to filter here
@@ -406,45 +366,10 @@ const HomePage = () => {
 		}
 	};
 
-	// const handleSharePost = async (postId) => {
-	// 	const postUrl = `${window.location.origin}/post/${postId}`;
-
-	// 	if (navigator.share) {
-	// 		try {
-	// 			await navigator.share({
-	// 				title: "Check out this post",
-	// 				url: postUrl,
-	// 			});
-	// 		} catch (err) {
-	// 			// Fallback to clipboard if sharing fails
-	// 			navigator.clipboard.writeText(postUrl);
-	// 		}
-	// 	} else {
-	// 		// Fallback to clipboard for browsers that don't support Web Share API
-	// 		try {
-	// 			await navigator.clipboard.writeText(postUrl);
-	// 		} catch (err) {
-	// 			console.error("Failed to copy to clipboard:", err);
-	// 		}
-	// 	}
-	// };
-
 	// Use the reusable sharePost utility
-	// const handleSharePost = (postId) => {
-	// 	sharePost(postId);
-	// };
-
-	// const handlePostClick = (postId, e) => {
-	// 	// Don't navigate if clicking on interactive elements
-	// 	if (
-	// 		e.target.closest("button") ||
-	// 		e.target.closest("a") ||
-	// 		e.target.closest(".dropdown")
-	// 	) {
-	// 		return;
-	// 	}
-	// 	window.location.href = `/post/${postId}`;
-	// };
+	const handleSharePost = (postId) => {
+		sharePost(postId);
+	};
 
 	const handleLikePost = async (postId) => {
 		try {
@@ -589,13 +514,11 @@ const HomePage = () => {
 									post={post}
 									currentUser={currentUser}
 									onLike={handleLikePost}
-									onShare={() => sharePost(post.id)} // Use reusable sharePost utility
+									onShare={() => handleSharePost(post.id)} // Use reusable sharePost utility
 									onDeletePost={handleDeletePost}
 									onPostClick={(e) => handlePostClick(post.id, e)} // Use reusable handlePostClick utility
-									showComments={
-										postComments[post.id] && postComments[post.id].length > 0
-									}
-									comments={postComments[post.id] || []}
+									showComments={post.comments && post.comments.length > 0}
+									comments={post.comments || []}
 								/>
 							))
 						)}
