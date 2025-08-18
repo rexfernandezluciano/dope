@@ -191,20 +191,21 @@ const NavigationView = ({ children }) => {
 									/>
 									<h6 className="mt-2">{user?.name}</h6>
 									<small className="text-muted">@{user?.username}</small>
-									{user.subscription && user.subscription !== "free" && (
+									{((user?.membership?.subscription || user?.subscription) && 
+									  (user?.membership?.subscription || user?.subscription) !== "free") && (
 										<span
 											className={`ms-1 badge ${
-												user.subscription === "premium"
+												(user?.membership?.subscription || user?.subscription) === "premium"
 													? "bg-warning text-dark"
-													: user.subscription === "pro"
+													: (user?.membership?.subscription || user?.subscription) === "pro"
 														? "bg-primary"
 														: "bg-secondary"
 											}`}
 											style={{ fontSize: "0.7rem" }}
 										>
-											{user.subscription.toUpperCase()}
+											{(user?.membership?.subscription || user?.subscription).toUpperCase()}
 										</span>
-									)}
+									)}</small>
 								</div>
 								<Nav className="flex-column">
 									{menuItems.map((item, idx) => (
@@ -359,21 +360,22 @@ const NavigationView = ({ children }) => {
 						<h5 className="text-center">{user?.name}</h5>
 						<p className="text-center text-muted small">
 							{user?.username}{" "}
-							{((user.membership?.subscription || user.subscription) && 
-							  (user.membership?.subscription || user.subscription) !== "free") && (
+							{((user?.membership?.subscription || user?.subscription) && 
+							  (user?.membership?.subscription || user?.subscription) !== "free") && (
 								<span
 									className={`ms-1 badge ${
-										(user.membership?.subscription || user.subscription) === "premium"
+										(user?.membership?.subscription || user?.subscription) === "premium"
 											? "bg-warning text-dark"
-											: (user.membership?.subscription || user.subscription) === "pro"
+											: (user?.membership?.subscription || user?.subscription) === "pro"
 												? "bg-primary"
 												: "bg-secondary"
 									}`}
 									style={{ fontSize: "0.7rem" }}
 								>
-									{(user.membership?.subscription || user.subscription).toUpperCase()}
+									{(user?.membership?.subscription || user?.subscription).toUpperCase()}
 								</span>
-							)}</p>
+							)}
+						</p>
 					</Container>
 					<Nav className="flex-column gap-1">
 						{menuItems.map((item, idx) => (
