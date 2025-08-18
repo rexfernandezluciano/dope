@@ -30,7 +30,12 @@ import {
 } from "react-bootstrap-icons";
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
-import { formatTimeAgo, deletePost as deletePostUtil, sharePost } from "../utils/common-utils";
+import {
+	formatTimeAgo,
+	deletePost as deletePostUtil,
+	sharePost,
+} from "../utils/common-utils";
+import { parseTextContent } from "../utils/text-utils";
 
 const PostDetailPage = () => {
 	const { postId } = useParams();
@@ -106,6 +111,18 @@ const PostDetailPage = () => {
 	const handleSharePost = async (postId) => {
 		const postUrl = `${window.location.origin}/post/${postId}`;
 		await sharePost(postUrl);
+	};
+
+	const handleHashtagClick = (hashtag) => {
+		navigate(`/search?q=%23${encodeURIComponent(hashtag)}`);
+	};
+
+	const handleMentionClick = (username) => {
+		navigate(`/${username}`);
+	};
+
+	const handleLinkClick = (url) => {
+		window.open(url, '_blank', 'noopener,noreferrer');
 	};
 
 	const handleDeleteComment = (commentId) => {
@@ -357,7 +374,16 @@ const PostDetailPage = () => {
 								</Button>
 							</div>
 
-							{post.content && <p className="mb-2 mt-2 fs-5">{post.content}</p>}
+							{post.content && (
+								<div className="mb-2 mt-2 fs-5">
+									{parseTextContent(post.content, {
+										onHashtagClick: handleHashtagClick,
+										onMentionClick: handleMentionClick,
+										onLinkClick: handleLinkClick
+									})}
+								</div>
+							)}
+
 
 							{post.imageUrls && post.imageUrls.length > 0 && (
 								<div className="mb-2">
@@ -704,7 +730,13 @@ const PostDetailPage = () => {
 									</Button>
 								</div>
 
-								<p className="mb-2">{comment.content}</p>
+								<div className="mb-2">
+												{parseTextContent(comment.content, {
+													onHashtagClick: handleHashtagClick,
+													onMentionClick: handleMentionClick,
+													onLinkClick: handleLinkClick
+												})}
+											</div>
 							</div>
 						</div>
 					))}
@@ -892,7 +924,7 @@ const PostDetailPage = () => {
 				show={showDeleteCommentDialog}
 				onHide={() => {
 					if (!deletingComment) {
-						setShowDeleteCommentDialog(false);
+						setShowDeleteDialog(false);
 						setCommentToDelete(null);
 					}
 				}}

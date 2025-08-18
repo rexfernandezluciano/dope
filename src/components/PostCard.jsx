@@ -30,6 +30,7 @@ import {
 	sharePost,
 	handlePostClick as handlePostClickUtil,
 } from "../utils/common-utils";
+import { parseTextContent } from "../utils/text-utils";
 
 // Giphy imports temporarily removed due to module issues
 // import { GifIcon } from '@giphy/js-fetch-api';
@@ -127,6 +128,18 @@ const PostCard = ({
 		onDeletePost?.(postId);
 	};
 
+	const handleHashtagClick = (hashtag) => {
+		navigate(`/search?q=%23${encodeURIComponent(hashtag)}`);
+	};
+
+	const handleMentionClick = (username) => {
+		navigate(`/${username}`);
+	};
+
+	const handleLinkClick = (url) => {
+		window.open(url, '_blank', 'noopener,noreferrer');
+	};
+
 	const openPostOptionsModal = (e) => {
 		e.stopPropagation();
 		setShowPostOptionsModal(true);
@@ -195,7 +208,15 @@ const PostCard = ({
 								</Button>
 							</div>
 
-							{post.content && <p className="mb-2">{post.content}</p>}
+							{post.content && (
+								<div className="mb-2">
+									{parseTextContent(post.content, {
+										onHashtagClick: handleHashtagClick,
+										onMentionClick: handleMentionClick,
+										onLinkClick: handleLinkClick
+									})}
+								</div>
+							)}
 
 							{post.imageUrls && post.imageUrls.length > 0 && (
 								<div className="mb-2">
@@ -503,7 +524,13 @@ const PostCard = ({
 														{formatTimeAgo(comment.createdAt)}
 													</span>
 												</div>
-												<p className="mb-0 small">{comment.content}</p>
+												<div className="mb-0 small">
+													{parseTextContent(comment.content, {
+														onHashtagClick: handleHashtagClick,
+														onMentionClick: handleMentionClick,
+														onLinkClick: handleLinkClick
+													})}
+												</div>
 											</div>
 										</div>
 									))}

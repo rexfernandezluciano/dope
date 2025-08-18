@@ -41,6 +41,48 @@ import {
 	handlePostClick,
 } from "../utils/common-utils";
 
+// Utility function to clean text content
+const cleanTextContent = (text) => {
+	// Replace multiple line breaks with a single one, and trim whitespace
+	return text.replace(/(\r\n|\n|\r){2,}/g, '$1$2').trim();
+};
+
+// Utility function to extract hashtags from text
+const extractHashtags = (text) => {
+	const hashtagRegex = /(?:^|\s)(#[\w]+)/g;
+	const matches = text.matchAll(hashtagRegex);
+	return Array.from(matches, match => match[1]);
+};
+
+// Utility function to extract mentions from text
+const extractMentions = (text) => {
+	const mentionRegex = /(?:^|\s)(@[\w]+)/g;
+	const matches = text.matchAll(mentionRegex);
+	return Array.from(matches, match => match[1]);
+};
+
+// Utility function to parse text with hashtags, links, and mentions
+const parseTextContent = (text) => {
+	if (!text) return text;
+
+	// Handle line breaks by converting them to <br />
+	const textWithBreaks = text.replace(/(\r\n|\n|\r)/g, '<br />');
+
+	// Regex for URLs
+	const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi;
+	const textWithLinks = textWithBreaks.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+
+	// Regex for hashtags
+	const hashtagRegex = /(#[\w]+)/g;
+	const textWithHashtags = textWithLinks.replace(hashtagRegex, '<a href="/search?query=$1" onClick="event.stopPropagation();">$1</a>');
+
+	// Regex for mentions
+	const mentionRegex = /(@[\w]+)/g;
+	const textWithMentions = textWithHashtags.replace(mentionRegex, '<a href="/profile/$1" onClick="event.stopPropagation();">$1</a>');
+
+	return textWithMentions;
+};
+
 const HomePage = () => {
 	const [showComposerModal, setShowComposerModal] = useState(false);
 	const [postText, setPostText] = useState("");
@@ -400,14 +442,43 @@ const HomePage = () => {
 	};
 
 	const handleCreatePost = async () => {
-		if (!postText.trim() && !photos && !liveVideoUrl) return;
+		// Placeholder states for the new logic
+		const newPost = postText;
+		const selectedImages = photos || [];
+		const selectedGif = null; // Assuming this is handled elsewhere or not used here
+		const selectedPrivacy = privacy;
+
+		const cleanedContent = cleanTextContent(newPost);
+
+		if (!cleanedContent.trim() && selectedImages.length === 0 && !selectedGif) {
+			setError("Please enter some content or select images/GIF.");
+			return;
+		}
 
 		try {
 			setSubmitting(true);
+			// Extract hashtags and mentions for potential future use
+			const hashtags = extractHashtags(cleanedContent);
+			const mentions = extractMentions(cleanedContent);
+
+			let uploadedImageUrls = [];
+			if (selectedImages.length > 0) {
+				// Upload images if they are files, otherwise assume they are already URLs
+				if (typeof selectedImages[0] === 'object') {
+					const uploadPromises = selectedImages.map(img => uploadImageToCloudinary(img));
+					uploadedImageUrls = await Promise.all(uploadPromises);
+				} else {
+					uploadedImageUrls = selectedImages; // Already URLs
+				}
+			}
+
 			const postData = {
-				content: postText,
-				privacy: privacy.toLowerCase(),
-				postType: isLive && isStreaming ? "live_video" : "text",
+				content: cleanedContent,
+				imageUrls: uploadedImageUrls,
+				gifUrl: selectedGif ? selectedGif.images.fixed_height.url : null,
+				privacy: selectedPrivacy,
+				hashtags,
+				mentions,
 			};
 
 			if (liveVideoUrl && isLive && isStreaming) {
@@ -416,31 +487,8 @@ const HomePage = () => {
 				postData.streamKey = streamUrlRef.current;
 			}
 
-			if (photos && photos.length > 0) {
-				// If photos are URLs (from Cloudinary), include them in postData
-				if (typeof photos[0] === "string") {
-					postData.imageUrls = photos;
-					await postAPI.createPost(postData);
-				} else {
-					// If photos are files, use FormData
-					const formData = new FormData();
-					formData.append("content", postText);
-					formData.append("privacy", privacy.toLowerCase());
-					formData.append("postType", isLive ? "live" : "text");
+			await postAPI.createPost(postData);
 
-					if (liveVideoUrl && isLive) {
-						formData.append("liveVideoUrl", liveVideoUrl);
-					}
-
-					for (let i = 0; i < photos.length; i++) {
-						formData.append("images", photos[i]);
-					}
-
-					await postAPI.createPost(formData);
-				}
-			} else {
-				await postAPI.createPost(postData);
-			}
 
 			// Reset form
 			setPostText("");
