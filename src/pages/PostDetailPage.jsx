@@ -25,8 +25,7 @@ import {
 	X,
 	ThreeDots,
 	ChevronLeft,
-	ChevronRight,
-	Trash,
+	ChevronRight
 } from "react-bootstrap-icons";
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -715,7 +714,6 @@ const PostDetailPage = () => {
 											}}
 											title="Delete comment"
 										>
-											<Trash size={12} />
 										</Button>
 									)}
 								</div>
