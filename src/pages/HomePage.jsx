@@ -496,7 +496,7 @@ const HomePage = () => {
 								roundedCircle
 								width="45"
 								height="45"
-								style={{ objectFit: "cover" }}
+								style={{ objectFit: "cover", minWidth: "45px", minHeight: "45px" }}
 							/>
 							<div className="flex-grow-1">
 								<div className="d-flex align-items-center gap-1 mb-2">
@@ -609,6 +609,7 @@ const HomePage = () => {
 								roundedCircle
 								width="48"
 								height="48"
+								style={{ objectFit: "cover", minWidth: "48px", minHeight: "48px" }}
 							/>
 
 							<div className="flex-grow-1">
