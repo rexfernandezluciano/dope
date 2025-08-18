@@ -50,7 +50,7 @@ export const handleGoogleSignIn = (callback) => {
 		}
 
 		window.google.accounts.id.initialize({
-			client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+			client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com",
 			callback: (response) => {
 				if (response.credential) {
 					resolve(response.credential);

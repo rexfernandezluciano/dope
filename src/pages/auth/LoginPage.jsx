@@ -40,13 +40,6 @@ const LoginPage = () => {
 		try {
 			setLoading(true);
 
-			// Developer access restriction during development
-			if (email !== "rexluciano@yahoo.com") {
-				setError("Access restricted during development. Only authorized developers can login.");
-				setLoading(false);
-				return;
-			}
-
 			const result = await authAPI.login(email, password);
 
 			if (result.user && !result.user.hasVerifiedEmail) {
@@ -229,7 +222,7 @@ const LoginPage = () => {
 										onClick={handleGoogleLogin}
 										size="md"
 										disabled={loading}
-										className="shadow-none">
+										className="shadow-none w-100">
 										Continue with Google
 									</Button>
 								</div>
