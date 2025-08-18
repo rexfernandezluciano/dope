@@ -7,6 +7,7 @@ import { CheckCircleFill, People, Globe, Clock } from "react-bootstrap-icons";
 
 import IntroductionBanner from "../components/banners/IntroductionBanner";
 import socialNetIllustration from "../assets/images/undraw_social-networking_v4z1.svg";
+import { addToWaitingList, isEmailInWaitingList } from "../utils/firestore-utils";
 
 const WaitingListPage = () => {
 	const [email, setEmail] = useState("");
@@ -23,17 +24,31 @@ const WaitingListPage = () => {
 			return;
 		}
 
+		// Basic email validation
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(email)) {
+			setError("Please enter a valid email address");
+			return;
+		}
+
 		try {
 			setLoading(true);
 			setError("");
 			
-			// Here you would typically call an API to save the waiting list entry
-			// For now, we'll simulate a successful submission
-			await new Promise(resolve => setTimeout(resolve, 1000));
+			// Check if email already exists
+			const emailExists = await isEmailInWaitingList(email);
+			if (emailExists) {
+				setError("This email is already on our waiting list. We'll notify you when we launch!");
+				return;
+			}
+			
+			// Add to waiting list
+			await addToWaitingList({ name, email });
 			
 			setSubmitted(true);
 		} catch (err) {
-			setError("Failed to join waiting list. Please try again.");
+			console.error('Waiting list submission error:', err);
+			setError(err.message || "Failed to join waiting list. Please try again.");
 		} finally {
 			setLoading(false);
 		}
