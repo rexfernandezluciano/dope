@@ -29,7 +29,7 @@ try {
 		}
 		
 		initializeAppCheck(app, {
-			provider: new ReCaptchaV3Provider(process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'),
+			provider: new ReCaptchaV3Provider(process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeXsKkrAAAAAIZ_HaIAbxmU6XIrxVlLguh78xx_'),
 			isTokenAutoRefreshEnabled: true
 		});
 	}
