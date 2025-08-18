@@ -51,6 +51,9 @@ const PostDetailPage = () => {
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
 	const [showDeleteCommentDialog, setShowDeleteCommentDialog] = useState(false);
 	const [commentToDelete, setCommentToDelete] = useState(null);
+	const [showCommentOptionsModal, setShowCommentOptionsModal] = useState(false);
+	const [selectedComment, setSelectedComment] = useState(null);
+	const [longPressTimer, setLongPressTimer] = useState(null);
 
 	useEffect(() => {
 		const loadPostAndComments = async () => {
@@ -123,6 +126,60 @@ const PostDetailPage = () => {
 		} finally {
 			setShowDeleteCommentDialog(false);
 			setCommentToDelete(null);
+		}
+	};
+
+	const handleCommentLongPress = (comment) => {
+		setSelectedComment(comment);
+		setShowCommentOptionsModal(true);
+	};
+
+	const handleCommentMouseDown = (comment) => {
+		const timer = setTimeout(() => {
+			handleCommentLongPress(comment);
+		}, 500); // 500ms for long press
+		setLongPressTimer(timer);
+	};
+
+	const handleCommentMouseUp = () => {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			setLongPressTimer(null);
+		}
+	};
+
+	const handleCommentTouchStart = (comment) => {
+		const timer = setTimeout(() => {
+			handleCommentLongPress(comment);
+		}, 500); // 500ms for long press
+		setLongPressTimer(timer);
+	};
+
+	const handleCommentTouchEnd = () => {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			setLongPressTimer(null);
+		}
+	};
+
+	const handleCopyComment = () => {
+		if (selectedComment) {
+			navigator.clipboard.writeText(selectedComment.content);
+			setShowCommentOptionsModal(false);
+		}
+	};
+
+	const handleReportComment = () => {
+		// Implement report functionality here
+		console.log("Report comment:", selectedComment?.id);
+		setShowCommentOptionsModal(false);
+	};
+
+	const handleDeleteCommentFromModal = () => {
+		if (selectedComment) {
+			setCommentToDelete(selectedComment.id);
+			setShowDeleteCommentDialog(true);
+			setShowCommentOptionsModal(false);
 		}
 	};
 
@@ -604,7 +661,16 @@ const PostDetailPage = () => {
 			) : (
 				<div className="comment-thread px-3 py-4">
 					{comments.map((comment, index) => (
-						<div key={comment.id} className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""} d-flex gap-2 mb-3`}>
+						<div 
+							key={comment.id} 
+							className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""} d-flex gap-2 mb-3`}
+							onMouseDown={() => handleCommentMouseDown(comment)}
+							onMouseUp={handleCommentMouseUp}
+							onMouseLeave={handleCommentMouseUp}
+							onTouchStart={() => handleCommentTouchStart(comment)}
+							onTouchEnd={handleCommentTouchEnd}
+							style={{ cursor: "pointer", userSelect: "none" }}
+						>
 							<Image
 								src={
 									comment.author.photoURL ||
@@ -643,7 +709,10 @@ const PostDetailPage = () => {
 												border: "none !important",
 												boxShadow: "none !important",
 											}}
-											onClick={() => handleDeleteComment(comment.id)}
+											onClick={(e) => {
+												e.stopPropagation();
+												handleDeleteComment(comment.id);
+											}}
 											title="Delete comment"
 										>
 											<Trash size={12} />
@@ -790,6 +859,46 @@ const PostDetailPage = () => {
 				onDialogButtonClick={confirmDeletePost}
 				type="danger"
 			/>
+
+			{/* Comment Options Modal */}
+			<Modal
+				show={showCommentOptionsModal}
+				onHide={() => {
+					setShowCommentOptionsModal(false);
+					setSelectedComment(null);
+				}}
+				centered
+			>
+				<Modal.Header closeButton>
+					<Modal.Title>Comment Options</Modal.Title>
+				</Modal.Header>
+				<Modal.Body className="p-0">
+					<div className="list-group list-group-flush">
+						<button
+							className="list-group-item list-group-item-action border-0"
+							onClick={handleCopyComment}
+						>
+							Copy Comment
+						</button>
+						{selectedComment?.author.uid !== currentUser.uid && (
+							<button
+								className="list-group-item list-group-item-action border-0 text-warning"
+								onClick={handleReportComment}
+							>
+								Report Comment
+							</button>
+						)}
+						{selectedComment?.author.uid === currentUser.uid && (
+							<button
+								className="list-group-item list-group-item-action border-0 text-danger"
+								onClick={handleDeleteCommentFromModal}
+							>
+								Delete Comment
+							</button>
+						)}
+					</div>
+				</Modal.Body>
+			</Modal>
 
 			{/* Delete Comment Confirmation Dialog */}
 			<AlertDialog
