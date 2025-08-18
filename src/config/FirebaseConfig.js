@@ -25,7 +25,7 @@ try {
 		// For development, use debug token
 		if (process.env.NODE_ENV === 'development') {
 			// Debug token for development - replace with your debug token
-			self.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.REACT_APP_FIREBASE_APPCHECK_DEBUG_TOKEN || true;
+			window.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.REACT_APP_FIREBASE_APPCHECK_DEBUG_TOKEN || true;
 		}
 		
 		initializeAppCheck(app, {

@@ -1,14 +1,14 @@
 /** @format */
 
+// Import the real App Check utility
+import { addAppCheckHeaders as addFirebaseAppCheckHeaders } from '../utils/app-check-utils';
+
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://natasha.dopp.eu.org/api';
 
 // Validate API URL is HTTPS
 if (!API_BASE_URL.startsWith('https://')) {
 	console.error('API URL must use HTTPS');
 }
-
-// Import the real App Check utility
-import { addAppCheckHeaders as addFirebaseAppCheckHeaders } from '../utils/app-check-utils';
 
 // Real Firebase App Check implementation
 const addAppCheckHeaders = async (headers) => {
