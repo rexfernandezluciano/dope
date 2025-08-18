@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState } from "react";
-import { useNavigate, useLocation, useLoaderData } from "react-router-dom";
+import { useNavigate, useLocation, useLoaderData, Link } from "react-router-dom";
 import {
 	Navbar,
 	Container,
@@ -110,7 +110,7 @@ const NavigationView = ({ children }) => {
 							className="shadow-none border-0"
 							onClick={() => setShowModal(true)}
 						/>
-						<Navbar.Brand href="/" className="text-primary">
+						<Navbar.Brand as={Link} to="/home" className="text-primary">
 							<div
 								style={{
 									width: "200px",
@@ -178,14 +178,15 @@ const NavigationView = ({ children }) => {
 								</div>
 								<Nav className="flex-column">
 									{menuItems.map((item, idx) => (
-										<Nav.Link
+										<Link
 											key={idx}
-											href={item.href}
+											to={item.href}
 											className={navItemClass(item.href)}
+											style={{ textDecoration: 'none' }}
 										>
 											{item.icon}
 											{item.label}
-										</Nav.Link>
+										</Link>
 									))}
 									<Nav.Link
 										onClick={handleLogout}
@@ -208,7 +209,8 @@ const NavigationView = ({ children }) => {
 				<Navbar expand={false} className="bg-white border-bottom sticky-top">
 					<Container fluid>
 						<Navbar.Brand
-							href="/home"
+							as={Link}
+							to="/home"
 							className="fw-bold d-flex align-items-center gap-2"
 						>
 							<Image
@@ -260,37 +262,37 @@ const NavigationView = ({ children }) => {
 							/>
 							<ul className="dropdown-menu dropdown-menu-end">
 								<li>
-									<a className="dropdown-item" href={`/${user?.username}`}>
+									<Link className="dropdown-item" to={`/${user?.username}`}>
 										<Person size={16} className="me-2" />
 										Profile
-									</a>
+									</Link>
 								</li>
 								<li>
-									<a
+									<Link
 										className="dropdown-item"
-										href={`/${user?.username}/settings`}
+										to={`/${user?.username}/settings`}
 									>
 										<Gear size={16} className="me-2" />
 										Settings
-									</a>
+									</Link>
 								</li>
 								<li>
-									<a
+									<Link
 										className="dropdown-item"
-										href={`/${user?.username}/subscription`}
+										to={`/${user?.username}/subscription`}
 									>
 										<Star size={16} className="me-2" />
 										Subscription
-									</a>
+									</Link>
 								</li>
 								<li>
-									<a
+									<Link
 										className="dropdown-item"
-										href={`/${user?.username}/analytics`}
+										to={`/${user?.username}/analytics`}
 									>
 										<BarChart size={16} className="me-2" />
 										Analytics
-									</a>
+									</Link>
 								</li>
 								<li>
 									<hr className="dropdown-divider" />
@@ -343,14 +345,15 @@ const NavigationView = ({ children }) => {
 						</p>
 						<Nav className="flex-column gap-1">
 							{menuItems.map((item, idx) => (
-								<Nav.Link
+								<Link
 									key={idx}
-									href={item.href}
+									to={item.href}
 									className={navItemClass(item.href)}
+									style={{ textDecoration: 'none' }}
 								>
 									{item.icon}
 									{item.label}
-								</Nav.Link>
+								</Link>
 							))}
 							<Nav.Link
 								onClick={handleLogout}
