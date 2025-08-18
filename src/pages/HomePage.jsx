@@ -34,7 +34,11 @@ import heic2any from "heic2any";
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
-import { deletePost as deletePostUtil, sharePost, handlePostClick } from "../utils/common-utils";
+import {
+	deletePost as deletePostUtil,
+	sharePost,
+	handlePostClick,
+} from "../utils/common-utils";
 
 const HomePage = () => {
 	const [showComposerModal, setShowComposerModal] = useState(false);
@@ -81,7 +85,7 @@ const HomePage = () => {
 			if (cursor) params.cursor = cursor;
 
 			let response;
-			
+
 			// Use specific endpoint for following feed
 			if (filter === "following") {
 				response = await postAPI.getFollowingFeed(params);
@@ -96,7 +100,9 @@ const HomePage = () => {
 			// Client-side filtering as backup in case API doesn't support it
 			if (filter === "following") {
 				// Filter out current user's own posts
-				processedPosts = response.posts.filter(post => post.author.uid !== currentUser.uid);
+				processedPosts = response.posts.filter(
+					(post) => post.author.uid !== currentUser.uid,
+				);
 			} else if (filter === "for-you") {
 				// Sort by engagement (likes + comments) if not already sorted by API
 				processedPosts = response.posts.sort((a, b) => {
@@ -107,27 +113,29 @@ const HomePage = () => {
 			}
 
 			// Filter posts based on profile privacy settings
-			const privacyFilteredPosts = processedPosts.filter(post => {
-				const authorPrivacy = post.author.privacy?.profile || 'public';
+			const privacyFilteredPosts = processedPosts.filter((post) => {
+				const authorPrivacy = post.author.privacy?.profile || "public";
 
 				// Always show public posts
-				if (authorPrivacy === 'public') return true;
+				if (authorPrivacy === "public") return true;
 
 				// Don't show private posts unless it's the current user's post
-				if (authorPrivacy === 'private') {
+				if (authorPrivacy === "private") {
 					return post.author.uid === currentUser.uid;
 				}
 
 				// Show followers-only posts if current user follows the author or is the author
-				if (authorPrivacy === 'followers') {
+				if (authorPrivacy === "followers") {
 					// Assuming `post.author.isFollowedByCurrentUser` is provided by the API
 					// If not, this logic might need to be adjusted based on how follow status is checked
-					return post.author.uid === currentUser.uid || post.author.isFollowedByCurrentUser;
+					return (
+						post.author.uid === currentUser.uid ||
+						post.author.isFollowedByCurrentUser
+					);
 				}
 
 				return false;
 			});
-
 
 			if (cursor) {
 				setPosts((prev) => [...prev, ...privacyFilteredPosts]);
@@ -162,7 +170,9 @@ const HomePage = () => {
 					const commentCount = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
 					const maxToShow = Math.min(commentCount, post.stats.comments, 3);
 
-					const response = await commentAPI.getComments(post.id, { limit: maxToShow });
+					const response = await commentAPI.getComments(post.id, {
+						limit: maxToShow,
+					});
 					if (response.comments && response.comments.length > 0) {
 						commentsData[post.id] = response.comments;
 					}
@@ -172,7 +182,7 @@ const HomePage = () => {
 			}
 		}
 
-		setPostComments(prev => ({ ...prev, ...commentsData }));
+		setPostComments((prev) => ({ ...prev, ...commentsData }));
 	};
 
 	// All posts are already filtered by the API, so we don't need to filter here
@@ -194,20 +204,28 @@ const HomePage = () => {
 	// Function to get the image upload limit based on subscription plan
 	const getImageUploadLimit = (subscription) => {
 		switch (subscription) {
-			case "premium": return 10;
-			case "pro": return Infinity;
-			default: return 3;
+			case "premium":
+				return 10;
+			case "pro":
+				return Infinity;
+			default:
+				return 3;
 		}
 	};
 
 	const uploadImageToCloudinary = async (file) => {
 		// Handle HEIC files
 		let finalFile = file;
-		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+		if (
+			file.type === "image/heic" ||
+			file.name.toLowerCase().endsWith(".heic")
+		) {
 			try {
 				const heic2any = (await import("heic2any")).default;
 				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+					type: "image/jpeg",
+				});
 			} catch (err) {
 				console.error("Error converting HEIC:", err);
 				return null;
@@ -236,15 +254,15 @@ const HomePage = () => {
 		}
 	};
 
-
-
 	const handleFileChange = async (e) => {
 		const files = Array.from(e.target.files);
 		const imageLimit = getImageUploadLimit(currentUser?.subscription);
 
 		if (files.length > imageLimit) {
-			alert(`You can only upload ${imageLimit === Infinity ? 'unlimited' : imageLimit} images per post. ${imageLimit === 3 ? 'Upgrade to Premium or Pro for more uploads.' : ''}`);
-			e.target.value = '';
+			alert(
+				`You can only upload ${imageLimit === Infinity ? "unlimited" : imageLimit} images per post. ${imageLimit === 3 ? "Upgrade to Premium or Pro for more uploads." : ""}`,
+			);
+			e.target.value = "";
 			return;
 		}
 
@@ -266,9 +284,14 @@ const HomePage = () => {
 				let finalFile = file;
 
 				// Handle HEIC files
-				if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+				if (
+					file.type === "image/heic" ||
+					file.name.toLowerCase().endsWith(".heic")
+				) {
 					const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-					finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+					finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+						type: "image/jpeg",
+					});
 				}
 
 				const url = await uploadImageToCloudinary(finalFile);
@@ -292,7 +315,9 @@ const HomePage = () => {
 		const imageLimit = getImageUploadLimit(currentUser?.subscription);
 
 		if (currentPhotos.length >= imageLimit) {
-			alert(`You can only add up to ${imageLimit === Infinity ? 'unlimited' : imageLimit} images/GIFs. ${imageLimit === 3 ? 'Upgrade to Premium or Pro for more uploads.' : ''}`);
+			alert(
+				`You can only add up to ${imageLimit === Infinity ? "unlimited" : imageLimit} images/GIFs. ${imageLimit === 3 ? "Upgrade to Premium or Pro for more uploads." : ""}`,
+			);
 			return;
 		}
 
@@ -433,7 +458,7 @@ const HomePage = () => {
 							...post,
 							likes: isLiked
 								? post.likes.filter((like) => like.user.uid !== currentUser.uid)
-								: [...post.likes, { user: {uid: currentUser.uid }}],
+								: [...post.likes, { user: { uid: currentUser.uid } }],
 							stats: {
 								...post.stats,
 								likes: isLiked ? post.stats.likes - 1 : post.stats.likes + 1,
@@ -473,8 +498,6 @@ const HomePage = () => {
 	return (
 		<>
 			<Container className="py-3 px-0 px-0 px-md-3">
-
-
 				{error && (
 					<Alert variant="danger" className="mb-3">
 						{error}
@@ -489,12 +512,18 @@ const HomePage = () => {
 					<Card.Body className="px-3 py-3">
 						<div className="d-flex gap-3">
 							<Image
-								src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
+								src={
+									currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"
+								}
 								alt="avatar"
 								roundedCircle
 								width="45"
 								height="45"
-								style={{ objectFit: "cover", minWidth: "45px", minHeight: "45px" }}
+								style={{
+									objectFit: "cover",
+									minWidth: "45px",
+									minHeight: "45px",
+								}}
 							/>
 							<div className="flex-grow-1">
 								<div className="d-flex align-items-center gap-1 mb-2">
@@ -511,40 +540,41 @@ const HomePage = () => {
 					</Card.Body>
 				</Card>
 
+				<div className="d-flex align-items-center justify-content-center px-0 pt-2 border-bottom bg-white sticky-top">
+					<div className="d-flex w-100">
+						<Button
+							variant="link"
+							className={`flex-fill px-4 py-2 fw-bold text-decoration-none border-0 ${
+								filterBy === "for-you"
+									? "text-primary border-bottom border-primary pb-3 border-2"
+									: "text-muted"
+							}`}
+							onClick={() => setFilterBy("for-you")}
+							style={{ borderRadius: 0 }}
+						>
+							For you
+						</Button>
+						<Button
+							variant="link"
+							className={`flex-fill px-4 py-2 fw-bold text-decoration-none border-0 ${
+								filterBy === "following"
+									? "text-primary border-bottom border-primary pb-3 border-2"
+									: "text-muted"
+							}`}
+							onClick={() => setFilterBy("following")}
+							style={{ borderRadius: 0 }}
+						>
+							Following
+						</Button>
+					</div>
+				</div>
+
 				{loading && posts.length === 0 ? (
 					<div className="text-center py-5">
 						<Spinner animation="border" variant="primary" />
 					</div>
 				) : (
 					<>
-						<div className="d-flex align-items-center justify-content-center px-0 pt-2 border-bottom bg-white sticky-top">
-							<div className="d-flex w-100">
-								<Button
-									variant="link"
-									className={`flex-fill px-4 py-2 fw-bold text-decoration-none border-0 ${
-										filterBy === "for-you"
-											? "text-primary border-bottom border-primary pb-3 border-2"
-											: "text-muted"
-									}`}
-									onClick={() => setFilterBy("for-you")}
-									style={{ borderRadius: 0 }}
-								>
-									For you
-								</Button>
-								<Button
-									variant="link"
-									className={`flex-fill px-4 py-2 fw-bold text-decoration-none border-0 ${
-										filterBy === "following"
-											? "text-primary border-bottom border-primary pb-3 border-2"
-											: "text-muted"
-									}`}
-									onClick={() => setFilterBy("following")}
-									style={{ borderRadius: 0 }}
-								>
-									Following
-								</Button>
-							</div>
-						</div>
 						{filteredPosts.length === 0 && !loading ? (
 							<div className="text-center text-muted py-5">
 								<h5>No posts available</h5>
@@ -560,7 +590,9 @@ const HomePage = () => {
 									onShare={() => sharePost(post.id)} // Use reusable sharePost utility
 									onDeletePost={handleDeletePost}
 									onPostClick={(e) => handlePostClick(post.id, e)} // Use reusable handlePostClick utility
-									showComments={postComments[post.id] && postComments[post.id].length > 0}
+									showComments={
+										postComments[post.id] && postComments[post.id].length > 0
+									}
 									comments={postComments[post.id] || []}
 								/>
 							))
@@ -602,12 +634,18 @@ const HomePage = () => {
 					<Modal.Body className="overflow-x-hidden">
 						<div className="d-flex gap-3 mb-3">
 							<Image
-								src={currentUser?.photoURL ?? "https://i.pravatar.cc/150?img=10"}
+								src={
+									currentUser?.photoURL ?? "https://i.pravatar.cc/150?img=10"
+								}
 								alt="avatar"
 								roundedCircle
 								width="48"
 								height="48"
-								style={{ objectFit: "cover", minWidth: "48px", minHeight: "48px" }}
+								style={{
+									objectFit: "cover",
+									minWidth: "48px",
+									minHeight: "48px",
+								}}
 							/>
 
 							<div className="flex-grow-1">
@@ -716,9 +754,13 @@ const HomePage = () => {
 									size="sm"
 									className={`p-1 ${photos?.length >= getImageUploadLimit(currentUser?.subscription) ? "text-secondary" : "text-muted"}`}
 									onClick={handlePhotoClick}
-									disabled={photos?.length >= getImageUploadLimit(currentUser?.subscription)}
+									disabled={
+										photos?.length >=
+										getImageUploadLimit(currentUser?.subscription)
+									}
 									title={
-										photos?.length >= getImageUploadLimit(currentUser?.subscription)
+										photos?.length >=
+										getImageUploadLimit(currentUser?.subscription)
 											? `Maximum ${getImageUploadLimit(currentUser?.subscription)} images allowed`
 											: "Add photo"
 									}
@@ -738,9 +780,13 @@ const HomePage = () => {
 									size="sm"
 									className={`p-1 ${photos?.length >= getImageUploadLimit(currentUser?.subscription) ? "text-secondary" : "text-muted"}`}
 									onClick={() => setShowStickerModal(true)}
-									disabled={photos?.length >= getImageUploadLimit(currentUser?.subscription)}
+									disabled={
+										photos?.length >=
+										getImageUploadLimit(currentUser?.subscription)
+									}
 									title={
-										photos?.length >= getImageUploadLimit(currentUser?.subscription)
+										photos?.length >=
+										getImageUploadLimit(currentUser?.subscription)
 											? `Maximum ${getImageUploadLimit(currentUser?.subscription)} images allowed`
 											: "Add GIF"
 									}
@@ -894,8 +940,6 @@ const HomePage = () => {
 					</Modal.Body>
 				</Modal>
 			)}
-
-
 
 			{/* Delete Post Confirmation Dialog */}
 			<AlertDialog
