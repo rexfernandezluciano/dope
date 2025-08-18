@@ -2,6 +2,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 const firebaseConfig = {
 	apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "your-api-key",
@@ -18,6 +19,21 @@ let db;
 
 try {
 	app = initializeApp(firebaseConfig);
+	
+	// Initialize App Check
+	if (typeof window !== 'undefined') {
+		// For development, use debug token
+		if (process.env.NODE_ENV === 'development') {
+			// Debug token for development - replace with your debug token
+			self.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.REACT_APP_FIREBASE_APPCHECK_DEBUG_TOKEN || true;
+		}
+		
+		initializeAppCheck(app, {
+			provider: new ReCaptchaV3Provider(process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'),
+			isTokenAutoRefreshEnabled: true
+		});
+	}
+	
 	db = getFirestore(app);
 } catch (error) {
 	console.error("Firebase initialization error:", error);

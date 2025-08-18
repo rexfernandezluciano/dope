@@ -7,24 +7,56 @@ if (!API_BASE_URL.startsWith('https://')) {
 	console.error('API URL must use HTTPS');
 }
 
-const apiRequest = async (endpoint, options = {}) => {
-	// Validate endpoint to prevent injection
-	if (typeof endpoint !== 'string' || endpoint.includes('..')) {
-		throw new Error('Invalid endpoint');
-	}
+// Placeholder for Firebase App Check functionality
+// In a real scenario, you would import and initialize Firebase,
+// and get the App Check token here.
+// For example:
+// import { initializeApp } from 'firebase/app';
+// import { getAppCheck, getToken } from 'firebase/app-check';
+//
+// const firebaseApp = initializeApp({ /* Your Firebase config */ });
+// const appCheck = getAppCheck(firebaseApp);
+//
+// const addAppCheckHeaders = async (headers) => {
+// 	try {
+// 		const appCheckTokenResponse = await getToken(appCheck, true); // true for optional refresh
+// 		return {
+// 			...headers,
+// 			'X-Firebase-AppCheck': appCheckTokenResponse.token,
+// 		};
+// 	} catch (error) {
+// 		console.error('Error getting App Check token:', error);
+// 		// Decide how to handle errors: throw, return headers without token, etc.
+// 		return headers;
+// 	}
+// };
 
+// Mock implementation for demonstration purposes:
+const addAppCheckHeaders = async (headers) => {
+	console.log('Adding mock App Check headers');
+	return {
+		...headers,
+		// 'X-Firebase-AppCheck': 'mock-app-check-token', // Replace with actual token
+	};
+};
+
+
+const apiRequest = async (endpoint, options = {}) => {
 	const url = `${API_BASE_URL}${endpoint}`;
 	const token = getAuthToken();
 
+	const defaultHeaders = {
+		'Content-Type': 'application/json',
+		...(token && { 'Authorization': `Bearer ${token}` })
+	};
+
+	// Add App Check token to headers
+	const headersWithAppCheck = await addAppCheckHeaders({ ...defaultHeaders, ...options.headers });
+
 	const config = {
-		headers: {
-			'Content-Type': 'application/json',
-			...(token && { 'Authorization': `Bearer ${token}` }),
-			'X-Requested-With': 'XMLHttpRequest', // CSRF protection
-			...options.headers,
-		},
-		credentials: 'same-origin', // CSRF protection
-		...options,
+		method: 'GET',
+		headers: headersWithAppCheck,
+		...options
 	};
 
 	if (config.body && typeof config.body === 'object') {
@@ -35,24 +67,13 @@ const apiRequest = async (endpoint, options = {}) => {
 		const response = await fetch(url, config);
 
 		if (!response.ok) {
-			// Don't expose detailed error messages to prevent information leakage
-			if (response.status === 401) {
-				removeAuthToken();
-				throw new Error('Authentication required');
-			} else if (response.status === 403) {
-				throw new Error('Access denied');
-			} else if (response.status >= 500) {
-				throw new Error('Server error occurred');
-			} else {
-				throw new Error('Request failed');
-			}
+			const errorData = await response.json().catch(() => ({}));
+			throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
 		}
 
-		return response.json();
+		return await response.json();
 	} catch (error) {
-		if (error.name === 'TypeError') {
-			throw new Error('Network connection error');
-		}
+		console.error('API request failed:', error);
 		throw error;
 	}
 };
@@ -118,11 +139,11 @@ const authAPI = {
 				password: password // Don't sanitize password to preserve special chars
 			}
 		});
-		
+
 		if (response.token) {
 			setAuthToken(response.token);
 		}
-		
+
 		return response;
 	},
 
