@@ -12,6 +12,13 @@ export const getUser = async () => {
 		if (!token) return null;
 
 		const response = await authAPI.getCurrentUser();
+		
+		// Handle the auth/me API response structure: { status: "ok", user: userObject }
+		if (response.status === 'ok' && response.user) {
+			return response.user;
+		}
+		
+		// Fallback for other response structures
 		return response.user || response;
 	} catch (error) {
 		console.error('Error getting user:', error);
