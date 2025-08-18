@@ -1,7 +1,8 @@
 /** @format */
 
 // Import the real App Check utility
-import { addAppCheckHeaders as addFirebaseAppCheckHeaders } from '../utils/app-check-utils';
+import { addAppCheckHeaders } from '../utils/app-check-utils';
+import { SecurityMiddleware } from "../utils/security-middleware";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://natasha.dopp.eu.org/api';
 

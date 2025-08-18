@@ -19,7 +19,9 @@ import AnalyticsPage from "../pages/AnalyticsPage";
 import LiveStreamPage from "../pages/LiveStreamPage";
 
 import RequireAuth from "./security/RequireAuth";
-import IndexPageLoader from "./loader/IndexPageLoader";
+import { IndexPageLoader } from "./loader/IndexPageLoader";
+import { SecurityProvider } from "../components/SecurityProvider";
+
 import NavigationView from "../components/navs/NavigationView";
 
 import LoadingView from "../components/LoadingView";
@@ -179,7 +181,11 @@ const AppRouter = () => {
 		};
 	}, []);
 
-	return <RouterProvider router={router} />;
+	return (
+		<SecurityProvider>
+			<RouterProvider router={router} />
+		</SecurityProvider>
+	);
 };
 
 export default AppRouter;

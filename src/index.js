@@ -12,8 +12,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 import "./config/FirebaseConfig";
 import "./config/OneSignalConfig";
+import { setupCSP } from "./utils/security-utils";
 import "animate.css";
 import "./assets/css/app.css";
+
+// Setup Content Security Policy
+setupCSP();
 
 // Disable console in production
 if (process.env.NODE_ENV === 'production') {
