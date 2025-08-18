@@ -7,37 +7,18 @@ if (!API_BASE_URL.startsWith('https://')) {
 	console.error('API URL must use HTTPS');
 }
 
-// Placeholder for Firebase App Check functionality
-// In a real scenario, you would import and initialize Firebase,
-// and get the App Check token here.
-// For example:
-// import { initializeApp } from 'firebase/app';
-// import { getAppCheck, getToken } from 'firebase/app-check';
-//
-// const firebaseApp = initializeApp({ /* Your Firebase config */ });
-// const appCheck = getAppCheck(firebaseApp);
-//
-// const addAppCheckHeaders = async (headers) => {
-// 	try {
-// 		const appCheckTokenResponse = await getToken(appCheck, true); // true for optional refresh
-// 		return {
-// 			...headers,
-// 			'X-Firebase-AppCheck': appCheckTokenResponse.token,
-// 		};
-// 	} catch (error) {
-// 		console.error('Error getting App Check token:', error);
-// 		// Decide how to handle errors: throw, return headers without token, etc.
-// 		return headers;
-// 	}
-// };
+// Import the real App Check utility
+import { addAppCheckHeaders as addFirebaseAppCheckHeaders } from '../utils/app-check-utils';
 
-// Mock implementation for demonstration purposes:
+// Real Firebase App Check implementation
 const addAppCheckHeaders = async (headers) => {
-	console.log('Adding mock App Check headers');
-	return {
-		...headers,
-		// 'X-Firebase-AppCheck': 'mock-app-check-token', // Replace with actual token
-	};
+	try {
+		return await addFirebaseAppCheckHeaders(headers);
+	} catch (error) {
+		console.error('Error adding App Check headers:', error);
+		// Return headers without App Check token on error to maintain functionality
+		return headers;
+	}
 };
 
 
