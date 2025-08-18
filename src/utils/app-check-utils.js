@@ -1,6 +1,6 @@
 
 import { getToken } from "firebase/app-check";
-import { app, appCheck } from "../config/FirebaseConfig";
+import { appCheck } from "../config/FirebaseConfig";
 
 /**
  * Get App Check token for API requests

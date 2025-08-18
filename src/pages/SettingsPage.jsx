@@ -314,7 +314,11 @@ const SettingsPage = () => {
 								</div>
 								<p>{post.content}</p>
 								{post.imageUrls && post.imageUrls.length > 0 && (
-									<img src={post.imageUrls[0]} alt="Post image" className="img-fluid rounded mb-2" />
+									<img
+										src={post.imageUrls[0]}
+										alt="Post content"
+										className="img-fluid rounded mb-2"
+									/>
 								)}
 								{post.liveVideoUrl && (
 									<div className="embed-responsive embed-responsive-16by9 mb-2">

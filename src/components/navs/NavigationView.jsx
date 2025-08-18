@@ -62,12 +62,9 @@ const NavigationView = ({ children }) => {
 		// Initialize user and notifications
 		if (loaderUserData && loaderUserData.uid) {
 			setUser(loaderUserData);
-			initializeNotifications(loaderUserData.uid).then((success) => {
-				if (success) {
-					requestNotificationPermission().then((granted) => {
-						setNotificationsEnabled(granted);
-					});
-				}
+			initializeNotifications(loaderUserData.uid);
+			requestNotificationPermission().then((granted) => {
+				setNotificationsEnabled(granted);
 			});
 		} else {
 			// If user data is not available from loader, attempt to fetch it
@@ -118,14 +115,8 @@ const NavigationView = ({ children }) => {
 	useEffect(() => {
 		if (loaderUserData && loaderUserData.uid) {
 			setUser(loaderUserData);
-			initializeNotifications(loaderUserData.uid).then((success) => {
-				if (success) {
-					requestNotificationPermission().then((granted) => {
-						setNotificationsEnabled(granted);
-					});
-				}
-			});
-
+			initializeNotifications(loaderUserData.uid);
+			
 			// Setup real-time notification listener
 			const unsubscribe = setupNotificationListener(loaderUserData.uid, (newNotifications) => {
 				setNotifications(newNotifications);

@@ -3,7 +3,6 @@
 import { Outlet, useLoaderData, useLocation } from "react-router-dom";
 
 import NavigationView from "../components/navs/NavigationView";
-import HomePage from "./HomePage";
 import ProfilePage from "./ProfilePage";
 import SettingsPage from "./SettingsPage";
 import SubscriptionPage from "./SubscriptionPage";

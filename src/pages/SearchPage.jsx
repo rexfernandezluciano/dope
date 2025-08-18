@@ -16,10 +16,6 @@ import {
 import {
 	ArrowLeft,
 	Search,
-	Heart,
-	HeartFill,
-	ChatDots,
-	Share,
 	CheckCircleFill,
 	Globe,
 	Lock,
@@ -57,7 +53,7 @@ const SearchPage = () => {
 		if (urlQuery !== searchQuery) {
 			setSearchQuery(urlQuery);
 		}
-	}, [searchParams]);
+	}, [searchParams, searchQuery]);
 
 	const handleSearch = useCallback(async () => {
 		if (!searchQuery.trim()) {
@@ -116,19 +112,7 @@ const SearchPage = () => {
 		}
 	}, [searchQuery, handleSearch]);
 
-	const formatTimeAgo = (dateString) => {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now - date;
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-
-		if (diffMins < 1) return "now";
-		if (diffMins < 60) return `${diffMins}m`;
-		if (diffHours < 24) return `${diffHours}h`;
-		return `${diffDays}d`;
-	};
+	
 
 	const handleLikePost = async (postId) => {
 		try {
@@ -171,38 +155,7 @@ const SearchPage = () => {
 		navigate(`/post/${postId}`);
 	};
 
-	const canComment = (post) => {
-		if (!currentUser) return false;
-
-		// Post owner can always comment
-		if (post.author.uid === currentUser.uid) return true;
-
-		// Check privacy settings
-		switch (post.privacy) {
-			case 'public':
-				return true;
-			case 'private':
-				return post.author.uid === currentUser.uid;
-			case 'followers':
-				// Check if current user follows the post author
-				return post.author.isFollowedByCurrentUser || false;
-			default:
-				return true;
-		}
-	};
-
-	const getPrivacyIcon = (privacy) => {
-		switch (privacy) {
-			case 'public':
-				return <Globe size={14} className="text-muted" />;
-			case 'private':
-				return <Lock size={14} className="text-muted" />;
-			case 'followers':
-				return <PersonFill size={14} className="text-muted" />;
-			default:
-				return <Globe size={14} className="text-muted" />;
-		}
-	};
+	
 
 	return (
 		<Container className="py-0 px-0">

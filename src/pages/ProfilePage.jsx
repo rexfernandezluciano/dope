@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState, useEffect } from "react";
-import { useParams, useLoaderData, useNavigate } from "react-router-dom";
+import { useParams, useLoaderData } from "react-router-dom";
 import {
 	Container,
 	Image,
@@ -321,12 +321,6 @@ const ProfilePage = () => {
 		}
 	};
 
-	const openImageViewer = (images, startIndex = 0) => {
-		setCurrentImages(images);
-		setCurrentImageIndex(startIndex);
-		setShowImageViewer(true);
-	};
-
 	const closeImageViewer = () => {
 		setShowImageViewer(false);
 		setCurrentImages([]);
@@ -381,38 +375,7 @@ const ProfilePage = () => {
 	};
 
 
-	const canComment = (post) => {
-		if (!currentUser) return false;
-
-		// Post owner can always comment
-		if (post.author.uid === currentUser.uid) return true;
-
-		// Check privacy settings
-		switch (post.privacy) {
-			case 'public':
-				return true;
-			case 'private':
-				return post.author.uid === currentUser.uid;
-			case 'followers':
-				// Check if current user follows the post author
-				return post.author.isFollowedByCurrentUser || false;
-			default:
-				return true;
-		}
-	};
-
-	const getPrivacyIcon = (privacy) => {
-		switch (privacy) {
-			case 'public':
-				return <Globe size={14} className="text-muted" />;
-			case 'private':
-				return <Lock size={14} className="text-muted" />;
-			case 'followers':
-				return <PersonFill size={14} className="text-muted" />;
-			default:
-				return <Globe size={14} className="text-muted" />;
-		}
-	};
+	
 
 	if (loading || !currentUser) {
 		return (

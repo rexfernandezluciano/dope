@@ -25,8 +25,7 @@ import {
 	X,
 	ThreeDots,
 	ChevronLeft,
-	ChevronRight,
-	Trash
+	ChevronRight
 } from "react-bootstrap-icons";
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -125,10 +124,7 @@ const PostDetailPage = () => {
 		window.open(url, '_blank', 'noopener,noreferrer');
 	};
 
-	const handleDeleteComment = (commentId) => {
-		setCommentToDelete(commentId);
-		setShowDeleteCommentDialog(true);
-	};
+	
 
 	const confirmDeleteComment = async () => {
 		if (!commentToDelete) return;

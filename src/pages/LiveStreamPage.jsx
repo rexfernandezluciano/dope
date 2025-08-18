@@ -13,13 +13,12 @@ const LiveStreamPage = () => {
 	const [viewerCount, setViewerCount] = useState(0);
 	const [comments, setComments] = useState([]);
 	const [newComment, setNewComment] = useState('');
-	const [currentUser, setCurrentUser] = useState({ name: 'Anonymous', uid: 'anon' });
+	const [currentUser] = useState({ name: 'Anonymous', uid: 'anon' });
 	
 	// Agora states
 	const [agoraClient, setAgoraClient] = useState(null);
 	const [localVideoTrack, setLocalVideoTrack] = useState(null);
 	const [localAudioTrack, setLocalAudioTrack] = useState(null);
-	const [remoteUsers, setRemoteUsers] = useState([]);
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isJoined, setIsJoined] = useState(false);
 	
@@ -102,7 +101,7 @@ const LiveStreamPage = () => {
 		if (agoraClient) {
 			initializeStream();
 		}
-	}, [agoraClient]);
+	}, [agoraClient, agoraConfig.appId, agoraConfig.channel, agoraConfig.token, agoraConfig.uid, handleUserPublished, handleUserUnpublished, handleUserLeft]);
 
 	const handleUserPublished = async (user, mediaType) => {
 		try {

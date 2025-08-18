@@ -2,7 +2,6 @@
 
 import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import { db } from "../config/FirebaseConfig";
-import { getAppCheckToken } from "./app-check-utils";
 
 
 /**

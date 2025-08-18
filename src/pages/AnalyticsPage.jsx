@@ -99,7 +99,7 @@ const AnalyticsPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [user?.username, user?.followersCount,user?.followingCount, timeRange]);
+	}, [user?.username, user?.followersCount, user?.followingCount]);
 
 	useEffect(() => {
 		if (user?.uid && user?.username) {

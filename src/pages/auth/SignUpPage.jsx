@@ -28,8 +28,8 @@ const SignUpPage = () => {
 	const [photoPreview, setPhotoPreview] = useState(null);
 
 	const [error, setError] = useState("");
-	const [dialogMessage, setDialogMessage] = useState("");
-	const [dialogTitle, setDialogTitle] = useState("");
+	const [dialogMessage] = useState("");
+	const [dialogTitle] = useState("");
 	const [showDialog, setShowDialog] = useState(false);
 	const [loading, setLoading] = useState(false);
 
