@@ -7,7 +7,6 @@ import {
 	Row,
 	Col,
 	Card,
-	Button,
 	Badge,
 	Alert,
 	Dropdown,
@@ -23,23 +22,19 @@ import {
 	People as Users,
 	Calendar3,
 	Bullseye as Target,
-	Gift,
-	Award as Crown,
 	Eye,
 	FileText,
 	Activity,
 	Star,
-	Lightning as Zap,
-	CurrencyDollar,
+	Lightning as Zap
 } from "react-bootstrap-icons";
 
-import { userAPI, postAPI } from "../config/ApiConfig";
+import { postAPI } from "../config/ApiConfig";
 import { formatTimeAgo } from "../utils/common-utils";
 
 const AnalyticsPage = () => {
 	const { user } = useLoaderData() || {};
 	const [analytics, setAnalytics] = useState(null);
-	const [posts, setPosts] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [timeRange, setTimeRange] = useState("30d");
@@ -56,7 +51,6 @@ const AnalyticsPage = () => {
 			});
 
 			const userPosts = userPostsResponse?.posts || [];
-			setPosts(userPosts);
 
 			// Calculate real analytics from DOPE API posts data
 			const totalPosts = userPosts.length;
@@ -105,13 +99,13 @@ const AnalyticsPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [user?.uid, user?.username, timeRange]);
+	}, [user?.username, user?.followersCount,user?.followingCount, timeRange]);
 
 	useEffect(() => {
 		if (user?.uid && user?.username) {
 			loadAnalytics();
 		}
-	}, [loadAnalytics]);
+	}, [loadAnalytics, user?.uid, user?.username]);
 
 	const StatCard = ({ icon: Icon, title, value, subtitle, color = "primary", growth }) => (
 		<Card className="border-0 shadow-sm h-100 stat-card">
@@ -132,7 +126,7 @@ const AnalyticsPage = () => {
 	);
 
 	const TopPostCard = ({ post, rank }) => {
-		const totalEngagement = (post._count?.likes || 0) + (post._count?.comments || 0) + (post.sharesCount || 0);
+		const totalEngagement = (post.stats?.likes || 0) + (post.stats?.comments || 0) + (post.sharesCount || 0);
 		const estimatedViews = totalEngagement * 3; // Estimate views as 3x engagement
 		const engagementRate = estimatedViews > 0 ? ((totalEngagement / estimatedViews) * 100).toFixed(1) : 0;
 
@@ -149,8 +143,8 @@ const AnalyticsPage = () => {
 						<div className="flex-grow-1">
 							<p className="mb-2 post-content">{post.content}</p>
 							<div className="d-flex flex-wrap gap-3 text-muted small">
-								<span><Heart className="me-1 text-danger" size={12} />{post._count?.likes || 0}</span>
-								<span><MessageCircle className="me-1 text-primary" size={12} />{post._count?.comments || 0}</span>
+								<span><Heart className="me-1 text-danger" size={12} />{post.stats?.likes || 0}</span>
+								<span><MessageCircle className="me-1 text-primary" size={12} />{post.stats?.comments || 0}</span>
 								<span><Share className="me-1 text-success" size={12} />{post.sharesCount || 0}</span>
 								<span><Eye className="me-1 text-info" size={12} />{estimatedViews || 0}</span>
 							</div>
@@ -169,7 +163,7 @@ const AnalyticsPage = () => {
 		return (
 			<Container className="text-center py-5">
 				<Spinner animation="border" variant="primary" />
-				<p className="mt-3 text-muted">Loading your analytics...</p>
+				<p className="mt-3 text-muted">Loading analytics...</p>
 			</Container>
 		);
 	}
