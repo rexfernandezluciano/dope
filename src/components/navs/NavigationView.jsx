@@ -190,7 +190,7 @@ const NavigationView = ({ children }) => {
 										height={70}
 									/>
 									<h6 className="mt-2">{user?.name}</h6>
-									<small className="text-muted">@{user?.username}</small>
+									<small className="text-muted">@{user?.username}
 									{((user?.membership?.subscription || user?.subscription) && 
 									  (user?.membership?.subscription || user?.subscription) !== "free") && (
 										<span
