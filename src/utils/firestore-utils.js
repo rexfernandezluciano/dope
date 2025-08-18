@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
@@ -18,7 +17,7 @@ export const isEmailInWaitingList = async (email) => {
 		const waitingListRef = collection(db, 'waitingList');
 		const q = query(waitingListRef, where('email', '==', email.toLowerCase().trim()));
 		const querySnapshot = await getDocs(q);
-		
+
 		return !querySnapshot.empty;
 	} catch (error) {
 		console.error('Error checking email in waiting list:', error);
@@ -36,7 +35,7 @@ export const isEmailInWaitingList = async (email) => {
 export const addToWaitingList = async (userData) => {
 	try {
 		const { name, email } = userData;
-		
+
 		// Check if email already exists
 		const emailExists = await isEmailInWaitingList(email);
 		if (emailExists) {
@@ -67,7 +66,7 @@ export const getWaitingListStats = async () => {
 	try {
 		const waitingListRef = collection(db, 'waitingList');
 		const querySnapshot = await getDocs(waitingListRef);
-		
+
 		return {
 			totalCount: querySnapshot.size,
 			timestamp: new Date().toISOString()
@@ -86,7 +85,7 @@ export const getAllWaitingListEntries = async () => {
 	try {
 		const waitingListRef = collection(db, 'waitingList');
 		const querySnapshot = await getDocs(waitingListRef);
-		
+
 		const entries = [];
 		querySnapshot.forEach((doc) => {
 			entries.push({

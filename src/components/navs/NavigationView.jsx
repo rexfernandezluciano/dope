@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useLoaderData } from "react-router-dom";
 import {
 	Navbar,
@@ -29,6 +29,7 @@ import { removeAuthToken } from "../../utils/app-utils";
 
 import logo from "../../assets/images/dope.png";
 import dopeImage from "../../assets/images/dope.png";
+import AlertDialog from "../dialogs/AlertDialog";
 
 const NavigationView = ({ children }) => {
 	const navigate = useNavigate();
@@ -37,18 +38,17 @@ const NavigationView = ({ children }) => {
 	const { user } = loaderData;
 	const [showModal, setShowModal] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-	const handleLogout = async () => {
-		try {
-			await authAPI.logout();
-			removeAuthToken();
-			navigate("/");
-		} catch (err) {
-			console.error("Logout error:", err);
-			// Force logout even if API call fails
-			removeAuthToken();
-			navigate("/");
-		}
+	const handleLogout = () => {
+		setShowLogoutDialog(true);
+	};
+
+	const confirmLogout = () => {
+		authAPI.logout();
+		removeAuthToken();
+		setShowLogoutDialog(false);
+		navigate("/");
 	};
 
 	const menuItems = [
@@ -352,6 +352,13 @@ const NavigationView = ({ children }) => {
 				</div>
 				<div style={{ marginLeft: "250px" }}>{children}</div>
 			</div>
+			<AlertDialog
+				show={showLogoutDialog}
+				title="Logout Confirmation"
+				message="Are you sure you want to logout?"
+				onConfirm={confirmLogout}
+				onCancel={() => setShowLogoutDialog(false)}
+			/>
 		</>
 	);
 };

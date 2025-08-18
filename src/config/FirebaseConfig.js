@@ -1,23 +1,28 @@
 /* @format */
 
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-	apiKey: "AIzaSyAxfinYGLdR1lQIdAExFkBrsjgA6rkmFBE",
-	authDomain: "www.dopp.eu.org",
-	projectId: "dope-international",
-	storageBucket: "dope-international.firebasestorage.app",
-	messagingSenderId: "171033182022",
-	appId: "1:171033182022:web:b5e61cc870771dc41daf47",
-	measurementId: "G-XV15BJFNYK",
+	apiKey: process.env.REACT_APP_FIREBASE_API_KEY || "your-api-key",
+	authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN || "your-project.firebaseapp.com",
+	projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID || "your-project-id",
+	storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET || "your-project.appspot.com",
+	messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID || "123456789",
+	appId: process.env.REACT_APP_FIREBASE_APP_ID || "your-app-id",
 };
 
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const auth = getAuth(app);
-const firestore = getFirestore(app);
+// Initialize Firebase
+let app;
+let db;
 
-export { auth, analytics, firestore };
+try {
+	app = initializeApp(firebaseConfig);
+	db = getFirestore(app);
+} catch (error) {
+	console.error("Firebase initialization error:", error);
+	// Create a mock database object to prevent crashes
+	db = null;
+}
+
+export { db };
