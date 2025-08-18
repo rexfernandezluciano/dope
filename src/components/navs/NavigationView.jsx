@@ -53,7 +53,7 @@ const NavigationView = ({ children }) => {
 
 		// Listen for popstate (back/forward button)
 		window.addEventListener('popstate', handleStart);
-		
+
 		// Complete progress when location changes
 		handleComplete();
 
@@ -359,43 +359,43 @@ const NavigationView = ({ children }) => {
 						<h5 className="text-center">{user?.name}</h5>
 						<p className="text-center text-muted small">
 							{user?.username}{" "}
-							{user.membership?.subscription && user.membership.subscription !== "free" && (
+							{((user.membership?.subscription || user.subscription) && 
+							  (user.membership?.subscription || user.subscription) !== "free") && (
 								<span
 									className={`ms-1 badge ${
-										user.membership.subscription === "premium"
+										(user.membership?.subscription || user.subscription) === "premium"
 											? "bg-warning text-dark"
-											: user.membership.subscription === "pro"
+											: (user.membership?.subscription || user.subscription) === "pro"
 												? "bg-primary"
 												: "bg-secondary"
 									}`}
 									style={{ fontSize: "0.7rem" }}
 								>
-									{user.membership.subscription.toUpperCase()}
+									{(user.membership?.subscription || user.subscription).toUpperCase()}
 								</span>
-							)}
-						</p>
-						<Nav className="flex-column gap-1">
-							{menuItems.map((item, idx) => (
-								<Link
-									key={idx}
-									to={item.href}
-									className={navItemClass(item.href)}
-									style={{ textDecoration: 'none' }}
-								>
-									{item.icon}
-									{item.label}
-								</Link>
-							))}
-							<Nav.Link
-								onClick={handleLogout}
-								className="nav-link text-danger mt-3 px-3 py-2 rounded-pill"
-								style={{ cursor: "pointer" }}
-							>
-								<BoxArrowRight size={18} className="me-2" />
-								Logout
-							</Nav.Link>
-						</Nav>
+							)}</p>
 					</Container>
+					<Nav className="flex-column gap-1">
+						{menuItems.map((item, idx) => (
+							<Link
+								key={idx}
+								to={item.href}
+								className={navItemClass(item.href)}
+								style={{ textDecoration: 'none' }}
+							>
+								{item.icon}
+								{item.label}
+							</Link>
+						))}
+						<Nav.Link
+							onClick={handleLogout}
+							className="nav-link text-danger mt-3 px-3 py-2 rounded-pill"
+							style={{ cursor: "pointer" }}
+						>
+							<BoxArrowRight size={18} className="me-2" />
+							Logout
+						</Nav.Link>
+					</Nav>
 				</div>
 				<div style={{ marginLeft: "250px" }}>{children}</div>
 			</div>

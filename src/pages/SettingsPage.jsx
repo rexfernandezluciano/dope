@@ -453,7 +453,7 @@ const SettingsPage = () => {
 						<div className="d-flex justify-content-between align-items-center">
 							<div>
 								<h6 className="mb-1">Subscription</h6>
-								<p className="text-muted mb-0 text-capitalize">{user?.membership?.subscription || 'free'}</p>
+								<p className="text-muted mb-0 text-capitalize">{user?.membership?.subscription || user?.subscription || 'free'}</p>
 								{user?.membership?.nextBillingDate && (
 									<small className="text-muted d-block">Next billing: {user.membership.nextBillingDate}</small>
 								)}

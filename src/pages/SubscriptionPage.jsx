@@ -165,7 +165,8 @@ const SubscriptionPage = () => {
 
 	useEffect(() => {
 		if (user && typeof user === "object") {
-			const userSubscription = user.membership?.subscription || "free";
+			// Handle both old and new API structures
+			const userSubscription = user.membership?.subscription || user.subscription || "free";
 			const nextBillingDate = user.membership?.nextBillingDate || null;
 			setSubscription({
 				plan: userSubscription,
