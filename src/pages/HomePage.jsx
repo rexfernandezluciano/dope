@@ -60,6 +60,7 @@ const HomePage = () => {
 	const [currentImages, setCurrentImages] = useState([]);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 	const [postToDelete, setPostToDelete] = useState(null);
+	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
 	const [filterBy, setFilterBy] = useState("for-you"); // State for filter selection
@@ -392,13 +393,14 @@ const HomePage = () => {
 		if (!postToDelete) return;
 
 		try {
-			// Use the reusable utility for deleting the post
-			await deletePostUtil(postToDelete, setPosts, setError); // Pass state setters and setError to the utility
-			setShowDeleteDialog(false);
-			setPostToDelete(null);
+			setDeletingPost(true);
+			await deletePostUtil(postToDelete); // Use the utility function
+			setPosts((prev) => prev.filter((post) => post.id !== postToDelete));
 		} catch (err) {
 			console.error("Error deleting post:", err);
 			setError("Failed to delete post.");
+		} finally {
+			setDeletingPost(false);
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
 		}
@@ -950,9 +952,16 @@ const HomePage = () => {
 				}}
 				title="Delete Post"
 				message="Are you sure you want to delete this post? This action cannot be undone."
-				dialogButtonMessage="Delete"
+				dialogButtonMessage={
+					deletingPost ? (
+						<Spinner size="sm" animation="border" />
+					) : (
+						"Delete"
+					)
+				}
 				onDialogButtonClick={confirmDeletePost}
 				type="danger"
+				disabled={deletingPost}
 			/>
 		</>
 	);

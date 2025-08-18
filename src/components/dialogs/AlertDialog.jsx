@@ -1,8 +1,8 @@
 /** @format */
 
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Spinner } from "react-bootstrap";
 
-export default function AlertDialog({ title, message, dialogButtonMessage, onDialogButtonClick, type = "dark", ...props }) {
+export default function AlertDialog({ title, message, dialogButtonMessage, onDialogButtonClick, type = "primary", disabled = false, ...props }) {
 	return (
 		<Modal
 			{...props}
@@ -18,12 +18,15 @@ export default function AlertDialog({ title, message, dialogButtonMessage, onDia
 			<Modal.Footer>
 				<Button
 					variant="outline-secondary"
-					onClick={props.onHide}>
+					onClick={props.onHide}
+					disabled={disabled}>
 					Cancel
 				</Button>
 				<Button
 					variant={type}
-					onClick={onDialogButtonClick}>
+					onClick={onDialogButtonClick}
+					disabled={disabled}>
+					{disabled && <Spinner size="sm" animation="border" className="me-2" />}
 					{dialogButtonMessage}
 				</Button>
 			</Modal.Footer>

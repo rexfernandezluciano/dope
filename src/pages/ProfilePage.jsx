@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState, useEffect } from "react";
-import { useParams, useLoaderData } from "react-router-dom";
+import { useParams, useLoaderData, useNavigate } from "react-router-dom";
 import {
 	Container,
 	Image,
@@ -48,6 +48,7 @@ const ProfilePage = () => {
 	const [currentImages, setCurrentImages] = useState([]);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 	const [postToDelete, setPostToDelete] = useState(null);
+	const [deletingPost, setDeletingPost] = useState(false);
 	const [editForm, setEditForm] = useState({
 		name: "",
 		bio: "",
@@ -72,26 +73,26 @@ const ProfilePage = () => {
 			// Handle response structure - the API returns user data directly
 			const profileUserData = userResponse.user;
 			const profilePrivacy = profileUserData.privacy?.profile || 'public';
-			
+
 			// Check if current user can view this profile
 			const canViewProfile = () => {
 				// Profile owner can always view their own profile
 				if (profileUserData.uid === currentUser.uid) return true;
-				
+
 				// Public profiles are visible to everyone
 				if (profilePrivacy === 'public') return true;
-				
+
 				// Private profiles are only visible to the owner
 				if (profilePrivacy === 'private') return false;
-				
+
 				// Followers-only profiles are visible to followers
 				if (profilePrivacy === 'followers') {
 					return profileUserData.isFollowedByCurrentUser || false;
 				}
-				
+
 				return false;
 			};
-			
+
 			if (!canViewProfile()) {
 				throw new Error("This profile is private");
 			}
@@ -111,42 +112,42 @@ const ProfilePage = () => {
 				const filteredPosts = userResponse.user.posts.filter(post => {
 					// Profile owner can see all their posts
 					if (post.author.uid === currentUser.uid) return true;
-					
+
 					// For other users, respect the profile privacy settings
 					const authorPrivacy = post.author.privacy?.profile || 'public';
-					
+
 					if (authorPrivacy === 'public') return true;
 					if (authorPrivacy === 'private') return false;
 					if (authorPrivacy === 'followers') {
 						return post.author.isFollowedByCurrentUser || false;
 					}
-					
+
 					return false;
 				});
-				
+
 				setPosts(filteredPosts);
 			} else {
 				// Fallback to separate posts API call
 				try {
 					const postsResponse = await postAPI.getPosts({ author: username });
-					
+
 					// Filter posts based on profile privacy
 					const filteredPosts = (postsResponse.posts || []).filter(post => {
 						// Profile owner can see all their posts
 						if (post.author.uid === currentUser.uid) return true;
-						
+
 						// For other users, respect the profile privacy settings
 						const authorPrivacy = post.author.privacy?.profile || 'public';
-						
+
 						if (authorPrivacy === 'public') return true;
 						if (authorPrivacy === 'private') return false;
 						if (authorPrivacy === 'followers') {
 							return post.author.isFollowedByCurrentUser || false;
 						}
-						
+
 						return false;
 					});
-					
+
 					setPosts(filteredPosts);
 				} catch (err) {
 					console.error("Error loading posts:", err);
@@ -340,6 +341,7 @@ const ProfilePage = () => {
 	const confirmDeletePost = async () => {
 		if (!postToDelete) return;
 
+		setDeletingPost(true); // Set deleting post state
 		try {
 			await deletePostUtil(postToDelete); // Use the utility function
 			setPosts((prev) => prev.filter((post) => post.id !== postToDelete));
@@ -350,6 +352,8 @@ const ProfilePage = () => {
 			setError("Failed to delete post.");
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
+		} finally {
+			setDeletingPost(false); // Reset deleting post state
 		}
 	};
 
@@ -881,8 +885,23 @@ const ProfilePage = () => {
 									onClick={() =>
 										handleOptionAction("delete", selectedPostForOptions.id)
 									}
+									disabled={deletingPost} // Disable button when deleting
 								>
-									<span>Delete Post</span>
+									{deletingPost ? (
+										<>
+											<Spinner
+												as="span"
+												animation="border"
+												size="sm"
+												role="status"
+												aria-hidden="true"
+												className="me-2"
+											/>
+											Deleting...
+										</>
+									) : (
+										<span>Delete Post</span>
+									)}
 								</button>
 							)}
 						</div>
@@ -899,9 +918,10 @@ const ProfilePage = () => {
 				}}
 				title="Delete Post"
 				message="Are you sure you want to delete this post? This action cannot be undone."
-				dialogButtonMessage="Delete"
+				dialogButtonMessage={deletingPost ? "Deleting..." : "Delete"}
 				onDialogButtonClick={confirmDeletePost}
 				type="danger"
+				disabled={deletingPost} // Disable dialog button when deleting
 			/>
 		</Container>
 	);

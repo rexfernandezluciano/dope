@@ -53,6 +53,8 @@ const PostDetailPage = () => {
 	const [commentToDelete, setCommentToDelete] = useState(null);
 	const [showCommentOptionsModal, setShowCommentOptionsModal] = useState(false);
 	const [selectedComment, setSelectedComment] = useState(null);
+	const [deletingPost, setDeletingPost] = useState(false);
+	const [deletingComment, setDeletingComment] = useState(false);
 
 	useEffect(() => {
 		const loadPostAndComments = async () => {
@@ -115,6 +117,7 @@ const PostDetailPage = () => {
 		if (!commentToDelete) return;
 
 		try {
+			setDeletingComment(true);
 			await commentAPI.deleteComment(commentToDelete);
 			// Reload comments after deletion
 			const commentsResponse = await commentAPI.getComments(postId);
@@ -123,6 +126,7 @@ const PostDetailPage = () => {
 			console.error("Error deleting comment:", err);
 			setError("Failed to delete comment");
 		} finally {
+			setDeletingComment(false);
 			setShowDeleteCommentDialog(false);
 			setCommentToDelete(null);
 		}
@@ -164,6 +168,7 @@ const PostDetailPage = () => {
 		if (!postToDelete) return;
 
 		try {
+			setDeletingPost(true);
 			// Delete associated images from Cloudinary first
 			if (post && post.imageUrls && post.imageUrls.length > 0) {
 				for (const imageUrl of post.imageUrls) {
@@ -180,6 +185,7 @@ const PostDetailPage = () => {
 			console.error("Error deleting post:", err.message || err);
 			// Optionally show user-friendly error message
 		} finally {
+			setDeletingPost(false);
 			setShowDeleteDialog(false);
 			setPostToDelete(null);
 		}
@@ -828,14 +834,17 @@ const PostDetailPage = () => {
 			<AlertDialog
 				show={showDeleteDialog}
 				onHide={() => {
-					setShowDeleteDialog(false);
-					setPostToDelete(null);
+					if (!deletingPost) {
+						setShowDeleteDialog(false);
+						setPostToDelete(null);
+					}
 				}}
 				title="Delete Post"
 				message="Are you sure you want to delete this post? This action cannot be undone."
-				dialogButtonMessage="Delete"
+				dialogButtonMessage={deletingPost ? "Deleting..." : "Delete"}
 				onDialogButtonClick={confirmDeletePost}
 				type="danger"
+				disabled={deletingPost}
 			/>
 
 			{/* Comment Options Modal */}
@@ -882,14 +891,17 @@ const PostDetailPage = () => {
 			<AlertDialog
 				show={showDeleteCommentDialog}
 				onHide={() => {
-					setShowDeleteCommentDialog(false);
-					setCommentToDelete(null);
+					if (!deletingComment) {
+						setShowDeleteCommentDialog(false);
+						setCommentToDelete(null);
+					}
 				}}
 				title="Delete Comment"
 				message="Are you sure you want to delete this comment? This action cannot be undone."
-				dialogButtonMessage="Delete"
+				dialogButtonMessage={deletingComment ? "Deleting..." : "Delete"}
 				onDialogButtonClick={confirmDeleteComment}
 				type="danger"
+				disabled={deletingComment}
 			/>
 		</Container>
 	);
