@@ -87,12 +87,6 @@ const removeAuthToken = () => {
 	}
 };
 
-// Helper function to get auth token, assuming it's stored in localStorage
-const getAuthToken = () => {
-	return localStorage.getItem('authToken');
-};
-
-
 // Input validation helpers
 const validateEmail = (email) => {
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
