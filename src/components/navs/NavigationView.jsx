@@ -233,7 +233,7 @@ const NavigationView = ({ children }) => {
 										placeholder="Search posts, users..."
 										value={searchQuery}
 										onChange={(e) => setSearchQuery(e.target.value)}
-										className="rounded-start-pill border-end-0"
+										className="rounded-start-pill border-end-0 shadow-none"
 									/>
 									<Button
 										variant="outline-secondary"
@@ -324,9 +324,20 @@ const NavigationView = ({ children }) => {
 							</Col>
 						</Row>
 						<h5 className="text-center">{user?.name}</h5>
-						<p className="text-center text-muted small">{user?.email}</p>
-						{user?.hasBlueCheck && (
-							<p className="text-center text-primary small">✓ Verified</p>
+						<p className="text-center text-muted small">{user?.username}</p>
+						{user.subscription && user.subscription !== "free" && (
+							<span
+								className={`ms-1 badge ${
+									user.subscription === "premium"
+										? "bg-warning text-dark"
+										: user.subscription === "pro"
+											? "bg-primary"
+											: "bg-secondary"
+								}`}
+								style={{ fontSize: "0.7rem" }}
+							>
+								{user.subscription.toUpperCase()}
+							</span>
 						)}
 						<Nav className="flex-column gap-1">
 							{menuItems.map((item, idx) => (

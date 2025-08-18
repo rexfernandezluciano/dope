@@ -497,7 +497,7 @@ const HomePage = () => {
 
 	return (
 		<>
-			<Container className="py-3 px-0 px-0 px-md-3">
+			<Container className="py-3 px-0">
 				{error && (
 					<Alert variant="danger" className="mb-3">
 						{error}

@@ -20,7 +20,7 @@ A modern social media platform built with React that connects communities worldw
 - **Frontend**: React 19.1.1 with React Router
 - **UI Framework**: React Bootstrap with Bootstrap Icons
 - **Authentication**: Firebase Auth
-- **Database**: Firebase Firestore
+- **Database**: Firebase Firestore, PostgreSQL + Prisma
 - **Media Storage**: Cloudinary
 - **Security**: Firebase App Check with reCAPTCHA
 - **Analytics**: Vercel Analytics & Speed Insights
@@ -28,7 +28,7 @@ A modern social media platform built with React that connects communities worldw
 
 ## 📋 Prerequisites
 
-- Node.js (v16 or higher)
+- Node.js (v22 or higher)
 - npm or yarn
 - Firebase project with Firestore enabled
 - Cloudinary account for media uploads
@@ -59,8 +59,8 @@ REACT_APP_API_BASE_URL=https://your-api-domain.com/api
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/dopp/dopp-social.git
-   cd dopp-social
+   git clone https://github.com/rexfernandezluciano/dope.git
+   cd dope
    ```
 
 2. **Install dependencies**
@@ -113,7 +113,7 @@ src/
 
 ## 🔐 Authentication & Security
 
-The application uses Firebase Authentication with the following features:
+The application uses Custom Authentication with the following features:
 
 - Email/password authentication
 - Email verification required
