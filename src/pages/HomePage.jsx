@@ -35,6 +35,7 @@ import AgoraRTC from 'agora-rtc-sdk-ng';
 import { postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
+import LiveStudioModal from "../components/modals/LiveStudioModal"; // Import the new modal
 import {
 	deletePost as deletePostUtil,
 	sharePost,
@@ -70,6 +71,7 @@ const extractMentions = (text) => {
 
 const HomePage = () => {
 	const [showComposerModal, setShowComposerModal] = useState(false);
+	const [showLiveStudioModal, setShowLiveStudioModal] = useState(false); // State for the new modal
 	const [postText, setPostText] = useState("");
 	const [privacy, setPrivacy] = useState("Public");
 	const [showStickerModal, setShowStickerModal] = useState(false);
@@ -83,6 +85,7 @@ const HomePage = () => {
 	const [submitting, setSubmitting] = useState(false);
 	const [isLive, setIsLive] = useState(false);
 	const [liveVideoUrl, setLiveVideoUrl] = useState("");
+	const [streamTitle, setStreamTitle] = useState(""); // State for stream title
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [mediaStream, setMediaStream] = useState(null);
 	const [mediaRecorder, setMediaRecorder] = useState(null);
@@ -393,32 +396,41 @@ const HomePage = () => {
 		}
 	};
 
+	const handleStartLiveStream = (streamData) => {
+		setIsLive(true);
+		setIsStreaming(true);
+		setStreamTitle(streamData.title);
+		setPostText(streamData.description);
+		setLiveVideoUrl(`live-stream-${Date.now()}`);
+		setShowLiveStudioModal(false);
+
+		// Handle the actual streaming logic here
+		console.log('Starting live stream with data:', streamData);
+	};
+
+	const handleStopLiveStream = () => {
+		stopLiveStream();
+		setShowLiveStudioModal(false);
+	};
+
 	const stopLiveStream = async () => {
 		try {
-			if (mediaRecorder) {
-				// Clean up Agora tracks
-				if (mediaRecorder.videoTrack) {
-					mediaRecorder.videoTrack.stop();
-					mediaRecorder.videoTrack.close();
-				}
-				if (mediaRecorder.audioTrack) {
-					mediaRecorder.audioTrack.stop();
-					mediaRecorder.audioTrack.close();
-				}
-				setMediaRecorder(null);
+			if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+				mediaRecorder.stop();
 			}
 
 			if (mediaStream) {
-				// Leave Agora channel and clean up client
-				await mediaStream.leave();
+				mediaStream.getTracks().forEach(track => track.stop());
 				setMediaStream(null);
 			}
 
 			setIsStreaming(false);
+			setIsLive(false);
+			setMediaRecorder(null);
 			setLiveVideoUrl("");
 
 			if (videoRef.current) {
-				videoRef.current.innerHTML = '';
+				videoRef.current.srcObject = null;
 			}
 		} catch (error) {
 			console.error('Error stopping live stream:', error);
@@ -428,11 +440,12 @@ const HomePage = () => {
 
 
 	const toggleLiveMode = () => {
-		if (isLive && !isStreaming) {
+		if (!isLive) {
+			setShowLiveStudioModal(true);
+		} else {
 			setIsLive(false);
 			setLiveVideoUrl("");
-		} else if (!isLive) {
-			setIsLive(true);
+			setPostText("");
 		}
 	};
 
@@ -592,8 +605,13 @@ const HomePage = () => {
 
 	const closeImageViewer = () => {
 		setShowImageViewer(false);
-		setCurrentImages([]);
 		setCurrentImageIndex(0);
+	};
+
+	const handleImageClick = (postImages, index) => {
+		setCurrentImageIndex(index);
+		setCurrentImages(postImages);
+		setShowImageViewer(true);
 	};
 
 	const privacyOptions = {
@@ -706,7 +724,7 @@ const HomePage = () => {
 									onLike={handleLikePost}
 									onShare={() => handleSharePost(post.id)} // Use reusable sharePost utility
 									onDeletePost={handleDeletePost}
-									onPostClick={(e) => handlePostClick(post.id, e)} // Use reusable handlePostClick utility
+									onPostClick={(e) => handleImageClick(post.images, post.id, e)} // Modified to pass images and id
 									showComments={post.comments && post.comments.length > 0}
 									comments={post.comments || []}
 								/>
@@ -848,185 +866,6 @@ const HomePage = () => {
 								})}
 							</div>
 						)}
-
-						{isLive && (
-						<Card className="mb-3 live-studio-card border-0 shadow-sm">
-							<Card.Header className="bg-gradient-primary text-white border-0">
-								<div className="d-flex justify-content-between align-items-center">
-									<div className="d-flex align-items-center gap-2">
-										<div
-											className="rounded-circle bg-white"
-											style={{ width: "12px", height: "12px", opacity: 0.9 }}
-										></div>
-										<h6 className="mb-0 fw-bold">Live Studio</h6>
-									</div>
-									<div className="d-flex align-items-center gap-2">
-										{isStreaming && (
-											<small className="opacity-75">
-												🔴 Broadcasting
-											</small>
-										)}
-										{!isStreaming ? (
-											<Button
-												variant="light"
-												size="sm"
-												onClick={startLiveStream}
-												className="d-flex align-items-center gap-2 px-3"
-											>
-												<div
-													className="rounded-circle bg-success"
-													style={{ width: "8px", height: "8px" }}
-												></div>
-												Go Live
-											</Button>
-										) : (
-											<Button
-												variant="outline-light"
-												size="sm"
-												onClick={stopLiveStream}
-												className="d-flex align-items-center gap-2 px-3"
-											>
-												<div
-													className="rounded-circle bg-danger"
-													style={{ 
-														width: "8px", 
-														height: "8px",
-														animation: "pulse 1.5s infinite"
-													}}
-												></div>
-												End Stream
-											</Button>
-										)}
-									</div>
-								</div>
-							</Card.Header>
-
-							<Card.Body className="p-3">
-								{/* Live Video Preview */}
-								<div className="position-relative mb-3 live-video-preview">
-									<video
-										ref={videoRef}
-										autoPlay
-										muted
-										playsInline
-										className="w-100 rounded-3"
-										style={{
-											height: "240px",
-											objectFit: "cover",
-											backgroundColor: "#1a1a1a",
-											border: isStreaming ? "2px solid #dc3545" : "2px solid #e9ecef"
-										}}
-									/>
-
-									{/* Live indicator overlay */}
-									{isStreaming && (
-										<div className="position-absolute top-0 start-0 end-0 bottom-0 d-flex align-items-start justify-content-between p-3">
-											<div className="live-indicator px-3 py-2 rounded-pill">
-												<div className="d-flex align-items-center gap-2">
-													<div
-														className="rounded-circle bg-white"
-														style={{
-															width: "8px",
-															height: "8px",
-															animation: "pulse 1s infinite"
-														}}
-													></div>
-													<span className="text-white fw-bold small">LIVE</span>
-												</div>
-											</div>
-											<div 
-												className="stream-controls rounded-3 px-3 py-2"
-												style={{ backdropFilter: "blur(10px)" }}
-											>
-												<small className="text-white opacity-75">
-													📹 Recording
-												</small>
-											</div>
-										</div>
-									)}
-
-									{/* Placeholder when not streaming */}
-									{!isStreaming && (
-										<div className="position-absolute top-0 start-0 end-0 bottom-0 d-flex align-items-center justify-content-center">
-											<div className="text-center text-muted">
-												<div className="mb-2" style={{ fontSize: "2rem" }}>📹</div>
-												<h6 className="mb-1">Camera Preview</h6>
-												<small>Click "Go Live" to start streaming</small>
-											</div>
-										</div>
-									)}
-								</div>
-
-								{/* Stream controls and info */}
-								<div className="row g-3">
-									{/* Stream URL */}
-									{liveVideoUrl && (
-										<div className="col-12">
-											<Form.Group>
-												<Form.Label className="small fw-semibold text-muted mb-2">
-													📡 Stream URL
-												</Form.Label>
-												<div className="input-group">
-													<Form.Control
-														type="text"
-														value={liveVideoUrl}
-														readOnly
-														className="shadow-none border-end-0"
-														style={{ 
-															fontSize: "0.875rem",
-															backgroundColor: "#f8f9fa",
-															fontFamily: "monospace"
-														}}
-													/>
-													<Button
-														variant="outline-secondary"
-														size="sm"
-														onClick={() => {
-															navigator.clipboard.writeText(liveVideoUrl);
-															// You could add a toast notification here
-														}}
-														className="border-start-0"
-													>
-														📋
-													</Button>
-												</div>
-												<Form.Text className="text-muted d-flex align-items-center gap-1 mt-2">
-													<span>🔗</span>
-													Share this URL with your audience to watch the live stream
-												</Form.Text>
-											</Form.Group>
-										</div>
-									)}
-
-									{/* Stream stats */}
-									{isStreaming && (
-										<div className="col-12">
-											<div className="row g-2">
-												<div className="col-4">
-													<div className="text-center p-2 bg-light rounded-3">
-														<div className="fw-bold text-success small">ONLINE</div>
-														<small className="text-muted">Status</small>
-													</div>
-												</div>
-												<div className="col-4">
-													<div className="text-center p-2 bg-light rounded-3">
-														<div className="fw-bold text-primary small">720p</div>
-														<small className="text-muted">Quality</small>
-													</div>
-												</div>
-												<div className="col-4">
-													<div className="text-center p-2 bg-light rounded-3">
-														<div className="fw-bold text-info small">0</div>
-														<small className="text-muted">Viewers</small>
-													</div>
-												</div>
-											</div>
-										</div>
-									)}
-								</div>
-							</Card.Body>
-						</Card>
-					)}
 
 						<div className="d-flex justify-content-between align-items-center">
 							<div className="d-flex gap-2">
@@ -1226,25 +1065,22 @@ const HomePage = () => {
 			{/* Delete Post Confirmation Dialog */}
 			<AlertDialog
 				show={showDeleteDialog}
-				onHide={() => {
-					setShowDeleteDialog(false);
-					setPostToDelete(null);
-				}}
 				title="Delete Post"
 				message="Are you sure you want to delete this post? This action cannot be undone."
-				dialogButtonMessage={
-					deletingPost ? (
-						<Spinner size="sm" animation="border" />
-					) : (
-						"Delete"
-					)
-				}
-				onDialogButtonClick={confirmDeletePost}
-				type="danger"
-				disabled={deletingPost}
+				onCancel={() => setShowDeleteDialog(false)}
+				onConfirm={confirmDeletePost}
+				isLoading={deletingPost}
 			/>
-		</>
+
+			{/* Live Studio Modal */}
+			<LiveStudioModal
+				show={showLiveStudioModal}
+				onHide={() => setShowLiveStudioModal(false)}
+				onStartStream={handleStartLiveStream}
+				onStopStream={handleStopLiveStream}
+				isStreaming={isStreaming}
+				currentUser={currentUser}
+			/>
+		</Container>
 	);
 };
-
-export default HomePage;
