@@ -26,6 +26,7 @@ import {
 	ThreeDots,
 	ChevronLeft,
 	ChevronRight,
+	Trash,
 } from "react-bootstrap-icons";
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -48,6 +49,8 @@ const PostDetailPage = () => {
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 	const [postToDelete, setPostToDelete] = useState(null);
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
+	const [showDeleteCommentDialog, setShowDeleteCommentDialog] = useState(false);
+	const [commentToDelete, setCommentToDelete] = useState(null);
 
 	useEffect(() => {
 		const loadPostAndComments = async () => {
@@ -99,6 +102,28 @@ const PostDetailPage = () => {
 	const handleSharePost = async (postId) => {
 		const postUrl = `${window.location.origin}/post/${postId}`;
 		await sharePost(postUrl);
+	};
+
+	const handleDeleteComment = (commentId) => {
+		setCommentToDelete(commentId);
+		setShowDeleteCommentDialog(true);
+	};
+
+	const confirmDeleteComment = async () => {
+		if (!commentToDelete) return;
+
+		try {
+			await commentAPI.deleteComment(commentToDelete);
+			// Reload comments after deletion
+			const commentsResponse = await commentAPI.getComments(postId);
+			setComments(commentsResponse.comments || []);
+		} catch (err) {
+			console.error("Error deleting comment:", err);
+			setError("Failed to delete comment");
+		} finally {
+			setShowDeleteCommentDialog(false);
+			setCommentToDelete(null);
+		}
 	};
 
 	const handleDeletePost = (postId) => {
@@ -579,7 +604,7 @@ const PostDetailPage = () => {
 			) : (
 				<div className="comment-thread px-3 py-4">
 					{comments.map((comment, index) => (
-						<div key={comment.id} className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""}`}>
+						<div key={comment.id} className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""} d-flex gap-2 mb-3`}>
 							<Image
 								src={
 									comment.author.photoURL ||
@@ -592,25 +617,41 @@ const PostDetailPage = () => {
 								className="comment-avatar"
 								style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
 							/>
-							<div className="comment-content">
-								<div className="d-flex align-items-center gap-1 mb-1">
-									<span className="fw-bold">{comment.author.name}</span>
-									{comment.author.hasBlueCheck && (
-										<span className="text-primary">
-											<CheckCircleFill className="text-primary" size={16} />
+							<div className="comment-content flex-grow-1">
+								<div className="d-flex align-items-center justify-content-between mb-1">
+									<div className="d-flex align-items-center gap-1">
+										<span className="fw-bold">{comment.author.name}</span>
+										{comment.author.hasBlueCheck && (
+											<span className="text-primary">
+												<CheckCircleFill className="text-primary" size={16} />
+											</span>
+										)}
+										<span className="text-muted">·</span>
+										<span className="text-muted small">
+											{formatTimeAgo(comment.createdAt)}
 										</span>
+									</div>
+									{comment.author.uid === currentUser.uid && (
+										<Button
+											variant="link"
+											size="sm"
+											className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
+											style={{
+												width: "24px",
+												height: "24px",
+												background: "none",
+												border: "none !important",
+												boxShadow: "none !important",
+											}}
+											onClick={() => handleDeleteComment(comment.id)}
+											title="Delete comment"
+										>
+											<Trash size={12} />
+										</Button>
 									)}
-									<span className="text-muted">·</span>
-									<span className="text-muted small">
-										{formatTimeAgo(comment.createdAt)}
-									</span>
 								</div>
 
 								<p className="mb-2">{comment.content}</p>
-
-								<div className="d-flex gap-4 text-muted">
-									{/* For future use */}
-								</div>
 							</div>
 						</div>
 					))}
@@ -747,6 +788,20 @@ const PostDetailPage = () => {
 				message="Are you sure you want to delete this post? This action cannot be undone."
 				dialogButtonMessage="Delete"
 				onDialogButtonClick={confirmDeletePost}
+				type="danger"
+			/>
+
+			{/* Delete Comment Confirmation Dialog */}
+			<AlertDialog
+				show={showDeleteCommentDialog}
+				onHide={() => {
+					setShowDeleteCommentDialog(false);
+					setCommentToDelete(null);
+				}}
+				title="Delete Comment"
+				message="Are you sure you want to delete this comment? This action cannot be undone."
+				dialogButtonMessage="Delete"
+				onDialogButtonClick={confirmDeleteComment}
 				type="danger"
 			/>
 		</Container>
