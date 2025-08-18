@@ -19,7 +19,7 @@ import {
 	Mic,
 	MicMute,
 	Palette,
-	Brightness,
+	Sun,
 	Contrast,
 	Globe,
 	People,
@@ -346,7 +346,7 @@ const LiveStudioModal = ({
 									<Col sm={6}>
 										<div className="mb-3">
 											<div className="d-flex align-items-center gap-2 mb-2">
-												<Brightness size={14} />
+												<Sun size={14} />
 												<small className="fw-bold">Brightness: {brightness}%</small>
 											</div>
 											<Form.Range
