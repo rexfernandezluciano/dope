@@ -24,7 +24,7 @@ import {
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
-import { deletePost as deletePostUtil, sharePost, handlePostClick, handlePostOption } from "../utils/common-utils";
+import { deletePost as deletePostUtil, sharePost, handlePostClick, handlePostOption, formatJoinDate } from "../utils/common-utils";
 
 const ProfilePage = () => {
 	const { username } = useParams();
