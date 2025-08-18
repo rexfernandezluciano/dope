@@ -1081,6 +1081,6 @@ const HomePage = () => {
 				isStreaming={isStreaming}
 				currentUser={currentUser}
 			/>
-		</Container>
+		</>
 	);
 };

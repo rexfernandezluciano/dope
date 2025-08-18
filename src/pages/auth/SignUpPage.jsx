@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
+import "animate.css";
 import heic2any from "heic2any";
 
 import { authAPI } from "../../config/ApiConfig";
