@@ -23,10 +23,13 @@ import {
 	Search,
 	Star,
 	BarChart,
+	Bell,
+	BellFill,
 } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../utils/app-utils";
+import { requestNotificationPermission } from "../../utils/messaging-utils";
 
 import logo from "../../assets/images/dope.png";
 import dopeImage from "../../assets/images/dope.png";
@@ -41,27 +44,33 @@ const NavigationView = ({ children }) => {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 	const [filterBy, setFilterBy] = useState("for-you"); // Assuming this state is needed for the tabs
+	const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
 	// Handle NProgress for all navigation including browser back/forward
 	useEffect(() => {
-		const handleStart = () => {
-			NProgress.start();
-		};
+		const handleStart = () => NProgress.start();
+		const handleComplete = () => NProgress.done();
 
-		const handleComplete = () => {
-			NProgress.done();
-		};
+		// Listen to React Router navigation events
+		window.addEventListener("beforeunload", handleStart);
 
-		// Listen for popstate (back/forward button)
-		window.addEventListener('popstate', handleStart);
+		// Request notification permission when navigation loads
+		if (user) {
+			requestNotificationPermission().then((token) => {
+				setNotificationsEnabled(!!token);
+			});
+		}
 
-		// Complete progress when location changes
-		handleComplete();
+		// Check current notification permission
+		if ('Notification' in window) {
+			setNotificationsEnabled(Notification.permission === 'granted');
+		}
 
 		return () => {
-			window.removeEventListener('popstate', handleStart);
+			window.removeEventListener("beforeunload", handleStart);
+			handleComplete();
 		};
-	}, [location]);
+	}, [location, user]);
 
 	const handleLogout = () => {
 		setShowLogoutDialog(true);

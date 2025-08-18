@@ -40,6 +40,11 @@ import {
 	sharePost,
 	handlePostClick,
 } from "../utils/common-utils";
+import {
+	requestNotificationPermission,
+	setupMessageListener,
+	notifyFollowersOfNewPost
+} from "../utils/messaging-utils";
 
 // Utility function to clean text content
 const cleanTextContent = (text) => {
@@ -118,6 +123,24 @@ const HomePage = () => {
 
 	useEffect(() => {
 		loadPosts();
+		
+		// Request notification permission and setup listener
+		const setupNotifications = async () => {
+			await requestNotificationPermission();
+			
+			// Setup foreground message listener
+			const unsubscribe = setupMessageListener((payload) => {
+				console.log('Received notification in foreground:', payload);
+				// Optionally refresh posts if it's a new post notification
+				if (payload.data?.type === 'new_post') {
+					loadPosts();
+				}
+			});
+			
+			return unsubscribe;
+		};
+		
+		setupNotifications();
 	}, [filterBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const loadPosts = async (cursor = null, filter = filterBy) => {
@@ -487,8 +510,20 @@ const HomePage = () => {
 				postData.streamKey = streamUrlRef.current;
 			}
 
-			await postAPI.createPost(postData);
+			const response = await postAPI.createPost(postData);
 
+			// Send notification to followers
+			if (response && response.post) {
+				try {
+					await notifyFollowersOfNewPost(response.post.id, {
+						...response.post,
+						author: currentUser
+					});
+				} catch (notificationError) {
+					console.error('Failed to send notifications:', notificationError);
+					// Don't fail the post creation if notification fails
+				}
+			}
 
 			// Reset form
 			setPostText("");

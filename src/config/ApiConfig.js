@@ -115,8 +115,8 @@ const authAPI = {
 
 		const response = await apiRequest('/auth/login', {
 			method: 'POST',
-			body: { 
-				email: sanitizeInput(email), 
+			body: {
+				email: sanitizeInput(email),
 				password: password // Don't sanitize password to preserve special chars
 			}
 		});
@@ -164,10 +164,10 @@ const authAPI = {
 
 		return apiRequest('/auth/verify-email', {
 			method: 'POST',
-			body: { 
-				email: sanitizeInput(email), 
-				code: sanitizeInput(code), 
-				verificationId: sanitizeInput(verificationId) 
+			body: {
+				email: sanitizeInput(email),
+				code: sanitizeInput(code),
+				verificationId: sanitizeInput(verificationId)
 			}
 		});
 	},
@@ -251,22 +251,13 @@ const postAPI = {
 			method: 'GET'
 		}),
 
-	createPost: (postData) =>
-		apiRequest('/posts', {
-			method: 'POST',
-			body: postData
-		}),
-
-	updatePost: (postId, postData) =>
-		apiRequest(`/posts/${postId}`, {
-			method: 'PUT',
-			body: postData
-		}),
-
-	deletePost: (postId) =>
-		apiRequest(`/posts/${postId}`, {
-			method: 'DELETE'
-		}),
+	createPost: (data) => apiRequest('/posts', 'POST', data),
+	updatePost: (id, data) => apiRequest(`/posts/${id}`, 'PUT', data),
+	deletePost: (id) => apiRequest(`/posts/${id}`, 'DELETE'),
+	likePost: (id) => apiRequest(`/posts/${id}/like`, 'POST'),
+	sharePost: (id, data) => apiRequest(`/posts/${id}/share`, 'POST', data),
+	saveFCMToken: (data) => apiRequest('/users/fcm-token', 'POST', data),
+	sendPostNotification: (data) => apiRequest('/notifications/post', 'POST', data),
 
 	deletePostWithImages: async (postId) => {
 		try {
@@ -289,11 +280,6 @@ const postAPI = {
 		}
 	},
 
-
-	likePost: (postId) =>
-		apiRequest(`/posts/${postId}/like`, {
-			method: 'POST'
-		}),
 
 	getUserPosts: (userId, params = {}) => {
 		const searchParams = new URLSearchParams();

@@ -3,6 +3,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
 	apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -17,6 +18,7 @@ const firebaseConfig = {
 let app;
 let db;
 let appCheck; // Declare appCheck
+let messaging; // Declare messaging
 
 try {
 	app = initializeApp(firebaseConfig);
@@ -36,11 +38,17 @@ try {
 	}
 
 	db = getFirestore(app);
+	
+	// Initialize Firebase Cloud Messaging
+	if (typeof window !== 'undefined') {
+		messaging = getMessaging(app);
+	}
 } catch (error) {
 	console.error("Firebase initialization error:", error);
 	// Create a mock database object to prevent crashes
 	db = null;
 	appCheck = null; // Ensure appCheck is also null in case of error
+	messaging = null; // Ensure messaging is also null in case of error
 }
 
-export { db, app, appCheck };
+export { db, app, appCheck, messaging };
