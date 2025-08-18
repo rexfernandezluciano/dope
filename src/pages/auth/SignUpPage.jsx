@@ -199,47 +199,7 @@ const SignUpPage = () => {
 		}
 	};
 
-	const handleGoogleSignUp = async () => {
-		setGoogleLoading(true);
-		try {
-			const googleAuthResponse = await renderGoogleButton();
-			if (googleAuthResponse && googleAuthResponse.credential && googleAuthResponse.credential.idToken) {
-				const idToken = googleAuthResponse.credential.idToken;
-				const response = await authAPI.googleAuth({ idToken });
-
-				if (response.token) {
-					setAuthToken(response.token);
-					navigate("/home");
-				} else if (response.error) {
-					setError(response.error);
-				} else {
-					setError("An unknown error occurred during Google sign-in.");
-				}
-			} else {
-				setError("Failed to get ID token from Google.");
-			}
-		} catch (err) {
-			setError(err.message);
-		} finally {
-			setGoogleLoading(false);
-		}
-	};
-
-	useEffect(() => {
-		// Update page meta data
-		updatePageMeta(pageMetaData.signup);
-
-		// Initialize Google Sign-In
-		initializeGoogleAuth().catch(err => {
-			console.error('Failed to initialize Google Sign-In:', err);
-		});
-
-		// Redirect if already authenticated
-		const token = localStorage.getItem("authToken");
-		if (token) {
-			navigate("/home");
-		}
-	}, [navigate]);
+	
 
 	return (
 		<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
