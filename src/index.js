@@ -11,6 +11,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import "./config/FirebaseConfig";
+import "./config/OneSignalConfig";
 import "animate.css";
 import "./assets/css/app.css";
 

@@ -29,7 +29,7 @@ import {
 
 import { authAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../utils/app-utils";
-import { requestNotificationPermission } from "../../utils/messaging-utils";
+import { initializeNotifications, requestNotificationPermission } from "../../utils/messaging-utils";
 
 import logo from "../../assets/images/dope.png";
 import dopeImage from "../../assets/images/dope.png";
@@ -54,10 +54,14 @@ const NavigationView = ({ children }) => {
 		// Listen to React Router navigation events
 		window.addEventListener("beforeunload", handleStart);
 
-		// Request notification permission when navigation loads
-		if (user) {
-			requestNotificationPermission().then((token) => {
-				setNotificationsEnabled(!!token);
+		// Initialize OneSignal with user ID when navigation loads
+		if (user && user.uid) {
+			initializeNotifications(user.uid).then((success) => {
+				if (success) {
+					requestNotificationPermission().then((granted) => {
+						setNotificationsEnabled(granted);
+					});
+				}
 			});
 		}
 

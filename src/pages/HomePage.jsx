@@ -41,6 +41,7 @@ import {
 	handlePostClick,
 } from "../utils/common-utils";
 import {
+	initializeNotifications,
 	requestNotificationPermission,
 	setupMessageListener,
 	notifyFollowersOfNewPost
@@ -102,20 +103,23 @@ const HomePage = () => {
 	useEffect(() => {
 		loadPosts();
 		
-		// Request notification permission and setup listener
+		// Initialize OneSignal and setup notifications
 		const setupNotifications = async () => {
-			await requestNotificationPermission();
-			
-			// Setup foreground message listener
-			const unsubscribe = setupMessageListener((payload) => {
-				console.log('Received notification in foreground:', payload);
-				// Optionally refresh posts if it's a new post notification
-				if (payload.data?.type === 'new_post') {
-					loadPosts();
+			if (currentUser && currentUser.uid) {
+				const initialized = await initializeNotifications(currentUser.uid);
+				if (initialized) {
+					await requestNotificationPermission();
 				}
-			});
-			
-			return unsubscribe;
+				
+				// Setup foreground message listener (OneSignal handles this automatically)
+				setupMessageListener((payload) => {
+					console.log('Received notification in foreground:', payload);
+					// Optionally refresh posts if it's a new post notification
+					if (payload.data?.type === 'new_post') {
+						loadPosts();
+					}
+				});
+			}
 		};
 		
 		setupNotifications();

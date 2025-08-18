@@ -256,8 +256,9 @@ const postAPI = {
 	deletePost: (id) => apiRequest(`/posts/${id}`, 'DELETE'),
 	likePost: (id) => apiRequest(`/posts/${id}/like`, 'POST'),
 	sharePost: (id, data) => apiRequest(`/posts/${id}/share`, 'POST', data),
-	saveFCMToken: (data) => apiRequest('/users/fcm-token', 'POST', data),
-	sendPostNotification: (data) => apiRequest('/notifications/post', 'POST', data),
+	saveOneSignalPlayerId: (data) => apiRequest('/users/onesignal-player', 'POST', data),
+	sendPostNotificationToFollowers: (data) => apiRequest('/notifications/post-followers', 'POST', data),
+	sendNotificationToUser: (data) => apiRequest('/notifications/user', 'POST', data),
 
 	deletePostWithImages: async (postId) => {
 		try {
