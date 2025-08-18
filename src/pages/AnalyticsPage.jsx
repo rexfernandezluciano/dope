@@ -66,8 +66,8 @@ const AnalyticsPage = () => {
 			// Get top performing posts based on real API data
 			const topPosts = [...userPosts]
 				.sort((a, b) => {
-					const aEngagement = (a.stats?.likes || 0) + (a.stats?.comments || 0) + (a.stats || 0);
-					const bEngagement = (b.stats?.likes || 0) + (b.stats?.comments || 0) + (b?.sharesCount || 0);
+					const aEngagement = (a.stats?.likes || 0) + (a.stats?.comments || 0) + (a.sharesCount || 0);
+					const bEngagement = (b.stats?.likes || 0) + (b.stats?.comments || 0) + (b.sharesCount || 0);
 					return bEngagement - aEngagement;
 				})
 				.slice(0, 5);
