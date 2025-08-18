@@ -183,6 +183,7 @@ const NavigationView = ({ children }) => {
 											to={item.href}
 											className={navItemClass(item.href)}
 											style={{ textDecoration: 'none' }}
+											onClick={() => setShowModal(false)}
 										>
 											{item.icon}
 											{item.label}
