@@ -16,10 +16,11 @@ const firebaseConfig = {
 // Initialize Firebase
 let app;
 let db;
+let appCheck; // Declare appCheck
 
 try {
 	app = initializeApp(firebaseConfig);
-	
+
 	// Initialize App Check
 	if (typeof window !== 'undefined') {
 		// For development, use debug token
@@ -27,18 +28,19 @@ try {
 			// Debug token for development - replace with your debug token
 			window.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.REACT_APP_FIREBASE_APPCHECK_DEBUG_TOKEN || true;
 		}
-		
-		initializeAppCheck(app, {
+
+		appCheck = initializeAppCheck(app, { // Assign to appCheck
 			provider: new ReCaptchaV3Provider(process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeXsKkrAAAAAIZ_HaIAbxmU6XIrxVlLguh78xx_'),
 			isTokenAutoRefreshEnabled: true
 		});
 	}
-	
+
 	db = getFirestore(app);
 } catch (error) {
 	console.error("Firebase initialization error:", error);
 	// Create a mock database object to prevent crashes
 	db = null;
+	appCheck = null; // Ensure appCheck is also null in case of error
 }
 
-export { db, app };
+export { db, app, appCheck };

@@ -1,6 +1,6 @@
 
 import { getToken } from "firebase/app-check";
-import { app } from "../config/FirebaseConfig";
+import { app, appCheck } from "../config/FirebaseConfig";
 
 /**
  * Get App Check token for API requests
@@ -10,8 +10,8 @@ export const getAppCheckToken = async () => {
 	try {
 		if (typeof window === 'undefined') return null;
 		
-		// Get the token directly - Firebase automatically uses the initialized App Check instance
-		const appCheckTokenResponse = await getToken(app, false);
+		// Get the token using the App Check instance
+		const appCheckTokenResponse = await getToken(appCheck, false);
 		return appCheckTokenResponse.token;
 	} catch (error) {
 		console.error('Error getting App Check token:', error);
