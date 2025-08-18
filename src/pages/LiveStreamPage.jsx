@@ -21,7 +21,7 @@ const LiveStreamPage = () => {
 	const [localAudioTrack, setLocalAudioTrack] = useState(null);
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isJoined, setIsJoined] = useState(false);
-	const [remoteUsers, setRemoteUsers] = useState([]); // State to keep track of remote users
+	
 
 	const videoRef = useRef(null);
 	const socketRef = useRef(null);
@@ -65,6 +65,34 @@ const LiveStreamPage = () => {
 		};
 	}, [streamKey]);
 
+	const handleUserPublished = React.useCallback(async (user, mediaType) => {
+		try {
+			await agoraClient.subscribe(user, mediaType);
+
+			if (mediaType === 'video') {
+				const remoteVideoTrack = user.videoTrack;
+				if (videoRef.current) {
+					remoteVideoTrack.play(videoRef.current);
+				}
+				
+			}
+
+			if (mediaType === 'audio') {
+				user.audioTrack.play();
+			}
+		} catch (err) {
+			console.error('Failed to subscribe to user:', err);
+		}
+	}, [agoraClient]);
+
+	const handleUserUnpublished = React.useCallback((user, mediaType) => {
+		// Handle user unpublished
+	}, []);
+
+	const handleUserLeft = React.useCallback((user) => {
+		// Handle user left
+	}, []);
+
 	useEffect(() => {
 		const initializeStream = async () => {
 			try {
@@ -106,43 +134,8 @@ const LiveStreamPage = () => {
 
 	useEffect(() => {
 		// Update page meta data
-		updatePageMeta(pageMetaData.liveStream(streamKey)); // Assuming streamKey can be used as title
-
-		initializeStream();
-		return () => {
-			cleanup();
-		};
+		updatePageMeta(pageMetaData.liveStream(streamKey));
 	}, [streamKey]);
-
-	const handleUserPublished = async (user, mediaType) => {
-		try {
-			await agoraClient.subscribe(user, mediaType);
-
-			if (mediaType === 'video') {
-				const remoteVideoTrack = user.videoTrack;
-				if (videoRef.current) {
-					remoteVideoTrack.play(videoRef.current);
-				}
-				setRemoteUsers(prev => [...prev.filter(u => u.uid !== user.uid), user]);
-			}
-
-			if (mediaType === 'audio') {
-				user.audioTrack.play();
-			}
-		} catch (err) {
-			console.error('Failed to subscribe to user:', err);
-		}
-	};
-
-	const handleUserUnpublished = (user, mediaType) => {
-		if (mediaType === 'video') {
-			setRemoteUsers(prev => prev.filter(u => u.uid !== user.uid));
-		}
-	};
-
-	const handleUserLeft = (user) => {
-		setRemoteUsers(prev => prev.filter(u => u.uid !== user.uid));
-	};
 
 	const startBroadcast = async () => {
 		try {

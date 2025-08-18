@@ -8,6 +8,7 @@ import { authAPI } from "../../config/ApiConfig";
 import { setAuthToken } from "../../utils/app-utils";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
 import { initializeGoogleAuth, renderGoogleButton } from "../../utils/google-auth-utils";
+import { verifyUser } from "../../utils/auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";

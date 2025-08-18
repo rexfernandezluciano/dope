@@ -28,6 +28,7 @@
 		"@vercel/analytics": "^1.5.0",
 		"@vercel/speed-insights": "^1.2.0",
 		"agora-rtc-sdk-ng": "^4.24.0",
+		"animate.css": "^4.1.1",
 		"bootstrap": "^5.3.7",
 		"crypto": "^1.0.1",
 		"firebase": "^12.1.0",
