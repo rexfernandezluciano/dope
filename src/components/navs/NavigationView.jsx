@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation, useLoaderData } from "react-router-dom";
 import {
 	Navbar,
@@ -354,10 +354,12 @@ const NavigationView = ({ children }) => {
 			</div>
 			<AlertDialog
 				show={showLogoutDialog}
+				onHide={() => setShowLogoutDialog(false)}
 				title="Logout Confirmation"
 				message="Are you sure you want to logout?"
-				onConfirm={confirmLogout}
-				onCancel={() => setShowLogoutDialog(false)}
+				onDialogButtonClick={confirmLogout}
+				dialogButtonMessage="Logout"
+				type="danger"
 			/>
 		</>
 	);

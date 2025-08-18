@@ -1,10 +1,7 @@
 /** @format */
 
 import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
-import { firestore } from "../config/FirebaseConfig";
-
-// Initialize Firestore
-const db = firestore;
+import { db } from "../config/FirebaseConfig";
 
 
 /**
