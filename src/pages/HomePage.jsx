@@ -102,7 +102,7 @@ const HomePage = () => {
 
 	useEffect(() => {
 		loadPosts();
-		
+
 		// Initialize OneSignal and setup notifications
 		const setupNotifications = async () => {
 			if (currentUser && currentUser.uid) {
@@ -110,7 +110,7 @@ const HomePage = () => {
 				if (initialized) {
 					await requestNotificationPermission();
 				}
-				
+
 				// Setup foreground message listener (OneSignal handles this automatically)
 				setupMessageListener((payload) => {
 					console.log('Received notification in foreground:', payload);
@@ -121,7 +121,7 @@ const HomePage = () => {
 				});
 			}
 		};
-		
+
 		setupNotifications();
 	}, [filterBy]); // eslint-disable-line react-hooks/exhaustive-deps
 

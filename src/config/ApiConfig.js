@@ -256,9 +256,7 @@ const postAPI = {
 	deletePost: (id) => apiRequest(`/posts/${id}`, 'DELETE'),
 	likePost: (id) => apiRequest(`/posts/${id}/like`, 'POST'),
 	sharePost: (id, data) => apiRequest(`/posts/${id}/share`, 'POST', data),
-	saveOneSignalPlayerId: (data) => apiRequest('/users/onesignal-player', 'POST', data),
-	sendPostNotificationToFollowers: (data) => apiRequest('/notifications/post-followers', 'POST', data),
-	sendNotificationToUser: (data) => apiRequest('/notifications/user', 'POST', data),
+	// Notifications now handled via Firestore
 
 	deletePostWithImages: async (postId) => {
 		try {

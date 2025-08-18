@@ -14,6 +14,7 @@ import {
 	Form,
 	InputGroup,
 	Button,
+	Badge,
 } from "react-bootstrap";
 import {
 	House,
@@ -26,25 +27,35 @@ import {
 	Bell,
 	BellFill,
 } from "react-bootstrap-icons";
+import { Search as LucideSearch, MessageCircle, User as LucideUser, Settings as LucideSettings, BarChart3 as LucideBarChart3, CreditCard as LucideCreditCard, Home as LucideHome } from "lucide-react";
+
 
 import { authAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../utils/app-utils";
-import { initializeNotifications, requestNotificationPermission } from "../../utils/messaging-utils";
+import { initializeNotifications, requestNotificationPermission, setupNotificationListener, getUnreadNotificationCount } from "../../utils/messaging-utils";
+import { getUser } from "../../utils/auth-utils";
 
 import logo from "../../assets/images/dope.png";
 import dopeImage from "../../assets/images/dope.png";
 import AlertDialog from "../dialogs/AlertDialog";
+import NotificationsDropdown from '../NotificationsDropdown';
 
 const NavigationView = ({ children }) => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const loaderData = useLoaderData() || {};
-	const { user } = loaderData;
+	const { user: loaderUserData } = loaderData; // Renamed to avoid conflict
 	const [showModal, setShowModal] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 	const [filterBy, setFilterBy] = useState("for-you"); // Assuming this state is needed for the tabs
 	const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+	const [user, setUser] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const [selectedTab, setSelectedTab] = useState('for-you');
+	const [notifications, setNotifications] = useState([]);
+	const [unreadCount, setUnreadCount] = useState(0);
+
 
 	// Handle NProgress for all navigation including browser back/forward
 	useEffect(() => {
@@ -55,14 +66,50 @@ const NavigationView = ({ children }) => {
 		window.addEventListener("beforeunload", handleStart);
 
 		// Initialize OneSignal with user ID when navigation loads
-		if (user && user.uid) {
-			initializeNotifications(user.uid).then((success) => {
+		// This block will be updated to handle Firestore initialization
+		if (loaderUserData && loaderUserData.uid) {
+			setUser(loaderUserData); // Set user from loader data initially
+			initializeNotifications(loaderUserData.uid).then((success) => {
 				if (success) {
 					requestNotificationPermission().then((granted) => {
 						setNotificationsEnabled(granted);
 					});
 				}
 			});
+		} else {
+			// If user data is not available from loader, attempt to fetch it
+			const initializeUser = async () => {
+				try {
+					setLoading(true);
+					const userData = await getUser();
+					if (userData) {
+						setUser(userData);
+
+						// Initialize notifications for the user
+						await initializeNotifications(userData.uid);
+
+						// Setup real-time notification listener
+						const unsubscribe = setupNotificationListener(userData.uid, (newNotifications) => {
+							setNotifications(newNotifications);
+							setUnreadCount(newNotifications.length);
+						});
+
+						// Get initial unread count
+						const initialUnreadCount = await getUnreadNotificationCount(userData.uid);
+						setUnreadCount(initialUnreadCount);
+
+						// Cleanup listener on unmount
+						return () => {
+							if (unsubscribe) unsubscribe();
+						};
+					}
+				} catch (error) {
+					console.error('Error initializing user:', error);
+				} finally {
+					setLoading(false);
+				}
+			};
+			initializeUser();
 		}
 
 		// Check current notification permission
@@ -74,7 +121,38 @@ const NavigationView = ({ children }) => {
 			window.removeEventListener("beforeunload", handleStart);
 			handleComplete();
 		};
-	}, [location, user]);
+	}, [location, loaderUserData]); // Dependency on loaderUserData
+
+
+	// Effect to setup notification listener if user is available from loader
+	useEffect(() => {
+		if (loaderUserData && loaderUserData.uid) {
+			setUser(loaderUserData);
+			initializeNotifications(loaderUserData.uid).then((success) => {
+				if (success) {
+					requestNotificationPermission().then((granted) => {
+						setNotificationsEnabled(granted);
+					});
+				}
+			});
+
+			// Setup real-time notification listener
+			const unsubscribe = setupNotificationListener(loaderUserData.uid, (newNotifications) => {
+				setNotifications(newNotifications);
+				setUnreadCount(newNotifications.length);
+			});
+
+			// Get initial unread count
+			getUnreadNotificationCount(loaderUserData.uid).then(initialUnreadCount => {
+				setUnreadCount(initialUnreadCount);
+			});
+
+			return () => {
+				if (unsubscribe) unsubscribe();
+			};
+		}
+	}, [loaderUserData]);
+
 
 	const handleLogout = () => {
 		setShowLogoutDialog(true);
@@ -295,64 +373,73 @@ const NavigationView = ({ children }) => {
 							</Form>
 						</div>
 
-						<div className="dropdown">
-							<Image
-								src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
-								alt="avatar"
-								roundedCircle
-								width="40"
-								height="40"
-								style={{ cursor: "pointer" }}
-								data-bs-toggle="dropdown"
-								aria-expanded="false"
+						<div className="d-flex align-items-center">
+							{/* Notification Icon */}
+							<NotificationsDropdown 
+								notifications={notifications}
+								unreadCount={unreadCount}
+								user={user}
 							/>
-							<ul className="dropdown-menu dropdown-menu-end">
-								<li>
-									<Link className="dropdown-item" to={`/${user?.username}`}>
-										<Person size={16} className="me-2" />
-										Profile
-									</Link>
-								</li>
-								<li>
-									<Link
-										className="dropdown-item"
-										to={`/${user?.username}/settings`}
-									>
-										<Gear size={16} className="me-2" />
-										Settings
-									</Link>
-								</li>
-								<li>
-									<Link
-										className="dropdown-item"
-										to={`/${user?.username}/subscription`}
-									>
-										<Star size={16} className="me-2" />
-										Subscription
-									</Link>
-								</li>
-								<li>
-									<Link
-										className="dropdown-item"
-										to={`/${user?.username}/analytics`}
-									>
-										<BarChart size={16} className="me-2" />
-										Analytics
-									</Link>
-								</li>
-								<li>
-									<hr className="dropdown-divider" />
-								</li>
-								<li>
-									<button
-										className="dropdown-item px-3 text-danger"
-										onClick={handleLogout}
-									>
-										<BoxArrowRight size={16} className="me-2" />
-										Logout
-									</button>
-								</li>
-							</ul>
+
+							<div className="dropdown ms-3">
+								<Image
+									src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
+									alt="avatar"
+									roundedCircle
+									width="40"
+									height="40"
+									style={{ cursor: "pointer" }}
+									data-bs-toggle="dropdown"
+									aria-expanded="false"
+								/>
+								<ul className="dropdown-menu dropdown-menu-end">
+									<li>
+										<Link className="dropdown-item" to={`/${user?.username}`}>
+											<Person size={16} className="me-2" />
+											Profile
+										</Link>
+									</li>
+									<li>
+										<Link
+											className="dropdown-item"
+											to={`/${user?.username}/settings`}
+										>
+											<Gear size={16} className="me-2" />
+											Settings
+										</Link>
+									</li>
+									<li>
+										<Link
+											className="dropdown-item"
+											to={`/${user?.username}/subscription`}
+										>
+											<Star size={16} className="me-2" />
+											Subscription
+										</Link>
+									</li>
+									<li>
+										<Link
+											className="dropdown-item"
+											to={`/${user?.username}/analytics`}
+										>
+											<BarChart size={16} className="me-2" />
+											Analytics
+										</Link>
+									</li>
+									<li>
+										<hr className="dropdown-divider" />
+									</li>
+									<li>
+										<button
+											className="dropdown-item px-3 text-danger"
+											onClick={handleLogout}
+										>
+											<BoxArrowRight size={16} className="me-2" />
+											Logout
+										</button>
+									</li>
+								</ul>
+							</div>
 						</div>
 					</Container>
 				</Navbar>
