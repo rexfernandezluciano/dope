@@ -41,9 +41,25 @@ const NavigationView = ({ children }) => {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-	// Complete NProgress when location changes
+	// Handle NProgress for all navigation including browser back/forward
 	useEffect(() => {
-		NProgress.done();
+		const handleStart = () => {
+			NProgress.start();
+		};
+
+		const handleComplete = () => {
+			NProgress.done();
+		};
+
+		// Listen for popstate (back/forward button)
+		window.addEventListener('popstate', handleStart);
+		
+		// Complete progress when location changes
+		handleComplete();
+
+		return () => {
+			window.removeEventListener('popstate', handleStart);
+		};
 	}, [location]);
 
 	const handleLogout = () => {

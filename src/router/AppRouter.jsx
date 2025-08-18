@@ -160,6 +160,18 @@ const AppRouter = () => {
 			speed: 500,
 			minimum: 0.3
 		});
+
+		// Handle browser navigation (back/forward buttons)
+		const handlePopState = () => {
+			NProgress.start();
+		};
+
+		// Add event listener for browser navigation
+		window.addEventListener('popstate', handlePopState);
+
+		return () => {
+			window.removeEventListener('popstate', handlePopState);
+		};
 	}, []);
 
 	return <RouterProvider router={router} />;
