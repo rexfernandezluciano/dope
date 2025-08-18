@@ -324,21 +324,23 @@ const NavigationView = ({ children }) => {
 							</Col>
 						</Row>
 						<h5 className="text-center">{user?.name}</h5>
-						<p className="text-center text-muted small">{user?.username}</p>
-						{user.subscription && user.subscription !== "free" && (
-							<span
-								className={`ms-1 badge ${
-									user.subscription === "premium"
-										? "bg-warning text-dark"
-										: user.subscription === "pro"
-											? "bg-primary"
-											: "bg-secondary"
-								}`}
-								style={{ fontSize: "0.7rem" }}
-							>
-								{user.subscription.toUpperCase()}
-							</span>
-						)}
+						<p className="text-center text-muted small">
+							{user?.username}{" "}
+							{user.subscription && user.subscription !== "free" && (
+								<span
+									className={`ms-1 badge ${
+										user.subscription === "premium"
+											? "bg-warning text-dark"
+											: user.subscription === "pro"
+												? "bg-primary"
+												: "bg-secondary"
+									}`}
+									style={{ fontSize: "0.7rem" }}
+								>
+									{user.subscription.toUpperCase()}
+								</span>
+							)}
+						</p>
 						<Nav className="flex-column gap-1">
 							{menuItems.map((item, idx) => (
 								<Nav.Link
