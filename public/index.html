@@ -56,7 +56,9 @@
 		<link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 		<script src="//cdn.jsdelivr.net/npm/eruda"></script>
 		<script>
-			eruda.init();
+			if (window.location.hostname === 'localhost' || window.location.hostname.includes('.replit.dev')) {
+				eruda.init();
+			}
 		</script>
 		<title>DOPE Network - Social Media Platform</title>
 	</head>
