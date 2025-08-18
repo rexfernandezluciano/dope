@@ -165,11 +165,12 @@ const SubscriptionPage = () => {
 
 	useEffect(() => {
 		if (user && typeof user === "object") {
-			const userSubscription = user.subscription || "free";
+			const userSubscription = user.membership?.subscription || "free";
+			const nextBillingDate = user.membership?.nextBillingDate || null;
 			setSubscription({
 				plan: userSubscription,
 				status: "active",
-				nextBilling: userSubscription !== "free" ? "2024-02-15" : null, // Mock next billing date
+				nextBilling: nextBillingDate,
 				features: {
 					blueCheck: getBlueCheckStatus(userSubscription),
 					imageLimit: getImageLimit(userSubscription),
@@ -243,7 +244,10 @@ const SubscriptionPage = () => {
 		try {
 			setLoading(true);
 			await userAPI.updateUser(user.username, {
-				subscription: planId,
+				membership: {
+					subscription: planId,
+					nextBillingDate: planId !== "free" ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
+				},
 			});
 			setMessage(`Successfully upgraded to ${planId} plan!`);
 			setMessageType("success");
@@ -251,6 +255,7 @@ const SubscriptionPage = () => {
 			setSubscription((prev) => ({
 				...prev,
 				plan: planId,
+				nextBilling: planId !== "free" ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null,
 				features: {
 					...prev.features,
 					blueCheck: getBlueCheckStatus(planId),
@@ -269,7 +274,10 @@ const SubscriptionPage = () => {
 		try {
 			setLoading(true);
 			await userAPI.updateUser(user.username, {
-				subscription: "free",
+				membership: {
+					subscription: "free",
+					nextBillingDate: null
+				},
 			});
 			setMessage(
 				"Subscription cancelled successfully. You'll retain access until the end of your billing period.",
@@ -280,6 +288,7 @@ const SubscriptionPage = () => {
 			setSubscription((prev) => ({
 				...prev,
 				plan: "free",
+				nextBilling: null,
 				features: {
 					...prev.features,
 					blueCheck: false,

@@ -469,19 +469,19 @@ const ProfilePage = () => {
 									<CheckCircleFill className="text-primary" size={16} />
 								</span>
 							)}
-							{profileUser.subscription &&
-								profileUser.subscription !== "free" && (
+							{profileUser.membership?.subscription &&
+								profileUser.membership.subscription !== "free" && (
 									<span
 										className={`badge ${
-											profileUser.subscription === "premium"
+											profileUser.membership.subscription === "premium"
 												? "bg-warning text-dark"
-												: profileUser.subscription === "pro"
+												: profileUser.membership.subscription === "pro"
 													? "bg-primary"
 													: "bg-secondary"
 										}`}
 										style={{ fontSize: "0.7rem" }}
 									>
-										{profileUser.subscription.toUpperCase()}
+										{profileUser.membership.subscription.toUpperCase()}
 									</span>
 								)}
 						</div>

@@ -359,18 +359,18 @@ const NavigationView = ({ children }) => {
 						<h5 className="text-center">{user?.name}</h5>
 						<p className="text-center text-muted small">
 							{user?.username}{" "}
-							{user.subscription && user.subscription !== "free" && (
+							{user.membership?.subscription && user.membership.subscription !== "free" && (
 								<span
 									className={`ms-1 badge ${
-										user.subscription === "premium"
+										user.membership.subscription === "premium"
 											? "bg-warning text-dark"
-											: user.subscription === "pro"
+											: user.membership.subscription === "pro"
 												? "bg-primary"
 												: "bg-secondary"
 									}`}
 									style={{ fontSize: "0.7rem" }}
 								>
-									{user.subscription.toUpperCase()}
+									{user.membership.subscription.toUpperCase()}
 								</span>
 							)}
 						</p>
