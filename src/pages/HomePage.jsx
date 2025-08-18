@@ -30,8 +30,9 @@ import {
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import heic2any from "heic2any";
+import AgoraRTC from 'agora-rtc-sdk-ng';
 
-import { postAPI, commentAPI } from "../config/ApiConfig";
+import { postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
 import {
@@ -278,100 +279,100 @@ const HomePage = () => {
 
 	const startLiveStream = async () => {
 		try {
-			// Request camera and microphone access
-			const stream = await navigator.mediaDevices.getUserMedia({
-				video: {
-					width: { ideal: 1280 },
-					height: { ideal: 720 },
-					frameRate: { ideal: 30 }
-				},
-				audio: {
-					echoCancellation: true,
-					noiseSuppression: true,
-					autoGainControl: true
+			// Create Agora client
+			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
+			
+			// Set client role as host
+			await client.setClientRole('host');
+
+			// Create local tracks
+			const videoTrack = await AgoraRTC.createCameraVideoTrack({
+				optimizationMode: 'detail',
+				encoderConfig: {
+					width: 1280,
+					height: 720,
+					frameRate: 30,
+					bitrateMin: 1000,
+					bitrateMax: 3000,
 				}
 			});
 
-			setMediaStream(stream);
-			setIsStreaming(true);
+			const audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+				encoderConfig: 'high_quality_stereo'
+			});
 
-			// Display the stream in video element
+			// Play local video preview
 			if (videoRef.current) {
-				videoRef.current.srcObject = stream;
+				videoTrack.play(videoRef.current);
 			}
 
-			// Create a simple RTMP-like streaming URL (you can replace this with actual streaming service)
+			// Generate stream key and URL
 			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 			const streamUrl = `${window.location.origin}/live/${streamKey}`;
 			setLiveVideoUrl(streamUrl);
 			streamUrlRef.current = streamUrl;
 
-			// Initialize MediaRecorder for recording chunks
-			const recorder = new MediaRecorder(stream, {
-				mimeType: 'video/webm;codecs=vp9,opus'
-			});
-			
-			const chunks = [];
-			recorder.ondataavailable = (event) => {
-				if (event.data.size > 0) {
-					chunks.push(event.data);
-					// Here you would typically send chunks to your streaming server
-					sendStreamChunk(event.data, streamKey);
-				}
+			// Join channel and publish tracks
+			const agoraConfig = {
+				appId: process.env.REACT_APP_AGORA_APP_ID || 'your-agora-app-id',
+				token: null, // Generate server-side for production
+				channel: streamKey,
+				uid: null
 			};
 
-			recorder.onstop = () => {
-				const blob = new Blob(chunks, { type: 'video/webm' });
-				// Handle the final recording if needed
-			};
+			await client.join(
+				agoraConfig.appId,
+				agoraConfig.channel,
+				agoraConfig.token,
+				agoraConfig.uid
+			);
 
-			setMediaRecorder(recorder);
-			recorder.start(1000); // Record in 1-second chunks
+			await client.publish([videoTrack, audioTrack]);
+
+			// Store references
+			setMediaStream(client);
+			setMediaRecorder({ videoTrack, audioTrack });
+			setIsStreaming(true);
 
 		} catch (error) {
-			console.error('Error starting live stream:', error);
-			setError('Failed to start live stream. Please check camera permissions.');
+			console.error('Error starting Agora live stream:', error);
+			setError('Failed to start live stream. Please check camera permissions and Agora configuration.');
 		}
 	};
 
-	const stopLiveStream = () => {
-		if (mediaStream) {
-			mediaStream.getTracks().forEach(track => track.stop());
-			setMediaStream(null);
-		}
-		
-		if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-			mediaRecorder.stop();
-			setMediaRecorder(null);
-		}
+	const stopLiveStream = async () => {
+		try {
+			if (mediaRecorder) {
+				// Clean up Agora tracks
+				if (mediaRecorder.videoTrack) {
+					mediaRecorder.videoTrack.stop();
+					mediaRecorder.videoTrack.close();
+				}
+				if (mediaRecorder.audioTrack) {
+					mediaRecorder.audioTrack.stop();
+					mediaRecorder.audioTrack.close();
+				}
+				setMediaRecorder(null);
+			}
+			
+			if (mediaStream) {
+				// Leave Agora channel and clean up client
+				await mediaStream.leave();
+				setMediaStream(null);
+			}
 
-		setIsStreaming(false);
-		setLiveVideoUrl("");
-		
-		if (videoRef.current) {
-			videoRef.current.srcObject = null;
+			setIsStreaming(false);
+			setLiveVideoUrl("");
+			
+			if (videoRef.current) {
+				videoRef.current.innerHTML = '';
+			}
+		} catch (error) {
+			console.error('Error stopping live stream:', error);
 		}
 	};
 
-	const sendStreamChunk = async (chunk, streamKey) => {
-		// This would send video chunks to your streaming server
-		// For now, we'll just log it
-		console.log(`Sending chunk for stream ${streamKey}:`, chunk.size, 'bytes');
-		
-		// Example of sending to a streaming endpoint:
-		// const formData = new FormData();
-		// formData.append('chunk', chunk);
-		// formData.append('streamKey', streamKey);
-		// 
-		// try {
-		//   await fetch('/api/stream/chunk', {
-		//     method: 'POST',
-		//     body: formData
-		//   });
-		// } catch (error) {
-		//   console.error('Failed to send stream chunk:', error);
-		// }
-	};
+	
 
 	const toggleLiveMode = () => {
 		if (isLive && !isStreaming) {

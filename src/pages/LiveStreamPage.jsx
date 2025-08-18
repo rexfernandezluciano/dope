@@ -1,7 +1,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Card, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Card, Button, Alert, Spinner, Form, InputGroup } from 'react-bootstrap';
+import AgoraRTC from 'agora-rtc-sdk-ng';
+import io from 'socket.io-client';
 
 const LiveStreamPage = () => {
 	const { streamKey } = useParams();
@@ -9,41 +11,228 @@ const LiveStreamPage = () => {
 	const [streamActive, setStreamActive] = useState(false);
 	const [error, setError] = useState('');
 	const [viewerCount, setViewerCount] = useState(0);
+	const [comments, setComments] = useState([]);
+	const [newComment, setNewComment] = useState('');
+	const [currentUser, setCurrentUser] = useState({ name: 'Anonymous', uid: 'anon' });
+	
+	// Agora states
+	const [agoraClient, setAgoraClient] = useState(null);
+	const [localVideoTrack, setLocalVideoTrack] = useState(null);
+	const [localAudioTrack, setLocalAudioTrack] = useState(null);
+	const [remoteUsers, setRemoteUsers] = useState([]);
+	const [isStreaming, setIsStreaming] = useState(false);
+	const [isJoined, setIsJoined] = useState(false);
+	
 	const videoRef = useRef(null);
-
-	useEffect(() => {
-		// Simulate checking if stream is active
-		const checkStream = setTimeout(() => {
-			setIsLoading(false);
-			// In a real implementation, you'd check if the stream is actually active
-			setStreamActive(Math.random() > 0.5); // Random for demo
-			setViewerCount(Math.floor(Math.random() * 1000) + 1);
-		}, 2000);
-
-		return () => clearTimeout(checkStream);
-	}, [streamKey]);
-
-	const connectToStream = async () => {
-		try {
-			// In a real implementation, you would connect to the actual stream
-			// This could be WebRTC, HLS, or another streaming protocol
-			console.log('Connecting to stream:', streamKey);
-			
-			// For demo purposes, we'll show a placeholder
-			if (videoRef.current) {
-				// You would set the actual stream source here
-				// videoRef.current.src = actualStreamUrl;
-			}
-		} catch (err) {
-			setError('Failed to connect to live stream');
-		}
+	const socketRef = useRef(null);
+	
+	// Agora configuration
+	const agoraConfig = {
+		appId: process.env.REACT_APP_AGORA_APP_ID || 'your-agora-app-id',
+		token: null, // You should generate this server-side for production
+		channel: streamKey || 'default-channel',
+		uid: null
 	};
 
 	useEffect(() => {
-		if (streamActive && !isLoading) {
-			connectToStream();
+		// Initialize Agora client
+		const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
+		setAgoraClient(client);
+
+		// Initialize Socket.IO for real-time comments
+		socketRef.current = io(process.env.REACT_APP_SOCKET_URL || 'ws://localhost:3001');
+		
+		socketRef.current.on('connect', () => {
+			console.log('Connected to comment server');
+			socketRef.current.emit('join-stream', streamKey);
+		});
+
+		socketRef.current.on('new-comment', (comment) => {
+			setComments(prev => [...prev, comment]);
+		});
+
+		socketRef.current.on('viewer-count', (count) => {
+			setViewerCount(count);
+		});
+
+		return () => {
+			if (socketRef.current) {
+				socketRef.current.disconnect();
+			}
+			if (client) {
+				client.leave();
+			}
+		};
+	}, [streamKey]);
+
+	useEffect(() => {
+		const initializeStream = async () => {
+			try {
+				setIsLoading(true);
+				
+				if (!agoraClient) return;
+
+				// Set client role as audience initially
+				await agoraClient.setClientRole('audience');
+
+				// Set up event listeners
+				agoraClient.on('user-published', handleUserPublished);
+				agoraClient.on('user-unpublished', handleUserUnpublished);
+				agoraClient.on('user-left', handleUserLeft);
+
+				// Join the channel
+				await agoraClient.join(
+					agoraConfig.appId,
+					agoraConfig.channel,
+					agoraConfig.token,
+					agoraConfig.uid
+				);
+
+				setIsJoined(true);
+				setStreamActive(true);
+				
+			} catch (err) {
+				console.error('Failed to initialize stream:', err);
+				setError('Failed to connect to live stream');
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		if (agoraClient) {
+			initializeStream();
 		}
-	}, [streamActive, isLoading]);
+	}, [agoraClient]);
+
+	const handleUserPublished = async (user, mediaType) => {
+		try {
+			await agoraClient.subscribe(user, mediaType);
+			
+			if (mediaType === 'video') {
+				const remoteVideoTrack = user.videoTrack;
+				if (videoRef.current) {
+					remoteVideoTrack.play(videoRef.current);
+				}
+				setRemoteUsers(prev => [...prev.filter(u => u.uid !== user.uid), user]);
+			}
+			
+			if (mediaType === 'audio') {
+				user.audioTrack.play();
+			}
+		} catch (err) {
+			console.error('Failed to subscribe to user:', err);
+		}
+	};
+
+	const handleUserUnpublished = (user, mediaType) => {
+		if (mediaType === 'video') {
+			setRemoteUsers(prev => prev.filter(u => u.uid !== user.uid));
+		}
+	};
+
+	const handleUserLeft = (user) => {
+		setRemoteUsers(prev => prev.filter(u => u.uid !== user.uid));
+	};
+
+	const startBroadcast = async () => {
+		try {
+			if (!agoraClient || !isJoined) return;
+
+			// Switch to broadcaster role
+			await agoraClient.setClientRole('host');
+
+			// Create and publish local tracks
+			const videoTrack = await AgoraRTC.createCameraVideoTrack({
+				optimizationMode: 'detail',
+				encoderConfig: {
+					width: 1280,
+					height: 720,
+					frameRate: 30,
+					bitrateMin: 1000,
+					bitrateMax: 3000,
+				}
+			});
+
+			const audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+				encoderConfig: 'high_quality_stereo'
+			});
+
+			// Play local video
+			if (videoRef.current) {
+				videoTrack.play(videoRef.current);
+			}
+
+			// Publish tracks
+			await agoraClient.publish([videoTrack, audioTrack]);
+
+			setLocalVideoTrack(videoTrack);
+			setLocalAudioTrack(audioTrack);
+			setIsStreaming(true);
+
+			// Notify server about stream start
+			if (socketRef.current) {
+				socketRef.current.emit('stream-started', streamKey);
+			}
+
+		} catch (err) {
+			console.error('Failed to start broadcast:', err);
+			setError('Failed to start live stream');
+		}
+	};
+
+	const stopBroadcast = async () => {
+		try {
+			if (localVideoTrack) {
+				localVideoTrack.stop();
+				localVideoTrack.close();
+				setLocalVideoTrack(null);
+			}
+
+			if (localAudioTrack) {
+				localAudioTrack.stop();
+				localAudioTrack.close();
+				setLocalAudioTrack(null);
+			}
+
+			if (agoraClient) {
+				await agoraClient.unpublish();
+				await agoraClient.setClientRole('audience');
+			}
+
+			setIsStreaming(false);
+
+			// Notify server about stream end
+			if (socketRef.current) {
+				socketRef.current.emit('stream-ended', streamKey);
+			}
+
+		} catch (err) {
+			console.error('Failed to stop broadcast:', err);
+		}
+	};
+
+	const sendComment = () => {
+		if (!newComment.trim() || !socketRef.current) return;
+
+		const comment = {
+			id: Date.now(),
+			user: currentUser.name,
+			uid: currentUser.uid,
+			text: newComment.trim(),
+			timestamp: new Date().toISOString(),
+			streamKey
+		};
+
+		socketRef.current.emit('send-comment', comment);
+		setNewComment('');
+	};
+
+	const handleKeyPress = (e) => {
+		if (e.key === 'Enter' && !e.shiftKey) {
+			e.preventDefault();
+			sendComment();
+		}
+	};
 
 	if (isLoading) {
 		return (
@@ -58,77 +247,172 @@ const LiveStreamPage = () => {
 
 	return (
 		<Container className="py-4">
-			<Card className="border-0 shadow-sm">
-				<Card.Body className="p-0">
-					{streamActive ? (
-						<>
+			<div className="row">
+				{/* Video Stream Section */}
+				<div className="col-lg-8">
+					<Card className="border-0 shadow-sm mb-3">
+						<Card.Body className="p-0">
 							<div className="position-relative">
-								<video
-									ref={videoRef}
-									controls
-									autoPlay
-									className="w-100"
-									style={{
-										height: "400px",
-										objectFit: "cover",
-										backgroundColor: "#000"
-									}}
-									poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23000'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23fff' font-size='24'%3ELive Stream%3C/text%3E%3C/svg%3E"
-								/>
 								<div
-									className="position-absolute top-0 start-0 m-3 px-2 py-1 rounded"
+									ref={videoRef}
+									className="w-100 bg-dark d-flex align-items-center justify-content-center"
 									style={{
-										backgroundColor: "rgba(220, 53, 69, 0.9)",
-										color: "white",
-										fontSize: "0.875rem",
-										fontWeight: "bold"
+										height: "450px",
+										borderRadius: "0.375rem 0.375rem 0 0"
 									}}
 								>
-									<span
-										style={{
-											width: "6px",
-											height: "6px",
-											borderRadius: "50%",
-											backgroundColor: "#fff",
-											display: "inline-block",
-											marginRight: "4px",
-											animation: "pulse 1s infinite"
-										}}
-									></span>
-									LIVE
+									{!streamActive && (
+										<div className="text-center text-white">
+											<h4>Stream Offline</h4>
+											<p>This live stream is currently offline</p>
+										</div>
+									)}
 								</div>
+
+								{/* Live indicator */}
+								{(streamActive || isStreaming) && (
+									<div
+										className="position-absolute top-0 start-0 m-3 px-3 py-1 rounded"
+										style={{
+											backgroundColor: "rgba(220, 53, 69, 0.9)",
+											color: "white",
+											fontSize: "0.875rem",
+											fontWeight: "bold"
+										}}
+									>
+										<span
+											style={{
+												width: "8px",
+												height: "8px",
+												borderRadius: "50%",
+												backgroundColor: "#fff",
+												display: "inline-block",
+												marginRight: "6px",
+												animation: "pulse 1.5s infinite"
+											}}
+										></span>
+										LIVE
+									</div>
+								)}
+
+								{/* Viewer count */}
 								<div
-									className="position-absolute top-0 end-0 m-3 px-2 py-1 rounded"
+									className="position-absolute top-0 end-0 m-3 px-3 py-1 rounded"
 									style={{
 										backgroundColor: "rgba(0, 0, 0, 0.7)",
 										color: "white",
 										fontSize: "0.875rem"
 									}}
 								>
-									👁️ {viewerCount.toLocaleString()} viewers
+									👁️ {viewerCount.toLocaleString()} watching
+								</div>
+
+								{/* Stream controls */}
+								<div className="position-absolute bottom-0 start-0 end-0 p-3">
+									<div className="d-flex gap-2 justify-content-center">
+										{!isStreaming ? (
+											<Button
+												variant="danger"
+												onClick={startBroadcast}
+												disabled={!isJoined}
+											>
+												Start Broadcasting
+											</Button>
+										) : (
+											<Button
+												variant="outline-light"
+												onClick={stopBroadcast}
+											>
+												Stop Broadcasting
+											</Button>
+										)}
+									</div>
 								</div>
 							</div>
+
 							<div className="p-3">
 								<h5 className="mb-2">Live Stream</h5>
-								<p className="text-muted mb-0">Stream Key: {streamKey}</p>
+								<p className="text-muted mb-0">
+									Channel: {agoraConfig.channel}
+								</p>
 							</div>
-						</>
-					) : (
-						<div className="text-center p-5">
-							<h4 className="mb-3">Stream Offline</h4>
-							<p className="text-muted mb-3">
-								This live stream is currently offline or has ended.
-							</p>
-							<Button
-								variant="primary"
-								onClick={() => window.location.reload()}
+						</Card.Body>
+					</Card>
+				</div>
+
+				{/* Comments Section */}
+				<div className="col-lg-4">
+					<Card className="border-0 shadow-sm" style={{ height: "450px" }}>
+						<Card.Header className="bg-white border-bottom">
+							<h6 className="mb-0 fw-bold">Live Chat</h6>
+						</Card.Header>
+						
+						<Card.Body className="p-0 d-flex flex-column">
+							{/* Comments list */}
+							<div 
+								className="flex-grow-1 overflow-auto p-3"
+								style={{ maxHeight: "350px" }}
 							>
-								Refresh Page
-							</Button>
-						</div>
-					)}
-				</Card.Body>
-			</Card>
+								{comments.length === 0 ? (
+									<div className="text-center text-muted">
+										<p className="mb-0">No comments yet</p>
+										<small>Be the first to comment!</small>
+									</div>
+								) : (
+									<div className="d-flex flex-column gap-2">
+										{comments.map((comment) => (
+											<div key={comment.id} className="d-flex gap-2">
+												<div className="flex-shrink-0">
+													<div
+														className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+														style={{ width: "32px", height: "32px", fontSize: "0.75rem" }}
+													>
+														{comment.user.charAt(0).toUpperCase()}
+													</div>
+												</div>
+												<div className="flex-grow-1">
+													<div className="d-flex align-items-center gap-2 mb-1">
+														<span className="fw-bold" style={{ fontSize: "0.875rem" }}>
+															{comment.user}
+														</span>
+														<small className="text-muted">
+															{new Date(comment.timestamp).toLocaleTimeString()}
+														</small>
+													</div>
+													<p className="mb-0" style={{ fontSize: "0.875rem" }}>
+														{comment.text}
+													</p>
+												</div>
+											</div>
+										))}
+									</div>
+								)}
+							</div>
+
+							{/* Comment input */}
+							<div className="border-top p-3">
+								<InputGroup>
+									<Form.Control
+										type="text"
+										placeholder="Type a message..."
+										value={newComment}
+										onChange={(e) => setNewComment(e.target.value)}
+										onKeyPress={handleKeyPress}
+										className="shadow-none"
+									/>
+									<Button
+										variant="primary"
+										onClick={sendComment}
+										disabled={!newComment.trim()}
+									>
+										Send
+									</Button>
+								</InputGroup>
+							</div>
+						</Card.Body>
+					</Card>
+				</div>
+			</div>
 
 			{error && (
 				<Alert variant="danger" className="mt-3">
