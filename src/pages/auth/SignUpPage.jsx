@@ -1,13 +1,13 @@
-
 /** @format */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 import heic2any from "heic2any";
 
 import { authAPI } from "../../config/ApiConfig";
 import { verifyUser, userExistByEmail, getGravatar, createUsername } from "../../utils/app-utils";
+import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
@@ -121,9 +121,9 @@ const SignUpPage = () => {
 			};
 
 			const result = await authAPI.register(userData);
-			
+
 			await verifyUser(email);
-			
+
 			// Redirect to verification page with verification ID and email
 			const verificationId = result.verificationId || 'verify';
 			navigate(`/auth/verify/${verificationId}?email=${encodeURIComponent(email)}`);
@@ -146,6 +146,17 @@ const SignUpPage = () => {
 			setLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		// Update page meta data
+		updatePageMeta(pageMetaData.signup);
+
+		// Redirect if already authenticated
+		const token = localStorage.getItem("authToken");
+		if (token) {
+			navigate("/home");
+		}
+	}, [navigate]);
 
 	return (
 		<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">

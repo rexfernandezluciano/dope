@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container, Card, Button, Alert, Spinner, Form, InputGroup } from 'react-bootstrap';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import io from 'socket.io-client';
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 
 const LiveStreamPage = () => {
 	const { streamKey } = useParams();
@@ -14,17 +14,18 @@ const LiveStreamPage = () => {
 	const [comments, setComments] = useState([]);
 	const [newComment, setNewComment] = useState('');
 	const [currentUser] = useState({ name: 'Anonymous', uid: 'anon' });
-	
+
 	// Agora states
 	const [agoraClient, setAgoraClient] = useState(null);
 	const [localVideoTrack, setLocalVideoTrack] = useState(null);
 	const [localAudioTrack, setLocalAudioTrack] = useState(null);
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isJoined, setIsJoined] = useState(false);
-	
+	const [remoteUsers, setRemoteUsers] = useState([]); // State to keep track of remote users
+
 	const videoRef = useRef(null);
 	const socketRef = useRef(null);
-	
+
 	// Agora configuration
 	const agoraConfig = {
 		appId: process.env.REACT_APP_AGORA_APP_ID || 'your-agora-app-id',
@@ -40,7 +41,7 @@ const LiveStreamPage = () => {
 
 		// Initialize Socket.IO for real-time comments
 		socketRef.current = io(process.env.REACT_APP_SOCKET_URL || 'ws://localhost:3001');
-		
+
 		socketRef.current.on('connect', () => {
 			console.log('Connected to comment server');
 			socketRef.current.emit('join-stream', streamKey);
@@ -68,7 +69,7 @@ const LiveStreamPage = () => {
 		const initializeStream = async () => {
 			try {
 				setIsLoading(true);
-				
+
 				if (!agoraClient) return;
 
 				// Set client role as audience initially
@@ -89,7 +90,7 @@ const LiveStreamPage = () => {
 
 				setIsJoined(true);
 				setStreamActive(true);
-				
+
 			} catch (err) {
 				console.error('Failed to initialize stream:', err);
 				setError('Failed to connect to live stream');
@@ -103,10 +104,20 @@ const LiveStreamPage = () => {
 		}
 	}, [agoraClient, agoraConfig.appId, agoraConfig.channel, agoraConfig.token, agoraConfig.uid, handleUserPublished, handleUserUnpublished, handleUserLeft]);
 
+	useEffect(() => {
+		// Update page meta data
+		updatePageMeta(pageMetaData.liveStream(streamKey)); // Assuming streamKey can be used as title
+
+		initializeStream();
+		return () => {
+			cleanup();
+		};
+	}, [streamKey]);
+
 	const handleUserPublished = async (user, mediaType) => {
 		try {
 			await agoraClient.subscribe(user, mediaType);
-			
+
 			if (mediaType === 'video') {
 				const remoteVideoTrack = user.videoTrack;
 				if (videoRef.current) {
@@ -114,7 +125,7 @@ const LiveStreamPage = () => {
 				}
 				setRemoteUsers(prev => [...prev.filter(u => u.uid !== user.uid), user]);
 			}
-			
+
 			if (mediaType === 'audio') {
 				user.audioTrack.play();
 			}
@@ -345,10 +356,10 @@ const LiveStreamPage = () => {
 						<Card.Header className="bg-white border-bottom">
 							<h6 className="mb-0 fw-bold">Live Chat</h6>
 						</Card.Header>
-						
+
 						<Card.Body className="p-0 d-flex flex-column">
 							{/* Comments list */}
-							<div 
+							<div
 								className="flex-grow-1 overflow-auto p-3"
 								style={{ maxHeight: "350px" }}
 							>

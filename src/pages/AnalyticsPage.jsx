@@ -31,6 +31,7 @@ import {
 
 import { postAPI } from "../config/ApiConfig";
 import { formatTimeAgo } from "../utils/common-utils";
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 
 const AnalyticsPage = () => {
 	const { user } = useLoaderData() || {};
@@ -104,6 +105,7 @@ const AnalyticsPage = () => {
 	useEffect(() => {
 		if (user?.uid && user?.username) {
 			loadAnalytics();
+			updatePageMeta("Analytics", `View your content performance and growth metrics on DOPE. Your username is ${user?.username}.`);
 		}
 	}, [loadAnalytics, user?.uid, user?.username]);
 
@@ -134,8 +136,8 @@ const AnalyticsPage = () => {
 			<Card className="border-0 shadow-sm mb-3 post-card">
 				<Card.Body className="p-3">
 					<div className="d-flex align-items-start">
-						<Badge 
-							bg={rank === 1 ? "warning" : rank === 2 ? "secondary" : "info"} 
+						<Badge
+							bg={rank === 1 ? "warning" : rank === 2 ? "secondary" : "info"}
 							className="rounded-circle me-3 rank-badge"
 						>
 							{rank}
@@ -328,10 +330,10 @@ const AnalyticsPage = () => {
 								</div>
 								<div className="mt-3">
 									<small className="text-muted d-block mb-1">Content Performance</small>
-									<ProgressBar 
-										now={Math.min((analytics?.engagementRate || 0) * 10, 100)} 
-										variant="success" 
-										className="rounded-3" 
+									<ProgressBar
+										now={Math.min((analytics?.engagementRate || 0) * 10, 100)}
+										variant="success"
+										className="rounded-3"
 										style={{ height: '8px' }}
 									/>
 								</div>
@@ -382,10 +384,10 @@ const AnalyticsPage = () => {
 										<small className="text-muted">Recent Growth</small>
 										<Badge bg="success" className="rounded-pill">+{analytics?.reachGrowth || 0}%</Badge>
 									</div>
-									<ProgressBar 
-										now={Math.min(analytics?.reachGrowth || 0, 100)} 
-										variant="success" 
-										className="rounded-3" 
+									<ProgressBar
+										now={Math.min(analytics?.reachGrowth || 0, 100)}
+										variant="success"
+										className="rounded-3"
 										style={{ height: '6px' }}
 									/>
 								</div>
@@ -394,10 +396,10 @@ const AnalyticsPage = () => {
 										<small className="text-muted">Engagement Quality</small>
 										<span className="small fw-bold">{analytics?.engagementRate || 0}%</span>
 									</div>
-									<ProgressBar 
-										now={Math.min((analytics?.engagementRate || 0) * 10, 100)} 
-										variant="primary" 
-										className="rounded-3" 
+									<ProgressBar
+										now={Math.min((analytics?.engagementRate || 0) * 10, 100)}
+										variant="primary"
+										className="rounded-3"
 										style={{ height: '6px' }}
 									/>
 								</div>
@@ -408,10 +410,10 @@ const AnalyticsPage = () => {
 											{analytics?.totalPosts > 0 ? Math.min(analytics.totalPosts * 2, 100) : 0}%
 										</span>
 									</div>
-									<ProgressBar 
-										now={analytics?.totalPosts > 0 ? Math.min(analytics.totalPosts * 2, 100) : 0} 
-										variant="warning" 
-										className="rounded-3" 
+									<ProgressBar
+										now={analytics?.totalPosts > 0 ? Math.min(analytics.totalPosts * 2, 100) : 0}
+										variant="warning"
+										className="rounded-3"
 										style={{ height: '6px' }}
 									/>
 								</div>

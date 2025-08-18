@@ -1,10 +1,11 @@
 /** @format */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Container, Nav, Button } from "react-bootstrap";
 import { ChevronLeft, Person, Shield, Eye, Bell, X } from "react-bootstrap-icons";
 
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import AccountSettingsPage from "./settings/AccountSettingsPage";
 import ProfileSettingsPage from "./settings/ProfileSettingsPage";
 import PrivacySettingsPage from "./settings/PrivacySettingsPage";
@@ -51,6 +52,24 @@ const SettingsPage = () => {
 	];
 
 	const currentTab = settingsTabs.find(tab => tab.key === activeTab);
+
+	useEffect(() => {
+		// Update page meta data based on active section
+		const metaKey = `${activeTab}Settings`; // Corrected to use activeTab state
+		if (pageMetaData[metaKey]) {
+			updatePageMeta(pageMetaData[metaKey]);
+		} else {
+			updatePageMeta(pageMetaData.settings);
+		}
+
+		// Parse URL parameters to determine active section (this part seems to be for URL-based activation, which might conflict with the state-driven tab switching)
+		// If the intention is solely state-driven tab switching, this part might be redundant or need adjustment.
+		const params = new URLSearchParams(window.location.search);
+		const section = params.get('section');
+		if (section && settingsTabs.find(tab => tab.key === section)) { // Added check to ensure section exists in settingsTabs
+			setActiveTab(section);
+		}
+	}, [activeTab]); // Depend on activeTab to trigger meta update when tab changes
 
 	return (
 		<Container className="py-0 px-0">

@@ -1,11 +1,12 @@
 /** @format */
 
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 
 import { authAPI } from "../../config/ApiConfig";
-import { verifyUser, setAuthToken } from "../../utils/app-utils";
+import { setAuthToken } from "../../utils/app-utils";
+import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
@@ -27,14 +28,14 @@ const LoginPage = () => {
 		e.preventDefault();
 		try {
 			setLoading(true);
-			
+
 			// Developer access restriction during development
 			if (email !== "rexluciano@yahoo.com") {
 				setError("Access restricted during development. Only authorized developers can login.");
 				setLoading(false);
 				return;
 			}
-			
+
 			const result = await authAPI.login(email, password);
 
 			if (result.user && !result.user.hasVerifiedEmail) {

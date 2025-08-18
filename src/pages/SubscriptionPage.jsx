@@ -25,6 +25,7 @@ import {
 } from "react-bootstrap-icons";
 
 import { userAPI } from "../config/ApiConfig";
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 
 const SubscriptionPage = () => {
 	const { user } = useLoaderData();
@@ -179,6 +180,7 @@ const SubscriptionPage = () => {
 					lastNameChange: null,
 				},
 			});
+			updatePageMeta(pageMetaData.subscription.title, pageMetaData.subscription.description);
 		}
 	}, [user]);
 

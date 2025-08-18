@@ -1,7 +1,7 @@
 /** @format */
 
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, useLoaderData } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useLoaderData, useNavigate } from "react-router-dom";
 import {
 	Container,
 	Card,
@@ -35,6 +35,7 @@ import {
 	sharePost,
 } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 
 const PostDetailPage = () => {
 	const { postId } = useParams();
@@ -60,25 +61,36 @@ const PostDetailPage = () => {
 	const [deletingPost, setDeletingPost] = useState(false);
 	const [deletingComment, setDeletingComment] = useState(false);
 
-	useEffect(() => {
-		const loadPostAndComments = async () => {
-			try {
-				setLoading(true);
-				const [postResponse, commentsResponse] = await Promise.all([
-					postAPI.getPost(postId),
-					commentAPI.getComments(postId),
-				]);
+	const loadPost = useCallback(async () => {
+		try {
+			setLoading(true);
+			const [postResponse, commentsResponse] = await Promise.all([
+				postAPI.getPost(postId),
+				commentAPI.getComments(postId),
+			]);
 
-				setPost(postResponse.post);
-				setComments(commentsResponse.comments || []);
-			} catch (err) {
-				setError(err.message);
-			} finally {
-				setLoading(false);
-			}
-		};
-		loadPostAndComments();
+			setPost(postResponse.post);
+			setComments(commentsResponse.comments || []);
+		} catch (err) {
+			setError(err.message);
+		} finally {
+			setLoading(false);
+		}
 	}, [postId]);
+
+	useEffect(() => {
+		if (postId) {
+			loadPost();
+		}
+	}, [postId, loadPost]);
+
+	// Update page meta data when post loads
+	useEffect(() => {
+		if (post) {
+			updatePageMeta(pageMetaData.postDetail(post.content));
+		}
+	}, [post]);
+
 
 	const handleLikePost = async () => {
 		try {
@@ -124,7 +136,7 @@ const PostDetailPage = () => {
 		window.open(url, '_blank', 'noopener,noreferrer');
 	};
 
-	
+
 
 	const confirmDeleteComment = async () => {
 		if (!commentToDelete) return;
@@ -292,9 +304,9 @@ const PostDetailPage = () => {
 	return (
 		<Container className="py-0 px-0">
 			{/* Header */}
-			<div 
+			<div
 				className="d-flex align-items-center gap-3 p-3 border-bottom bg-white sticky-top d-none d-md-block"
-				style={{ 
+				style={{
 					top: '112px', /* Below navbar (56px) + tabs (56px) */
 					zIndex: 1018 /* Below tabs but above content */
 				}}
@@ -678,8 +690,8 @@ const PostDetailPage = () => {
 			) : (
 				<div className="comment-thread px-3 py-4">
 					{comments.map((comment, index) => (
-						<div 
-							key={comment.id} 
+						<div
+							key={comment.id}
 							className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""} d-flex gap-2 mb-3`}
 						>
 							<Image

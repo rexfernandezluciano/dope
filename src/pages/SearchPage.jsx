@@ -23,6 +23,7 @@ import {
 } from "react-bootstrap-icons";
 
 import { postAPI, userAPI } from "../config/ApiConfig";
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import PostCard from "../components/PostCard";
 
 const SearchPage = () => {
@@ -112,7 +113,15 @@ const SearchPage = () => {
 		}
 	}, [searchQuery, handleSearch]);
 
-	
+
+	// Update meta tags when search query changes
+	useEffect(() => {
+		updatePageMeta({
+			title: searchQuery ? `Search results for "${searchQuery}"` : "Search DOPE Network",
+			description: searchQuery ? `Find posts and users related to "${searchQuery}".` : "Search for posts and people on the DOPE Network.",
+		});
+	}, [searchQuery]);
+
 
 	const handleLikePost = async (postId) => {
 		try {
@@ -155,7 +164,7 @@ const SearchPage = () => {
 		navigate(`/post/${postId}`);
 	};
 
-	
+
 
 	return (
 		<Container className="py-0 px-0">

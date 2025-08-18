@@ -46,6 +46,7 @@ import {
 	setupMessageListener,
 	notifyFollowersOfNewPost
 } from "../utils/messaging-utils";
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 
 // Utility function to clean text content
 const cleanTextContent = (text) => {
@@ -101,28 +102,33 @@ const HomePage = () => {
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
 
 	useEffect(() => {
-		loadPosts();
+		// Update page meta data
+		updatePageMeta(pageMetaData.home);
 
-		// Initialize OneSignal and setup notifications
-		const setupNotifications = async () => {
-			if (currentUser && currentUser.uid) {
-				const initialized = await initializeNotifications(currentUser.uid);
-				if (initialized) {
-					await requestNotificationPermission();
-				}
+		if (currentUser && currentUser.uid) {
+			loadPosts();
 
-				// Setup foreground message listener (OneSignal handles this automatically)
-				setupMessageListener((payload) => {
-					console.log('Received notification in foreground:', payload);
-					// Optionally refresh posts if it's a new post notification
-					if (payload.data?.type === 'new_post') {
-						loadPosts();
+			// Initialize OneSignal and setup notifications
+			const setupNotifications = async () => {
+				if (currentUser && currentUser.uid) {
+					const initialized = await initializeNotifications(currentUser.uid);
+					if (initialized) {
+						await requestNotificationPermission();
 					}
-				});
-			}
-		};
 
-		setupNotifications();
+					// Setup foreground message listener (OneSignal handles this automatically)
+					setupMessageListener((payload) => {
+						console.log('Received notification in foreground:', payload);
+						// Optionally refresh posts if it's a new post notification
+						if (payload.data?.type === 'new_post') {
+							loadPosts();
+						}
+					});
+				}
+			};
+
+			setupNotifications();
+		}
 	}, [filterBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const loadPosts = async (cursor = null, filter = filterBy) => {

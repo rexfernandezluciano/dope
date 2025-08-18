@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useLoaderData } from "react-router-dom";
 import {
 	Container,
@@ -24,9 +24,7 @@ import {
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
-import AlertDialog from "../components/dialogs/AlertDialog";
-import PostCard from "../components/PostCard";
-import { formatJoinDate, deletePost as deletePostUtil, sharePost, handlePostClick, handlePostOption } from "../utils/common-utils";
+import { deletePost as deletePostUtil, sharePost, handlePostClick, handlePostOption } from "../utils/common-utils";
 
 const ProfilePage = () => {
 	const { username } = useParams();
@@ -192,8 +190,17 @@ const ProfilePage = () => {
 	};
 
 	useEffect(() => {
-		loadProfile();
-	}, [username]); // eslint-disable-line react-hooks/exhaustive-deps
+		if (username) {
+			loadProfile();
+		}
+	}, [username, loadProfile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// Update page meta data when profile user changes
+	useEffect(() => {
+		if (profileUser) {
+			updatePageMeta(pageMetaData.profile(profileUser.username, profileUser.name));
+		}
+	}, [profileUser]);
 
 	const handleFollow = async () => {
 		try {
@@ -373,7 +380,7 @@ const ProfilePage = () => {
 	};
 
 
-	
+
 
 	if (loading || !currentUser) {
 		return (
@@ -712,8 +719,8 @@ const ProfilePage = () => {
 						</Form>
 					</Modal.Body>
 					<Modal.Footer>
-						<Button 
-							variant="secondary" 
+						<Button
+							variant="secondary"
 							onClick={() => {
 								setShowEditModal(false);
 								setProfileImagePreview("");
@@ -722,8 +729,8 @@ const ProfilePage = () => {
 						>
 							Cancel
 						</Button>
-						<Button 
-							variant="primary" 
+						<Button
+							variant="primary"
 							onClick={handleUpdateProfile}
 							disabled={uploadingProfileImage}
 						>
