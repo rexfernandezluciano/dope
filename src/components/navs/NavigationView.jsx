@@ -116,7 +116,7 @@ const NavigationView = ({ children }) => {
 		if (loaderUserData && loaderUserData.uid) {
 			setUser(loaderUserData);
 			initializeNotifications(loaderUserData.uid);
-			
+
 			// Setup real-time notification listener
 			const unsubscribe = setupNotificationListener(loaderUserData.uid, (newNotifications) => {
 				setNotifications(newNotifications);
@@ -133,6 +133,43 @@ const NavigationView = ({ children }) => {
 			};
 		}
 	}, [loaderUserData]);
+
+	// Placeholder for checkAdminStatus if it's defined elsewhere
+	const checkAdminStatus = async (userId) => {
+		// Replace with actual admin check logic if needed
+		console.log(`Checking admin status for ${userId}`);
+	};
+
+
+	useEffect(() => {
+		if (user && user.uid) {
+			// Check if current user is an admin
+			checkAdminStatus(user.uid);
+
+			// Load unread notification count
+			const loadNotificationCount = async () => {
+				const count = await getUnreadNotificationCount(user.uid);
+				setUnreadCount(count);
+			};
+			loadNotificationCount();
+
+			// Setup real-time notification listener
+			const unsubscribe = setupNotificationListener(user.uid, (newNotifications) => {
+				setNotifications(newNotifications);
+				setUnreadCount(newNotifications.length);
+
+				// Play notification sound for new notifications (optional)
+				if (newNotifications.length > 0) {
+					// You can add a notification sound here
+					console.log(`${newNotifications.length} new notifications received`);
+				}
+			});
+
+			return () => {
+				if (unsubscribe) unsubscribe();
+			};
+		}
+	}, [user]);
 
 
 	const handleLogout = () => {

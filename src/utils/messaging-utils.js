@@ -75,6 +75,102 @@ const savePlayerIdToFirestore = async (playerId, uid) => {
 };
 
 /**
+ * Send OneSignal notification using REST API
+ * @param {Array} playerIds - Array of OneSignal player IDs
+ * @param {Object} notificationData - Notification content
+ */
+const sendOneSignalNotification = async (playerIds, notificationData) => {
+	try {
+		if (!playerIds || playerIds.length === 0) {
+			console.log("No player IDs provided for OneSignal notification");
+			return;
+		}
+
+		const payload = {
+			app_id: process.env.REACT_APP_ONESIGNAL_APP_ID,
+			include_player_ids: playerIds,
+			headings: { en: notificationData.title },
+			contents: { en: notificationData.message },
+			data: notificationData.data || {},
+			url: notificationData.url ? `${window.location.origin}${notificationData.url}` : undefined,
+			chrome_web_icon: `${window.location.origin}/logo192.png`,
+			firefox_icon: `${window.location.origin}/logo192.png`,
+		};
+
+		const response = await fetch('https://onesignal.com/api/v1/notifications', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Basic ${process.env.REACT_APP_ONESIGNAL_REST_API_KEY}`
+			},
+			body: JSON.stringify(payload)
+		});
+
+		if (!response.ok) {
+			const errorData = await response.text();
+			console.error("OneSignal API error:", response.status, errorData);
+			return false;
+		}
+
+		const result = await response.json();
+		console.log("OneSignal notification sent successfully:", result);
+		return true;
+
+	} catch (error) {
+		console.error("Error sending OneSignal notification:", error);
+		return false;
+	}
+};
+
+/**
+ * Send OneSignal notification to specific external user IDs
+ * @param {Array} externalUserIds - Array of external user IDs
+ * @param {Object} notificationData - Notification content
+ */
+const sendOneSignalNotificationToUsers = async (externalUserIds, notificationData) => {
+	try {
+		if (!externalUserIds || externalUserIds.length === 0) {
+			console.log("No external user IDs provided for OneSignal notification");
+			return;
+		}
+
+		const payload = {
+			app_id: process.env.REACT_APP_ONESIGNAL_APP_ID,
+			include_external_user_ids: externalUserIds,
+			headings: { en: notificationData.title },
+			contents: { en: notificationData.message },
+			data: notificationData.data || {},
+			url: notificationData.url ? `${window.location.origin}${notificationData.url}` : undefined,
+			chrome_web_icon: `${window.location.origin}/logo192.png`,
+			firefox_icon: `${window.location.origin}/logo192.png`,
+		};
+
+		const response = await fetch('https://onesignal.com/api/v1/notifications', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Basic ${process.env.REACT_APP_ONESIGNAL_REST_API_KEY}`
+			},
+			body: JSON.stringify(payload)
+		});
+
+		if (!response.ok) {
+			const errorData = await response.text();
+			console.error("OneSignal API error:", response.status, errorData);
+			return false;
+		}
+
+		const result = await response.json();
+		console.log("OneSignal notification sent successfully to external users:", result);
+		return true;
+
+	} catch (error) {
+		console.error("Error sending OneSignal notification to external users:", error);
+		return false;
+	}
+};
+
+/**
  * Save notification to Firestore for followers when a post is created
  * @param {string} postId - Post ID
  * @param {Object} postData - Post data
@@ -94,6 +190,11 @@ export const notifyFollowersOfNewPost = async (postId, postData) => {
 
 		const followersSnapshot = await getDocs(followersQuery);
 		const followerUids = followersSnapshot.docs.map(doc => doc.data().followerUid);
+
+		if (followerUids.length === 0) {
+			console.log("No followers to notify");
+			return;
+		}
 
 		// Create notification document for each follower
 		const notificationPromises = followerUids.map(async (followerUid) => {
@@ -119,14 +220,19 @@ export const notifyFollowersOfNewPost = async (postId, postData) => {
 		await Promise.all(notificationPromises);
 		console.log(`Notifications saved to Firestore for ${followerUids.length} followers`);
 
-		// Send OneSignal notifications to followers who have player IDs
-		await sendOneSignalNotificationsToFollowers(followerUids, {
+		// Send OneSignal notifications to followers
+		await sendOneSignalNotificationToUsers(followerUids, {
 			title: `${postData.author.name} shared a new post`,
 			message: postData.content
 				? postData.content.substring(0, 100) + "..."
 				: "New post from someone you follow",
 			url: `/post/${postId}`,
-			data: { postId, type: "new_post" }
+			data: { 
+				postId, 
+				type: "new_post",
+				authorUid: postData.author.uid,
+				authorName: postData.author.name
+			}
 		});
 
 	} catch (error) {
@@ -143,24 +249,32 @@ const sendOneSignalNotificationsToFollowers = async (targetUids, notificationDat
 	try {
 		if (!db || targetUids.length === 0) return;
 
-		// Get player IDs for target users
-		const tokenQuery = query(
-			collection(db, "userNotificationTokens"),
-			where("uid", "in", targetUids.slice(0, 10)) // Firestore limit for 'in' queries
-		);
+		// Get player IDs for target users in batches (Firestore 'in' query limit is 10)
+		const batches = [];
+		for (let i = 0; i < targetUids.length; i += 10) {
+			batches.push(targetUids.slice(i, i + 10));
+		}
 
-		const tokenSnapshot = await getDocs(tokenQuery);
-		const playerIds = tokenSnapshot.docs.map(doc => doc.data().playerId).filter(Boolean);
+		const allPlayerIds = [];
+		
+		for (const batch of batches) {
+			const tokenQuery = query(
+				collection(db, "userNotificationTokens"),
+				where("uid", "in", batch)
+			);
 
-		if (playerIds.length === 0) {
+			const tokenSnapshot = await getDocs(tokenQuery);
+			const playerIds = tokenSnapshot.docs.map(doc => doc.data().playerId).filter(Boolean);
+			allPlayerIds.push(...playerIds);
+		}
+
+		if (allPlayerIds.length === 0) {
 			console.log("No OneSignal player IDs found for followers");
 			return;
 		}
 
-		// Here you would typically call OneSignal's REST API to send notifications
-		// For now, we'll log the notification details
-		console.log("Would send OneSignal notification to players:", playerIds);
-		console.log("Notification data:", notificationData);
+		// Send notification using OneSignal REST API
+		await sendOneSignalNotification(allPlayerIds, notificationData);
 
 	} catch (error) {
 		console.error("Error sending OneSignal notifications:", error);
@@ -190,23 +304,104 @@ export const sendNotificationToUser = async (targetUid, notificationData) => {
 		await addDoc(collection(db, "notifications"), notification);
 		console.log("Notification saved to Firestore for user:", targetUid);
 
-		// Get user's OneSignal player ID and send notification
-		const userTokenDoc = await getDocs(query(
-			collection(db, "userNotificationTokens"),
-			where("uid", "==", targetUid),
-			limit(1)
-		));
-
-		if (!userTokenDoc.empty) {
-			const playerId = userTokenDoc.docs[0].data().playerId;
-			if (playerId) {
-				console.log("Would send OneSignal notification to player:", playerId);
-				console.log("Notification data:", notificationData);
-			}
-		}
+		// Send OneSignal notification using external user ID
+		await sendOneSignalNotificationToUsers([targetUid], notificationData);
 
 	} catch (error) {
 		console.error("Error sending notification to user:", error);
+	}
+};
+
+/**
+ * Send like notification
+ * @param {string} postId - Post ID
+ * @param {Object} postData - Post data
+ * @param {Object} liker - User who liked the post
+ */
+export const sendLikeNotification = async (postId, postData, liker) => {
+	try {
+		// Don't notify if user likes their own post
+		if (postData.author.uid === liker.uid) return;
+
+		const notificationData = {
+			type: "like",
+			postId,
+			authorUid: liker.uid,
+			title: `${liker.name} liked your post`,
+			message: postData.content
+				? postData.content.substring(0, 100) + "..."
+				: "Someone liked your post",
+			url: `/post/${postId}`,
+			data: {
+				postId,
+				type: "like",
+				likerUid: liker.uid,
+				likerName: liker.name
+			}
+		};
+
+		await sendNotificationToUser(postData.author.uid, notificationData);
+	} catch (error) {
+		console.error("Error sending like notification:", error);
+	}
+};
+
+/**
+ * Send follow notification
+ * @param {string} followedUid - UID of user being followed
+ * @param {Object} follower - User who followed
+ */
+export const sendFollowNotification = async (followedUid, follower) => {
+	try {
+		const notificationData = {
+			type: "follow",
+			authorUid: follower.uid,
+			title: `${follower.name} started following you`,
+			message: "Check out their profile!",
+			url: `/profile/${follower.uid}`,
+			data: {
+				type: "follow",
+				followerUid: follower.uid,
+				followerName: follower.name
+			}
+		};
+
+		await sendNotificationToUser(followedUid, notificationData);
+	} catch (error) {
+		console.error("Error sending follow notification:", error);
+	}
+};
+
+/**
+ * Send comment notification
+ * @param {string} postId - Post ID
+ * @param {Object} postData - Post data
+ * @param {Object} commenter - User who commented
+ * @param {string} commentText - Comment text
+ */
+export const sendCommentNotification = async (postId, postData, commenter, commentText) => {
+	try {
+		// Don't notify if user comments on their own post
+		if (postData.author.uid === commenter.uid) return;
+
+		const notificationData = {
+			type: "comment",
+			postId,
+			authorUid: commenter.uid,
+			title: `${commenter.name} commented on your post`,
+			message: commentText.substring(0, 100) + (commentText.length > 100 ? "..." : ""),
+			url: `/post/${postId}`,
+			data: {
+				postId,
+				type: "comment",
+				commenterUid: commenter.uid,
+				commenterName: commenter.name
+			}
+		};
+
+		await sendNotificationToUser(postData.author.uid, notificationData);
+	} catch (error) {
+		console.error("Error sending comment notification:", error);
 	}
 };
 

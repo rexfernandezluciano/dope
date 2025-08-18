@@ -16,6 +16,44 @@ export const initializeOneSignal = async () => {
 				enable: false, // We'll handle permission requests manually
 			},
 			allowLocalhostAsSecureOrigin: true, // For development
+			autoResubscribe: true,
+			promptOptions: {
+				slidedown: {
+					prompts: [
+						{
+							type: "push",
+							autoPrompt: false,
+							text: {
+								actionMessage: "We'd like to show you notifications for new posts and interactions.",
+								acceptButton: "Allow",
+								cancelButton: "No Thanks"
+							}
+						}
+					]
+				}
+			}
+		});
+
+		// Set up notification click handler
+		OneSignal.on('notificationClick', function(event) {
+			console.log('OneSignal notification clicked:', event);
+			
+			// Get the notification data
+			const data = event.data;
+			
+			// Handle navigation based on notification type
+			if (data && data.url) {
+				// Navigate to the specified URL
+				window.location.href = data.url;
+			} else if (data && data.postId) {
+				// Navigate to post detail page
+				window.location.href = `/post/${data.postId}`;
+			}
+		});
+
+		// Set up notification display handler for foreground notifications
+		OneSignal.on('notificationDisplay', function(event) {
+			console.log('OneSignal notification displayed:', event);
 		});
 
 		oneSignalInitialized = true;
@@ -64,6 +102,24 @@ export const requestNotificationPermission = async () => {
 		console.error('Error requesting notification permission:', error);
 		return false;
 	}
+};
+
+export const getNotificationPermission = async () => {
+	try {
+		if (!oneSignalInitialized) {
+			await initializeOneSignal();
+		}
+		
+		const permission = await OneSignal.getNotificationPermission();
+		return permission;
+	} catch (error) {
+		console.error('Error getting notification permission:', error);
+		return 'default';
+	}
+};
+
+export const isOneSignalInitialized = () => {
+	return oneSignalInitialized;
 };
 
 export default OneSignal;
