@@ -2,7 +2,7 @@
 
 import { getUser } from "../../utils/app-utils";
 
-const indexPageLoader = async () => {
+const IndexPageLoader = async () => {
 	try {
 		const user = await getUser();
 		return { user };
@@ -12,4 +12,5 @@ const indexPageLoader = async () => {
 	}
 };
 
-export default indexPageLoader;
+export { IndexPageLoader };
+export default IndexPageLoader;

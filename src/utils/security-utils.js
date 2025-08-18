@@ -6,7 +6,7 @@ export const setupCSP = () => {
 	if (typeof document !== 'undefined') {
 		const meta = document.createElement('meta');
 		meta.httpEquiv = 'Content-Security-Policy';
-		meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://natasha.dopp.eu.org;";
+		meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://natasha.dopp.eu.org https://va.vercel-scripts.com;";
 		document.head.appendChild(meta);
 	}
 };

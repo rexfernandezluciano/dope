@@ -32,7 +32,7 @@ const apiRequest = async (endpoint, options = {}) => {
 	};
 
 	// Add App Check token to headers
-	const headersWithAppCheck = await addAppCheckHeaders({ ...defaultHeaders, ...options.headers });
+	const headersWithAppCheck = await addFirebaseAppCheckHeaders({ ...defaultHeaders, ...options.headers });
 
 	const config = {
 		method: 'GET',
