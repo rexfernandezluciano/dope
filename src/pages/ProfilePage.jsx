@@ -23,6 +23,7 @@ import {
 	Globe,
 	Lock,
 	PersonFill,
+	Camera,
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
@@ -665,7 +666,7 @@ const ProfilePage = () => {
 											style={{ width: "35px", height: "35px" }}
 											onClick={() => document.getElementById("profile-image-upload").click()}
 										>
-											📷
+											<Camera size={16} />
 										</Button>
 									</div>
 									<Button

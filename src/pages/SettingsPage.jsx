@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useLoaderData, useNavigate, useParams } from "react-router-dom";
 import { Container, Card, Form, Button, Alert, Modal, Row, Col } from "react-bootstrap";
-import { Shield, Bell, Eye, Globe, People, Lock, Trash } from "react-bootstrap-icons";
+import { Shield, Bell, Eye, Globe, People, Lock, Trash, Camera } from "react-bootstrap-icons";
 
 import { userAPI, authAPI } from "../config/ApiConfig";
 import { removeAuthToken } from "../utils/app-utils";
@@ -251,7 +251,7 @@ const SettingsPage = () => {
 												style={{ width: "25px", height: "25px", fontSize: "12px" }}
 												onClick={() => document.getElementById("settings-profile-upload").click()}
 											>
-												📷
+												<Camera size={12} />
 											</Button>
 										</div>
 										<Button
