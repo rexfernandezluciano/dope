@@ -306,9 +306,40 @@ const PostCard = ({
 
 							{post.postType === "live_video" && post.liveVideoUrl && (
 								<div className="mb-2">
-									<p className="text-danger fw-bold">
-										Live Video: {post.liveVideoUrl}
-									</p>
+									<div className="position-relative rounded overflow-hidden bg-dark">
+										{post.isLiveStreaming ? (
+											<div className="text-center p-4 text-white">
+												<div className="d-flex align-items-center justify-content-center gap-2 mb-2">
+													<span
+														style={{
+															width: "8px",
+															height: "8px",
+															borderRadius: "50%",
+															backgroundColor: "#dc3545",
+															display: "inline-block",
+															animation: "pulse 1s infinite"
+														}}
+													></span>
+													<span className="fw-bold text-danger">LIVE NOW</span>
+												</div>
+												<p className="mb-2">🔴 Live Stream in Progress</p>
+												<Button
+													variant="outline-light"
+													size="sm"
+													onClick={() => window.open(post.liveVideoUrl, '_blank')}
+												>
+													Watch Live Stream
+												</Button>
+											</div>
+										) : (
+											<div className="text-center p-4 text-white">
+												<p className="mb-2">📹 Live Stream Ended</p>
+												<small className="text-muted">
+													Stream URL: {post.liveVideoUrl}
+												</small>
+											</div>
+										)}
+									</div>
 								</div>
 							)}
 

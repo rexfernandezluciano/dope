@@ -16,6 +16,7 @@ import SettingsPage from "../pages/SettingsPage";
 import SubscriptionPage from "../pages/SubscriptionPage";
 import SearchPage from "../pages/SearchPage";
 import AnalyticsPage from "../pages/AnalyticsPage";
+import LiveStreamPage from "../pages/LiveStreamPage";
 
 import RequireAuth from "./security/RequireAuth";
 import IndexPageLoader from "./loader/IndexPageLoader";
@@ -149,6 +150,10 @@ const router = createBrowserRouter([
 				element: <SettingsPage />,
 			},
 		],
+	},
+	{
+		path: "/live/:streamKey",
+		element: <LiveStreamPage />,
 	},
 ]);
 

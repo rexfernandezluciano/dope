@@ -55,6 +55,11 @@ const HomePage = () => {
 	const [submitting, setSubmitting] = useState(false);
 	const [isLive, setIsLive] = useState(false);
 	const [liveVideoUrl, setLiveVideoUrl] = useState("");
+	const [isStreaming, setIsStreaming] = useState(false);
+	const [mediaStream, setMediaStream] = useState(null);
+	const [mediaRecorder, setMediaRecorder] = useState(null);
+	const videoRef = useRef(null);
+	const streamUrlRef = useRef(null);
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
@@ -271,6 +276,112 @@ const HomePage = () => {
 		setPhotos((prev) => prev.filter((_, i) => i !== index));
 	};
 
+	const startLiveStream = async () => {
+		try {
+			// Request camera and microphone access
+			const stream = await navigator.mediaDevices.getUserMedia({
+				video: {
+					width: { ideal: 1280 },
+					height: { ideal: 720 },
+					frameRate: { ideal: 30 }
+				},
+				audio: {
+					echoCancellation: true,
+					noiseSuppression: true,
+					autoGainControl: true
+				}
+			});
+
+			setMediaStream(stream);
+			setIsStreaming(true);
+
+			// Display the stream in video element
+			if (videoRef.current) {
+				videoRef.current.srcObject = stream;
+			}
+
+			// Create a simple RTMP-like streaming URL (you can replace this with actual streaming service)
+			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+			const streamUrl = `${window.location.origin}/live/${streamKey}`;
+			setLiveVideoUrl(streamUrl);
+			streamUrlRef.current = streamUrl;
+
+			// Initialize MediaRecorder for recording chunks
+			const recorder = new MediaRecorder(stream, {
+				mimeType: 'video/webm;codecs=vp9,opus'
+			});
+			
+			const chunks = [];
+			recorder.ondataavailable = (event) => {
+				if (event.data.size > 0) {
+					chunks.push(event.data);
+					// Here you would typically send chunks to your streaming server
+					sendStreamChunk(event.data, streamKey);
+				}
+			};
+
+			recorder.onstop = () => {
+				const blob = new Blob(chunks, { type: 'video/webm' });
+				// Handle the final recording if needed
+			};
+
+			setMediaRecorder(recorder);
+			recorder.start(1000); // Record in 1-second chunks
+
+		} catch (error) {
+			console.error('Error starting live stream:', error);
+			setError('Failed to start live stream. Please check camera permissions.');
+		}
+	};
+
+	const stopLiveStream = () => {
+		if (mediaStream) {
+			mediaStream.getTracks().forEach(track => track.stop());
+			setMediaStream(null);
+		}
+		
+		if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+			mediaRecorder.stop();
+			setMediaRecorder(null);
+		}
+
+		setIsStreaming(false);
+		setLiveVideoUrl("");
+		
+		if (videoRef.current) {
+			videoRef.current.srcObject = null;
+		}
+	};
+
+	const sendStreamChunk = async (chunk, streamKey) => {
+		// This would send video chunks to your streaming server
+		// For now, we'll just log it
+		console.log(`Sending chunk for stream ${streamKey}:`, chunk.size, 'bytes');
+		
+		// Example of sending to a streaming endpoint:
+		// const formData = new FormData();
+		// formData.append('chunk', chunk);
+		// formData.append('streamKey', streamKey);
+		// 
+		// try {
+		//   await fetch('/api/stream/chunk', {
+		//     method: 'POST',
+		//     body: formData
+		//   });
+		// } catch (error) {
+		//   console.error('Failed to send stream chunk:', error);
+		// }
+	};
+
+	const toggleLiveMode = () => {
+		if (isLive && !isStreaming) {
+			setIsLive(false);
+			setLiveVideoUrl("");
+		} else if (!isLive) {
+			setIsLive(true);
+		}
+	};
+
 	const handleSelectGif = (gif) => {
 		const currentPhotos = photos || [];
 		const imageLimit = getImageUploadLimit(currentUser?.subscription);
@@ -295,11 +406,13 @@ const HomePage = () => {
 			const postData = {
 				content: postText,
 				privacy: privacy.toLowerCase(),
-				postType: isLive ? "live_video" : "text",
+				postType: isLive && isStreaming ? "live_video" : "text",
 			};
 
-			if (liveVideoUrl && isLive) {
+			if (liveVideoUrl && isLive && isStreaming) {
 				postData.liveVideoUrl = liveVideoUrl;
+				postData.isLiveStreaming = true;
+				postData.streamKey = streamUrlRef.current;
 			}
 
 			if (photos && photos.length > 0) {
@@ -334,6 +447,11 @@ const HomePage = () => {
 			setIsLive(false);
 			setLiveVideoUrl("");
 			setShowComposerModal(false);
+			
+			// Stop live stream if active
+			if (isStreaming) {
+				stopLiveStream();
+			}
 
 			// Reload posts
 			loadPosts();
@@ -660,16 +778,105 @@ const HomePage = () => {
 						)}
 
 						{isLive && (
-							<Form.Group className="mb-3">
-								<Form.Label>Live Video URL</Form.Label>
-								<Form.Control
-									type="url"
-									value={liveVideoUrl}
-									onChange={(e) => setLiveVideoUrl(e.target.value)}
-									placeholder="https://example.com/live-stream"
-									className="shadow-none"
-								/>
-							</Form.Group>
+							<div className="mb-3">
+								<div className="d-flex justify-content-between align-items-center mb-2">
+									<Form.Label className="mb-0">Live Video Studio</Form.Label>
+									{!isStreaming ? (
+										<Button
+											variant="success"
+											size="sm"
+											onClick={startLiveStream}
+											className="d-flex align-items-center gap-1"
+										>
+											<span
+												style={{
+													width: "8px",
+													height: "8px",
+													borderRadius: "50%",
+													backgroundColor: "#fff",
+													display: "inline-block",
+												}}
+											></span>
+											Start Streaming
+										</Button>
+									) : (
+										<Button
+											variant="outline-danger"
+											size="sm"
+											onClick={stopLiveStream}
+											className="d-flex align-items-center gap-1"
+										>
+											<span
+												style={{
+													width: "8px",
+													height: "8px",
+													borderRadius: "50%",
+													backgroundColor: "#dc3545",
+													display: "inline-block",
+													animation: "pulse 1s infinite"
+												}}
+											></span>
+											Stop Stream
+										</Button>
+									)}
+								</div>
+
+								{/* Live Video Preview */}
+								<div className="position-relative mb-2">
+									<video
+										ref={videoRef}
+										autoPlay
+										muted
+										playsInline
+										className="w-100 rounded"
+										style={{
+											maxHeight: "300px",
+											objectFit: "cover",
+											backgroundColor: "#000"
+										}}
+									/>
+									{isStreaming && (
+										<div
+											className="position-absolute top-0 start-0 m-2 px-2 py-1 rounded"
+											style={{
+												backgroundColor: "rgba(220, 53, 69, 0.9)",
+												color: "white",
+												fontSize: "0.75rem",
+												fontWeight: "bold"
+											}}
+										>
+											<span
+												style={{
+													width: "6px",
+													height: "6px",
+													borderRadius: "50%",
+													backgroundColor: "#fff",
+													display: "inline-block",
+													marginRight: "4px",
+													animation: "pulse 1s infinite"
+												}}
+											></span>
+											LIVE
+										</div>
+									)}
+								</div>
+
+								{liveVideoUrl && (
+									<Form.Group className="mb-2">
+										<Form.Label className="small text-muted">Stream URL</Form.Label>
+										<Form.Control
+											type="text"
+											value={liveVideoUrl}
+											readOnly
+											className="shadow-none small"
+											style={{ fontSize: "0.875rem" }}
+										/>
+										<Form.Text className="text-muted">
+											Share this URL with your audience to watch the live stream
+										</Form.Text>
+									</Form.Group>
+								)}
+							</div>
 						)}
 
 						<div className="d-flex justify-content-between align-items-center">
@@ -722,7 +929,7 @@ const HomePage = () => {
 									variant={isLive ? "danger" : "link"}
 									size="sm"
 									className={isLive ? "text-white p-1" : "text-muted p-1"}
-									onClick={() => setIsLive(!isLive)}
+									onClick={toggleLiveMode}
 								>
 									<span className="d-flex align-items-center gap-1">
 										<span
@@ -732,9 +939,10 @@ const HomePage = () => {
 												borderRadius: "50%",
 												backgroundColor: isLive ? "#fff" : "#dc3545",
 												display: "inline-block",
+												animation: isStreaming ? "pulse 1s infinite" : "none"
 											}}
 										></span>
-										{isLive ? "LIVE" : "Go Live"}
+										{isStreaming ? "STREAMING" : isLive ? "LIVE" : "Go Live"}
 									</span>
 								</Button>
 							</div>
