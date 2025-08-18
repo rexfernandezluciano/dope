@@ -273,7 +273,25 @@ const PostDetailPage = () => {
 	return (
 		<Container className="py-0 px-0">
 			{/* Header */}
-			<div className="d-flex align-items-center gap-3 p-3 border-bottom bg-white sticky-top">
+			<div 
+				className="d-flex align-items-center gap-3 p-3 border-bottom bg-white sticky-top d-none d-md-block"
+				style={{ 
+					top: '112px', /* Below navbar (56px) + tabs (56px) */
+					zIndex: 1018 /* Below tabs but above content */
+				}}
+			>
+				<Button
+					variant="link"
+					size="sm"
+					className="text-dark p-0"
+					onClick={() => navigate(-1)}
+				>
+					<ArrowLeft size={20} />
+				</Button>
+				<h5 className="mb-0">Post</h5>
+			</div>
+			{/* Mobile Header */}
+			<div className="d-flex align-items-center gap-3 p-3 border-bottom bg-white sticky-top d-md-none">
 				<Button
 					variant="link"
 					size="sm"
