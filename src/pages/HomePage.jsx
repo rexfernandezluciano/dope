@@ -437,7 +437,6 @@ const HomePage = () => {
 				content: streamData.description || streamData.title,
 				postType: 'live_video',
 				liveVideoUrl: streamUrl,
-				streamTitle: streamData.title,
 				privacy: streamData.privacy || 'public'
 			};
 
