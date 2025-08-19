@@ -31,7 +31,7 @@ import {
 
 import { postAPI } from "../config/ApiConfig";
 import { formatTimeAgo } from "../utils/common-utils";
-import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
+import { updatePageMeta } from "../utils/meta-utils";
 
 const AnalyticsPage = () => {
 	const { user } = useLoaderData() || {};
