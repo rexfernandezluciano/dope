@@ -34,38 +34,6 @@ export const getUser = async () => {
 };
 
 /**
- * Save user data
- * @param {Object} userData - User data to save
- * @returns {Promise<void>}
- */
-export const saveUser = async (userData) => {
-	try {
-		await userAPI.updateUser(userData.uid, {
-			uid: userData.uid,
-			name: userData.displayName,
-			email: userData.email,
-			photoURL: userData.photoURL,
-			role: {
-				user: true,
-				editor: false,
-				moderator: false,
-			},
-			username: await createUsername(userData.displayName),
-			status: "online",
-			account: {
-				verified: false,
-				subscription: "free",
-			},
-			lastSeen: new Date().toISOString(),
-			createdAt: new Date().toISOString(),
-		});
-	} catch (error) {
-		console.error('Error saving user:', error);
-		throw error;
-	}
-};
-
-/**
  * Check if user is admin
  * @returns {Promise<boolean>} true if admin, false otherwise
  */
