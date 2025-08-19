@@ -61,6 +61,7 @@ const PostDetailPage = () => {
 	const [selectedComment, setSelectedComment] = useState(null);
 	const [deletingPost, setDeletingPost] = useState(false);
 	const [deletingComment, setDeletingComment] = useState(false);
+	const [isLiked, setIsLiked] = useState(false);
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -112,8 +113,6 @@ const PostDetailPage = () => {
 	const handleLikePost = async () => {
 		try {
 			const response = await postAPI.likePost(postId);
-			setPost(response.post);
-
 			// Send like notification to post owner
 			try {
 				await handleLikeNotification(postId, response.post, currentUser);
