@@ -8,8 +8,6 @@ import SettingsPage from "./SettingsPage";
 import SubscriptionPage from "./SubscriptionPage";
 import AnalyticsPage from "./AnalyticsPage";
 
-import PostDetailPage from "./PostDetailPage";
-
 const IndexPage = () => {
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData;
@@ -43,17 +41,8 @@ const IndexPage = () => {
 		);
 	}
 
-	// Check if it's a post detail page (post id path)
-	if (pathname.startsWith("/post/")) {
-		return (
-			<NavigationView user={user}>
-				<PostDetailPage />
-			</NavigationView>
-		);
-	}
-
 	// Check if it's a profile page (username path)
-	if (pathname !== "/home" && pathname !== "/") {
+	if (pathname !== "/home" && pathname !== "/" && !pathname.startsWith("/post/")) {
 		return (
 			<NavigationView user={user}>
 				<ProfilePage />
