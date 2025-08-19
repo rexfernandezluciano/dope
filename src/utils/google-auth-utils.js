@@ -84,7 +84,7 @@ export const renderGoogleButton = (elementId, callback) => {
 		return;
 	}
 
-	const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com";
+	const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-q5s7u27t4s7idqq7mepqkcp3jjsev8pb.apps.googleusercontent.com";
 	const element = document.getElementById(elementId);
 	
 	if (!element) {
