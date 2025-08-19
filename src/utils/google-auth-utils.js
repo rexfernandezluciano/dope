@@ -3,14 +3,25 @@
  * Google Sign-In utility functions
  */
 
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com";
+
 /**
  * Initialize Google Sign-In
  */
 export const initializeGoogleAuth = () => {
 	return new Promise((resolve, reject) => {
 		if (window.google && window.google.accounts && window.google.accounts.id) {
-			// Google is already loaded
-			resolve();
+			// Google is already loaded, initialize it
+			try {
+				window.google.accounts.id.initialize({
+					client_id: GOOGLE_CLIENT_ID,
+					auto_select: false,
+					cancel_on_tap_outside: true
+				});
+				resolve();
+			} catch (error) {
+				reject(new Error('Failed to initialize Google Sign-In: ' + error.message));
+			}
 			return;
 		}
 
@@ -21,14 +32,26 @@ export const initializeGoogleAuth = () => {
 		script.defer = true;
 		
 		script.onload = () => {
-			// Wait a bit for the script to fully initialize
-			setTimeout(() => {
+			// Wait for the script to fully initialize
+			const checkGoogle = (attempts = 0) => {
 				if (window.google && window.google.accounts && window.google.accounts.id) {
-					resolve();
+					try {
+						window.google.accounts.id.initialize({
+							client_id: GOOGLE_CLIENT_ID,
+							auto_select: false,
+							cancel_on_tap_outside: true
+						});
+						resolve();
+					} catch (error) {
+						reject(new Error('Failed to initialize Google Sign-In: ' + error.message));
+					}
+				} else if (attempts < 50) { // Try for 5 seconds
+					setTimeout(() => checkGoogle(attempts + 1), 100);
 				} else {
 					reject(new Error('Google Sign-In failed to load properly'));
 				}
-			}, 100);
+			};
+			checkGoogle();
 		};
 		
 		script.onerror = (error) => {
@@ -49,33 +72,39 @@ export const handleGoogleSignInPopup = (callback) => {
 			return;
 		}
 
-		const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com";
+		try {
+			// Initialize with callback
+			window.google.accounts.id.initialize({
+				client_id: GOOGLE_CLIENT_ID,
+				callback: (response) => {
+					if (response.credential) {
+						if (callback) callback(response);
+						resolve(response.credential);
+					} else {
+						reject(new Error('Google Sign-In failed - no credential received'));
+					}
+				},
+				auto_select: false,
+				cancel_on_tap_outside: true,
+				ux_mode: 'popup'
+			});
 
-		window.google.accounts.id.initialize({
-			client_id: clientId,
-			callback: (response) => {
-				if (response.credential) {
-					if (callback) callback(response);
-					resolve(response.credential);
-				} else {
-					reject(new Error('Google Sign-In failed'));
+			// Show the popup immediately
+			window.google.accounts.id.prompt((notification) => {
+				if (notification.isNotDisplayed()) {
+					console.log('Google popup blocked or not displayed');
+					reject(new Error('Google popup was blocked or could not be displayed. Please allow popups or try the redirect method.'));
+				} else if (notification.isSkippedMoment()) {
+					console.log('Google popup was skipped');
+					reject(new Error('Google popup was skipped by user'));
+				} else if (notification.isDismissedMoment()) {
+					console.log('Google popup was dismissed');
+					reject(new Error('Google sign-in was dismissed'));
 				}
-			},
-			auto_select: false,
-			cancel_on_tap_outside: true,
-			ux_mode: 'popup'
-		});
-
-		// Show the popup immediately
-		window.google.accounts.id.prompt((notification) => {
-			if (notification.isNotDisplayed()) {
-				console.log('Google popup blocked or not displayed');
-				reject(new Error('Google popup was blocked or could not be displayed'));
-			} else if (notification.isSkippedMoment()) {
-				console.log('Google popup was skipped');
-				reject(new Error('Google popup was skipped by user'));
-			}
-		});
+			});
+		} catch (error) {
+			reject(new Error('Failed to show Google Sign-In popup: ' + error.message));
+		}
 	});
 };
 
@@ -89,29 +118,34 @@ export const handleGoogleSignIn = (callback) => {
 			return;
 		}
 
-		const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com";
+		try {
+			window.google.accounts.id.initialize({
+				client_id: GOOGLE_CLIENT_ID,
+				callback: (response) => {
+					if (response.credential) {
+						if (callback) callback(response);
+						resolve(response.credential);
+					} else {
+						reject(new Error('Google Sign-In failed - no credential received'));
+					}
+				},
+				auto_select: false,
+				cancel_on_tap_outside: true
+			});
 
-		window.google.accounts.id.initialize({
-			client_id: clientId,
-			callback: (response) => {
-				if (response.credential) {
-					if (callback) callback(response);
-					resolve(response.credential);
-				} else {
-					reject(new Error('Google Sign-In failed'));
+			// Try to show the prompt
+			window.google.accounts.id.prompt((notification) => {
+				if (notification.isNotDisplayed()) {
+					reject(new Error('Google sign-in prompt could not be displayed. Please try using the button method.'));
+				} else if (notification.isSkippedMoment()) {
+					reject(new Error('Google sign-in was skipped. Please try using the button method.'));
+				} else if (notification.isDismissedMoment()) {
+					reject(new Error('Google sign-in was dismissed'));
 				}
-			},
-			auto_select: false,
-			cancel_on_tap_outside: true
-		});
-
-		// Try to show the prompt
-		window.google.accounts.id.prompt((notification) => {
-			if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-				// Fallback: user needs to click a button
-				console.log('Google prompt not displayed, fallback to button required');
-			}
-		});
+			});
+		} catch (error) {
+			reject(new Error('Failed to show Google Sign-In: ' + error.message));
+		}
 	});
 };
 
@@ -121,28 +155,38 @@ export const handleGoogleSignIn = (callback) => {
 export const renderGoogleButton = (elementId, callback) => {
 	if (!window.google || !window.google.accounts || !window.google.accounts.id) {
 		console.error('Google Sign-In not initialized');
-		return;
+		return false;
 	}
 
-	const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com";
 	const element = document.getElementById(elementId);
 	
 	if (!element) {
 		console.error(`Element with id ${elementId} not found`);
-		return;
+		return false;
 	}
 
-	window.google.accounts.id.initialize({
-		client_id: clientId,
-		callback: callback,
-		auto_select: false,
-		cancel_on_tap_outside: true
-	});
+	try {
+		// Clear any existing content
+		element.innerHTML = '';
+		
+		window.google.accounts.id.initialize({
+			client_id: GOOGLE_CLIENT_ID,
+			callback: callback,
+			auto_select: false,
+			cancel_on_tap_outside: true
+		});
 
-	window.google.accounts.id.renderButton(element, {
-		theme: 'outline',
-		size: 'large',
-		width: '100%',
-		text: 'continue_with'
-	});
+		window.google.accounts.id.renderButton(element, {
+			theme: 'outline',
+			size: 'large',
+			width: element.offsetWidth || 300,
+			text: 'continue_with',
+			logo_alignment: 'left'
+		});
+		
+		return true;
+	} catch (error) {
+		console.error('Failed to render Google button:', error);
+		return false;
+	}
 };

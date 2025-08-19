@@ -110,9 +110,7 @@ const SignUpPage = () => {
 			setError("");
 
 			// Ensure Google is initialized first
-			if (!window.google || !window.google.accounts || !window.google.accounts.id) {
-				await initializeGoogleAuth();
-			}
+			await initializeGoogleAuth();
 
 			if (usePopup) {
 				// Try popup sign-in first
@@ -123,14 +121,20 @@ const SignUpPage = () => {
 			}
 		} catch (err) {
 			console.error('Google signup error:', err);
-			setError("Google signup failed. Please try again.");
 			
-			// Fallback to button rendering if popup fails
-			if (usePopup) {
+			// Show specific error message
+			const errorMessage = err.message || "Google signup failed. Please try again.";
+			setError(errorMessage);
+			
+			// Fallback to button rendering if popup fails or is blocked
+			if (err.message && (err.message.includes('popup') || err.message.includes('blocked') || err.message.includes('prompt'))) {
 				const buttonElement = document.getElementById('google-signup-button');
 				if (buttonElement) {
 					buttonElement.style.display = 'block';
-					renderGoogleButton('google-signup-button', handleGoogleCallback);
+					const success = renderGoogleButton('google-signup-button', handleGoogleCallback);
+					if (success) {
+						setError("Please use the Google button below to sign up.");
+					}
 				}
 			}
 		} finally {

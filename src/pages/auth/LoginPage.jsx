@@ -155,13 +155,7 @@ const LoginPage = () => {
 			setError("");
 
 			// Ensure Google is initialized first
-			if (
-				!window.google ||
-				!window.google.accounts ||
-				!window.google.accounts.id
-			) {
-				await initializeGoogleAuth();
-			}
+			await initializeGoogleAuth();
 
 			if (usePopup) {
 				// Try popup sign-in first
@@ -172,14 +166,20 @@ const LoginPage = () => {
 			}
 		} catch (err) {
 			console.error("Google login error:", err);
-			setError("Google login failed. Please try again.");
 			
-			// Fallback to button rendering if popup fails
-			if (usePopup) {
+			// Show specific error message
+			const errorMessage = err.message || "Google login failed. Please try again.";
+			setError(errorMessage);
+			
+			// Fallback to button rendering if popup fails or is blocked
+			if (err.message && (err.message.includes('popup') || err.message.includes('blocked') || err.message.includes('prompt'))) {
 				const buttonElement = document.getElementById("google-signin-button");
 				if (buttonElement) {
 					buttonElement.style.display = "block";
-					renderGoogleButton("google-signin-button", handleGoogleCallback);
+					const success = renderGoogleButton("google-signin-button", handleGoogleCallback);
+					if (success) {
+						setError("Please use the Google button below to sign in.");
+					}
 				}
 			}
 		} finally {
