@@ -308,7 +308,20 @@ const PostDetailPage = () => {
 		try {
 			setSubmitting(true);
 			const response = await commentAPI.createComment(postId, newComment.trim());
-			setComments((prevComments) => [response.comment, ...prevComments]);
+			
+			// Ensure the comment has a proper author object
+			const newCommentObj = {
+				...response.comment,
+				author: response.comment.author || {
+					uid: currentUser.uid,
+					name: currentUser.name || currentUser.displayName,
+					username: currentUser.username,
+					photoURL: currentUser.photoURL,
+					hasBlueCheck: currentUser.hasBlueCheck || false
+				}
+			};
+			
+			setComments((prevComments) => [newCommentObj, ...prevComments]);
 
 			// Send comment notification to post owner
 			try {
