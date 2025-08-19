@@ -766,7 +766,14 @@ const HomePage = () => {
 			setPosts((prevPosts) =>
 				prevPosts.map((post) => {
 					if (post.id === postId) {
-						return response.post;
+						// Preserve existing comments and other properties that might not be in the response
+						return {
+							...post,
+							...response.post,
+							comments: post.comments || [], // Preserve existing comments
+							stats: response.post.stats || post.stats, // Update stats if available
+							likes: response.post.likes || post.likes // Update likes
+						};
 					}
 					return post;
 				}),
