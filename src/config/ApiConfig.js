@@ -590,6 +590,6 @@ const commentAPI = {
 	},
 };
 
-export { authAPI, postAPI, userAPI, commentAPI, setAuthToken, removeAuthToken, validateEmail, sanitizeInput };
+export { authAPI, postAPI, userAPI, commentAPI, setAuthToken, removeAuthToken, getAuthToken, validateEmail, sanitizeInput };
 
 export default apiRequest;
