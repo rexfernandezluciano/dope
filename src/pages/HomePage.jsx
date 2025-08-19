@@ -969,6 +969,8 @@ const HomePage = () => {
 									onDeletePost={handleDeletePost}
 									onPostClick={(e) => handleImageClick(post.images, post.id, e)}
 									onHashtagClick={handleHashtagClick}
+									showComments={true}
+									comments={post.comments || []}
 								/>
 							))
 						)}
