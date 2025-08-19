@@ -1,10 +1,10 @@
-
 /** @format */
 
 import { useEffect, useState } from "react";
 import { Spinner, Container } from "react-bootstrap";
 
 import { getUser } from "../../utils/app-utils";
+import { getAuthToken, removeAuthToken } from "../../config/ApiConfig";
 
 const RequireAuth = ({ children }) => {
 	const [user, setUser] = useState(null);
@@ -13,18 +13,15 @@ const RequireAuth = ({ children }) => {
 	useEffect(() => {
 		const checkAuth = async () => {
 			try {
-				// Import token utilities from app-utils
-				const { getAuthToken, removeAuthToken } = await import('../../utils/app-utils');
-				
 				const token = getAuthToken();
-				if (!token || typeof token !== 'string' || token.length < 10) {
+				if (!token || typeof token !== "string" || token.length < 10) {
 					setUser(null);
 					setLoading(false);
 					return;
 				}
 
 				// Validate token format (basic JWT structure check)
-				const tokenParts = token.split('.');
+				const tokenParts = token.split(".");
 				if (tokenParts.length !== 3) {
 					removeAuthToken();
 					setUser(null);
@@ -35,9 +32,9 @@ const RequireAuth = ({ children }) => {
 				const currentUser = await getUser();
 				setUser(currentUser);
 			} catch (error) {
-				console.error('Auth check failed');
+				console.error("Auth check failed");
 				// Clear potentially invalid token using secure method
-				const { removeAuthToken } = await import('../../utils/app-utils');
+				const { removeAuthToken } = await import("../../utils/app-utils");
 				removeAuthToken();
 				setUser(null);
 			} finally {
@@ -62,7 +59,7 @@ const RequireAuth = ({ children }) => {
 	// Require authentication to access protected routes
 	if (!user) {
 		// Redirect to start page for unauthenticated users
-		window.location.href = '/';
+		window.location.href = "/";
 		return null;
 	}
 
