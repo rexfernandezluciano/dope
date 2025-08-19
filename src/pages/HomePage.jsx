@@ -89,7 +89,6 @@ const HomePage = () => {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [mediaStream, setMediaStream] = useState(null);
 	const [mediaRecorder, setMediaRecorder] = useState(null);
-	const videoRef = useRef(null);
 	const streamUrlRef = useRef(null);
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -333,95 +332,23 @@ const HomePage = () => {
 		setPhotos((prev) => prev.filter((_, i) => i !== index));
 	};
 
-	const startLiveStream = async () => {
+	const handleStartLiveStream = async (streamData) => {
 		try {
-			// Check if browser supports getUserMedia
-			if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-				throw new Error('Camera access is not supported in this browser');
+			// Validate required fields
+			if (!streamData.title || !streamData.title.trim()) {
+				throw new Error('Stream title is required');
 			}
 
-			// Test camera and microphone permissions first
-			let testStream;
-			try {
-				testStream = await navigator.mediaDevices.getUserMedia({ 
-					video: {
-						width: { ideal: 1280 },
-						height: { ideal: 720 },
-						frameRate: { ideal: 30 }
-					}, 
-					audio: {
-						echoCancellation: true,
-						noiseSuppression: true,
-						autoGainControl: true
-					}
-				});
-			} catch (permissionError) {
-				if (permissionError.name === 'NotAllowedError') {
-					throw new Error('Camera and microphone access denied. Please click "Allow" when prompted for permissions.');
-				} else if (permissionError.name === 'NotFoundError') {
-					throw new Error('No camera or microphone found. Please connect a camera/microphone and try again.');
-				} else if (permissionError.name === 'NotReadableError') {
-					throw new Error('Camera is being used by another application. Please close other apps and try again.');
-				} else {
-					throw new Error(`Failed to access camera: ${permissionError.message}`);
-				}
-			}
+			// Generate unique stream key
+			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+			const streamUrl = `${window.location.origin}/live/${streamKey}`;
 
-			// Stop the test stream immediately
-			testStream.getTracks().forEach(track => track.stop());
+			// Use the tracks from LiveStudioModal
+			const { videoTrack, audioTrack } = streamData;
 
-			// Create Agora client
+			// Create Agora client for publishing
 			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
-
-			// Set client role as host
 			await client.setClientRole('host');
-
-			// Create local tracks with proper configuration
-			const videoTrack = await AgoraRTC.createCameraVideoTrack({
-				optimizationMode: 'detail',
-				encoderConfig: {
-					width: 1280,
-					height: 720,
-					frameRate: 30,
-					bitrateMin: 1000,
-					bitrateMax: 3000,
-				}
-			});
-
-			const audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-				encoderConfig: 'high_quality_stereo'
-			});
-
-			// Play local video preview immediately
-			if (videoRef.current) {
-				videoTrack.play(videoRef.current);
-			}
-
-			// Store references
-			setMediaStream(client);
-			setMediaRecorder({ videoTrack, audioTrack });
-			setIsStreaming(true);
-
-		} catch (error) {
-			console.error('Error starting live stream:', error);
-			setError(error.message || 'Failed to start live stream. Please check camera permissions.');
-
-			// Clean up on error
-			setIsStreaming(false);
-			setIsLive(false);
-			setLiveVideoUrl("");
-		}
-	};
-
-	const startAgoraLiveStream = async (streamKey) => {
-		try {
-			// Use existing tracks from preview
-			if (!mediaRecorder || !mediaRecorder.videoTrack || !mediaRecorder.audioTrack) {
-				throw new Error('Camera not initialized. Please start preview first.');
-			}
-
-			const { videoTrack, audioTrack } = mediaRecorder;
-			const client = mediaStream;
 
 			// Join channel and publish tracks
 			const agoraConfig = {
@@ -440,27 +367,6 @@ const HomePage = () => {
 
 			await client.publish([videoTrack, audioTrack]);
 
-			return { success: true };
-		} catch (error) {
-			console.error('Agora streaming error:', error);
-			throw error;
-		}
-	};
-
-	const handleStartLiveStream = async (streamData) => {
-		try {
-			// Validate required fields
-			if (!streamData.title || !streamData.title.trim()) {
-				throw new Error('Stream title is required');
-			}
-
-			// First initialize camera and preview
-			await startLiveStream();
-
-			// Generate unique stream key
-			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-			const streamUrl = `${window.location.origin}/live/${streamKey}`;
-
 			// Prepare the live stream post payload
 			const postPayload = {
 				content: streamData.description || streamData.title,
@@ -470,7 +376,6 @@ const HomePage = () => {
 			};
 
 			// Create the live stream post using the API
-			const { postAPI } = await import('../config/ApiConfig');
 			const response = await postAPI.createPost(postPayload);
 
 			if (response.success || response.id) {
@@ -478,14 +383,13 @@ const HomePage = () => {
 				setStreamTitle(streamData.title);
 				setPostText(streamData.description || streamData.title);
 				setLiveVideoUrl(streamUrl);
-				setShowLiveStudioModal(false);
+				setIsStreaming(true);
+				setMediaStream(client);
+				setMediaRecorder({ videoTrack, audioTrack });
 
 				// Set broadcast status in localStorage
 				localStorage.setItem('isCurrentlyBroadcasting', 'true');
 				localStorage.setItem('currentStreamTitle', streamData.title);
-
-				// Start Agora stream with existing tracks
-				await startAgoraLiveStream(streamKey);
 
 				console.log('Live stream started successfully:', response);
 			} else {
@@ -537,11 +441,6 @@ const HomePage = () => {
 			// Clear broadcast status from localStorage
 			localStorage.removeItem('isCurrentlyBroadcasting');
 			localStorage.removeItem('currentStreamTitle');
-
-			// Clear video element
-			if (videoRef.current) {
-				videoRef.current.srcObject = null;
-			}
 		} catch (error) {
 			console.error('Error stopping live stream:', error);
 		}
@@ -553,8 +452,7 @@ const HomePage = () => {
 		if (!isLive) {
 			setShowLiveStudioModal(true);
 		} else {
-			setIsLive(false);
-			setLiveVideoUrl("");
+			stopLiveStream();
 			setPostText("");
 		}
 	};
