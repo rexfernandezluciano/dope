@@ -8,9 +8,8 @@ import { authAPI, userAPI } from '../config/ApiConfig';
  */
 export const getUser = async () => {
 	try {
-		// Import token utilities to use secure method
-		const ApiConfig = await import('../config/ApiConfig');
-		const token = ApiConfig.getAuthToken ? ApiConfig.getAuthToken() : null;
+		// Use direct token retrieval
+		const token = getAuthToken();
 		if (!token) return null;
 
 		const response = await authAPI.getCurrentUser();
@@ -26,10 +25,7 @@ export const getUser = async () => {
 		console.error('Error getting user:', error);
 		// Only remove token if it's an auth error (401/403)
 		if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
-			const ApiConfig = await import('../config/ApiConfig');
-			if (ApiConfig.removeAuthToken) {
-				ApiConfig.removeAuthToken();
-			}
+			removeAuthToken();
 		}
 		return null;
 	}
@@ -166,20 +162,15 @@ export const getGravatar = (email) => {
  */
 export const setAuthToken = (token) => {
 	try {
-		// Implement secure cookie storage here
-		// For example, using httpOnly and secure flags for cookies
-		// This part would typically involve server-side logic or a library
-		// that can set cookies from the client-side with appropriate flags.
-		// For demonstration purposes, we'll simulate setting a cookie.
-		// In a real application, you'd likely use a library like 'js-cookie'
-		// or have your backend set the cookie.
-
-		// Example using document.cookie (less secure than true httpOnly cookies):
-		// document.cookie = `authToken=${token}; max-age=3600; path=/; secure=true; samesite=strict`;
-
-		// For now, keeping the original logic as a placeholder for actual secure cookie implementation
+		// Set secure cookie
+		const isSecure = window.location.protocol === 'https:';
+		document.cookie = `authToken=${token}; max-age=86400; path=/; ${isSecure ? 'secure; ' : ''}samesite=strict`;
+		
+		// Also store in session for compatibility
 		sessionStorage.setItem('authToken', token);
 		localStorage.setItem('authToken', token);
+		
+		console.log('Auth token stored in secure cookie');
 	} catch (e) {
 		console.error('Failed to store auth token');
 	}
@@ -190,14 +181,14 @@ export const setAuthToken = (token) => {
  */
 export const removeAuthToken = () => {
 	try {
-		// Remove secure cookie
-		// In a real application, you'd set the cookie's expiration to a past date.
-		// Example using document.cookie:
-		// document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-
-		// For now, keeping the original logic as a placeholder for actual secure cookie implementation
+		// Remove secure cookie by setting expiration to past date
+		document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; samesite=strict';
+		
+		// Remove from storage
 		sessionStorage.removeItem('authToken');
 		localStorage.removeItem('authToken');
+		
+		console.log('Auth token removed from secure cookie');
 	} catch (e) {
 		console.error('Failed to remove auth token');
 	}
@@ -209,17 +200,16 @@ export const removeAuthToken = () => {
  */
 export const getAuthToken = () => {
 	try {
-		// Retrieve from secure cookie or fallback to localStorage/sessionStorage
-		// Example retrieving from document.cookie:
-		// const cookies = document.cookie.split(';');
-		// for (let i = 0; i < cookies.length; i++) {
-		// 	let cookie = cookies[i].trim();
-		// 	if (cookie.startsWith('authToken=')) {
-		// 		return cookie.substring('authToken='.length, cookie.length);
-		// 	}
-		// }
+		// Check secure cookie first
+		const cookies = document.cookie.split(';');
+		for (let i = 0; i < cookies.length; i++) {
+			let cookie = cookies[i].trim();
+			if (cookie.startsWith('authToken=')) {
+				return cookie.substring('authToken='.length, cookie.length);
+			}
+		}
 
-		// For now, keeping the original logic as a placeholder for actual secure cookie implementation
+		// Fallback to storage
 		return sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
 	} catch (e) {
 		console.error('Failed to retrieve auth token');

@@ -13,8 +13,8 @@ const RequireAuth = ({ children }) => {
 	useEffect(() => {
 		const checkAuth = async () => {
 			try {
-				// Import token utilities
-				const { getAuthToken, removeAuthToken } = await import('../../config/ApiConfig');
+				// Import token utilities from app-utils
+				const { getAuthToken, removeAuthToken } = await import('../../utils/app-utils');
 				
 				const token = getAuthToken();
 				if (!token || typeof token !== 'string' || token.length < 10) {
@@ -37,7 +37,7 @@ const RequireAuth = ({ children }) => {
 			} catch (error) {
 				console.error('Auth check failed');
 				// Clear potentially invalid token using secure method
-				const { removeAuthToken } = await import('../../config/ApiConfig');
+				const { removeAuthToken } = await import('../../utils/app-utils');
 				removeAuthToken();
 				setUser(null);
 			} finally {
