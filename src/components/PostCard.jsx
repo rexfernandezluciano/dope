@@ -122,6 +122,10 @@ const PostCard = ({
 	};
 
 	const handlePostClickView = async (e) => {
+		// Prevent default behavior and stop propagation
+		e.preventDefault();
+		e.stopPropagation();
+
 		// Don't navigate if clicking on interactive elements
 		const target = e.target;
 		if (!target || typeof target.closest !== "function") return;
@@ -129,8 +133,10 @@ const PostCard = ({
 		const isButton = target.closest("button");
 		const isLink = target.closest("a");
 		const isModal = target.closest(".modal");
+		const isImage = target.closest("img");
+		const isInput = target.closest("input, textarea");
 
-		if (isButton || isLink || isModal) {
+		if (isButton || isLink || isModal || isImage || isInput) {
 			return;
 		}
 
@@ -141,7 +147,8 @@ const PostCard = ({
 			console.error("Failed to track view:", viewError);
 		}
 
-		handlePostClick(post.id, navigate);
+		// Navigate directly instead of using utility function
+		navigate(`/post/${post.id}`);
 	};
 
 	const handleLike = async (e) => {
@@ -205,7 +212,12 @@ const PostCard = ({
 				ref={cardRef}
 				className="border-0 border-bottom rounded-0 mb-0 post-card"
 				style={{ cursor: "pointer" }}
-				onClick={(e) => handlePostClickView(e)}
+				onPointerDown={(e) => {
+					// Only handle left clicks (button 0) and touches
+					if (e.button === 0 || e.pointerType === 'touch') {
+						handlePostClickView(e);
+					}
+				}}
 			>
 				<Card.Body className="px-3">
 					<div className="d-flex gap-2">
