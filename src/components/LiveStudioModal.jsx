@@ -252,6 +252,10 @@ const LiveStudioModal = ({
 	};
 
 	const handleStartStream = () => {
+		console.log('Stream title value:', `"${streamTitle}"`);
+		console.log('Stream title length:', streamTitle.length);
+		console.log('Stream title after trim:', `"${streamTitle.trim()}"`);
+		
 		if (!streamTitle.trim()) {
 			alert('Please enter a stream title');
 			return;
