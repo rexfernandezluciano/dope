@@ -539,41 +539,6 @@ const NavigationView = ({ children }) => {
 						</Nav.Link>
 					</Nav>
 				</div>
-				{/* The following div contains the tabs that need to be sticky */}
-				<div
-					className="d-flex align-items-center justify-content-center px-0 pt-2 border-bottom bg-white sticky-top"
-					style={{ 
-						top: '56px', /* Height of the navbar */
-						zIndex: 1019 /* Below navbar but above content */
-					}}
-				>
-					<div className="d-flex w-100">
-						<Button
-							variant="link"
-							className={`flex-fill px-4 py-2 fw-bold text-decoration-none border-0 ${
-								filterBy === "for-you"
-									? "text-primary border-bottom border-primary pb-3 border-2"
-									: "text-muted"
-							}`}
-							onClick={() => setFilterBy("for-you")}
-							style={{ borderRadius: 0 }}
-						>
-							For you
-						</Button>
-						<Button
-							variant="link"
-							className={`flex-fill px-4 py-2 fw-bold text-decoration-none border-0 ${
-								filterBy === "following"
-									? "text-primary border-bottom border-primary pb-3 border-2"
-									: "text-muted"
-							}`}
-							onClick={() => setFilterBy("following")}
-							style={{ borderRadius: 0 }}
-						>
-							Following
-						</Button>
-					</div>
-				</div>
 				<div style={{ marginLeft: "250px" }}>{children}</div>
 			</div>
 			<AlertDialog
