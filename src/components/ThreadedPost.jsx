@@ -16,6 +16,7 @@ import {
 import { commentAPI } from "../config/ApiConfig";
 import { formatTimeAgo } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
+import { handleLikeNotification } from "../utils/notification-helpers";
 
 const ThreadedPost = ({ post, currentUser, onLike, onShare, maxComments = 3 }) => {
 	const navigate = useNavigate();
@@ -171,7 +172,16 @@ const ThreadedPost = ({ post, currentUser, onLike, onShare, maxComments = 3 }) =
 										? "#dc3545"
 										: "#6c757d",
 								}}
-								onClick={() => onLike?.(post.id)}
+								onClick={async () => {
+									onLike?.(post.id);
+									
+									// Send like notification
+									try {
+										await handleLikeNotification(post.id, post, currentUser);
+									} catch (error) {
+										console.error('Failed to send like notification:', error);
+									}
+								}}
 							>
 								{post.likes?.some(like => like.user.uid === currentUser?.uid) ? (
 									<HeartFill size={20} />

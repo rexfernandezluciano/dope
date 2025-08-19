@@ -36,6 +36,7 @@ import {
 } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
+import { handleLikeNotification, handleCommentNotification } from "../utils/notification-helpers";
 
 const PostDetailPage = () => {
 	const { postId } = useParams();
@@ -65,7 +66,7 @@ const PostDetailPage = () => {
 		try {
 			setLoading(true);
 			setError(""); // Clear previous errors
-			
+
 			// Load post first
 			const postResponse = await postAPI.getPost(postId);
 			setPost(postResponse.post);
@@ -110,27 +111,17 @@ const PostDetailPage = () => {
 
 	const handleLikePost = async () => {
 		try {
-			await postAPI.likePost(postId);
-			setPost((prev) => {
-				if (!prev) return prev;
-				const isLiked = (prev.likes || []).some(
-					(like) => like.user.uid === currentUser.uid,
-				);
-				return {
-					...prev,
-					likes: isLiked
-						? prev.likes.filter((like) => like.user.uid !== currentUser.uid)
-						: [...(prev.likes || []), { user: { uid: currentUser.uid } }],
-					stats: {
-						...prev.stats,
-						likes: isLiked
-							? (prev.stats?.likes || 1) - 1
-							: (prev.stats?.likes || 0) + 1,
-					},
-				};
-			});
-		} catch (err) {
-			console.error("Error liking post:", err);
+			const response = await postAPI.likePost(postId);
+			setPost(response.post);
+
+			// Send like notification to post owner
+			try {
+				await handleLikeNotification(postId, post, currentUser);
+			} catch (notificationError) {
+				console.error('Failed to send like notification:', notificationError);
+			}
+		} catch (error) {
+			console.error("Failed to like post:", error);
 		}
 	};
 
@@ -283,7 +274,16 @@ const PostDetailPage = () => {
 
 		try {
 			setSubmitting(true);
-			await commentAPI.createComment(postId, newComment.trim());
+			const response = await commentAPI.createComment(postId, newComment.trim());
+			setComments((prevComments) => [response.comment, ...prevComments]);
+
+			// Send comment notification to post owner
+			try {
+				await handleCommentNotification(postId, post, currentUser, newComment);
+			} catch (notificationError) {
+				console.error('Failed to send comment notification:', notificationError);
+			}
+
 			setNewComment("");
 			// Reload to get updated comments
 			const [postResponse, commentsResponse] = await Promise.all([

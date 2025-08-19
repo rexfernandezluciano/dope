@@ -26,6 +26,7 @@ import {
 	handlePostClick,
 } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
+import { handleLikeNotification } from "../utils/notification-helpers";
 
 const PostCard = ({
 	post,
@@ -143,10 +144,17 @@ const PostCard = ({
 		handlePostClick(post.id, navigate);
 	};
 
-	const handleLike = (e) => {
+	const handleLike = async (e) => {
 		e.stopPropagation();
 		if (onLike) {
 			onLike(post.id);
+			
+			// Send like notification to post owner
+			try {
+				await handleLikeNotification(post.id, post, currentUser);
+			} catch (error) {
+				console.error('Failed to send like notification:', error);
+			}
 		}
 	};
 
