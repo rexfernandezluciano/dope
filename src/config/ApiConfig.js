@@ -435,7 +435,7 @@ const commentAPI = {
 			if (!postId) {
 				throw new Error('Post ID is required');
 			}
-			const response = await fetch(`${API_BASE_URL}/comments/posts/${postId}`, {
+			const response = await fetch(`${API_BASE_URL}/comments/post/${postId}`, {
 				headers: await getAuthHeaders(),
 			});
 			return handleApiResponse(response);
