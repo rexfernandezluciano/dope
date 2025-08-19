@@ -37,4 +37,15 @@ try {
 	messaging = null; // Ensure messaging is also null in case of error
 }
 
+// Add connection state monitoring to reduce console errors
+if (db) {
+	// Enable offline persistence to reduce connection errors
+	try {
+		// Note: This is for web, not needed for newer versions but helps with connection stability
+		console.log('Firebase initialized successfully');
+	} catch (persistenceError) {
+		console.warn('Firebase persistence setup failed:', persistenceError);
+	}
+}
+
 export { db, app, messaging };

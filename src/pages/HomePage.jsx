@@ -356,16 +356,23 @@ const HomePage = () => {
 				throw new Error('Audio track is not ready. Please try again.');
 			}
 
+			// Clean up any existing stream first
+			if (mediaStream) {
+				try {
+					await mediaStream.leave();
+				} catch (cleanupError) {
+					console.warn('Error cleaning up existing stream:', cleanupError);
+				}
+			}
+
 			// Generate unique stream key
 			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 			const streamUrl = `${window.location.origin}/live/${streamKey}`;
 
-			// Create Agora client with enhanced error handling and network resilience
+			// Create Agora client with simpler configuration to avoid network issues
 			const client = AgoraRTC.createClient({ 
 				mode: 'live', 
-				codec: 'h264',  // H264 is more stable than VP8
-				// Enable network optimizations
-				optimizeForNetworkQuality: true
+				codec: 'vp8'  // VP8 might work better in some network conditions
 			});
 
 			// Enhanced error handlers
@@ -412,43 +419,36 @@ const HomePage = () => {
 				hasAudio: !!audioTrack
 			});
 
-			const joinWithRetry = async (maxRetries = 3) => {
-				for (let attempt = 1; attempt <= maxRetries; attempt++) {
-					try {
-						console.log(`Joining Agora channel - attempt ${attempt}/${maxRetries}`);
-						
-						const joinPromise = client.join(
-							agoraConfig.appId,
-							agoraConfig.channel,
-							agoraConfig.token,
-							agoraConfig.uid
-						);
-
-						// Increase timeout for better reliability
-						const timeoutPromise = new Promise((_, reject) => 
-							setTimeout(() => reject(new Error('Connection timeout')), 20000)
-						);
-
-						await Promise.race([joinPromise, timeoutPromise]);
-						console.log('Successfully joined Agora channel');
-						return;
-					} catch (joinError) {
-						console.warn(`Join attempt ${attempt} failed:`, joinError);
-						
-						if (attempt === maxRetries) {
-							throw new Error(`Failed to join after ${maxRetries} attempts: ${joinError.message}`);
-						}
-						
-						// Wait before retry
-						await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
-					}
-				}
-			};
-
 			try {
-				await joinWithRetry();
+				console.log('Joining Agora channel with config:', {
+					appId: agoraConfig.appId,
+					channel: agoraConfig.channel
+				});
+
+				// Single join attempt with shorter timeout to prevent hanging
+				const joinPromise = client.join(
+					agoraConfig.appId,
+					agoraConfig.channel,
+					agoraConfig.token,
+					agoraConfig.uid
+				);
+
+				const timeoutPromise = new Promise((_, reject) => 
+					setTimeout(() => reject(new Error('Connection timeout - please try again')), 10000)
+				);
+
+				await Promise.race([joinPromise, timeoutPromise]);
+				console.log('Successfully joined Agora channel');
 			} catch (joinError) {
-				console.error('Failed to join Agora channel after retries:', joinError);
+				console.error('Failed to join Agora channel:', joinError);
+				
+				// Clean up client on error
+				try {
+					await client.leave();
+				} catch (leaveError) {
+					console.warn('Error during cleanup:', leaveError);
+				}
+				
 				// Clean up tracks on error
 				if (videoTrack) {
 					videoTrack.stop();
@@ -458,7 +458,8 @@ const HomePage = () => {
 					audioTrack.stop();
 					audioTrack.close();
 				}
-				throw new Error(`Failed to join live stream channel: ${joinError.message}`);
+				
+				throw new Error(`Failed to join live stream channel. Please check your internet connection and try again.`);
 			}
 
 			try {
@@ -524,26 +525,45 @@ const HomePage = () => {
 
 	const stopLiveStream = async () => {
 		try {
-			// Stop Agora tracks properly
-			if (mediaRecorder) {
-				if (mediaRecorder.videoTrack) {
-					mediaRecorder.videoTrack.stop();
-					mediaRecorder.videoTrack.close();
-				}
-				if (mediaRecorder.audioTrack) {
-					mediaRecorder.audioTrack.stop();
-					mediaRecorder.audioTrack.close();
-				}
-			}
-
-			// Leave Agora channel and cleanup
+			// Leave Agora channel first before stopping tracks
 			if (mediaStream) {
 				try {
+					// Unpublish tracks first
+					if (mediaRecorder) {
+						try {
+							await mediaStream.unpublish([mediaRecorder.videoTrack, mediaRecorder.audioTrack]);
+						} catch (unpublishError) {
+							console.warn('Error unpublishing tracks:', unpublishError);
+						}
+					}
+					
 					await mediaStream.leave();
+					console.log('Left Agora channel successfully');
 				} catch (err) {
 					console.warn('Error leaving Agora channel:', err);
 				}
 				setMediaStream(null);
+			}
+
+			// Stop Agora tracks properly after leaving channel
+			if (mediaRecorder) {
+				try {
+					if (mediaRecorder.videoTrack) {
+						await mediaRecorder.videoTrack.stop();
+						await mediaRecorder.videoTrack.close();
+					}
+				} catch (videoError) {
+					console.warn('Error stopping video track:', videoError);
+				}
+				
+				try {
+					if (mediaRecorder.audioTrack) {
+						await mediaRecorder.audioTrack.stop();
+						await mediaRecorder.audioTrack.close();
+					}
+				} catch (audioError) {
+					console.warn('Error stopping audio track:', audioError);
+				}
 			}
 
 			setIsStreaming(false);
