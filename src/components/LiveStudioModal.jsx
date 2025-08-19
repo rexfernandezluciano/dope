@@ -7,9 +7,6 @@ import {
 	Row,
 	Col,
 	Badge,
-	OverlayTrigger,
-	Tooltip,
-	ButtonGroup,
 	Spinner,
 	Image
 } from 'react-bootstrap';
@@ -39,8 +36,7 @@ const LiveStudioModal = ({
 	onHide, 
 	onStartStream, 
 	isStreaming, 
-	onStopStream,
-	currentUser 
+	onStopStream 
 }) => {
 	const [streamTitle, setStreamTitle] = useState('');
 	const [streamDescription, setStreamDescription] = useState('');
@@ -187,7 +183,7 @@ const LiveStudioModal = ({
 
 			// Play video preview immediately
 			if (videoRef.current) {
-				await videoTrack.play(videoRef.current);
+			videoTrack.play(videoRef.current);
 			}
 
 			setLocalVideoTrack(videoTrack);
