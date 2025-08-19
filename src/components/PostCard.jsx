@@ -158,7 +158,7 @@ const PostCard = ({
 	const handleLike = useCallback(async (e) => {
 		e.stopPropagation();
 		if (onLike) {
-			const wasLiked = currentUserLiked;
+			const wasLiked = post.likes.some(like => like.user.uid === currentUser.uid);
 			const response = await onLike(post.id);
 			
 			// Send like notification to post owner only when user actually likes (not unlikes)
@@ -170,7 +170,7 @@ const PostCard = ({
 				}
 			}
 		}
-	}, [onLike, post.id, post, currentUser, currentUserLiked]);
+	}, [onLike, post.id, post, currentUser]);
 
 	const handleShare = useCallback((e) => {
 		e.stopPropagation();
