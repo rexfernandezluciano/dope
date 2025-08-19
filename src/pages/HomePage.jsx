@@ -25,7 +25,7 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	CheckCircleFill,
-	FiUser
+	Person
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
@@ -853,7 +853,7 @@ const HomePage = () => {
 				{!user && (
 					<Card className="mb-4 shadow-sm border-primary">
 						<Card.Body className="text-center py-4">
-							<FiUser size={48} className="text-primary mb-3" />
+							<Person size={48} className="text-primary mb-3" />
 							<h4 className="text-primary">Welcome to DOPE Network!</h4>
 							<p className="text-muted mb-3">
 								Join our community to create posts, go live, and connect with others.
