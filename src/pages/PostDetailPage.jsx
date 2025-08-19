@@ -61,7 +61,6 @@ const PostDetailPage = () => {
 	const [selectedComment, setSelectedComment] = useState(null);
 	const [deletingPost, setDeletingPost] = useState(false);
 	const [deletingComment, setDeletingComment] = useState(false);
-	const [isLiked, setIsLiked] = useState(false);
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -113,11 +112,17 @@ const PostDetailPage = () => {
 	const handleLikePost = async () => {
 		try {
 			const response = await postAPI.likePost(postId);
-			// Send like notification to post owner
-			try {
-				await handleLikeNotification(postId, response.post, currentUser);
-			} catch (notificationError) {
-				console.error('Failed to send like notification:', notificationError);
+			
+			// Update post state with the response
+			setPost(response.post);
+			
+			// Send like notification to post owner only if liked (not unliked)
+			if (response.liked) {
+				try {
+					await handleLikeNotification(postId, response.post, currentUser);
+				} catch (notificationError) {
+					console.error('Failed to send like notification:', notificationError);
+				}
 			}
 		} catch (error) {
 			console.error("Failed to like post:", error);

@@ -490,7 +490,7 @@ const HomePage = () => {
 				}
 
 				throw new Error(
-					`Unable to connect to streaming servers. This might be due to network restrictions. Please try again later.`,
+					"Unable to connect to streaming servers. This might be due to network restrictions. Please try again later.",
 				);
 			}
 
@@ -762,30 +762,19 @@ const HomePage = () => {
 
 	const handleLikePost = async (postId) => {
 		try {
-			await postAPI.likePost(postId);
-			// Update posts state to reflect like change
-			setPosts((prev) =>
-				prev.map((post) => {
+			const response = await postAPI.likePost(postId);
+			setPosts((prevPosts) =>
+				prevPosts.map((post) => {
 					if (post.id === postId) {
-						const isLiked = post.likes.some(
-							(like) => like.user.uid === currentUser.uid,
-						);
-						return {
-							...post,
-							likes: isLiked
-								? post.likes.filter((like) => like.user.uid !== currentUser.uid)
-								: [...post.likes, { user: { uid: currentUser.uid } }],
-							stats: {
-								...post.stats,
-								likes: isLiked ? post.stats.likes - 1 : post.stats.likes + 1,
-							},
-						};
+						return response.post;
 					}
 					return post;
 				}),
 			);
+			return response; // Return the response so PostCard can check if liked
 		} catch (err) {
 			console.error("Error liking post:", err);
+			return null;
 		}
 	};
 

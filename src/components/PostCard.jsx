@@ -153,13 +153,15 @@ const PostCard = ({
 	const handleLike = async (e) => {
 		e.stopPropagation();
 		if (onLike) {
-			onLike(post.id);
+			const response = await onLike(post.id);
 			
-			// Send like notification to post owner
-			try {
-				await handleLikeNotification(post.id, post, currentUser);
-			} catch (error) {
-				console.error('Failed to send like notification:', error);
+			// Send like notification to post owner only if liked (not unliked)
+			if (response && response.liked) {
+				try {
+					await handleLikeNotification(post.id, post, currentUser);
+				} catch (error) {
+					console.error('Failed to send like notification:', error);
+				}
 			}
 		}
 	};
