@@ -6,7 +6,7 @@ import { appCheck } from "../config/FirebaseConfig";
  * Get App Check token for API requests
  * @returns {Promise<string|null>} App Check token or null if failed
  */
-export const getAppCheckToken = async (timeout = 5000) => {
+export const getAppCheckToken = async (timeout = 3000) => {
 	try {
 		if (typeof window === 'undefined') return null;
 		
@@ -23,21 +23,44 @@ export const getAppCheckToken = async (timeout = 5000) => {
 		);
 		
 		const appCheckTokenResponse = await Promise.race([tokenPromise, timeoutPromise]);
-		return appCheckTokenResponse.token;
+		
+		if (appCheckTokenResponse && appCheckTokenResponse.token) {
+			console.log('App Check token retrieved successfully');
+			return appCheckTokenResponse.token;
+		} else {
+			console.warn('App Check token response is empty');
+			return null;
+		}
 	} catch (error) {
 		console.error('Error getting App Check token:', error);
 		
-		// For network errors, don't retry to avoid hanging the app
-		if (error.code === 'appCheck/fetch-network-error') {
+		// For network errors or fetch errors, don't retry to avoid hanging the app
+		if (error.code === 'appCheck/fetch-network-error' || error.message === 'Failed to fetch') {
 			console.warn('Network error fetching App Check token - continuing without it');
 			return null;
 		}
 		
-		// Try once more with force refresh for other errors
+		// For timeout errors, also don't retry
+		if (error.message === 'App Check token timeout') {
+			console.warn('App Check token request timed out - continuing without it');
+			return null;
+		}
+		
+		// For other errors, try once more with force refresh
 		try {
 			if (appCheck) {
-				const retryResponse = await getToken(appCheck, true);
-				return retryResponse.token;
+				console.log('Retrying App Check token with force refresh...');
+				const retryResponse = await Promise.race([
+					getToken(appCheck, true),
+					new Promise((_, reject) => 
+						setTimeout(() => reject(new Error('Retry timeout')), 2000)
+					)
+				]);
+				
+				if (retryResponse && retryResponse.token) {
+					console.log('App Check token retrieved on retry');
+					return retryResponse.token;
+				}
 			}
 		} catch (retryError) {
 			console.error('App Check retry failed:', retryError);

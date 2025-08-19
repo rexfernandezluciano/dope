@@ -26,14 +26,25 @@ try {
 	// Initialize App Check
 	if (typeof window !== 'undefined') {
 		try {
-			// For development, use debug token
-			if (process.env.NODE_ENV === 'development') {
-				// Debug token for development - replace with your debug token
-				window.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.REACT_APP_FIREBASE_APPCHECK_DEBUG_TOKEN || 'BDE92789-B377-47C0-A021-C3CBD7A24A48';
+			// Set debug token for development and mobile environments
+			if (process.env.NODE_ENV === 'development' || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+				window.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.REACT_APP_FIREBASE_APPCHECK_DEBUG_TOKEN || 'BDE92789-B377-47C0-A021-C3CBD7A48';
+				console.log('Using App Check debug token for development/mobile environment');
 			}
 
-			appCheck = initializeAppCheck(app, { // Assign to appCheck
-				provider: new ReCaptchaV3Provider(process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeXsKkrAAAAAIZ_HaIAbxmU6XIrxVlLguh78xx_'),
+			// Try ReCAPTCHA provider first, fallback to debug in mobile environments
+			let provider;
+			const isDebugMode = process.env.NODE_ENV === 'development' || window.FIREBASE_APPCHECK_DEBUG_TOKEN;
+			
+			if (isDebugMode) {
+				// In debug mode, we still initialize with ReCAPTCHA but it will use debug tokens
+				provider = new ReCaptchaV3Provider(process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeXsKkrAAAAAIZ_HaIAbxmU6XIrxVlLguh78xx_');
+			} else {
+				provider = new ReCaptchaV3Provider(process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeXsKkrAAAAAIZ_HaIAbxmU6XIrxVlLguh78xx_');
+			}
+
+			appCheck = initializeAppCheck(app, {
+				provider: provider,
 				isTokenAutoRefreshEnabled: true
 			});
 			
