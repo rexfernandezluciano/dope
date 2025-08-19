@@ -918,7 +918,10 @@ const HomePage = () => {
 					</Card>
 				)}
 
-				<div className="d-flex align-items-center justify-content-between px-0 pt-2 border-bottom bg-white sticky-top z-0">
+				<div
+					className="d-flex align-items-center justify-content-between px-0 pt-2 border-bottom bg-white sticky-top-md"
+					style={{ zIndex: 10 }}
+				>
 					<div className="d-flex w-100">
 						<Button
 							variant="link"
