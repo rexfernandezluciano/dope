@@ -335,11 +335,40 @@ const HomePage = () => {
 
 	const startLiveStream = async () => {
 		try {
-			// Request camera and microphone permissions
-			await navigator.mediaDevices.getUserMedia({ 
-				video: true, 
-				audio: true 
-			});
+			// Check if browser supports getUserMedia
+			if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+				throw new Error('Camera access is not supported in this browser');
+			}
+
+			// Test camera and microphone permissions first
+			let testStream;
+			try {
+				testStream = await navigator.mediaDevices.getUserMedia({ 
+					video: {
+						width: { ideal: 1280 },
+						height: { ideal: 720 },
+						frameRate: { ideal: 30 }
+					}, 
+					audio: {
+						echoCancellation: true,
+						noiseSuppression: true,
+						autoGainControl: true
+					}
+				});
+			} catch (permissionError) {
+				if (permissionError.name === 'NotAllowedError') {
+					throw new Error('Camera and microphone access denied. Please click "Allow" when prompted for permissions.');
+				} else if (permissionError.name === 'NotFoundError') {
+					throw new Error('No camera or microphone found. Please connect a camera/microphone and try again.');
+				} else if (permissionError.name === 'NotReadableError') {
+					throw new Error('Camera is being used by another application. Please close other apps and try again.');
+				} else {
+					throw new Error(`Failed to access camera: ${permissionError.message}`);
+				}
+			}
+
+			// Stop the test stream immediately
+			testStream.getTracks().forEach(track => track.stop());
 
 			// Create Agora client
 			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
@@ -375,7 +404,7 @@ const HomePage = () => {
 
 		} catch (error) {
 			console.error('Error starting live stream:', error);
-			setError('Failed to start live stream. Please check camera permissions.');
+			setError(error.message || 'Failed to start live stream. Please check camera permissions.');
 
 			// Clean up on error
 			setIsStreaming(false);

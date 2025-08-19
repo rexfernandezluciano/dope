@@ -87,13 +87,42 @@ const LiveStudioModal = ({
 		try {
 			setIsInitializing(true);
 			
-			// Request permissions first
-			await navigator.mediaDevices.getUserMedia({ 
-				video: true, 
-				audio: true 
-			});
+			// Check if browser supports getUserMedia
+			if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+				throw new Error('Camera access is not supported in this browser');
+			}
+
+			// Request permissions with better error handling
+			let stream;
+			try {
+				stream = await navigator.mediaDevices.getUserMedia({ 
+					video: {
+						width: { ideal: 1280 },
+						height: { ideal: 720 },
+						frameRate: { ideal: 30 }
+					}, 
+					audio: {
+						echoCancellation: true,
+						noiseSuppression: true,
+						autoGainControl: true
+					}
+				});
+			} catch (permissionError) {
+				if (permissionError.name === 'NotAllowedError') {
+					throw new Error('Camera and microphone access denied. Please allow permissions and try again.');
+				} else if (permissionError.name === 'NotFoundError') {
+					throw new Error('No camera or microphone found. Please connect a camera/microphone and try again.');
+				} else if (permissionError.name === 'NotReadableError') {
+					throw new Error('Camera is being used by another application. Please close other apps and try again.');
+				} else {
+					throw new Error(`Failed to access camera: ${permissionError.message}`);
+				}
+			}
+
+			// Stop the test stream immediately since we'll use Agora tracks
+			stream.getTracks().forEach(track => track.stop());
 			
-			// Create video track for preview
+			// Create Agora video track for preview
 			const videoTrack = await AgoraRTC.createCameraVideoTrack({
 				optimizationMode: 'detail',
 				encoderConfig: {
@@ -118,8 +147,9 @@ const LiveStudioModal = ({
 			setLocalAudioTrack(audioTrack);
 		} catch (error) {
 			console.error('Failed to initialize preview:', error);
-			// Show user-friendly error
-			alert('Failed to access camera. Please check permissions and try again.');
+			// Show user-friendly error with specific guidance
+			alert(error.message || 'Failed to access camera. Please check permissions and try again.');
+			onHide(); // Close modal on error
 		} finally {
 			setIsInitializing(false);
 		}
