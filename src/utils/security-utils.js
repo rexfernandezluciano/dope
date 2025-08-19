@@ -25,34 +25,6 @@ export const sanitizeHTML = (html) => {
 		.trim();
 };
 
-// Rate limiting helper
-export const createRateLimiter = (maxRequests = 10, windowMs = 60000) => {
-	const requests = new Map();
-	
-	return (key) => {
-		const now = Date.now();
-		const windowStart = now - windowMs;
-		
-		if (!requests.has(key)) {
-			requests.set(key, []);
-		}
-		
-		const userRequests = requests.get(key);
-		
-		// Remove old requests outside the window
-		const validRequests = userRequests.filter(time => time > windowStart);
-		
-		if (validRequests.length >= maxRequests) {
-			throw new Error('Rate limit exceeded. Please try again later.');
-		}
-		
-		validRequests.push(now);
-		requests.set(key, validRequests);
-		
-		return true;
-	};
-};
-
 // CSRF token generator
 export const generateCSRFToken = () => {
 	const array = new Uint32Array(4);

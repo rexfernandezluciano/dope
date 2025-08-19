@@ -1,13 +1,9 @@
 import {
 	sanitizeHTML,
-	createRateLimiter,
 	generateCSRFToken,
 	ValidationPatterns,
 } from "./security-utils";
 import { addAppCheckHeaders } from "./app-check-utils";
-// Rate limiter for API requests
-const apiRateLimiter = createRateLimiter(50, 60000); // 50 requests per minute
-const authRateLimiter = createRateLimiter(5, 300000); // 5 auth attempts per 5 minutes
 
 /**
  * Security middleware for API requests
@@ -15,14 +11,6 @@ const authRateLimiter = createRateLimiter(5, 300000); // 5 auth attempts per 5 m
 export class SecurityMiddleware {
 	static async secureApiRequest(url, options = {}) {
 		try {
-			// Rate limiting
-			const userId = this.getUserId();
-			if (url.includes("/auth/")) {
-				authRateLimiter(userId || "anonymous");
-			} else {
-				apiRateLimiter(userId || "anonymous");
-			}
-
 			// Add security headers
 			const secureHeaders = await addAppCheckHeaders(options.headers || {});
 
