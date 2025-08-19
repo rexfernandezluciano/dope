@@ -1,7 +1,7 @@
 
 /** @format */
 
-import { authAPI, userAPI } from '../config/ApiConfig';
+import { authAPI, userAPI, getAuthToken } from '../config/ApiConfig';
 
 /**
  * Get current authenticated user
@@ -10,8 +10,7 @@ import { authAPI, userAPI } from '../config/ApiConfig';
 export const getUser = async () => {
 	try {
 		// Import getAuthToken from ApiConfig to avoid circular dependencies
-		const { getAuthToken } = await import('../config/ApiConfig');
-		const token = getAuthToken();
+		const token = await getAuthToken();
 		if (!token) return null;
 
 		const response = await authAPI.getCurrentUser();
