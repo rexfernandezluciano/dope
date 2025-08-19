@@ -291,11 +291,18 @@ const NavigationView = ({ children }) => {
 						{/* Mobile Search Icon */}
 						<Button
 							variant="link"
-							className="p-0 me-1"
+							className="p-0 me-2"
 							onClick={() => navigate("/search")}
 						>
 							<Search size={24} className="text-primary" />
 						</Button>
+
+						{/* Mobile Notification Icon */}
+						<NotificationsDropdown
+							notifications={notifications}
+							unreadCount={unreadCount}
+							user={user}
+						/>
 
 						<Navbar.Offcanvas
 							id="offcanvasNavbar"
