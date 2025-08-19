@@ -12,18 +12,6 @@
 		<meta
 			name="keywords"
 			content="DOPE Network, social media, community, social networking, microblogging, posts, friends"
-
-  <script>
-    // Disable React error overlay
-    if (typeof window !== 'undefined') {
-      window.__REACT_ERROR_OVERLAY_GLOBAL_HOOK__ = {
-        isFiberMounted: () => false,
-        onCommitFiberRoot: () => {},
-        onCommitFiberUnmount: () => {},
-      };
-    }
-  </script>
-
 		/>
 		<meta name="author" content="DOPE Network Team" />
 
@@ -66,15 +54,36 @@
 			href="%PUBLIC_URL%/logo192.png"
 		/>
 		<link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-		<script src="//cdn.jsdelivr.net/npm/eruda"></script>
 		<script>
-			const search = new URLSearchParams(window.location.search);
-			if (search.get("debug") === "true") eruda.init();
+			// Completely disable React error overlay
+			if (typeof window !== 'undefined') {
+				window.__REACT_ERROR_OVERLAY_GLOBAL_HOOK__ = {
+					isFiberMounted: () => false,
+					onCommitFiberRoot: () => {},
+					onCommitFiberUnmount: () => {},
+				};
+
+				// Additional overlay disabling
+				window.__webpack_require__ = window.__webpack_require__ || {};
+				if (window.__webpack_require__.cache) {
+					Object.keys(window.__webpack_require__.cache).forEach(key => {
+						if (key.includes('react-error-overlay') || key.includes('react-dev-utils')) {
+							delete window.__webpack_require__.cache[key];
+						}
+					});
+				}
+			}
 		</script>
-		<script
-			src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
-			defer
-		></script>
+		<script>
+			// Only load Eruda if explicitly requested with debug=true
+			const search = new URLSearchParams(window.location.search);
+			if (search.get("debug") === "true") {
+				const script = document.createElement('script');
+				script.src = '//cdn.jsdelivr.net/npm/eruda';
+				script.onload = () => eruda.init();
+				document.head.appendChild(script);
+			}
+		</script>
 		<script>
 			window.OneSignalDeferred = window.OneSignalDeferred || [];
 			OneSignalDeferred.push(async function (OneSignal) {

@@ -16,24 +16,56 @@ import { setupCSP } from "./utils/security-utils";
 import "animate.css";
 import "./assets/css/app.css";
 
-// Disable React error overlay
-if (process.env.NODE_ENV === 'development') {
-  const originalError = console.error;
-  console.error = (...args) => {
-    if (typeof args[0] === 'string' && args[0].includes('Warning:')) {
-      return;
-    }
-    originalError(...args);
+// Disable React error overlay completely
+if (typeof window !== 'undefined') {
+  // Override error overlay hooks
+  window.__REACT_ERROR_OVERLAY_GLOBAL_HOOK__ = {
+    isFiberMounted: () => false,
+    onCommitFiberRoot: () => {},
+    onCommitFiberUnmount: () => {},
   };
-  
-  // Hide error overlay
+
+  // Suppress all error overlays and popups
   window.addEventListener('error', (e) => {
+    e.preventDefault();
     e.stopImmediatePropagation();
-  });
+    return false;
+  }, true);
   
   window.addEventListener('unhandledrejection', (e) => {
+    e.preventDefault();
     e.stopImmediatePropagation();
-  });
+    return false;
+  }, true);
+
+  // Override console methods to hide warnings in development
+  if (process.env.NODE_ENV === 'development') {
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    
+    console.error = (...args) => {
+      const message = args[0];
+      if (typeof message === 'string' && (
+        message.includes('Warning:') ||
+        message.includes('React Error Overlay') ||
+        message.includes('webpack-dev-server')
+      )) {
+        return;
+      }
+      originalError(...args);
+    };
+    
+    console.warn = (...args) => {
+      const message = args[0];
+      if (typeof message === 'string' && (
+        message.includes('Warning:') ||
+        message.includes('React Error Overlay')
+      )) {
+        return;
+      }
+      originalWarn(...args);
+    };
+  }
 }
 
 // Setup Content Security Policy
