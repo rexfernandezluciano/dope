@@ -105,7 +105,7 @@ const AnalyticsPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [user?.username, user?.followersCount, user?.followingCount]);
+	}, [user?.username, user?.stats.followers, user?.stats.followings]);
 
 	useEffect(() => {
 		if (user?.uid && user?.username) {

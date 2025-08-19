@@ -1,7 +1,12 @@
 /** @format */
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, useLoaderData, Link } from "react-router-dom";
+import {
+	useNavigate,
+	useLocation,
+	useLoaderData,
+	Link,
+} from "react-router-dom";
 import NProgress from "nprogress";
 import {
 	Navbar,
@@ -25,16 +30,20 @@ import {
 	BarChart,
 } from "react-bootstrap-icons";
 
-
 import { authAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../utils/app-utils";
-import { initializeNotifications, requestNotificationPermission, setupNotificationListener, getUnreadNotificationCount } from "../../utils/messaging-utils";
+import {
+	initializeNotifications,
+	requestNotificationPermission,
+	setupNotificationListener,
+	getUnreadNotificationCount,
+} from "../../utils/messaging-utils";
 import { getUser } from "../../utils/auth-utils";
 
 import logo from "../../assets/images/dope.png";
 import dopeImage from "../../assets/images/dope.png";
 import AlertDialog from "../dialogs/AlertDialog";
-import NotificationsDropdown from '../NotificationsDropdown';
+import NotificationsDropdown from "../NotificationsDropdown";
 
 const NavigationView = ({ children }) => {
 	const navigate = useNavigate();
@@ -49,7 +58,6 @@ const NavigationView = ({ children }) => {
 	const [user, setUser] = useState(null);
 	const [notifications, setNotifications] = useState([]);
 	const [unreadCount, setUnreadCount] = useState(0);
-
 
 	// Handle NProgress for all navigation including browser back/forward
 	useEffect(() => {
@@ -78,13 +86,18 @@ const NavigationView = ({ children }) => {
 						await initializeNotifications(userData.uid);
 
 						// Setup real-time notification listener
-						const unsubscribe = setupNotificationListener(userData.uid, (newNotifications) => {
-							setNotifications(newNotifications);
-							setUnreadCount(newNotifications.length);
-						});
+						const unsubscribe = setupNotificationListener(
+							userData.uid,
+							(newNotifications) => {
+								setNotifications(newNotifications);
+								setUnreadCount(newNotifications.length);
+							},
+						);
 
 						// Get initial unread count
-						const initialUnreadCount = await getUnreadNotificationCount(userData.uid);
+						const initialUnreadCount = await getUnreadNotificationCount(
+							userData.uid,
+						);
 						setUnreadCount(initialUnreadCount);
 
 						// Cleanup listener on unmount
@@ -93,15 +106,15 @@ const NavigationView = ({ children }) => {
 						};
 					}
 				} catch (error) {
-					console.error('Error initializing user:', error);
+					console.error("Error initializing user:", error);
 				}
 			};
 			initializeUser();
 		}
 
 		// Check current notification permission
-		if ('Notification' in window) {
-			setNotificationsEnabled(Notification.permission === 'granted');
+		if ("Notification" in window) {
+			setNotificationsEnabled(Notification.permission === "granted");
 		}
 
 		return () => {
@@ -110,7 +123,6 @@ const NavigationView = ({ children }) => {
 		};
 	}, [location, loaderUserData]); // Dependency on loaderUserData
 
-
 	// Effect to setup notification listener if user is available from loader
 	useEffect(() => {
 		if (loaderUserData && loaderUserData.uid) {
@@ -118,15 +130,20 @@ const NavigationView = ({ children }) => {
 			initializeNotifications(loaderUserData.uid);
 
 			// Setup real-time notification listener
-			const unsubscribe = setupNotificationListener(loaderUserData.uid, (newNotifications) => {
-				setNotifications(newNotifications);
-				setUnreadCount(newNotifications.length);
-			});
+			const unsubscribe = setupNotificationListener(
+				loaderUserData.uid,
+				(newNotifications) => {
+					setNotifications(newNotifications);
+					setUnreadCount(newNotifications.length);
+				},
+			);
 
 			// Get initial unread count
-			getUnreadNotificationCount(loaderUserData.uid).then(initialUnreadCount => {
-				setUnreadCount(initialUnreadCount);
-			});
+			getUnreadNotificationCount(loaderUserData.uid).then(
+				(initialUnreadCount) => {
+					setUnreadCount(initialUnreadCount);
+				},
+			);
 
 			return () => {
 				if (unsubscribe) unsubscribe();
@@ -139,7 +156,6 @@ const NavigationView = ({ children }) => {
 		// Replace with actual admin check logic if needed
 		console.log(`Checking admin status for ${userId}`);
 	};
-
 
 	useEffect(() => {
 		if (user && user.uid) {
@@ -154,23 +170,27 @@ const NavigationView = ({ children }) => {
 			loadNotificationCount();
 
 			// Setup real-time notification listener
-			const unsubscribe = setupNotificationListener(user.uid, (newNotifications) => {
-				setNotifications(newNotifications);
-				setUnreadCount(newNotifications.length);
+			const unsubscribe = setupNotificationListener(
+				user.uid,
+				(newNotifications) => {
+					setNotifications(newNotifications);
+					setUnreadCount(newNotifications.length);
 
-				// Play notification sound for new notifications (optional)
-				if (newNotifications.length > 0) {
-					// You can add a notification sound here
-					console.log(`${newNotifications.length} new notifications received`);
-				}
-			});
+					// Play notification sound for new notifications (optional)
+					if (newNotifications.length > 0) {
+						// You can add a notification sound here
+						console.log(
+							`${newNotifications.length} new notifications received`,
+						);
+					}
+				},
+			);
 
 			return () => {
 				if (unsubscribe) unsubscribe();
 			};
 		}
 	}, [user]);
-
 
 	const handleLogout = () => {
 		setShowLogoutDialog(true);
@@ -300,22 +320,29 @@ const NavigationView = ({ children }) => {
 										height={70}
 									/>
 									<h6 className="mt-2">{user?.name}</h6>
-									<small className="text-muted">@{user?.username}
-									{((user?.membership?.subscription || user?.subscription) && 
-									  (user?.membership?.subscription || user?.subscription) !== "free") && (
-										<span
-											className={`ms-1 badge ${
-												(user?.membership?.subscription || user?.subscription) === "premium"
-													? "bg-warning text-dark"
-													: (user?.membership?.subscription || user?.subscription) === "pro"
-														? "bg-primary"
-														: "bg-secondary"
-											}`}
-											style={{ fontSize: "0.7rem" }}
-										>
-											{(user?.membership?.subscription || user?.subscription).toUpperCase()}
-										</span>
-									)}</small>
+									<small className="text-muted">
+										@{user?.username}
+										{(user?.membership?.subscription || user?.subscription) &&
+											(user?.membership?.subscription || user?.subscription) !==
+												"free" && (
+												<span
+													className={`ms-1 badge ${
+														(user?.membership?.subscription ||
+															user?.subscription) === "premium"
+															? "bg-warning text-dark"
+															: (user?.membership?.subscription ||
+																		user?.subscription) === "pro"
+																? "bg-primary"
+																: "bg-secondary"
+													}`}
+													style={{ fontSize: "0.7rem" }}
+												>
+													{(
+														user?.membership?.subscription || user?.subscription
+													).toUpperCase()}
+												</span>
+											)}
+									</small>
 								</div>
 								<Nav className="flex-column">
 									{menuItems.map((item, idx) => (
@@ -323,7 +350,7 @@ const NavigationView = ({ children }) => {
 											key={idx}
 											to={item.href}
 											className={navItemClass(item.href)}
-											style={{ textDecoration: 'none' }}
+											style={{ textDecoration: "none" }}
 											onClick={() => handleNavigate(item.href)}
 										>
 											{item.icon}
@@ -350,23 +377,27 @@ const NavigationView = ({ children }) => {
 			<div className="d-none d-md-block">
 				<Navbar expand={false} className="bg-white border-bottom sticky-top">
 					{/* Live Broadcasting Top Bar */}
-					{window.location.pathname === '/' && localStorage.getItem('isCurrentlyBroadcasting') === 'true' && (
-						<div className="w-100 bg-danger text-white text-center py-1" style={{ fontSize: '0.875rem' }}>
-							<span
-								style={{
-									width: "8px",
-									height: "8px",
-									borderRadius: "50%",
-									backgroundColor: "#fff",
-									display: "inline-block",
-									marginRight: "6px",
-									animation: "pulse 1.5s infinite"
-								}}
-							></span>
-							🔴 LIVE BROADCASTING IN PROGRESS
-						</div>
-					)}
-					<Container>
+					{window.location.pathname === "/" &&
+						localStorage.getItem("isCurrentlyBroadcasting") === "true" && (
+							<div
+								className="w-100 bg-danger text-white text-center py-1"
+								style={{ fontSize: "0.875rem" }}
+							>
+								<span
+									style={{
+										width: "8px",
+										height: "8px",
+										borderRadius: "50%",
+										backgroundColor: "#fff",
+										display: "inline-block",
+										marginRight: "6px",
+										animation: "pulse 1.5s infinite",
+									}}
+								></span>
+								🔴 LIVE BROADCASTING IN PROGRESS
+							</div>
+						)}
+					<Container fluid>
 						<Navbar.Brand as={Link} to="/" className="fw-bold fs-4">
 							<div
 								style={{
@@ -414,7 +445,7 @@ const NavigationView = ({ children }) => {
 
 						<div className="d-flex align-items-center">
 							{/* Notification Icon */}
-							<NotificationsDropdown 
+							<NotificationsDropdown
 								notifications={notifications}
 								unreadCount={unreadCount}
 								user={user}
@@ -500,30 +531,35 @@ const NavigationView = ({ children }) => {
 						<h5 className="text-center">{user?.name}</h5>
 						<p className="text-center text-muted small">
 							{user?.username}{" "}
-							{((user?.membership?.subscription || user?.subscription) && 
-							  (user?.membership?.subscription || user?.subscription) !== "free") && (
-								<span
-									className={`ms-1 badge ${
-										(user?.membership?.subscription || user?.subscription) === "premium"
-											? "bg-warning text-dark"
-											: (user?.membership?.subscription || user?.subscription) === "pro"
-												? "bg-primary"
-												: "bg-secondary"
-									}`}
-									style={{ fontSize: "0.7rem" }}
-								>
-									{(user?.membership?.subscription || user?.subscription).toUpperCase()}
-								</span>
-							)}
+							{(user?.membership?.subscription || user?.subscription) &&
+								(user?.membership?.subscription || user?.subscription) !==
+									"free" && (
+									<span
+										className={`ms-1 badge ${
+											(user?.membership?.subscription || user?.subscription) ===
+											"premium"
+												? "bg-warning text-dark"
+												: (user?.membership?.subscription ||
+															user?.subscription) === "pro"
+													? "bg-primary"
+													: "bg-secondary"
+										}`}
+										style={{ fontSize: "0.7rem" }}
+									>
+										{(
+											user?.membership?.subscription || user?.subscription
+										).toUpperCase()}
+									</span>
+								)}
 						</p>
 					</Container>
-					<Nav className="flex-column gap-1">
+					<Nav className="flex-column gap-1 pe-3">
 						{menuItems.map((item, idx) => (
 							<Link
 								key={idx}
 								to={item.href}
 								className={navItemClass(item.href)}
-								style={{ textDecoration: 'none' }}
+								style={{ textDecoration: "none" }}
 							>
 								{item.icon}
 								{item.label}
@@ -531,7 +567,7 @@ const NavigationView = ({ children }) => {
 						))}
 						<Nav.Link
 							onClick={handleLogout}
-							className="nav-link text-danger mt-3 px-3 py-2 rounded-pill"
+							className="nav-link text-danger px-3 py-2 rounded-pill"
 							style={{ cursor: "pointer" }}
 						>
 							<BoxArrowRight size={18} className="me-2" />
