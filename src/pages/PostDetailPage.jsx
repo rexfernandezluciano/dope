@@ -197,10 +197,7 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const handleCommentOptions = (comment) => {
-		setSelectedComment(comment);
-		setShowCommentOptionsModal(true);
-	};
+	
 
 	const handleCopyComment = () => {
 		if (selectedComment) {

@@ -86,7 +86,7 @@ const LiveStudioModal = ({
 		return () => {
 			cleanup();
 		};
-	}, [show]);
+	}, [show, isStreaming]);
 
 	// Simulate live comments when streaming (replace with real socket connection)
 	useEffect(() => {

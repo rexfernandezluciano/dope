@@ -37,7 +37,7 @@ const SearchPage = () => {
 	const [comments, setComments] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
-	
+
 
 	// Get current user from localStorage or context
 	const {user: currentUser} = useLoaderData();
@@ -64,21 +64,21 @@ const SearchPage = () => {
 	}, [searchParams, searchQuery, activeTab]);
 
 
-	const performSearch = async (searchQuery = searchQuery, tab = activeTab) => {
-		if (!searchQuery.trim()) return;
+	const performSearch = useCallback(async (searchQueryParam = searchQuery, tab = activeTab) => {
+		if (!searchQueryParam.trim()) return;
 
 		try {
 			setLoading(true);
 			setError("");
 
 			if (tab === "posts") {
-				const response = await postAPI.searchPosts(searchQuery);
+				const response = await postAPI.searchPosts(searchQueryParam);
 				setPosts(response.posts || []);
 			} else if (tab === "users") {
-				const response = await userAPI.searchUsers(searchQuery);
+				const response = await userAPI.searchUsers(searchQueryParam);
 				setUsers(response.users || []);
 			} else if (tab === "comments") {
-				const response = await commentAPI.searchComments(searchQuery);
+				const response = await commentAPI.searchComments(searchQueryParam);
 				setComments(response.comments || []);
 			}
 		} catch (err) {
@@ -86,7 +86,7 @@ const SearchPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [searchQuery, activeTab]);
 
 	const handleSearch = useCallback(() => {
 		if (!searchQuery.trim()) {

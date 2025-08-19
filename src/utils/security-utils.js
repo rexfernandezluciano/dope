@@ -50,7 +50,7 @@ export const ValidationPatterns = {
 	EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
 	USERNAME: /^[a-zA-Z0-9_-]{3,30}$/,
 	PASSWORD: /^.{8,128}$/,
-	URL: /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/
+	URL: /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/
 };
 
 // Validate file uploads

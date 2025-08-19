@@ -6,7 +6,7 @@ import { useLoaderData } from "react-router-dom";
 import { Container, Card, Form, Button, Alert, Modal } from "react-bootstrap";
 import { Person, Shield, Trash } from "react-bootstrap-icons";
 
-import { userAPI, authAPI } from "../../config/ApiConfig";
+import { userAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../config/ApiConfig";
 
 const AccountSettingsPage = () => {
