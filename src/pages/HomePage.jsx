@@ -353,6 +353,24 @@ const HomePage = () => {
 				}
 			});
 
+			const startAgoraLiveStream = async (streamKey) => {
+		try {
+			// Create Agora client
+			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
+			await client.setClientRole('host');
+
+			// Create media tracks
+			const videoTrack = await AgoraRTC.createCameraVideoTrack({
+				optimizationMode: 'detail',
+				encoderConfig: {
+					width: 1280,
+					height: 720,
+					frameRate: 30,
+					bitrateMin: 1000,
+					bitrateMax: 3000,
+				}
+			});
+
 			const audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
 				encoderConfig: 'high_quality_stereo'
 			});
@@ -361,12 +379,6 @@ const HomePage = () => {
 			if (videoRef.current) {
 				videoTrack.play(videoRef.current);
 			}
-
-			// Generate stream key and URL
-			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-			const streamUrl = `${window.location.origin}/live/${streamKey}`;
-			setLiveVideoUrl(streamUrl);
-			streamUrlRef.current = streamUrl;
 
 			// Join channel and publish tracks
 			const agoraConfig = {
@@ -388,24 +400,70 @@ const HomePage = () => {
 			// Store references
 			setMediaStream(client);
 			setMediaRecorder({ videoTrack, audioTrack });
-			setIsStreaming(true);
+
+			return { success: true };
+		} catch (error) {
+			console.error('Agora streaming error:', error);
+			throw error;
+		}
+	};
 
 		} catch (error) {
 			console.error('Error starting Agora live stream:', error);
 			setError('Failed to start live stream. Please check camera permissions and Agora configuration.');
+			
+			// Clean up on error
+			setIsStreaming(false);
+			setIsLive(false);
+			setLiveVideoUrl("");
 		}
 	};
 
-	const handleStartLiveStream = (streamData) => {
-		setIsLive(true);
-		setIsStreaming(true);
-		setStreamTitle(streamData.title);
-		setPostText(streamData.description);
-		setLiveVideoUrl(`live-stream-${Date.now()}`);
-		setShowLiveStudioModal(false);
+	const handleStartLiveStream = async (streamData) => {
+		try {
+			// Validate required fields
+			if (!streamData.title || !streamData.title.trim()) {
+				throw new Error('Stream title is required');
+			}
 
-		// Handle the actual streaming logic here
-		console.log('Starting live stream with data:', streamData);
+			// Generate unique stream key
+			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+			const streamUrl = `${window.location.origin}/live/${streamKey}`;
+
+			// Prepare the live stream post payload
+			const postPayload = {
+				content: streamData.description || streamData.title,
+				postType: 'live_video',
+				liveVideoUrl: streamUrl,
+				isLiveStreaming: true,
+				streamTitle: streamData.title,
+				privacy: streamData.privacy || 'public',
+				streamKey: streamKey
+			};
+
+			// Create the live stream post using the API
+			const { postAPI } = await import('../config/ApiConfig');
+			const response = await postAPI.createPost(postPayload);
+
+			if (response.success || response.id) {
+				setIsLive(true);
+				setIsStreaming(true);
+				setStreamTitle(streamData.title);
+				setPostText(streamData.description || streamData.title);
+				setLiveVideoUrl(streamUrl);
+				setShowLiveStudioModal(false);
+
+				// Start Agora stream
+				await startAgoraLiveStream(streamKey);
+
+				console.log('Live stream started successfully:', response);
+			} else {
+				throw new Error('Failed to create live stream post');
+			}
+		} catch (error) {
+			console.error('Error starting live stream:', error);
+			setError(`Failed to start live stream: ${error.message}`);
+		}
 	};
 
 	const handleStopLiveStream = () => {

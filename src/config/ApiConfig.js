@@ -267,10 +267,30 @@ const postAPI = {
 			method: 'GET'
 		}),
 
-	createPost: (data) => apiRequest('/posts', {
-		method: 'POST',
-		body: data
-	}),
+	createPost: (data) => {
+		// Validate required fields for live stream posts
+		if (data.postType === 'live_video') {
+			if (!data.liveVideoUrl) {
+				throw new Error('Live video URL is required for live stream posts');
+			}
+			if (!data.streamTitle) {
+				throw new Error('Stream title is required for live stream posts');
+			}
+		}
+
+		// Sanitize content if present
+		if (data.content) {
+			data.content = sanitizeInput(data.content);
+		}
+		if (data.streamTitle) {
+			data.streamTitle = sanitizeInput(data.streamTitle);
+		}
+
+		return apiRequest('/posts', {
+			method: 'POST',
+			body: data
+		});
+	},
 	updatePost: (id, data) => apiRequest(`/posts/${id}`, {
 		method: 'PUT',
 		body: data
