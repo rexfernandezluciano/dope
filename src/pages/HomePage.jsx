@@ -985,53 +985,19 @@ const HomePage = () => {
 								<p>Be the first to share something!</p>
 							</div>
 						) : (
-							filteredPosts.map((post, index) => {
-								// Track view for posts that come into view
-								useEffect(() => {
-									const trackView = async () => {
-										try {
-											await postAPI.trackView(post.id);
-										} catch (error) {
-											console.error('Failed to track view for post:', post.id, error);
-										}
-									};
-
-									// Use Intersection Observer to track when post comes into view
-									const observer = new IntersectionObserver(
-										(entries) => {
-											entries.forEach((entry) => {
-												if (entry.isIntersecting) {
-													trackView();
-													observer.unobserve(entry.target);
-												}
-											});
-										},
-										{ threshold: 0.5 } // Trigger when 50% of post is visible
-									);
-
-									const postElement = document.querySelector(`[data-post-id="${post.id}"]`);
-									if (postElement) {
-										observer.observe(postElement);
-									}
-
-									return () => observer.disconnect();
-								}, [post.id]);
-
-								return (
-									<div key={post.id} data-post-id={post.id}>
-										<PostCard
-											post={post}
-											currentUser={user} // Use the user state here
-											onLike={handleLikePost}
-											onShare={() => handleSharePost(post.id)} // Use reusable sharePost utility
-											onDeletePost={handleDeletePost}
-											onPostClick={(e) => handleImageClick(post.images, post.id, e)} // Modified to pass images and id
-											showComments={post.comments && post.comments.length > 0}
-											comments={post.comments || []}
-										/>
-									</div>
-								);
-							})
+							filteredPosts.map((post, index) => (
+								<PostCard
+									key={post.id}
+									post={post}
+									currentUser={user}
+									onLike={handleLikePost}
+									onShare={() => handleSharePost(post.id)}
+									onDeletePost={handleDeletePost}
+									onPostClick={(e) => handleImageClick(post.images, post.id, e)}
+									showComments={post.comments && post.comments.length > 0}
+									comments={post.comments || []}
+								/>
+							))
 						)}
 
 						{hasMore && (

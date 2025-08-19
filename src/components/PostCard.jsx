@@ -1,7 +1,6 @@
 /** @format */
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
 import {
 	Card,
 	Image,
@@ -51,6 +50,39 @@ const PostCard = ({
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
+	const cardRef = useRef(null);
+	const [viewTracked, setViewTracked] = useState(false);
+
+	// Track view when post comes into view
+	useEffect(() => {
+		if (viewTracked) return;
+
+		const trackView = async () => {
+			try {
+				await postAPI.trackView(post.id);
+				setViewTracked(true);
+			} catch (error) {
+				console.error('Failed to track view for post:', post.id, error);
+			}
+		};
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting && !viewTracked) {
+						trackView();
+					}
+				});
+			},
+			{ threshold: 0.5 }
+		);
+
+		if (cardRef.current) {
+			observer.observe(cardRef.current);
+		}
+
+		return () => observer.disconnect();
+	}, [post.id, viewTracked]);
 
 	const canComment = (post) => {
 		if (!currentUser) return false;
@@ -169,6 +201,7 @@ const PostCard = ({
 	return (
 		<>
 			<Card
+				ref={cardRef}
 				className="border-0 border-bottom rounded-0 mb-0 post-card"
 				style={{ cursor: "pointer" }}
 				onClick={handlePostClick}
