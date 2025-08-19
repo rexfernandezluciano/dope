@@ -68,7 +68,7 @@ const NotificationsDropdown = ({ notifications = [], unreadCount = 0, user }) =>
 	return (
 		<Dropdown align="end" onToggle={(isOpen) => {
 			if (isOpen) loadAllNotifications();
-		}}>
+		}} style={{ position: 'relative', zIndex: 1040 }}>
 			<Dropdown.Toggle variant="link" className="text-dark position-relative p-2 border-0 bg-transparent">
 				<Bell size={20} />
 				{unreadCount > 0 && (
@@ -83,7 +83,7 @@ const NotificationsDropdown = ({ notifications = [], unreadCount = 0, user }) =>
 				)}
 			</Dropdown.Toggle>
 
-			<Dropdown.Menu className="shadow-sm border-0" style={{ width: '350px', maxHeight: '400px', zIndex: 1030 }}>
+			<Dropdown.Menu className="shadow-sm border-0" style={{ width: '350px', maxHeight: '400px', zIndex: 9999, position: 'absolute' }}>
 				<div className="px-3 py-2 border-bottom">
 					<h6 className="mb-0 fw-bold">Notifications</h6>
 				</div>
