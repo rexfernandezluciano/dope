@@ -25,7 +25,7 @@ import {
 	Share,
 	People as Users,
 	Calendar3,
-	Target,
+	Bullseye as Target,
 	Eye,
 	FileText,
 	Activity,
