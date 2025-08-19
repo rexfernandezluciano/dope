@@ -346,8 +346,8 @@ const HomePage = () => {
 			// Use the tracks from LiveStudioModal
 			const { videoTrack, audioTrack } = streamData;
 
-			// Create Agora client for publishing
-			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
+			// Create Agora client for publishing with simpler codec
+			const client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' });
 			
 			// Add error handlers
 			client.on('connection-state-change', (curState, revState) => {
@@ -360,10 +360,10 @@ const HomePage = () => {
 
 			await client.setClientRole('host');
 
-			// Join channel and publish tracks
+			// Join channel and publish tracks with timeout
 			const agoraConfig = {
-				appId: '24ce08654e5c4232bac73ee7946ee769',
-				token: null, // Generate server-side for production
+				appId: process.env.REACT_APP_AGORA_APP_ID || '24ce08654e5c4232bac73ee7946ee769',
+				token: null,
 				channel: streamKey,
 				uid: null
 			};
@@ -376,12 +376,19 @@ const HomePage = () => {
 			});
 
 			try {
-				await client.join(
+				// Add timeout to join operation
+				const joinPromise = client.join(
 					agoraConfig.appId,
 					agoraConfig.channel,
 					agoraConfig.token,
 					agoraConfig.uid
 				);
+				
+				const timeoutPromise = new Promise((_, reject) => 
+					setTimeout(() => reject(new Error('Connection timeout')), 15000)
+				);
+				
+				await Promise.race([joinPromise, timeoutPromise]);
 				console.log('Successfully joined Agora channel');
 			} catch (joinError) {
 				console.error('Failed to join Agora channel:', joinError);
