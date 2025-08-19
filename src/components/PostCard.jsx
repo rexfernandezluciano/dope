@@ -133,9 +133,11 @@ const PostCard = ({
 	const handlePostClick = async (e) => {
 		// Don't navigate if clicking on interactive elements
 		const target = e.target;
-		const isButton = target.closest('button');
-		const isLink = target.closest('a');
-		const isModal = target.closest('.modal');
+		if (!target) return;
+		
+		const isButton = target.closest && target.closest('button');
+		const isLink = target.closest && target.closest('a');
+		const isModal = target.closest && target.closest('.modal');
 
 		if (isButton || isLink || isModal) {
 			return;
