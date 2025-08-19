@@ -140,34 +140,38 @@ const deleteCookie = (name, options = {}) => {
 
 const getAuthToken = () => {
 	try {
-		// Try secure cookie first, then fallback to storage for backward compatibility
-		const cookieToken = getCookie("authToken");
-		if (cookieToken) {
-			console.log("Auth token found in secure cookie");
-			return cookieToken;
+		const isProduction = process.env.NODE_ENV === "production";
+		const isReplit =
+			window.location.hostname.includes("replit") ||
+			window.location.hostname.includes("repl.co");
+
+		// In Replit development, prioritize sessionStorage
+		if (isReplit && !isProduction) {
+			const sessionToken = sessionStorage.getItem("authToken");
+			if (sessionToken) {
+				console.log("Auth token found in sessionStorage (Replit dev)");
+				return sessionToken;
+			}
+		} else {
+			// In production, try secure cookie first
+			const cookieToken = getCookie("authToken");
+			if (cookieToken) {
+				console.log("Auth token found in secure cookie");
+				return cookieToken;
+			}
 		}
 
-		// Fallback to storage (for backward compatibility)
+		// Fallback to any available storage
 		const sessionToken = sessionStorage.getItem("authToken");
 		const localToken = localStorage.getItem("authToken");
 		const storageToken = sessionToken || localToken;
 
 		if (storageToken) {
-			console.log("Auth token found in storage, migrating to secure cookie");
-			// Migrate to secure cookie and remove from storage
-			setAuthToken(storageToken);
-			//sessionStorage.removeItem("authToken");
-			//localStorage.removeItem("authToken");
+			console.log("Auth token found in fallback storage");
 			return storageToken;
 		}
 
-		console.warn("No auth token found in cookie or storage");
-		console.log("Available cookies:", document.cookie);
-		console.log(
-			"Session storage authToken:",
-			sessionStorage.getItem("authToken"),
-		);
-		console.log("Local storage authToken:", localStorage.getItem("authToken"));
+		console.warn("No auth token found in any storage");
 		return null;
 	} catch (e) {
 		console.error("Failed to get auth token:", e);
@@ -178,34 +182,36 @@ const getAuthToken = () => {
 const setAuthToken = (token, rememberMe = false) => {
 	try {
 		const isProduction = process.env.NODE_ENV === "production";
-		const isHttps = window.location.protocol === "https:";
 		const isReplit =
 			window.location.hostname.includes("replit") ||
 			window.location.hostname.includes("repl.co");
 
-		// Set secure cookie with appropriate expiration (in days)
+		console.log("Setting auth token - environment:", { isProduction, isReplit });
+
+		// For Replit development, use sessionStorage as primary
+		if (isReplit && !isProduction) {
+			sessionStorage.setItem("authToken", token);
+			console.log("Auth token stored in sessionStorage (Replit development)");
+			return;
+		}
+
+		// Try to set secure cookie for production
 		const expires = rememberMe ? 30 : 1; // 30 days or 1 day
 		const cookieOptions = {
 			expires,
-			secure: isProduction && isHttps && !isReplit, // Disable secure for Replit dev
-			sameSite: isReplit ? "None" : isProduction ? "Strict" : "Lax", // Use None for Replit
+			secure: isProduction,
+			sameSite: isProduction ? "Strict" : "Lax",
 		};
-
-		// For Replit development, use minimal restrictions
-		if (isReplit && !isProduction) {
-			delete cookieOptions.secure;
-			delete cookieOptions.sameSite;
-		}
 
 		setCookie("authToken", token, cookieOptions);
 
-		// Verify cookie was set, if not use sessionStorage as primary storage
+		// Verify cookie was set, if not use sessionStorage as fallback
 		setTimeout(() => {
 			const verification = getCookie("authToken");
 			if (!verification) {
-				console.warn("Cookie storage failed, using sessionStorage as primary");
+				console.warn("Cookie storage failed, using sessionStorage as fallback");
 				sessionStorage.setItem("authToken", token);
-				console.log("Auth token stored in sessionStorage (primary fallback)");
+				console.log("Auth token stored in sessionStorage (cookie fallback)");
 			} else {
 				console.log("Auth token stored in secure cookie successfully");
 				// Clean up any existing storage tokens only if cookie worked
@@ -214,13 +220,13 @@ const setAuthToken = (token, rememberMe = false) => {
 			}
 		}, 100);
 	} catch (e) {
-		console.error("Failed to store auth token in secure cookie:", e);
-		// Fallback to sessionStorage if cookie fails
+		console.error("Failed to store auth token:", e);
+		// Always fallback to sessionStorage
 		try {
 			sessionStorage.setItem("authToken", token);
 			console.log("Fallback: Auth token stored in sessionStorage");
 		} catch (storageError) {
-			console.error("Fallback storage also failed:", storageError);
+			console.error("All storage methods failed:", storageError);
 		}
 	}
 };
