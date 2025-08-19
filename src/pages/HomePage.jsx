@@ -900,7 +900,7 @@ const HomePage = () => {
 								/>
 								<div className="flex-grow-1">
 									<div className="d-flex align-items-center gap-1 mb-2">
-										<span className="fw-bold">{user?.displayName}</span>
+										<span className="fw-bold">{user?.name}</span>
 										{user?.hasBlueCheck && (
 											<CheckCircleFill className="text-primary" size={16} />
 										)}
@@ -1042,7 +1042,7 @@ const HomePage = () => {
 
 							<div className="flex-grow-1">
 								<div className="d-flex align-items-center gap-1 mb-2">
-									<span className="fw-bold">{user?.displayName}</span>
+									<span className="fw-bold">{user?.name}</span>
 									{user?.hasBlueCheck && (
 										<CheckCircleFill className="text-primary" size={16} />
 									)}

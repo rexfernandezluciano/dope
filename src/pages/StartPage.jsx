@@ -14,10 +14,10 @@ const StartPage = () => {
 	}, []);
 
 	return (
-		<Container fluid className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+		<Container fluid className="min-vh-100 p-0 d-flex align-items-center justify-content-center bg-white">
 			<Row className="w-100 justify-content-center">
 				<Col xs={12} md={8} lg={6} xl={4}>
-					<Card className="shadow-lg border-0">
+					<Card className="shadow-none border-0">
 						<Card.Body className="text-center p-5">
 							<Image
 								src={socialNetIllustration}
