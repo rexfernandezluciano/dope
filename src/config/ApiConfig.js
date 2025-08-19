@@ -120,7 +120,10 @@ const getAuthToken = () => {
 			return storageToken;
 		}
 
-		console.warn('No auth token found');
+		console.warn('No auth token found in cookie or storage');
+		console.log('Available cookies:', document.cookie);
+		console.log('Session storage authToken:', sessionStorage.getItem('authToken'));
+		console.log('Local storage authToken:', localStorage.getItem('authToken'));
 		return null;
 	} catch (e) {
 		console.error('Failed to get auth token:', e);

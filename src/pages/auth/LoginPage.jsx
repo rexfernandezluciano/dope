@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 
-import { authAPI } from "../../config/ApiConfig";
-import { setAuthToken, verifyUser } from "../../utils/app-utils";
+import { authAPI, setAuthToken } from "../../config/ApiConfig";
+import { verifyUser } from "../../utils/app-utils";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
 import {
 	initializeGoogleAuth,

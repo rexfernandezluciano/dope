@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { authAPI, userAPI } from '../config/ApiConfig';
@@ -159,63 +158,5 @@ export const getGravatar = (email) => {
 	return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=200`;
 };
 
-/**
- * Store authentication token
- * @param {string} token - JWT token
- */
-export const setAuthToken = (token) => {
-	try {
-		// Set secure cookie
-		const isSecure = window.location.protocol === 'https:';
-		document.cookie = `authToken=${token}; max-age=86400; path=/; ${isSecure ? 'secure; ' : ''}samesite=strict`;
-		
-		// Also store in session for compatibility
-		sessionStorage.setItem('authToken', token);
-		localStorage.setItem('authToken', token);
-		
-		console.log('Auth token stored in secure cookie');
-	} catch (e) {
-		console.error('Failed to store auth token');
-	}
-};
-
-/**
- * Remove authentication token
- */
-export const removeAuthToken = () => {
-	try {
-		// Remove secure cookie by setting expiration to past date
-		document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; samesite=strict';
-		
-		// Remove from storage
-		sessionStorage.removeItem('authToken');
-		localStorage.removeItem('authToken');
-		
-		console.log('Auth token removed from secure cookie');
-	} catch (e) {
-		console.error('Failed to remove auth token');
-	}
-};
-
-/**
- * Get authentication token
- * @returns {string|null} JWT token or null
- */
-export const getAuthToken = () => {
-	try {
-		// Check secure cookie first
-		const cookies = document.cookie.split(';');
-		for (let i = 0; i < cookies.length; i++) {
-			let cookie = cookies[i].trim();
-			if (cookie.startsWith('authToken=')) {
-				return cookie.substring('authToken='.length, cookie.length);
-			}
-		}
-
-		// Fallback to storage
-		return sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-	} catch (e) {
-		console.error('Failed to retrieve auth token');
-		return null;
-	}
-};
+// Token functions are now handled by ApiConfig.js - import them when needed
+// This avoids circular dependencies and ensures consistency
