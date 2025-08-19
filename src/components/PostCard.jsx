@@ -214,12 +214,7 @@ const PostCard = ({
 				ref={cardRef}
 				className="border-0 border-bottom rounded-0 mb-0 post-card"
 				style={{ cursor: "pointer" }}
-				onPointerDown={(e) => {
-					// Only handle left clicks (button 0) and touches
-					if (e.button === 0 || e.pointerType === 'touch') {
-						handlePostClickView(e);
-					}
-				}}
+				onClick={handlePostClickView}
 			>
 				<Card.Body className="px-3">
 					<div className="d-flex gap-2">
