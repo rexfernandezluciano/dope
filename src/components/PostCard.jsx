@@ -2,12 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-	Card,
-	Image,
-	Button,
-	Modal,
-} from "react-bootstrap";
+import { Card, Image, Button, Modal } from "react-bootstrap";
 import {
 	Heart,
 	HeartFill,
@@ -28,13 +23,9 @@ import {
 	formatTimeAgo,
 	deletePost as deletePostUtil,
 	sharePost,
-	handlePostClick as handlePostClickUtil,
+	handlePostClick,
 } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
-
-// Giphy imports temporarily removed due to module issues
-// import { GifIcon } from '@giphy/js-fetch-api';
-// import { Gif } from '@giphy/react-components';
 
 const PostCard = ({
 	post,
@@ -44,7 +35,6 @@ const PostCard = ({
 	onDeletePost,
 	showComments = false,
 	comments = [],
-	onPostClick,
 }) => {
 	const navigate = useNavigate();
 	const [showImageViewer, setShowImageViewer] = useState(false);
@@ -63,7 +53,7 @@ const PostCard = ({
 				await postAPI.trackView(post.id);
 				setViewTracked(true);
 			} catch (error) {
-				console.error('Failed to track view for post:', post.id, error);
+				console.error("Failed to track view for post:", post.id, error);
 			}
 		};
 
@@ -75,7 +65,7 @@ const PostCard = ({
 					}
 				});
 			},
-			{ threshold: 0.5 }
+			{ threshold: 0.5 },
 		);
 
 		if (cardRef.current) {
@@ -93,11 +83,11 @@ const PostCard = ({
 
 		// Check privacy settings
 		switch (post.privacy) {
-			case 'public':
+			case "public":
 				return true;
-			case 'private':
+			case "private":
 				return post.author.uid === currentUser.uid;
-			case 'followers':
+			case "followers":
 				// Check if current user follows the post author
 				return post.author.isFollowedByCurrentUser || false;
 			default:
@@ -107,11 +97,11 @@ const PostCard = ({
 
 	const getPrivacyIcon = (privacy) => {
 		switch (privacy) {
-			case 'public':
+			case "public":
 				return <Globe size={14} className="text-muted" />;
-			case 'private':
+			case "private":
 				return <Lock size={14} className="text-muted" />;
-			case 'followers':
+			case "followers":
 				return <PersonFill size={14} className="text-muted" />;
 			default:
 				return <Globe size={14} className="text-muted" />;
@@ -130,14 +120,14 @@ const PostCard = ({
 		setCurrentImageIndex(0);
 	};
 
-	const handlePostClick = async (e) => {
+	const handlePostClickView = async (e) => {
 		// Don't navigate if clicking on interactive elements
 		const target = e.target;
-		if (!target || typeof target.closest !== 'function') return;
-		
-		const isButton = target.closest('button');
-		const isLink = target.closest('a');
-		const isModal = target.closest('.modal');
+		if (!target || typeof target.closest !== "function") return;
+
+		const isButton = target.closest("button");
+		const isLink = target.closest("a");
+		const isModal = target.closest(".modal");
 
 		if (isButton || isLink || isModal) {
 			return;
@@ -147,10 +137,10 @@ const PostCard = ({
 		try {
 			await postAPI.trackView(post.id);
 		} catch (viewError) {
-			console.error('Failed to track view:', viewError);
+			console.error("Failed to track view:", viewError);
 		}
 
-		handlePostClickUtil(post.id, navigate);
+		handlePostClick(post.id, navigate);
 	};
 
 	const handleLike = (e) => {
@@ -189,7 +179,7 @@ const PostCard = ({
 	};
 
 	const handleLinkClick = (url) => {
-		window.open(url, '_blank', 'noopener,noreferrer');
+		window.open(url, "_blank", "noopener,noreferrer");
 	};
 
 	const openPostOptionsModal = (e) => {
@@ -207,20 +197,21 @@ const PostCard = ({
 				ref={cardRef}
 				className="border-0 border-bottom rounded-0 mb-0 post-card"
 				style={{ cursor: "pointer" }}
-				onClick={handlePostClick}
+				onClick={(e) => handlePostClickView(e)}
 			>
 				<Card.Body className="px-3">
 					<div className="d-flex gap-2">
 						<Image
-							src={
-								post.author.photoURL ||
-								"https://i.pravatar.cc/150?img=10"
-							}
+							src={post.author.photoURL || "https://i.pravatar.cc/150?img=10"}
 							alt="avatar"
 							roundedCircle
 							width="40"
 							height="40"
-							style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
+							style={{
+								objectFit: "cover",
+								minWidth: "40px",
+								minHeight: "40px",
+							}}
 						/>
 						<div className="flex-grow-1">
 							<div className="d-flex align-items-center justify-content-between">
@@ -266,7 +257,7 @@ const PostCard = ({
 									{parseTextContent(post.content, {
 										onHashtagClick: handleHashtagClick,
 										onMentionClick: handleMentionClick,
-										onLinkClick: handleLinkClick
+										onLinkClick: handleLinkClick,
 									})}
 								</div>
 							)}
@@ -391,7 +382,7 @@ const PostCard = ({
 															borderRadius: "50%",
 															backgroundColor: "#dc3545",
 															display: "inline-block",
-															animation: "pulse 1s infinite"
+															animation: "pulse 1s infinite",
 														}}
 													></span>
 													<span className="fw-bold text-danger">LIVE NOW</span>
@@ -400,7 +391,9 @@ const PostCard = ({
 												<Button
 													variant="outline-light"
 													size="sm"
-													onClick={() => window.open(post.liveVideoUrl, '_blank')}
+													onClick={() =>
+														window.open(post.liveVideoUrl, "_blank")
+													}
 												>
 													Watch Live Stream
 												</Button>
@@ -448,7 +441,7 @@ const PostCard = ({
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn ${!canComment(post) ? 'opacity-50' : 'text-muted'}`}
+									className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn ${!canComment(post) ? "opacity-50" : "text-muted"}`}
 									style={{
 										transition: "all 0.2s",
 										minWidth: "40px",
@@ -456,7 +449,11 @@ const PostCard = ({
 									}}
 									onClick={handleComment}
 									disabled={!canComment(post)}
-									title={!canComment(post) ? "You cannot comment on this post" : "Comment"}
+									title={
+										!canComment(post)
+											? "You cannot comment on this post"
+											: "Comment"
+									}
 									onMouseEnter={(e) => {
 										if (canComment(post)) {
 											e.target.closest(".action-btn").style.backgroundColor =
@@ -557,15 +554,25 @@ const PostCard = ({
 							{showComments && comments && comments.length > 0 && (
 								<div className="mt-3 pt-2 border-top comment-thread">
 									{comments.map((comment, index) => (
-										<div key={comment.id} className={`comment-item ${index === comments.length - 1 ? 'mb-0' : 'mb-2'}`}>
+										<div
+											key={comment.id}
+											className={`comment-item ${index === comments.length - 1 ? "mb-0" : "mb-2"}`}
+										>
 											<Image
-												src={comment.author.photoURL || "https://i.pravatar.cc/150?img=10"}
+												src={
+													comment.author.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
 												alt="avatar"
 												roundedCircle
 												width="32"
 												height="32"
 												className="comment-avatar"
-												style={{ objectFit: "cover", minWidth: "32px", minHeight: "32px" }}
+												style={{
+													objectFit: "cover",
+													minWidth: "32px",
+													minHeight: "32px",
+												}}
 											/>
 											<div className="comment-content">
 												<div className="d-flex align-items-center gap-1">
@@ -580,7 +587,10 @@ const PostCard = ({
 														{comment.author.name}
 													</span>
 													{comment.author.hasBlueCheck && (
-														<CheckCircleFill className="text-primary" size={12} />
+														<CheckCircleFill
+															className="text-primary"
+															size={12}
+														/>
 													)}
 													<span className="text-muted small">·</span>
 													<span className="text-muted small">
@@ -591,7 +601,7 @@ const PostCard = ({
 													{parseTextContent(comment.content, {
 														onHashtagClick: handleHashtagClick,
 														onMentionClick: handleMentionClick,
-														onLinkClick: handleLinkClick
+														onLinkClick: handleLinkClick,
 													})}
 												</div>
 											</div>

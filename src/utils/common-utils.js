@@ -1,6 +1,6 @@
 /** @format */
 
-import { postAPI } from '../config/ApiConfig';
+import { postAPI } from "../config/ApiConfig";
 
 /**
  * Format time ago string
@@ -87,7 +87,7 @@ export const sharePost = async (postId) => {
 export const copyPostLink = async (postId) => {
 	try {
 		await navigator.clipboard.writeText(
-			`${window.location.origin}/post/${postId}`
+			`${window.location.origin}/post/${postId}`,
 		);
 	} catch (err) {
 		console.error("Failed to copy to clipboard:", err);
@@ -97,20 +97,11 @@ export const copyPostLink = async (postId) => {
 /**
  * Handle post click navigation with exclusions for interactive elements
  * @param {string} postId - Post ID
- * @param {Event} e - Click event
+ * @param {useNavigate} navigate - React Router navigate function
  */
-export const handlePostClick = (postId, e) => {
-	// Don't navigate if clicking on buttons, links, dropdowns, or images
-	if (
-		e.target.closest("button") ||
-		e.target.closest("a") ||
-		e.target.closest(".dropdown") ||
-		e.target.closest("img") ||
-		e.target.tagName === "IMG"
-	) {
-		return;
-	}
-	window.location.href = `/post/${postId}`;
+export const handlePostClick = (postId, navigate) => {
+	if (!postId) return;
+	navigate(`/post/${postId}`);
 };
 
 /**
@@ -149,9 +140,9 @@ export const calculateEngagementRate = (likes, comments, shares, views) => {
 	return ((totalEngagements / views) * 100).toFixed(1);
 };
 
-export const formatCurrency = (amount, currency = 'USD') => {
-	return new Intl.NumberFormat('en-US', {
-		style: 'currency',
+export const formatCurrency = (amount, currency = "USD") => {
+	return new Intl.NumberFormat("en-US", {
+		style: "currency",
 		currency: currency,
 		minimumFractionDigits: 2,
 	}).format(amount);
@@ -159,9 +150,9 @@ export const formatCurrency = (amount, currency = 'USD') => {
 
 export const formatNumber = (number) => {
 	if (number >= 1000000) {
-		return (number / 1000000).toFixed(1) + 'M';
+		return (number / 1000000).toFixed(1) + "M";
 	} else if (number >= 1000) {
-		return (number / 1000).toFixed(1) + 'K';
+		return (number / 1000).toFixed(1) + "K";
 	}
 	return number.toString();
 };
@@ -173,10 +164,10 @@ export const formatNumber = (number) => {
  */
 export const trackPostView = async (postId) => {
 	try {
-		const { postAPI } = await import('../config/ApiConfig');
+		const { postAPI } = await import("../config/ApiConfig");
 		await postAPI.trackView(postId);
 	} catch (error) {
-		console.error('Failed to track post view:', error);
+		console.error("Failed to track post view:", error);
 		// Don't throw to avoid breaking user experience
 	}
 };
