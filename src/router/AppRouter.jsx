@@ -46,11 +46,7 @@ const router = createBrowserRouter([
 	},
 	{
 		path: "/home",
-		element: (
-			<RequireAuth>
-				<IndexPage />
-			</RequireAuth>
-		),
+		element: <IndexPage />,
 		loader: IndexPageLoader,
 		children: [
 			{

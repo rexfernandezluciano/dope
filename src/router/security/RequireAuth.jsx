@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { Spinner, Container } from "react-bootstrap";
 
 import { getUser } from "../../utils/app-utils";
-import StartPage from "../../pages/StartPage";
 
 const RequireAuth = ({ children }) => {
 	const [user, setUser] = useState(null);
@@ -58,10 +57,8 @@ const RequireAuth = ({ children }) => {
 		);
 	}
 
-	if (!user) {
-		return <StartPage />;
-	}
-
+	// Allow access regardless of authentication status
+	// Pass user info to children components for conditional rendering
 	return children;
 };
 

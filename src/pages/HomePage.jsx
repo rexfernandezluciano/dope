@@ -25,6 +25,7 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	CheckCircleFill,
+	FiUser
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
@@ -48,6 +49,9 @@ import {
 	notifyFollowersOfNewPost
 } from "../utils/messaging-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
+import { getUser } from "../utils/auth-utils";
+import { useNavigate } from "react-router-dom";
+
 
 // Utility function to clean text content
 const cleanTextContent = (text) => {
@@ -70,6 +74,7 @@ const extractMentions = (text) => {
 };
 
 const HomePage = () => {
+	const navigate = useNavigate();
 	const [showComposerModal, setShowComposerModal] = useState(false);
 	const [showLiveStudioModal, setShowLiveStudioModal] = useState(false); // State for the new modal
 	const [postText, setPostText] = useState("");
@@ -99,6 +104,7 @@ const HomePage = () => {
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
 	const [filterBy, setFilterBy] = useState("for-you"); // State for filter selection
+	const [user, setUser] = useState(null); // State to hold the current user
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -107,31 +113,24 @@ const HomePage = () => {
 		// Update page meta data
 		updatePageMeta(pageMetaData.home);
 
-		if (currentUser && currentUser.uid) {
-			loadPosts();
+		loadPosts();
+		checkUser();
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-			// Initialize OneSignal and setup notifications
-			const setupNotifications = async () => {
-				if (currentUser && currentUser.uid) {
-					const initialized = await initializeNotifications(currentUser.uid);
-					if (initialized) {
-						await requestNotificationPermission();
-					}
+	// Effect to load posts when filterBy changes
+	useEffect(() => {
+		loadPosts();
+	}, [filterBy]);
 
-					// Setup foreground message listener (OneSignal handles this automatically)
-					setupMessageListener((payload) => {
-						console.log('Received notification in foreground:', payload);
-						// Optionally refresh posts if it's a new post notification
-						if (payload.data?.type === 'new_post') {
-							loadPosts();
-						}
-					});
-				}
-			};
-
-			setupNotifications();
+	const checkUser = async () => {
+		try {
+			const currentUser = await getUser();
+			setUser(currentUser);
+		} catch (error) {
+			console.log('No authenticated user');
+			setUser(null);
 		}
-	}, [filterBy]); // eslint-disable-line react-hooks/exhaustive-deps
+	};
 
 	const loadPosts = async (cursor = null, filter = filterBy) => {
 		try {
@@ -403,7 +402,7 @@ const HomePage = () => {
 			// Enhanced error handlers
 			client.on('connection-state-change', (curState, revState, reason) => {
 				console.log('Agora connection state changed:', curState, 'from', revState, 'reason:', reason);
-				
+
 				if (curState === 'FAILED' || curState === 'DISCONNECTED') {
 					console.warn('Agora connection lost, attempting to reconnect...');
 				}
@@ -449,7 +448,7 @@ const HomePage = () => {
 				for (let attempt = 1; attempt <= maxRetries; attempt++) {
 					try {
 						console.log(`Joining Agora channel - attempt ${attempt}/${maxRetries}`);
-						
+
 						const joinPromise = client.join(
 							agoraConfig.appId,
 							agoraConfig.channel,
@@ -467,11 +466,11 @@ const HomePage = () => {
 						return true;
 					} catch (attemptError) {
 						console.log(`Join attempt ${attempt} failed:`, attemptError);
-						
+
 						if (attempt === maxRetries) {
 							throw attemptError;
 						}
-						
+
 						// Wait before retry with exponential backoff
 						const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
 						await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -483,14 +482,14 @@ const HomePage = () => {
 				await joinWithRetry();
 			} catch (joinError) {
 				console.error('Failed to join Agora channel after retries:', joinError);
-				
+
 				// Clean up client on error
 				try {
 					await client.leave();
 				} catch (leaveError) {
 					console.warn('Error during cleanup:', leaveError);
 				}
-				
+
 				// Clean up tracks on error
 				if (videoTrack) {
 					videoTrack.stop();
@@ -500,7 +499,7 @@ const HomePage = () => {
 					audioTrack.stop();
 					audioTrack.close();
 				}
-				
+
 				throw new Error(`Unable to connect to streaming servers. This might be due to network restrictions. Please try again later.`);
 			}
 
@@ -542,7 +541,7 @@ const HomePage = () => {
 			}
 		} catch (error) {
 			console.error('Error starting live stream:', error);
-			
+
 			// Provide specific error messages based on error type
 			let errorMessage = error.message;
 			if (error.message.includes('NETWORK_ERROR') || error.message.includes('timeout')) {
@@ -552,7 +551,7 @@ const HomePage = () => {
 			} else if (error.message.includes('microphone') || error.message.includes('audio')) {
 				errorMessage = 'Microphone access issue. Please check your microphone permissions.';
 			}
-			
+
 			setError(`Failed to start live stream: ${errorMessage}`);
 
 			// Clean up localStorage on error
@@ -578,7 +577,7 @@ const HomePage = () => {
 							console.warn('Error unpublishing tracks:', unpublishError);
 						}
 					}
-					
+
 					await mediaStream.leave();
 					console.log('Left Agora channel successfully');
 				} catch (err) {
@@ -597,7 +596,7 @@ const HomePage = () => {
 				} catch (videoError) {
 					console.warn('Error stopping video track:', videoError);
 				}
-				
+
 				try {
 					if (mediaRecorder.audioTrack) {
 						await mediaRecorder.audioTrack.stop();
@@ -850,41 +849,70 @@ const HomePage = () => {
 					</div>
 				)}
 
-				{/* Quick Post */}
-				<Card
-					className="border-0 border-bottom rounded-0 mb-0 shadow-none"
-					onClick={() => setShowComposerModal(true)}
-				>
-					<Card.Body className="px-3 py-3">
-						<div className="d-flex gap-3">
-							<Image
-								src={
-									currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"
-								}
-								alt="avatar"
-								roundedCircle
-								width="45"
-								height="45"
-								style={{
-									objectFit: "cover",
-									minWidth: "45px",
-									minHeight: "45px",
-								}}
-							/>
-							<div className="flex-grow-1">
-								<div className="d-flex align-items-center gap-1 mb-2">
-									<span className="fw-bold">{currentUser?.name}</span>
-									{currentUser?.hasBlueCheck && (
-										<CheckCircleFill className="text-primary" size={16} />
-									)}
-								</div>
-								<div className="w-100 text-start text-muted border-1 bg-transparent">
-									What's on your mind?
+				{/* Guest Welcome Section */}
+				{!user && (
+					<Card className="mb-4 shadow-sm border-primary">
+						<Card.Body className="text-center py-4">
+							<FiUser size={48} className="text-primary mb-3" />
+							<h4 className="text-primary">Welcome to DOPE Network!</h4>
+							<p className="text-muted mb-3">
+								Join our community to create posts, go live, and connect with others.
+							</p>
+							<div className="d-flex gap-2 justify-content-center">
+								<Button 
+									variant="primary"
+									onClick={() => navigate('/auth/signup')}
+								>
+									Sign Up
+								</Button>
+								<Button 
+									variant="outline-primary"
+									onClick={() => navigate('/auth/login')}
+								>
+									Login
+								</Button>
+							</div>
+						</Card.Body>
+					</Card>
+				)}
+
+				{/* Create Post Section */}
+				{user && (
+					<Card
+						className="border-0 border-bottom rounded-0 mb-0 shadow-none"
+						onClick={() => setShowComposerModal(true)}
+					>
+						<Card.Body className="px-3 py-3">
+							<div className="d-flex gap-3">
+								<Image
+									src={
+										user?.photoURL || "https://i.pravatar.cc/150?img=10"
+									}
+									alt="avatar"
+									roundedCircle
+									width="45"
+									height="45"
+									style={{
+										objectFit: "cover",
+										minWidth: "45px",
+										minHeight: "45px",
+									}}
+								/>
+								<div className="flex-grow-1">
+									<div className="d-flex align-items-center gap-1 mb-2">
+										<span className="fw-bold">{user?.displayName}</span>
+										{user?.hasBlueCheck && (
+											<CheckCircleFill className="text-primary" size={16} />
+										)}
+									</div>
+									<div className="w-100 text-start text-muted border-1 bg-transparent">
+										What's on your mind?
+									</div>
 								</div>
 							</div>
-						</div>
-					</Card.Body>
-				</Card>
+						</Card.Body>
+					</Card>
+				)}
 
 				<div className="d-flex align-items-center justify-content-center px-0 pt-2 border-bottom bg-white sticky-top">
 					<div className="d-flex w-100">
@@ -931,7 +959,7 @@ const HomePage = () => {
 								<PostCard
 									key={post.id}
 									post={post}
-									currentUser={currentUser}
+									currentUser={user} // Use the user state here
 									onLike={handleLikePost}
 									onShare={() => handleSharePost(post.id)} // Use reusable sharePost utility
 									onDeletePost={handleDeletePost}
@@ -999,7 +1027,7 @@ const HomePage = () => {
 						<div className="d-flex gap-3 mb-3">
 							<Image
 								src={
-									currentUser?.photoURL ?? "https://i.pravatar.cc/150?img=10"
+									user?.photoURL ?? "https://i.pravatar.cc/150?img=10"
 								}
 								alt="avatar"
 								roundedCircle
@@ -1014,8 +1042,8 @@ const HomePage = () => {
 
 							<div className="flex-grow-1">
 								<div className="d-flex align-items-center gap-1 mb-2">
-									<span className="fw-bold">{currentUser?.name}</span>
-									{currentUser?.hasBlueCheck && (
+									<span className="fw-bold">{user?.displayName}</span>
+									{user?.hasBlueCheck && (
 										<CheckCircleFill className="text-primary" size={16} />
 									)}
 								</div>
@@ -1103,16 +1131,16 @@ const HomePage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-1 ${photos?.length >= getImageUploadLimit(currentUser?.subscription) ? "text-secondary" : "text-muted"}`}
+									className={`p-1 ${photos?.length >= getImageUploadLimit(user?.subscription) ? "text-secondary" : "text-muted"}`}
 									onClick={handlePhotoClick}
 									disabled={
 										photos?.length >=
-										getImageUploadLimit(currentUser?.subscription)
+										getImageUploadLimit(user?.subscription)
 									}
 									title={
 										photos?.length >=
-										getImageUploadLimit(currentUser?.subscription)
-											? `Maximum ${getImageUploadLimit(currentUser?.subscription)} images allowed`
+										getImageUploadLimit(user?.subscription)
+											? `Maximum ${getImageUploadLimit(user?.subscription)} images allowed`
 											: "Add photo"
 									}
 								>
@@ -1129,16 +1157,16 @@ const HomePage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-1 ${photos?.length >= getImageUploadLimit(currentUser?.subscription) ? "text-secondary" : "text-muted"}`}
+									className={`p-1 ${photos?.length >= getImageUploadLimit(user?.subscription) ? "text-secondary" : "text-muted"}`}
 									onClick={() => setShowStickerModal(true)}
 									disabled={
 										photos?.length >=
-										getImageUploadLimit(currentUser?.subscription)
+										getImageUploadLimit(user?.subscription)
 									}
 									title={
 										photos?.length >=
-										getImageUploadLimit(currentUser?.subscription)
-											? `Maximum ${getImageUploadLimit(currentUser?.subscription)} images allowed`
+										getImageUploadLimit(user?.subscription)
+											? `Maximum ${getImageUploadLimit(user?.subscription)} images allowed`
 											: "Add GIF"
 									}
 								>
@@ -1331,7 +1359,7 @@ const HomePage = () => {
 				onStartStream={handleStartLiveStream}
 				onStopStream={handleStopLiveStream}
 				isStreaming={isStreaming}
-				currentUser={currentUser}
+				currentUser={user} // Pass the user state
 			/>
 		</>
 	);
