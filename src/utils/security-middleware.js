@@ -3,7 +3,6 @@ import {
 	generateCSRFToken,
 	ValidationPatterns,
 } from "./security-utils";
-import { addAppCheckHeaders } from "./app-check-utils";
 
 /**
  * Security middleware for API requests
@@ -11,8 +10,8 @@ import { addAppCheckHeaders } from "./app-check-utils";
 export class SecurityMiddleware {
 	static async secureApiRequest(url, options = {}) {
 		try {
-			// Add security headers
-			const secureHeaders = await addAppCheckHeaders(options.headers || {});
+			// Start with basic headers
+			const secureHeaders = options.headers || {};
 
 			// Add CSRF token for state-changing requests
 			if (
