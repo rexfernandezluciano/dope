@@ -35,24 +35,29 @@ const router = createBrowserRouter([
 	{
 		path: "/auth/login",
 		element: <LoginPage />,
+		hydrateFallbackElement: <LoadingView />,
 	},
 	{
 		path: "/auth/signup",
 		element: <SignUpPage />,
+		hydrateFallbackElement: <LoadingView />,
 	},
 	{
 		path: "/auth/verify/:verificationId",
 		element: <VerifyEmailPage />,
+		hydrateFallbackElement: <LoadingView />,
 	},
 	{
 		path: "/home",
 		element: <IndexPage />,
 		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
 		children: [
 			{
 				index: true,
 				element: <HomePage />,
 				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
 			},
 		],
 	},
@@ -64,6 +69,7 @@ const router = createBrowserRouter([
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
 	},
 	{
 		path: "/:username",
@@ -73,11 +79,13 @@ const router = createBrowserRouter([
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
 		children: [
 			{
 				index: true,
 				element: <ProfilePage />,
 				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
 			},
 		],
 	},
@@ -89,11 +97,13 @@ const router = createBrowserRouter([
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
 		children: [
 			{
 				index: true,
 				element: <SettingsPage />,
 				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
 			},
 		],
 	},
@@ -107,6 +117,7 @@ const router = createBrowserRouter([
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
 	},
 	{
 		path: "/analytics",
@@ -118,6 +129,7 @@ const router = createBrowserRouter([
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
 	},
 	{
 		path: "/dashboard",
@@ -129,29 +141,35 @@ const router = createBrowserRouter([
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
 		children: [
 			{
 				index: true,
 				element: <HomePage />,
 				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
 			},
 			{
 				path: "subscription",
 				element: <SubscriptionPage />,
+				hydrateFallbackElement: <LoadingView />,
 			},
 			{
 				path: "analytics",
 				element: <AnalyticsPage />,
+				hydrateFallbackElement: <LoadingView />,
 			},
 			{
 				path: "settings",
 				element: <SettingsPage />,
+				hydrateFallbackElement: <LoadingView />,
 			},
 		],
 	},
 	{
 		path: "/live/:streamKey",
 		element: <LiveStreamPage />,
+		hydrateFallbackElement: <LoadingView />,
 	},
 ]);
 
