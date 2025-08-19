@@ -72,13 +72,6 @@ try {
 			});
 
 			console.log("App Check initialized successfully");
-			getToken(appCheck, true)
-				.then((token) => {
-					console.log("App Check token:", token);
-				})
-				.then((error) => {
-					console.error("Error getting App Check token:", error);
-				});
 		} catch (error) {
 			console.warn("App Check initialization failed:", error);
 			appCheck = null; // Set to null if initialization fails
