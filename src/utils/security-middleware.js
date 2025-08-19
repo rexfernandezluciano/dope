@@ -86,6 +86,9 @@ export class SecurityMiddleware {
 					throw new Error('Invalid URL format');
 				}
 				break;
+			default:
+				// No validation needed for unknown types
+				break;
 		}
 
 		return sanitizeHTML(input);

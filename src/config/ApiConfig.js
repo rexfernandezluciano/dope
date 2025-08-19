@@ -10,14 +10,14 @@ if (!API_BASE_URL.startsWith('https://')) {
 
 const apiRequest = async (endpoint, options = {}) => {
 	const url = `${API_BASE_URL}${endpoint}`;
-	
+
 	try {
 		// Import SecurityMiddleware dynamically to avoid circular imports
 		const { SecurityMiddleware } = await import('../utils/security-middleware');
-		
+
 		// Use SecurityMiddleware to add all security headers including App Check
 		const secureOptions = await SecurityMiddleware.secureApiRequest(url, options);
-		
+
 		// Ensure body is properly stringified
 		if (secureOptions.body && typeof secureOptions.body === 'object') {
 			secureOptions.body = JSON.stringify(secureOptions.body);
@@ -40,9 +40,20 @@ const apiRequest = async (endpoint, options = {}) => {
 // Secure token storage helper
 const getAuthToken = () => {
 	try {
-		return sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+		// Try sessionStorage first, then localStorage as fallback
+		const sessionToken = sessionStorage.getItem('authToken');
+		const localToken = localStorage.getItem('authToken');
+
+		const token = sessionToken || localToken;
+		if (token) {
+			console.log('Auth token found');
+			return token;
+		} else {
+			console.warn('No auth token found in storage');
+			return null;
+		}
 	} catch (e) {
-		console.error('Failed to retrieve auth token');
+		console.error('Failed to get auth token:', e);
 		return null;
 	}
 };
@@ -160,7 +171,7 @@ const authAPI = {
 		if (!verificationId || typeof verificationId !== 'string') {
 			throw new Error('Invalid verification ID');
 		}
-		
+
 		return apiRequest(`/auth/validate-verification-id/${encodeURIComponent(verificationId)}`, {
 			method: 'GET'
 		});
