@@ -63,11 +63,12 @@ const setCookie = (name, value, options = {}) => {
 	try {
 		const isProduction = process.env.NODE_ENV === 'production';
 		const isHttps = window.location.protocol === "https:";
+		const isReplit = window.location.hostname.includes('replit') || window.location.hostname.includes('repl.co');
 		
 		const defaults = {
 			path: "/",
-			secure: isProduction && isHttps, // Only require secure in production with HTTPS
-			sameSite: isProduction ? "Strict" : "Lax", // Use Lax in development
+			secure: isProduction && isHttps && !isReplit, // Disable secure for Replit dev
+			sameSite: isReplit ? "None" : (isProduction ? "Strict" : "Lax"), // Use None for Replit
 			expires: 1, // 1 day default
 		};
 
@@ -79,9 +80,19 @@ const setCookie = (name, value, options = {}) => {
 			delete config.maxAge;
 		}
 
+		// For Replit development, use minimal restrictions
+		if (isReplit && !isProduction) {
+			delete config.secure;
+			delete config.sameSite;
+		}
+
 		Cookies.set(name, value, config);
 		console.log(`Cookie '${name}' set successfully with config:`, config);
 		console.log(`All cookies after setting:`, document.cookie);
+		
+		// Verify cookie was set
+		const verification = Cookies.get(name);
+		console.log(`Cookie verification - found:`, verification ? 'YES' : 'NO');
 	} catch (e) {
 		console.error("Failed to set secure cookie:", e);
 	}
@@ -101,13 +112,20 @@ const deleteCookie = (name, options = {}) => {
 	try {
 		const isProduction = process.env.NODE_ENV === 'production';
 		const isHttps = window.location.protocol === "https:";
+		const isReplit = window.location.hostname.includes('replit') || window.location.hostname.includes('repl.co');
 		
 		const config = {
 			path: "/",
-			secure: isProduction && isHttps, // Only require secure in production with HTTPS
-			sameSite: isProduction ? "Strict" : "Lax", // Use Lax in development
+			secure: isProduction && isHttps && !isReplit, // Disable secure for Replit dev
+			sameSite: isReplit ? "None" : (isProduction ? "Strict" : "Lax"), // Use None for Replit
 			...options,
 		};
+
+		// For Replit development, use minimal restrictions
+		if (isReplit && !isProduction) {
+			delete config.secure;
+			delete config.sameSite;
+		}
 
 		Cookies.remove(name, config);
 		console.log(`Cookie '${name}' removed successfully`);
@@ -157,20 +175,39 @@ const setAuthToken = (token, rememberMe = false) => {
 	try {
 		const isProduction = process.env.NODE_ENV === 'production';
 		const isHttps = window.location.protocol === "https:";
+		const isReplit = window.location.hostname.includes('replit') || window.location.hostname.includes('repl.co');
 		
 		// Set secure cookie with appropriate expiration (in days)
 		const expires = rememberMe ? 30 : 1; // 30 days or 1 day
-		setCookie("authToken", token, {
+		const cookieOptions = {
 			expires,
-			secure: isProduction && isHttps, // Only require secure in production with HTTPS
-			sameSite: isProduction ? "Strict" : "Lax", // Use Lax in development
-		});
+			secure: isProduction && isHttps && !isReplit, // Disable secure for Replit dev
+			sameSite: isReplit ? "None" : (isProduction ? "Strict" : "Lax"), // Use None for Replit
+		};
 
-		console.log("Auth token stored in secure cookie");
+		// For Replit development, use minimal restrictions
+		if (isReplit && !isProduction) {
+			delete cookieOptions.secure;
+			delete cookieOptions.sameSite;
+		}
 
-		// Clean up any existing storage tokens
-		sessionStorage.removeItem("authToken");
-		localStorage.removeItem("authToken");
+		setCookie("authToken", token, cookieOptions);
+
+		// Verify cookie was set, if not use sessionStorage as primary storage
+		setTimeout(() => {
+			const verification = getCookie("authToken");
+			if (!verification) {
+				console.warn("Cookie storage failed, using sessionStorage as primary");
+				sessionStorage.setItem("authToken", token);
+				console.log("Auth token stored in sessionStorage (primary fallback)");
+			} else {
+				console.log("Auth token stored in secure cookie successfully");
+				// Clean up any existing storage tokens only if cookie worked
+				sessionStorage.removeItem("authToken");
+				localStorage.removeItem("authToken");
+			}
+		}, 100);
+
 	} catch (e) {
 		console.error("Failed to store auth token in secure cookie:", e);
 		// Fallback to sessionStorage if cookie fails
@@ -187,13 +224,22 @@ const removeAuthToken = () => {
 	try {
 		const isProduction = process.env.NODE_ENV === 'production';
 		const isHttps = window.location.protocol === "https:";
+		const isReplit = window.location.hostname.includes('replit') || window.location.hostname.includes('repl.co');
 		
 		// Remove secure cookie with proper options
-		deleteCookie("authToken", {
+		const deleteOptions = {
 			path: "/",
-			secure: isProduction && isHttps, // Only require secure in production with HTTPS
-			sameSite: isProduction ? "Strict" : "Lax", // Use Lax in development
-		});
+			secure: isProduction && isHttps && !isReplit, // Disable secure for Replit dev
+			sameSite: isReplit ? "None" : (isProduction ? "Strict" : "Lax"), // Use None for Replit
+		};
+
+		// For Replit development, use minimal restrictions
+		if (isReplit && !isProduction) {
+			delete deleteOptions.secure;
+			delete deleteOptions.sameSite;
+		}
+
+		deleteCookie("authToken", deleteOptions);
 
 		// Clean up storage as well (for backward compatibility)
 		sessionStorage.removeItem("authToken");
