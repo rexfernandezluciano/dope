@@ -431,43 +431,75 @@ const handleApiResponse = async (response) => {
 
 const commentAPI = {
 	getComments: async (postId) => {
-		const response = await fetch(`${API_BASE_URL}/posts/${postId}/comments`, {
-			headers: await getAuthHeaders(),
-		});
-		return handleApiResponse(response);
+		try {
+			if (!postId) {
+				throw new Error('Post ID is required');
+			}
+			const response = await fetch(`${API_BASE_URL}/posts/${postId}/comments`, {
+				headers: await getAuthHeaders(),
+			});
+			return handleApiResponse(response);
+		} catch (error) {
+			console.error('Failed to get comments:', error);
+			return { comments: [] }; // Return empty array on error
+		}
 	},
 
 	createComment: async (postId, content) => {
-		const response = await fetch(`${API_BASE_URL}/posts/${postId}/comments`, {
-			method: "POST",
-			headers: await getAuthHeaders(),
-			body: JSON.stringify({ content }),
-		});
-		return handleApiResponse(response);
+		try {
+			if (!postId || !content) {
+				throw new Error('Post ID and content are required');
+			}
+			const response = await fetch(`${API_BASE_URL}/posts/${postId}/comments`, {
+				method: "POST",
+				headers: await getAuthHeaders(),
+				body: JSON.stringify({ content }),
+			});
+			return handleApiResponse(response);
+		} catch (error) {
+			console.error('Failed to create comment:', error);
+			throw error;
+		}
 	},
 
 	deleteComment: async (commentId) => {
-		const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
-			method: "DELETE",
-			headers: await getAuthHeaders(),
-		});
-		return handleApiResponse(response);
+		try {
+			if (!commentId) {
+				throw new Error('Comment ID is required');
+			}
+			const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
+				method: "DELETE",
+				headers: await getAuthHeaders(),
+			});
+			return handleApiResponse(response);
+		} catch (error) {
+			console.error('Failed to delete comment:', error);
+			throw error;
+		}
 	},
 
 	searchComments: async (query, limit = 20, cursor = null) => {
-		const params = new URLSearchParams({
-			q: query,
-			limit: limit.toString(),
-		});
+		try {
+			if (!query) {
+				throw new Error('Search query is required');
+			}
+			const params = new URLSearchParams({
+				q: query,
+				limit: limit.toString(),
+			});
 
-		if (cursor) {
-			params.append('cursor', cursor);
+			if (cursor) {
+				params.append('cursor', cursor);
+			}
+
+			const response = await fetch(`${API_BASE_URL}/comments/search?${params}`, {
+				headers: await getAuthHeaders(),
+			});
+			return handleApiResponse(response);
+		} catch (error) {
+			console.error('Failed to search comments:', error);
+			return { comments: [], cursor: null }; // Return empty result on error
 		}
-
-		const response = await fetch(`${API_BASE_URL}/comments/search?${params}`, {
-			headers: await getAuthHeaders(),
-		});
-		return handleApiResponse(response);
 	},
 };
 

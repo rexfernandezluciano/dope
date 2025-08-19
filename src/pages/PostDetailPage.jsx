@@ -64,13 +64,20 @@ const PostDetailPage = () => {
 	const loadPost = useCallback(async () => {
 		try {
 			setLoading(true);
-			const [postResponse, commentsResponse] = await Promise.all([
-				postAPI.getPost(postId),
-				commentAPI.getComments(postId),
-			]);
-
+			setError(""); // Clear previous errors
+			
+			// Load post first
+			const postResponse = await postAPI.getPost(postId);
 			setPost(postResponse.post);
-			setComments(commentsResponse.comments || []);
+
+			// Load comments separately to avoid 404 breaking the entire page
+			try {
+				const commentsResponse = await commentAPI.getComments(postId);
+				setComments(commentsResponse.comments || []);
+			} catch (commentError) {
+				console.error('Failed to load comments:', commentError);
+				setComments([]); // Set empty comments on error
+			}
 
 			// Track view after successfully loading the post
 			try {
@@ -80,6 +87,7 @@ const PostDetailPage = () => {
 				// Don't throw here as view tracking shouldn't break the page
 			}
 		} catch (err) {
+			console.error('Failed to load post:', err);
 			setError(err.message);
 		} finally {
 			setLoading(false);

@@ -57,17 +57,7 @@ const cleanTextContent = (text) => {
 	return text.replace(/(\r\n|\n|\r){2,}/g, "$1$2").trim();
 };
 
-// Utility function to extract hashtags from text
-// const extractHashtags = (text) => {
-// 	const hashtagRegex = /#\w+/g;
-// 	return text.match(hashtagRegex) || [];
-// };
 
-// Utility function to extract mentions from text
-// const extractMentions = (text) => {
-// 	const mentionRegex = /@\w+/g;
-// 	return text.match(mentionRegex) || [];
-// };
 
 const HomePage = () => {
 	const navigate = useNavigate();
@@ -188,8 +178,8 @@ const HomePage = () => {
 
 	const handleHashtagClick = (hashtag) => {
 		setFilterBy("hashtag");
-		// Removed undefined setHashtagFilter call
-		// setActiveTab("hashtags");
+		// Navigate to search page for hashtag
+		navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=posts`);
 	};
 
 	const handleInput = (e) => {
