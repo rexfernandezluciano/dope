@@ -30,7 +30,7 @@ import {
 	FileText,
 	Activity,
 	CurrencyDollar,
-	TrendingUp,
+	GraphUp as TrendingUp,
 	House,
 	PersonCheck,
 } from "react-bootstrap-icons";
