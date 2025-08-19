@@ -57,8 +57,13 @@ const RequireAuth = ({ children }) => {
 		);
 	}
 
-	// Allow access regardless of authentication status
-	// Pass user info to children components for conditional rendering
+	// Require authentication to access protected routes
+	if (!user) {
+		// Redirect to start page for unauthenticated users
+		window.location.href = '/';
+		return null;
+	}
+
 	return children;
 };
 

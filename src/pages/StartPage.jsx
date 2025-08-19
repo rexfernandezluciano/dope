@@ -1,10 +1,10 @@
-
 /** @format */
 
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Row, Col, Button, Card } from "react-bootstrap";
+import { Container, Row, Col, Button, Card, Image } from "react-bootstrap";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
+import socialNetIllustration from "../assets/img/social-net-illustration.svg";
 
 const StartPage = () => {
 	const navigate = useNavigate();
@@ -22,57 +22,43 @@ const StartPage = () => {
 			<Row className="w-100 justify-content-center">
 				<Col xs={12} md={8} lg={6} xl={4}>
 					<Card className="shadow-lg border-0">
-						<Card.Body className="p-5 text-center">
-							<div className="mb-4">
-								<img 
-									src="/logo192.png" 
-									alt="DOPE Network" 
-									width="80" 
-									height="80"
-									className="mb-3"
-								/>
-								<h1 className="h2 fw-bold text-primary mb-3">
-									Welcome to DOPE Network
-								</h1>
-								<p className="text-muted lead mb-4">
-									Connect, share, and discover amazing content with our community. 
-									Start your journey today!
-								</p>
-							</div>
-
-							<div className="d-grid gap-3">
-								<Button 
-									variant="primary" 
-									size="lg" 
-									className="fw-bold py-3"
-									onClick={handleGetStarted}
+						<Card.Body className="text-center p-5">
+							<Image
+								src={socialNetIllustration}
+								alt="Social Network"
+								style={{ maxWidth: "300px", height: "auto" }}
+								className="mb-4"
+							/>
+							<h1 className="display-4 fw-bold text-primary mb-3">
+								Welcome to DOPE Network
+							</h1>
+							<p className="lead text-muted mb-4">
+								Connect, share, and discover amazing content with our community
+							</p>
+							<p className="text-success mb-4">
+								<strong>Open to Everyone!</strong> Join our growing community today.
+							</p>
+							<div className="d-grid gap-2 d-md-flex justify-content-md-center">
+								<Button
+									variant="primary"
+									size="lg"
+									onClick={() => navigate('/auth/signup')}
+									className="me-md-2 px-4 py-2"
 								>
-									Get Started
+									Create Account
 								</Button>
-								
-								<div className="text-center">
-									<small className="text-muted">
-										Join thousands of users sharing their stories
-									</small>
-								</div>
+								<Button
+									variant="outline-primary"
+									size="lg"
+									onClick={() => navigate('/auth/login')}
+									className="px-4 py-2"
+								>
+									Sign In
+								</Button>
 							</div>
-
-							<div className="mt-4 pt-4 border-top">
-								<Row className="text-center">
-									<Col xs={4}>
-										<div className="fw-bold text-primary">1M+</div>
-										<small className="text-muted">Posts</small>
-									</Col>
-									<Col xs={4}>
-										<div className="fw-bold text-primary">50K+</div>
-										<small className="text-muted">Users</small>
-									</Col>
-									<Col xs={4}>
-										<div className="fw-bold text-primary">24/7</div>
-										<small className="text-muted">Active</small>
-									</Col>
-								</Row>
-							</div>
+							<p className="text-muted mt-3 small">
+								Registration is free and open to all users
+							</p>
 						</Card.Body>
 					</Card>
 				</Col>
