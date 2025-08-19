@@ -376,7 +376,7 @@ const HomePage = () => {
 		} catch (error) {
 			console.error('Error starting live stream:', error);
 			setError('Failed to start live stream. Please check camera permissions.');
-			
+
 			// Clean up on error
 			setIsStreaming(false);
 			setIsLive(false);
@@ -437,8 +437,8 @@ const HomePage = () => {
 				content: streamData.description || streamData.title,
 				postType: 'live_video',
 				liveVideoUrl: streamUrl,
-				privacy: streamData.privacy || 'public',
-				streamKey: streamKey
+				streamTitle: streamData.title,
+				privacy: streamData.privacy || 'public'
 			};
 
 			// Create the live stream post using the API
@@ -466,7 +466,7 @@ const HomePage = () => {
 		} catch (error) {
 			console.error('Error starting live stream:', error);
 			setError(`Failed to start live stream: ${error.message}`);
-			
+
 			// Clean up localStorage on error
 			localStorage.removeItem('isCurrentlyBroadcasting');
 		}
