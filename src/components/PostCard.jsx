@@ -550,8 +550,8 @@ const PostCard = ({
 								</Button>
 							</div>
 
-							{/* Random Comments Display */}
-							{showComments && comments && comments.length > 0 && (
+							{/* Threaded Comments - show when enabled and post has comment capability */}
+							{showComments && (
 								<div className="mt-3 pt-2 border-top comment-thread">
 									{comments.map((comment, index) => (
 										<div

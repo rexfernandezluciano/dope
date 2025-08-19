@@ -435,12 +435,20 @@ const commentAPI = {
 			if (!postId) {
 				throw new Error('Post ID is required');
 			}
+			console.log('Fetching comments for post:', postId);
 			const response = await fetch(`${API_BASE_URL}/comments/post/${postId}`, {
 				headers: await getAuthHeaders(),
 			});
-			return handleApiResponse(response);
+			
+			if (!response.ok) {
+				console.warn(`Comments API returned ${response.status} for post ${postId}`);
+			}
+			
+			const result = await handleApiResponse(response);
+			console.log('Comments response for post', postId, ':', result);
+			return result;
 		} catch (error) {
-			console.error('Failed to get comments:', error);
+			console.error('Failed to get comments for post', postId, ':', error);
 			return { comments: [] }; // Return empty array on error
 		}
 	},

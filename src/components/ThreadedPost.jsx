@@ -28,13 +28,15 @@ const ThreadedPost = ({ post, currentUser, onLike, onShare, maxComments = 3 }) =
 				setComments(response.comments || []);
 			} catch (error) {
 				console.error("Failed to load comments:", error);
+				setComments([]); // Set empty array on error
 			}
 		};
 
-		if (post.stats?.comments > 0) {
+		// Always try to load comments, don't rely on stats
+		if (post.id) {
 			loadComments();
 		}
-	}, [post.id, post.stats?.comments]);
+	}, [post.id]);
 
 	
 
