@@ -498,18 +498,26 @@ const PostDetailPage = () => {
 							)}
 
 							<div className="d-flex align-items-center justify-content-between">
-								{post.likes.length > 0 &&
-									(post.likes[0].user.uid === currentUser.uid ? (
-										<div className="small text-muted">
-											<span className="fw-bold">You</span>{" "}
-											{post.likes.length > 1
-												? "& " + (post.likes.length - 1) + " reacted."
-												: " reacted."}
-										</div>
-									) : (
-										""
-									))}
-							</div>
+								<div className="d-flex flex-wrap gap-3 small text-muted">
+									{post.likes.length > 0 &&
+										(post.likes[0].user.uid === currentUser.uid ? (
+											<span>
+												<span className="fw-bold">You</span>{" "}
+												{post.likes.length > 1
+													? "& " + (post.likes.length - 1) + " reacted."
+													: " reacted."}
+											</span>
+										) : (
+											""
+										))}
+									{post.analytics?.views > 0 && (
+										<span>{post.analytics.views} views</span>
+									)}
+									{post.analytics?.shares > 0 && (
+										<span>{post.analytics.shares} shares</span>
+									)}
+								</div>
+							</div>v>
 
 							<div
 								className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
