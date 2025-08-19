@@ -8,7 +8,9 @@ import { authAPI, userAPI } from '../config/ApiConfig';
  */
 export const getUser = async () => {
 	try {
-		const token = localStorage.getItem('authToken');
+		// Import token utilities to use secure method
+		const { getAuthToken } = await import('../config/ApiConfig');
+		const token = getAuthToken();
 		if (!token) return null;
 
 		const response = await authAPI.getCurrentUser();
@@ -24,7 +26,8 @@ export const getUser = async () => {
 		console.error('Error getting user:', error);
 		// Only remove token if it's an auth error (401/403)
 		if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
-			localStorage.removeItem('authToken');
+			const { removeAuthToken } = await import('../config/ApiConfig');
+			removeAuthToken();
 		}
 		return null;
 	}
