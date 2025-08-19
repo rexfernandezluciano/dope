@@ -517,7 +517,7 @@ const PostDetailPage = () => {
 										<span>{post.analytics.shares} shares</span>
 									)}
 								</div>
-							</div>v>
+							</div>
 
 							<div
 								className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
