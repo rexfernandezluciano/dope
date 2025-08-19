@@ -349,19 +349,40 @@ const NavigationView = ({ children }) => {
 			{/* Desktop Sidebar */}
 			<div className="d-none d-md-block">
 				<Navbar expand={false} className="bg-white border-bottom sticky-top">
-					<Container fluid>
-						<Navbar.Brand
-							as={Link}
-							to="/home"
-							className="fw-bold d-flex align-items-center gap-2"
-						>
-							<Image
-								src={dopeImage}
-								alt="DOPE Network"
-								width={32}
-								height={32}
-							/>
-							<span className="d-none d-sm-inline">DOPE Network</span>
+					{/* Live Broadcasting Top Bar */}
+					{window.location.pathname === '/' && localStorage.getItem('isCurrentlyBroadcasting') === 'true' && (
+						<div className="w-100 bg-danger text-white text-center py-1" style={{ fontSize: '0.875rem' }}>
+							<span
+								style={{
+									width: "8px",
+									height: "8px",
+									borderRadius: "50%",
+									backgroundColor: "#fff",
+									display: "inline-block",
+									marginRight: "6px",
+									animation: "pulse 1.5s infinite"
+								}}
+							></span>
+							🔴 LIVE BROADCASTING IN PROGRESS
+						</div>
+					)}
+					<Container>
+						<Navbar.Brand as={Link} to="/" className="fw-bold fs-4">
+							<div
+								style={{
+									width: "200px",
+									height: "30px",
+									backgroundColor: "#0069B5",
+									WebkitMaskImage: `url(${logo})`,
+									WebkitMaskRepeat: "no-repeat",
+									WebkitMaskPosition: "center",
+									WebkitMaskSize: "contain",
+									maskImage: `url(${logo})`,
+									maskRepeat: "no-repeat",
+									maskPosition: "center",
+									maskSize: "contain",
+								}}
+							></div>
 						</Navbar.Brand>
 
 						{/* Search Bar */}

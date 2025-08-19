@@ -454,6 +454,10 @@ const HomePage = () => {
 				setLiveVideoUrl(streamUrl);
 				setShowLiveStudioModal(false);
 
+				// Set broadcast status in localStorage
+				localStorage.setItem('isCurrentlyBroadcasting', 'true');
+				localStorage.setItem('currentStreamTitle', streamData.title);
+
 				// Start Agora stream with existing tracks
 				await startAgoraLiveStream(streamKey);
 
@@ -464,6 +468,9 @@ const HomePage = () => {
 		} catch (error) {
 			console.error('Error starting live stream:', error);
 			setError(`Failed to start live stream: ${error.message}`);
+			
+			// Clean up localStorage on error
+			localStorage.removeItem('isCurrentlyBroadcasting');
 		}
 	};
 
@@ -500,6 +507,10 @@ const HomePage = () => {
 			setIsLive(false);
 			setMediaRecorder(null);
 			setLiveVideoUrl("");
+
+			// Clear broadcast status from localStorage
+			localStorage.removeItem('isCurrentlyBroadcasting');
+			localStorage.removeItem('currentStreamTitle');
 
 			// Clear video element
 			if (videoRef.current) {
@@ -712,6 +723,34 @@ const HomePage = () => {
 					</Alert>
 				)}
 
+				{/* Live Broadcasting Status Bar */}
+				{isStreaming && (
+					<div className="bg-danger text-white px-3 py-2 d-flex align-items-center justify-content-between">
+						<div className="d-flex align-items-center gap-2">
+							<span
+								style={{
+									width: "10px",
+									height: "10px",
+									borderRadius: "50%",
+									backgroundColor: "#fff",
+									display: "inline-block",
+									animation: "pulse 1.5s infinite"
+								}}
+							></span>
+							<strong>🔴 LIVE BROADCASTING</strong>
+							<span className="text-white-50">|</span>
+							<span>{streamTitle || 'Untitled Stream'}</span>
+						</div>
+						<Button 
+							variant="outline-light" 
+							size="sm"
+							onClick={() => setShowLiveStudioModal(true)}
+						>
+							Manage Stream
+						</Button>
+					</div>
+				)}
+
 				{/* Quick Post */}
 				<Card
 					className="border-0 border-bottom rounded-0 mb-0 shadow-none"
@@ -838,6 +877,26 @@ const HomePage = () => {
 					</Modal.Header>
 
 					<Modal.Body className="overflow-x-hidden">
+						{/* Live Broadcasting Status Alert */}
+						{isStreaming && (
+							<div className="alert alert-danger mb-3 d-flex align-items-center gap-2" role="alert">
+								<span
+									style={{
+										width: "12px",
+										height: "12px",
+										borderRadius: "50%",
+										backgroundColor: "#dc3545",
+										display: "inline-block",
+										animation: "pulse 1.5s infinite"
+									}}
+								></span>
+								<strong>🔴 You are currently broadcasting live!</strong>
+								<span className="ms-auto">
+									<small>Stream: {streamTitle || 'Untitled Stream'}</small>
+								</span>
+							</div>
+						)}
+
 						<div className="d-flex gap-3 mb-3">
 							<Image
 								src={
@@ -1003,7 +1062,7 @@ const HomePage = () => {
 												animation: isStreaming ? "pulse 1s infinite" : "none"
 											}}
 										></span>
-										{isStreaming ? "STREAMING" : isLive ? "LIVE" : "Go Live"}
+										{isStreaming ? "BROADCASTING" : isLive ? "LIVE" : "Go Live"}
 									</span>
 								</Button>
 							</div>
@@ -1012,15 +1071,36 @@ const HomePage = () => {
 						</div>
 					</Modal.Body>
 
-					<Modal.Footer>
+					<Modal.Footer className="d-flex justify-content-between align-items-center">
+						{isStreaming && (
+							<div className="d-flex align-items-center gap-2 text-danger">
+								<span
+									style={{
+										width: "8px",
+										height: "8px",
+										borderRadius: "50%",
+										backgroundColor: "#dc3545",
+										display: "inline-block",
+										animation: "pulse 1.5s infinite"
+									}}
+								></span>
+								<small className="fw-bold">Broadcasting Live</small>
+							</div>
+						)}
 						<Button
-							className="w-100"
+							className={isStreaming ? "flex-grow-1 ms-3" : "w-100"}
 							onClick={handleCreatePost}
 							disabled={
 								submitting || (!postText.trim() && !photos && !liveVideoUrl)
 							}
 						>
-							{submitting ? <Spinner size="sm" animation="border" /> : "Post"}
+							{submitting ? (
+								<Spinner size="sm" animation="border" />
+							) : isStreaming ? (
+								"Post to Live Stream"
+							) : (
+								"Post"
+							)}
 						</Button>
 					</Modal.Footer>
 				</Modal>
