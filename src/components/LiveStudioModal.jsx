@@ -247,7 +247,6 @@ const LiveStudioModal = ({
 	};
 
 	const handleStartStream = () => {
-
 		if (!streamTitle.trim()) {
 			alert('Please enter a stream title');
 			return;
