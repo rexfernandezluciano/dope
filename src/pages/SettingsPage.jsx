@@ -11,7 +11,7 @@ import ProfileSettingsPage from "./settings/ProfileSettingsPage";
 import PrivacySettingsPage from "./settings/PrivacySettingsPage";
 import NotificationSettingsPage from "./settings/NotificationSettingsPage";
 import { authAPI } from "../config/ApiConfig";
-import { removeAuthToken } from "../utils/app-utils";
+import { removeAuthToken } from "../config/ApiConfig";
 
 const SettingsPage = () => {
 	const { username } = useParams();

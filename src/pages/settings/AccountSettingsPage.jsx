@@ -7,7 +7,7 @@ import { Container, Card, Form, Button, Alert, Modal } from "react-bootstrap";
 import { Person, Shield, Trash } from "react-bootstrap-icons";
 
 import { userAPI, authAPI } from "../../config/ApiConfig";
-import { removeAuthToken } from "../../utils/app-utils";
+import { removeAuthToken } from "../../config/ApiConfig";
 
 const AccountSettingsPage = () => {
 	const loaderData = useLoaderData() || {};

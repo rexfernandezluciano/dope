@@ -31,7 +31,7 @@ import {
 } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
-import { removeAuthToken } from "../../utils/app-utils";
+import { removeAuthToken } from "../../config/ApiConfig";
 import {
 	initializeNotifications,
 	requestNotificationPermission,

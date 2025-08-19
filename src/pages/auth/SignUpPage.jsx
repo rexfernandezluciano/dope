@@ -7,7 +7,8 @@ import "animate.css";
 import heic2any from "heic2any";
 
 import { authAPI } from "../../config/ApiConfig";
-import { userExistByEmail, getGravatar, createUsername, setAuthToken } from "../../utils/app-utils";
+import { userExistByEmail, getGravatar, createUsername } from "../../utils/app-utils";
+import { setAuthToken } from "../../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
 import { initializeGoogleAuth, renderGoogleButton, handleGoogleSignIn } from "../../utils/google-auth-utils";
 
@@ -62,7 +63,7 @@ const SignUpPage = () => {
 
 	useEffect(() => {
 		updatePageMeta(pageMetaData.signup);
-		
+
 		// Initialize Google Sign-In
 		const initGoogle = async () => {
 			try {
@@ -72,7 +73,7 @@ const SignUpPage = () => {
 				console.error('Failed to initialize Google Sign-In:', err);
 			}
 		};
-		
+
 		initGoogle();
 	}, []);
 
@@ -108,7 +109,7 @@ const SignUpPage = () => {
 			if (!window.google || !window.google.accounts || !window.google.accounts.id) {
 				await initializeGoogleAuth();
 			}
-			
+
 			// Try direct sign-in first
 			await handleGoogleSignIn(handleGoogleCallback);
 		} catch (err) {
@@ -197,7 +198,7 @@ const SignUpPage = () => {
 		}
 	};
 
-	
+
 
 	return (
 		<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
