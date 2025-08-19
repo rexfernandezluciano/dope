@@ -49,7 +49,7 @@ const StartPage = () => {
 			<Row className="w-100 justify-content-center">
 				<Col xs={12} md={8} lg={6} xl={4}>
 					<Card className="shadow-none border-0">
-						<Card.Body className="text-center p-5">
+						<Card.Body className="text-center">
 							<Image
 								src={socialNetIllustration}
 								alt="Social Network"

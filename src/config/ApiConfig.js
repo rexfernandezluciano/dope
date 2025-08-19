@@ -450,7 +450,7 @@ const commentAPI = {
 			if (!postId || !content) {
 				throw new Error('Post ID and content are required');
 			}
-			const response = await fetch(`${API_BASE_URL}/comments/posts/${postId}`, {
+			const response = await fetch(`${API_BASE_URL}/comments/post/${postId}`, {
 				method: "POST",
 				headers: await getAuthHeaders(),
 				body: JSON.stringify({ content }),

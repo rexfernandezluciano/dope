@@ -37,10 +37,7 @@ import { postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
 import LiveStudioModal from "../components/LiveStudioModal";
-import {
-	deletePost as deletePostUtil,
-	sharePost,
-} from "../utils/common-utils";
+import { deletePost as deletePostUtil, sharePost } from "../utils/common-utils";
 import {
 	initializeNotifications,
 	requestNotificationPermission,
@@ -56,8 +53,6 @@ const cleanTextContent = (text) => {
 	// Replace multiple line breaks with a single one, and trim whitespace
 	return text.replace(/(\r\n|\n|\r){2,}/g, "$1$2").trim();
 };
-
-
 
 const HomePage = () => {
 	const navigate = useNavigate();
@@ -689,8 +684,7 @@ const HomePage = () => {
 			const postData = {
 				content: cleanedContent,
 				imageUrls: uploadedImageUrls,
-				gifUrl: selectedGif ? selectedGif.images.fixed_height.url : null,
-				privacy: selectedPrivacy,
+				privacy: selectedPrivacy.toLowerCase(),
 				postType: "text",
 			};
 
