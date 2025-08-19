@@ -56,12 +56,6 @@
 		<link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 		<script src="//cdn.jsdelivr.net/npm/eruda"></script>
 		<script>
-			if (
-				window.location.hostname === "localhost" ||
-				window.location.hostname.includes(".replit.dev")
-			) {
-				eruda.init();
-			}
 			const search = new URLSearchParams(window.location.search);
 			if (search.get("debug") === "true") eruda.init();
 		</script>
