@@ -83,7 +83,7 @@ const NotificationsDropdown = ({ notifications = [], unreadCount = 0, user }) =>
 				)}
 			</Dropdown.Toggle>
 
-			<Dropdown.Menu className="shadow-lg border-0" style={{ width: '350px', maxHeight: '400px' }}>
+			<Dropdown.Menu className="shadow-sm border-0 z-3" style={{ width: '350px', maxHeight: '400px' }}>
 				<div className="px-3 py-2 border-bottom">
 					<h6 className="mb-0 fw-bold">Notifications</h6>
 				</div>

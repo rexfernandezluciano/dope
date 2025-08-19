@@ -267,14 +267,14 @@ const NavigationView = ({ children }) => {
 					<Container fluid>
 						<Navbar.Toggle
 							aria-controls="offcanvasNavbar"
-							className="shadow-none border-0"
+							className="shadow-none border-0 text-black"
 							onClick={() => setShowModal(true)}
 						/>
 						<Navbar.Brand as={Link} to="/home" className="text-primary">
 							<div
 								style={{
-									width: "200px",
-									height: "30px",
+									width: "150px",
+									height: "35px",
 									backgroundColor: "#0069B5",
 									WebkitMaskImage: `url(${logo})`,
 									WebkitMaskRepeat: "no-repeat",
@@ -288,21 +288,21 @@ const NavigationView = ({ children }) => {
 							></div>
 						</Navbar.Brand>
 
-						{/* Mobile Search Icon */}
-						<Button
-							variant="link"
-							className="p-0 me-2"
-							onClick={() => navigate("/search")}
-						>
-							<Search size={24} className="text-primary" />
-						</Button>
-
 						{/* Mobile Notification Icon */}
 						<NotificationsDropdown
 							notifications={notifications}
 							unreadCount={unreadCount}
 							user={user}
 						/>
+
+						{/* Mobile Search Icon */}
+						<Button
+							variant="link"
+							className="p-0 ms-2 me-2"
+							onClick={() => navigate("/search")}
+						>
+							<Search size={20} className="text-black" />
+						</Button>
 
 						<Navbar.Offcanvas
 							id="offcanvasNavbar"

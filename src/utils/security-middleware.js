@@ -3,6 +3,7 @@ import {
 	generateCSRFToken,
 	ValidationPatterns,
 } from "./security-utils";
+import { getAuthToken } from "../config/ApiConfig";
 
 /**
  * Security middleware for API requests
@@ -28,11 +29,11 @@ export class SecurityMiddleware {
 			}
 
 			// Add authentication headers using secure method (skip for auth endpoints)
-			const isAuthEndpoint = url.includes('/auth/') || url.includes('/login') || url.includes('/signup');
+			const isAuthEndpoint =
+				url.includes("/auth/login") || url.includes("/auth/signup");
 			if (!isAuthEndpoint) {
 				try {
-					const ApiConfig = await import("../config/ApiConfig");
-					const token = ApiConfig.getAuthToken ? ApiConfig.getAuthToken() : null;
+					const token = getAuthToken() ? getAuthToken() : null;
 					if (token) {
 						secureHeaders["Authorization"] = `Bearer ${token}`;
 					}
