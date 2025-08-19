@@ -455,66 +455,6 @@ const NavigationView = ({ children }) => {
 								unreadCount={unreadCount}
 								user={user}
 							/>
-
-							<div className="dropdown ms-3">
-								<Image
-									src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
-									alt="avatar"
-									roundedCircle
-									width="40"
-									height="40"
-									style={{ cursor: "pointer" }}
-									data-bs-toggle="dropdown"
-									aria-expanded="false"
-								/>
-								<ul className="dropdown-menu dropdown-menu-end">
-									<li>
-										<Link className="dropdown-item" to={`/${user?.username}`}>
-											<Person size={16} className="me-2" />
-											Profile
-										</Link>
-									</li>
-									<li>
-										<Link
-											className="dropdown-item"
-											to={`/${user?.username}/settings`}
-										>
-											<Gear size={16} className="me-2" />
-											Settings
-										</Link>
-									</li>
-									<li>
-										<Link
-											className="dropdown-item"
-											to={`/${user?.username}/subscription`}
-										>
-											<Star size={16} className="me-2" />
-											Subscription
-										</Link>
-									</li>
-									<li>
-										<Link
-											className="dropdown-item"
-											to={`/${user?.username}/analytics`}
-										>
-											<BarChart size={16} className="me-2" />
-											Analytics
-										</Link>
-									</li>
-									<li>
-										<hr className="dropdown-divider" />
-									</li>
-									<li>
-										<button
-											className="dropdown-item px-3 text-danger"
-											onClick={handleLogout}
-										>
-											<BoxArrowRight size={16} className="me-2" />
-											Logout
-										</button>
-									</li>
-								</ul>
-							</div>
 						</div>
 					</Container>
 				</Navbar>
