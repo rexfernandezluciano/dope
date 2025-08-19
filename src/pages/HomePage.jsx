@@ -42,7 +42,6 @@ import ThreadedPost from "../components/ThreadedPost";
 import {
 	deletePost as deletePostUtil,
 	sharePost,
-	handlePostClick,
 } from "../utils/common-utils";
 import {
 	initializeNotifications,
@@ -95,7 +94,7 @@ const HomePage = () => {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [mediaStream, setMediaStream] = useState(null);
 	const [mediaRecorder, setMediaRecorder] = useState(null);
-	const streamUrlRef = useRef(null);
+	
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
@@ -127,7 +126,7 @@ const HomePage = () => {
 	// Effect to load posts when filterBy or hashtagFilter changes
 	useEffect(() => {
 		loadPosts();
-	}, [filterBy, hashtagFilter]);
+	}, [filterBy, hashtagFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const checkUser = async () => {
 		try {
@@ -692,8 +691,8 @@ const HomePage = () => {
 		try {
 			setSubmitting(true);
 			// Extract hashtags and mentions for potential future use
-			const hashtags = extractHashtags(cleanedContent);
-			const mentions = extractMentions(cleanedContent);
+			// const hashtags = extractHashtags(cleanedContent);
+			// const mentions = extractMentions(cleanedContent);
 
 			let uploadedImageUrls = [];
 			if (selectedImages.length > 0) {

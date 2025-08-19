@@ -378,7 +378,55 @@ const postAPI = {
 		return apiRequest(`/posts/feed/following${queryString ? `?${queryString}` : ''}`, {
 			method: 'GET'
 		});
+	},
+
+	searchPosts: (query, params = {}) => {
+		const searchParams = new URLSearchParams();
+		searchParams.append('q', query);
+		Object.keys(params).forEach(key => {
+			if (params[key] !== undefined && params[key] !== null) {
+				searchParams.append(key, params[key]);
+			}
+		});
+		const queryString = searchParams.toString();
+		return apiRequest(`/posts/search?${queryString}`, {
+			method: 'GET'
+		});
+	},
+
+	getPostsByHashtag: (params = {}) => {
+		const searchParams = new URLSearchParams();
+		Object.keys(params).forEach(key => {
+			if (params[key] !== undefined && params[key] !== null) {
+				searchParams.append(key, params[key]);
+			}
+		});
+		const queryString = searchParams.toString();
+		return apiRequest(`/posts/hashtag${queryString ? `?${queryString}` : ''}`, {
+			method: 'GET'
+		});
 	}
+};
+
+// Helper function to get auth headers
+const getAuthHeaders = async () => {
+	const token = getAuthToken();
+	const headers = {
+		'Content-Type': 'application/json',
+	};
+	if (token) {
+		headers['Authorization'] = `Bearer ${token}`;
+	}
+	return headers;
+};
+
+// Helper function to handle API responses
+const handleApiResponse = async (response) => {
+	if (!response.ok) {
+		const errorData = await response.json().catch(() => ({}));
+		throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+	}
+	return await response.json();
 };
 
 const commentAPI = {

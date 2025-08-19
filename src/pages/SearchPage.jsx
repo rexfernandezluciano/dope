@@ -10,24 +10,19 @@ import {
 	Card,
 	Spinner,
 	Alert,
-	Tabs,
-	Tab,
 	Nav,
 } from "react-bootstrap";
 import {
 	ArrowLeft,
 	Search,
 	CheckCircleFill,
-	Globe,
-	Lock,
-	PersonFill,
 	Person,
 	Hash,
 	ChatDots,
 } from "react-bootstrap-icons";
 
 import { postAPI, userAPI, commentAPI } from "../config/ApiConfig";
-import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
+import { updatePageMeta } from "../utils/meta-utils";
 import PostCard from "../components/PostCard";
 import { formatTimeAgo } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
@@ -42,8 +37,7 @@ const SearchPage = () => {
 	const [comments, setComments] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
-	const [hasMore, setHasMore] = useState(false);
-	const [nextCursor, setNextCursor] = useState(null);
+	
 
 	// Get current user from localStorage or context
 	const {user: currentUser} = useLoaderData();
@@ -70,7 +64,7 @@ const SearchPage = () => {
 	}, [searchParams, searchQuery, activeTab]);
 
 
-	const performSearch = async (searchQuery = query, tab = activeTab) => {
+	const performSearch = async (searchQuery = searchQuery, tab = activeTab) => {
 		if (!searchQuery.trim()) return;
 
 		try {
@@ -80,8 +74,6 @@ const SearchPage = () => {
 			if (tab === "posts") {
 				const response = await postAPI.searchPosts(searchQuery);
 				setPosts(response.posts || []);
-				setHasMore(response.hasMore || false);
-				setNextCursor(response.nextCursor || null);
 			} else if (tab === "users") {
 				const response = await userAPI.searchUsers(searchQuery);
 				setUsers(response.users || []);
@@ -101,12 +93,10 @@ const SearchPage = () => {
 			setPosts([]);
 			setUsers([]);
 			setComments([]);
-			setHasMore(false);
-			setNextCursor(null);
 			return;
 		}
 		performSearch(searchQuery, activeTab);
-	}, [searchQuery, activeTab]);
+	}, [searchQuery, activeTab, performSearch]);
 
 
 	useEffect(() => {

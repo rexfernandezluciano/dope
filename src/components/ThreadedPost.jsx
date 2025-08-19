@@ -21,27 +21,22 @@ const ThreadedPost = ({ post, currentUser, onLike, onShare, maxComments = 3 }) =
 	const navigate = useNavigate();
 	const [comments, setComments] = useState([]);
 	const [showAllComments, setShowAllComments] = useState(false);
-	const [loading, setLoading] = useState(false);
-	const [totalComments, setTotalComments] = useState(0);
-
 	useEffect(() => {
+		const loadComments = async () => {
+			try {
+				const response = await commentAPI.getComments(post.id);
+				setComments(response.comments || []);
+			} catch (error) {
+				console.error("Failed to load comments:", error);
+			}
+		};
+
 		if (post.stats?.comments > 0) {
 			loadComments();
 		}
-	}, [post.id]);
+	}, [post.id, post.stats?.comments]);
 
-	const loadComments = async () => {
-		try {
-			setLoading(true);
-			const response = await commentAPI.getComments(post.id);
-			setComments(response.comments || []);
-			setTotalComments(response.total || response.comments?.length || 0);
-		} catch (error) {
-			console.error("Failed to load comments:", error);
-		} finally {
-			setLoading(false);
-		}
-	};
+	
 
 	const handleHashtagClick = (hashtag) => {
 		navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=comments`);
