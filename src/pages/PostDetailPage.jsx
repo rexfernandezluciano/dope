@@ -112,13 +112,13 @@ const PostDetailPage = () => {
 	const handleLikePost = async () => {
 		try {
 			const response = await postAPI.likePost(postId);
-			
+
 			// Update post state locally based on the liked response
 			setPost(prevPost => {
 				if (!prevPost) return prevPost;
-				
+
 				const isCurrentlyLiked = prevPost.likes.some(like => like.user.uid === currentUser.uid);
-				
+
 				if (response.liked && !isCurrentlyLiked) {
 					// Add like
 					return {
@@ -140,10 +140,10 @@ const PostDetailPage = () => {
 						}
 					};
 				}
-				
+
 				return prevPost;
 			});
-			
+
 			// Send like notification to post owner only when user actually likes (not unlikes)
 			const wasLiked = post.likes.some(like => like.user.uid === currentUser.uid);
 			if (response.liked && !wasLiked) {
@@ -308,7 +308,7 @@ const PostDetailPage = () => {
 		try {
 			setSubmitting(true);
 			const response = await commentAPI.createComment(postId, newComment.trim());
-			
+
 			// Ensure the comment has a proper author object
 			const newCommentObj = {
 				...response.comment,
@@ -320,7 +320,7 @@ const PostDetailPage = () => {
 					hasBlueCheck: currentUser.hasBlueCheck || false
 				}
 			};
-			
+
 			setComments((prevComments) => [newCommentObj, ...prevComments]);
 
 			// Send comment notification to post owner
@@ -556,7 +556,7 @@ const PostDetailPage = () => {
 									{post.likes.length > 0 && (() => {
 										const currentUserLiked = post.likes.some(like => like.user.uid === currentUser.uid);
 										const otherLikesCount = currentUserLiked ? post.likes.length - 1 : post.likes.length;
-										
+
 										if (currentUserLiked && otherLikesCount > 0) {
 											return (
 												<span>
@@ -799,10 +799,9 @@ const PostDetailPage = () => {
 								style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
 							/>
 							<div className="comment-content flex-grow-1">
-								<div className="d-flex align-items-center justify-content-between mb-1">
-									<div className="d-flex align-items-center gap-1">
-										<span className="fw-bold">{comment.author.name}</span>
-										{comment.author.hasBlueCheck && (
+								<div className="d-flex align-items-center gap-1 mb-1">
+										<span className="fw-bold">{comment.author?.name || 'Unknown User'}</span>
+										{comment.author?.hasBlueCheck && (
 											<span className="text-primary">
 												<CheckCircleFill className="text-primary" size={16} />
 											</span>
@@ -812,23 +811,6 @@ const PostDetailPage = () => {
 											{formatTimeAgo(comment.createdAt)}
 										</span>
 									</div>
-									<Button
-										variant="link"
-										size="sm"
-										className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
-										style={{
-											width: "24px",
-											height: "24px",
-											background: "none",
-											border: "none !important",
-											boxShadow: "none !important",
-										}}
-										onClick={() => handleCommentOptions(comment)}
-										title="Comment options"
-									>
-										<ThreeDots size={14} />
-									</Button>
-								</div>
 
 								<div className="mb-2">
 												{parseTextContent(comment.content, {

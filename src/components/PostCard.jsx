@@ -589,7 +589,7 @@ const PostCard = ({
 										>
 											<Image
 												src={
-													comment.author.photoURL ||
+													comment.author?.photoURL ||
 													"https://i.pravatar.cc/150?img=10"
 												}
 												alt="avatar"
@@ -610,12 +610,14 @@ const PostCard = ({
 														style={{ cursor: "pointer", color: "inherit" }}
 														onClick={(e) => {
 															e.stopPropagation();
-															navigate(`/${comment.author.username}`);
+															if (comment.author?.username) {
+																navigate(`/${comment.author.username}`);
+															}
 														}}
 													>
-														{comment.author.name}
+														{comment.author?.name || 'Unknown User'}
 													</span>
-													{comment.author.hasBlueCheck && (
+													{comment.author?.hasBlueCheck && (
 														<CheckCircleFill
 															className="text-primary"
 															size={12}

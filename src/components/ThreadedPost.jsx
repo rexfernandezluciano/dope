@@ -211,7 +211,7 @@ const ThreadedPost = ({ post, currentUser, onLike, onShare, maxComments = 3 }) =
 										{displayedComments.map((comment, index) => (
 											<div key={comment.id} className={`comment-item ${index === displayedComments.length - 1 ? "mb-0" : "mb-2"} d-flex gap-2`}>
 												<Image
-													src={comment.author.photoURL || "https://i.pravatar.cc/150?img=10"}
+													src={comment.author?.photoURL || "https://i.pravatar.cc/150?img=10"}
 													alt="avatar"
 													roundedCircle
 													width="32"
@@ -223,11 +223,15 @@ const ThreadedPost = ({ post, currentUser, onLike, onShare, maxComments = 3 }) =
 														<span
 															className="fw-bold small"
 															style={{ cursor: "pointer" }}
-															onClick={() => navigate(`/${comment.author.username}`)}
+															onClick={() => {
+																if (comment.author?.username) {
+																	navigate(`/${comment.author.username}`);
+																}
+															}}
 														>
-															{comment.author.name}
+															{comment.author?.name || 'Unknown User'}
 														</span>
-														{comment.author.hasBlueCheck && (
+														{comment.author?.hasBlueCheck && (
 															<CheckCircleFill className="text-primary" size={12} />
 														)}
 														<span className="text-muted small">·</span>
