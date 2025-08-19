@@ -4,7 +4,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button, Card, Image } from "react-bootstrap";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
-import socialNetIllustration from "../assets/img/social-net-illustration.svg";
+import socialNetIllustration from "../assets/images/undraw_social-networking_v4z1.svg";
 
 const StartPage = () => {
 	const navigate = useNavigate();
@@ -12,10 +12,6 @@ const StartPage = () => {
 	React.useEffect(() => {
 		updatePageMeta(pageMetaData.home);
 	}, []);
-
-	const handleGetStarted = () => {
-		navigate("/home");
-	};
 
 	return (
 		<Container fluid className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
