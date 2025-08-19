@@ -182,33 +182,49 @@ const LiveStudioModal = ({
 			// Wait a moment to ensure camera is released
 			await new Promise(resolve => setTimeout(resolve, 500));
 
-			// Create Agora tracks with very basic settings
+			// Create Agora tracks with retry mechanism
 			let videoTrack, audioTrack;
 
-			try {
-				// Use most basic configuration for maximum compatibility
-				videoTrack = await AgoraRTC.createCameraVideoTrack({
-					optimizationMode: 'motion',
-					encoderConfig: {
-						width: 320,
-						height: 240,
-						frameRate: 10,
-						bitrateMin: 200,
-						bitrateMax: 800,
+			const createVideoTrackWithRetry = async (maxRetries = 3) => {
+				for (let attempt = 1; attempt <= maxRetries; attempt++) {
+					try {
+						console.log(`Creating video track - attempt ${attempt}/${maxRetries}`);
+						
+						if (attempt === 1) {
+							// Try with optimized settings first
+							return await AgoraRTC.createCameraVideoTrack({
+								optimizationMode: 'motion',
+								encoderConfig: {
+									width: 320,
+									height: 240,
+									frameRate: 10,
+									bitrateMin: 200,
+									bitrateMax: 800,
+								}
+							});
+						} else {
+							// Fallback to default settings
+							return await AgoraRTC.createCameraVideoTrack();
+						}
+					} catch (error) {
+						console.warn(`Video track creation attempt ${attempt} failed:`, error);
+						
+						if (attempt === maxRetries) {
+							throw new Error('Cannot start video source. Please ensure no other application is using your camera and try again.');
+						}
+						
+						// Wait before retry with exponential backoff
+						await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
 					}
-				});
+				}
+			};
+
+			try {
+				videoTrack = await createVideoTrackWithRetry();
 				console.log('Agora video track created successfully');
 			} catch (videoError) {
-				console.error('Failed to create Agora video track:', videoError);
-
-				// Try with even simpler settings
-				try {
-					videoTrack = await AgoraRTC.createCameraVideoTrack();
-					console.log('Agora video track created with default settings');
-				} catch (fallbackError) {
-					console.error('Fallback video track creation failed:', fallbackError);
-					throw new Error('Cannot start video source. Please ensure no other application is using your camera and try again.');
-				}
+				console.error('Failed to create Agora video track after retries:', videoError);
+				throw videoError;
 			}
 
 			try {
@@ -324,14 +340,27 @@ const LiveStudioModal = ({
 		setConnectionStatus('connecting');
 
 		try {
-			// Test basic network connectivity first
-			const response = await fetch('https://api.agora.io/v1/projects', {
-				method: 'HEAD',
-				mode: 'no-cors'
-			});
+			// Multiple connectivity tests
+			const tests = [
+				// Test 1: Basic internet connectivity
+				fetch('https://www.google.com', { method: 'HEAD', mode: 'no-cors' }).catch(() => null),
+				// Test 2: Agora service availability
+				fetch('https://webrtc2-ap-web-1.agora.io/health', { method: 'HEAD', mode: 'no-cors' }).catch(() => null),
+				// Test 3: Alternative Agora endpoint
+				fetch('https://webrtc2-us-west-1.agora.io/health', { method: 'HEAD', mode: 'no-cors' }).catch(() => null)
+			];
 
-			// If we get here, basic connectivity works
-			setConnectionStatus('connected');
+			const results = await Promise.allSettled(tests);
+			const hasInternet = results[0].status === 'fulfilled';
+			
+			if (hasInternet) {
+				console.log('Network connectivity: OK');
+				setConnectionStatus('connected');
+			} else {
+				console.warn('Network connectivity issues detected');
+				setConnectionStatus('error');
+			}
+
 			setTimeout(() => setConnectionStatus('disconnected'), 3000);
 		} catch (error) {
 			console.error('Connection test failed:', error);

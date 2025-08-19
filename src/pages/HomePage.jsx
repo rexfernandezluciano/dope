@@ -360,24 +360,42 @@ const HomePage = () => {
 			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 			const streamUrl = `${window.location.origin}/live/${streamKey}`;
 
-			// Create Agora client with optimized settings for network reliability
+			// Create Agora client with enhanced error handling and network resilience
 			const client = AgoraRTC.createClient({ 
 				mode: 'live', 
-				codec: 'vp8',
-				// Enable network quality optimization
+				codec: 'h264',  // H264 is more stable than VP8
+				// Enable network optimizations
 				optimizeForNetworkQuality: true
 			});
 
-			// Add error handlers
-			client.on('connection-state-change', (curState, revState) => {
-				console.log('Agora connection state changed:', curState, 'from', revState);
+			// Enhanced error handlers
+			client.on('connection-state-change', (curState, revState, reason) => {
+				console.log('Agora connection state changed:', curState, 'from', revState, 'reason:', reason);
+				
+				if (curState === 'FAILED' || curState === 'DISCONNECTED') {
+					console.warn('Agora connection lost, attempting to reconnect...');
+				}
 			});
 
 			client.on('exception', (evt) => {
 				console.error('Agora exception:', evt);
+				if (evt.code === 'NETWORK_ERROR') {
+					console.warn('Network error detected, connection may be unstable');
+				}
 			});
 
-			await client.setClientRole('host');
+			client.on('network-quality', (stats) => {
+				if (stats.uplinkNetworkQuality < 3 || stats.downlinkNetworkQuality < 3) {
+					console.warn('Poor network quality detected');
+				}
+			});
+
+			try {
+				await client.setClientRole('host');
+			} catch (roleError) {
+				console.error('Failed to set client role:', roleError);
+				throw new Error('Failed to initialize streaming role');
+			}
 
 			// Join channel and publish tracks with timeout
 			const agoraConfig = {
@@ -394,23 +412,43 @@ const HomePage = () => {
 				hasAudio: !!audioTrack
 			});
 
+			const joinWithRetry = async (maxRetries = 3) => {
+				for (let attempt = 1; attempt <= maxRetries; attempt++) {
+					try {
+						console.log(`Joining Agora channel - attempt ${attempt}/${maxRetries}`);
+						
+						const joinPromise = client.join(
+							agoraConfig.appId,
+							agoraConfig.channel,
+							agoraConfig.token,
+							agoraConfig.uid
+						);
+
+						// Increase timeout for better reliability
+						const timeoutPromise = new Promise((_, reject) => 
+							setTimeout(() => reject(new Error('Connection timeout')), 20000)
+						);
+
+						await Promise.race([joinPromise, timeoutPromise]);
+						console.log('Successfully joined Agora channel');
+						return;
+					} catch (joinError) {
+						console.warn(`Join attempt ${attempt} failed:`, joinError);
+						
+						if (attempt === maxRetries) {
+							throw new Error(`Failed to join after ${maxRetries} attempts: ${joinError.message}`);
+						}
+						
+						// Wait before retry
+						await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+					}
+				}
+			};
+
 			try {
-				// Add timeout to join operation
-				const joinPromise = client.join(
-					agoraConfig.appId,
-					agoraConfig.channel,
-					agoraConfig.token,
-					agoraConfig.uid
-				);
-
-				const timeoutPromise = new Promise((_, reject) => 
-					setTimeout(() => reject(new Error('Connection timeout')), 15000)
-				);
-
-				await Promise.race([joinPromise, timeoutPromise]);
-				console.log('Successfully joined Agora channel');
+				await joinWithRetry();
 			} catch (joinError) {
-				console.error('Failed to join Agora channel:', joinError);
+				console.error('Failed to join Agora channel after retries:', joinError);
 				// Clean up tracks on error
 				if (videoTrack) {
 					videoTrack.stop();
@@ -461,7 +499,18 @@ const HomePage = () => {
 			}
 		} catch (error) {
 			console.error('Error starting live stream:', error);
-			setError(`Failed to start live stream: ${error.message}`);
+			
+			// Provide specific error messages based on error type
+			let errorMessage = error.message;
+			if (error.message.includes('NETWORK_ERROR') || error.message.includes('timeout')) {
+				errorMessage = 'Network connection issues detected. Please check your internet connection and try again.';
+			} else if (error.message.includes('camera') || error.message.includes('video')) {
+				errorMessage = 'Camera access issue. Please ensure your camera is not being used by another application.';
+			} else if (error.message.includes('microphone') || error.message.includes('audio')) {
+				errorMessage = 'Microphone access issue. Please check your microphone permissions.';
+			}
+			
+			setError(`Failed to start live stream: ${errorMessage}`);
 
 			// Clean up localStorage on error
 			localStorage.removeItem('isCurrentlyBroadcasting');
