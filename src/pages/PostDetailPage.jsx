@@ -144,8 +144,9 @@ const PostDetailPage = () => {
 				return prevPost;
 			});
 			
-			// Send like notification to post owner only if liked (not unliked)
-			if (response.liked) {
+			// Send like notification to post owner only when user actually likes (not unlikes)
+			const wasLiked = post.likes.some(like => like.user.uid === currentUser.uid);
+			if (response.liked && !wasLiked) {
 				try {
 					await handleLikeNotification(postId, post, currentUser);
 				} catch (notificationError) {

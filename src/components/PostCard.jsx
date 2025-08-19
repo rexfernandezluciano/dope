@@ -153,10 +153,11 @@ const PostCard = ({
 	const handleLike = async (e) => {
 		e.stopPropagation();
 		if (onLike) {
+			const wasLiked = post.likes.some(like => like.user.uid === currentUser.uid);
 			const response = await onLike(post.id);
 			
-			// Send like notification to post owner only if liked (not unliked)
-			if (response && response.liked) {
+			// Send like notification to post owner only when user actually likes (not unlikes)
+			if (response && response.liked && !wasLiked) {
 				try {
 					await handleLikeNotification(post.id, post, currentUser);
 				} catch (error) {
