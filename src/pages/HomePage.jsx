@@ -766,14 +766,30 @@ const HomePage = () => {
 			setPosts((prevPosts) =>
 				prevPosts.map((post) => {
 					if (post.id === postId) {
-						// Preserve existing comments and other properties that might not be in the response
-						return {
-							...post,
-							...response.post,
-							comments: post.comments || [], // Preserve existing comments
-							stats: response.post.stats || post.stats || [], // Update stats if available
-							likes: response.post.likes || post.likes || [] // Update likes
-						};
+						// Only update the likes array based on the response
+						const updatedPost = { ...post };
+
+						// Update likes based on response
+						if (response.liked) {
+							// Add current user to likes if not already there
+							const userAlreadyLiked = post.likes.some(like => like.user.uid === currentUser.uid);
+							if (!userAlreadyLiked) {
+								updatedPost.likes = [...post.likes, { user: currentUser }];
+							}
+						} else {
+							// Remove current user from likes
+							updatedPost.likes = post.likes.filter(like => like.user.uid !== currentUser.uid);
+						}
+
+						// Update stats if available
+						if (updatedPost.stats) {
+							updatedPost.stats = {
+								...updatedPost.stats,
+								likes: updatedPost.likes.length
+							};
+						}
+
+						return updatedPost;
 					}
 					return post;
 				}),
