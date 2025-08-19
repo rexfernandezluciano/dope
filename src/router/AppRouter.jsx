@@ -66,13 +66,19 @@ const router = createBrowserRouter([
 		path: "/post/:postId",
 		element: (
 			<RequireAuth>
-				<NavigationView>
-					<PostDetailPage />
-				</NavigationView>
+				<IndexPage />
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
 		hydrateFallbackElement: <LoadingView />,
+		children: [
+			{
+				index: true,
+				element: <PostDetailPage />,
+				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
+			},
+		],
 	},
 	{
 		path: "/:username",

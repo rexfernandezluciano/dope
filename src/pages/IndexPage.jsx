@@ -7,7 +7,6 @@ import ProfilePage from "./ProfilePage";
 import SettingsPage from "./SettingsPage";
 import SubscriptionPage from "./SubscriptionPage";
 import AnalyticsPage from "./AnalyticsPage";
-import PostDetailPage from "./PostDetailPage";
 
 const IndexPage = () => {
   const loaderData = useLoaderData() || {};
@@ -15,14 +14,7 @@ const IndexPage = () => {
   const location = useLocation();
   const pathname = location.pathname;
 
-  // Check if it's a post detail page
-	if (pathname.startsWith('/post/')) {
-		return (
-			<NavigationView user={user}>
-				<PostDetailPage />
-			</NavigationView>
-		);
-	}
+  
 
 	// Check if it's settings page
 	if (pathname.endsWith('/settings')) {

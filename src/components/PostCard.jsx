@@ -23,7 +23,6 @@ import {
 	formatTimeAgo,
 	deletePost as deletePostUtil,
 	sharePost,
-	handlePostClick,
 } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
 import { handleLikeNotification } from "../utils/notification-helpers";
