@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Image, Button, Modal } from "react-bootstrap";
 import {
@@ -75,7 +75,7 @@ const PostCard = ({
 		return () => observer.disconnect();
 	}, [post.id, viewTracked]);
 
-	const canComment = (post) => {
+	const canComment = useMemo(() => {
 		if (!currentUser) return false;
 
 		// Post owner can always comment
@@ -93,10 +93,10 @@ const PostCard = ({
 			default:
 				return true;
 		}
-	};
+	}, [currentUser, post.author.uid, post.privacy, post.author.isFollowedByCurrentUser]);
 
-	const getPrivacyIcon = (privacy) => {
-		switch (privacy) {
+	const privacyIcon = useMemo(() => {
+		switch (post.privacy) {
 			case "public":
 				return <Globe size={14} className="text-muted" />;
 			case "private":
@@ -106,21 +106,26 @@ const PostCard = ({
 			default:
 				return <Globe size={14} className="text-muted" />;
 		}
-	};
+	}, [post.privacy]);
 
-	const openImageViewer = (images, startIndex = 0) => {
+	const currentUserLiked = useMemo(() => 
+		post.likes.some(like => like.user.uid === currentUser.uid),
+		[post.likes, currentUser.uid]
+	);
+
+	const openImageViewer = useCallback((images, startIndex = 0) => {
 		setCurrentImages(images);
 		setCurrentImageIndex(startIndex);
 		setShowImageViewer(true);
-	};
+	}, []);
 
-	const closeImageViewer = () => {
+	const closeImageViewer = useCallback(() => {
 		setShowImageViewer(false);
 		setCurrentImages([]);
 		setCurrentImageIndex(0);
-	};
+	}, []);
 
-	const handlePostClickView = async (e) => {
+	const handlePostClickView = useCallback(async (e) => {
 		// Prevent default behavior and stop propagation
 		e.preventDefault();
 		e.stopPropagation();
@@ -148,12 +153,12 @@ const PostCard = ({
 
 		// Navigate directly instead of using utility function
 		navigate(`/post/${post.id}`);
-	};
+	}, [post.id, navigate]);
 
-	const handleLike = async (e) => {
+	const handleLike = useCallback(async (e) => {
 		e.stopPropagation();
 		if (onLike) {
-			const wasLiked = post.likes.some(like => like.user.uid === currentUser.uid);
+			const wasLiked = currentUserLiked;
 			const response = await onLike(post.id);
 			
 			// Send like notification to post owner only when user actually likes (not unlikes)
@@ -165,48 +170,48 @@ const PostCard = ({
 				}
 			}
 		}
-	};
+	}, [onLike, post.id, post, currentUser, currentUserLiked]);
 
-	const handleShare = (e) => {
+	const handleShare = useCallback((e) => {
 		e.stopPropagation();
 		sharePost(post.id); // Use the utility function
 		if (onShare) {
 			onShare(post.id);
 		}
-	};
+	}, [post.id, onShare]);
 
-	const handleComment = (e) => {
+	const handleComment = useCallback((e) => {
 		e.stopPropagation();
-		if (canComment(post)) {
+		if (canComment) {
 			navigate(`/post/${post.id}`);
 		}
-	};
+	}, [canComment, navigate, post.id]);
 
 	const handleDeletePost = async (postId) => {
 		await deletePostUtil(postId, postAPI.deletePost); // Use the utility function
 		onDeletePost?.(postId);
 	};
 
-	const handleHashtagClick = (hashtag) => {
+	const handleHashtagClick = useCallback((hashtag) => {
 		navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=comments`);
-	};
+	}, [navigate]);
 
-	const handleMentionClick = (username) => {
+	const handleMentionClick = useCallback((username) => {
 		navigate(`/${username}`);
-	};
+	}, [navigate]);
 
-	const handleLinkClick = (url) => {
+	const handleLinkClick = useCallback((url) => {
 		window.open(url, "_blank", "noopener,noreferrer");
-	};
+	}, []);
 
-	const openPostOptionsModal = (e) => {
+	const openPostOptionsModal = useCallback((e) => {
 		e.stopPropagation();
 		setShowPostOptionsModal(true);
-	};
+	}, []);
 
-	const closePostOptionsModal = () => {
+	const closePostOptionsModal = useCallback(() => {
 		setShowPostOptionsModal(false);
-	};
+	}, []);
 
 	return (
 		<>
@@ -251,7 +256,7 @@ const PostCard = ({
 										{formatTimeAgo(post.createdAt)}
 									</span>
 									<span className="text-muted">·</span>
-									{getPrivacyIcon(post.privacy)}
+									{privacyIcon}
 								</div>
 								<Button
 									variant="link"
@@ -430,7 +435,6 @@ const PostCard = ({
 							<div className="d-flex align-items-center justify-content-between">
 								<div className="d-flex flex-wrap gap-3 small text-muted">
 									{post.likes.length > 0 && (() => {
-										const currentUserLiked = post.likes.some(like => like.user.uid === currentUser.uid);
 										const otherLikesCount = currentUserLiked ? post.likes.length - 1 : post.likes.length;
 										
 										if (currentUserLiked && otherLikesCount > 0) {
@@ -478,28 +482,28 @@ const PostCard = ({
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn ${!canComment(post) ? "opacity-50" : "text-muted"}`}
+									className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn ${!canComment ? "opacity-50" : "text-muted"}`}
 									style={{
 										transition: "all 0.2s",
 										minWidth: "40px",
 										height: "36px",
 									}}
 									onClick={handleComment}
-									disabled={!canComment(post)}
+									disabled={!canComment}
 									title={
-										!canComment(post)
+										!canComment
 											? "You cannot comment on this post"
 											: "Comment"
 									}
 									onMouseEnter={(e) => {
-										if (canComment(post)) {
+										if (canComment) {
 											e.target.closest(".action-btn").style.backgroundColor =
 												"rgba(29, 161, 242, 0.1)";
 											e.target.closest(".action-btn").style.color = "#1da1f2";
 										}
 									}}
 									onMouseLeave={(e) => {
-										if (canComment(post)) {
+										if (canComment) {
 											e.target.closest(".action-btn").style.backgroundColor =
 												"transparent";
 											e.target.closest(".action-btn").style.color = "#6c757d";
@@ -517,9 +521,7 @@ const PostCard = ({
 									size="sm"
 									className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 									style={{
-										color: post.likes.some(
-											(like) => like.user.uid === currentUser.uid,
-										)
+										color: currentUserLiked
 											? "#dc3545"
 											: "#6c757d",
 										transition: "all 0.2s",
@@ -528,31 +530,21 @@ const PostCard = ({
 									}}
 									onClick={handleLike}
 									onMouseEnter={(e) => {
-										if (
-											!post.likes.some(
-												(like) => like.user.uid === currentUser.uid,
-											)
-										) {
+										if (!currentUserLiked) {
 											e.target.closest(".action-btn").style.backgroundColor =
 												"rgba(220, 53, 69, 0.1)";
 											e.target.closest(".action-btn").style.color = "#dc3545";
 										}
 									}}
 									onMouseLeave={(e) => {
-										if (
-											!post.likes.some(
-												(like) => like.user.uid === currentUser.uid,
-											)
-										) {
+										if (!currentUserLiked) {
 											e.target.closest(".action-btn").style.backgroundColor =
 												"transparent";
 											e.target.closest(".action-btn").style.color = "#6c757d";
 										}
 									}}
 								>
-									{post.likes.some(
-										(like) => like.user.uid === currentUser.uid,
-									) ? (
+									{currentUserLiked ? (
 										<HeartFill size={20} style={{ flexShrink: 0 }} />
 									) : (
 										<Heart size={20} style={{ flexShrink: 0 }} />
