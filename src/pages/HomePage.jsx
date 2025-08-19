@@ -362,13 +362,18 @@ const HomePage = () => {
 
 			// Join channel and publish tracks
 			const agoraConfig = {
-				appId: process.env.REACT_APP_AGORA_APP_ID || '24ce08654e5c4232bac73ee7946ee769',
+				appId: '24ce08654e5c4232bac73ee7946ee769',
 				token: null, // Generate server-side for production
 				channel: streamKey,
 				uid: null
 			};
 
-			console.log('Joining Agora channel with config:', agoraConfig);
+			console.log('Joining Agora channel with config:', {
+				appId: agoraConfig.appId,
+				channel: agoraConfig.channel,
+				hasVideo: !!videoTrack,
+				hasAudio: !!audioTrack
+			});
 
 			try {
 				await client.join(
@@ -380,6 +385,15 @@ const HomePage = () => {
 				console.log('Successfully joined Agora channel');
 			} catch (joinError) {
 				console.error('Failed to join Agora channel:', joinError);
+				// Clean up tracks on error
+				if (videoTrack) {
+					videoTrack.stop();
+					videoTrack.close();
+				}
+				if (audioTrack) {
+					audioTrack.stop();
+					audioTrack.close();
+				}
 				throw new Error(`Failed to join live stream channel: ${joinError.message}`);
 			}
 

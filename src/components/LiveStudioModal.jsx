@@ -59,6 +59,7 @@ const LiveStudioModal = ({
 	// Live comments states
 	const [liveComments, setLiveComments] = useState([]);
 	const [viewerCount, setViewerCount] = useState(0);
+	const [connectionStatus, setConnectionStatus] = useState('disconnected'); // disconnected, connecting, connected, error
 
 	const videoRef = useRef(null);
 	const commentsEndRef = useRef(null);
@@ -166,20 +167,39 @@ const LiveStudioModal = ({
 			stream.getTracks().forEach(track => track.stop());
 
 			// Create Agora video track for preview
-			const videoTrack = await AgoraRTC.createCameraVideoTrack({
-				optimizationMode: 'detail',
-				encoderConfig: {
-					width: 1280,
-					height: 720,
-					frameRate: 30,
-					bitrateMin: 1000,
-					bitrateMax: 3000,
-				}
-			});
+			let videoTrack, audioTrack;
+			
+			try {
+				videoTrack = await AgoraRTC.createCameraVideoTrack({
+					optimizationMode: 'detail',
+					encoderConfig: {
+						width: 1280,
+						height: 720,
+						frameRate: 30,
+						bitrateMin: 1000,
+						bitrateMax: 3000,
+					}
+				});
+				console.log('Video track created successfully');
+			} catch (videoError) {
+				console.error('Failed to create video track:', videoError);
+				throw new Error(`Camera error: ${videoError.message}`);
+			}
 
-			const audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-				encoderConfig: 'high_quality_stereo'
-			});
+			try {
+				audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
+					encoderConfig: 'high_quality_stereo'
+				});
+				console.log('Audio track created successfully');
+			} catch (audioError) {
+				console.error('Failed to create audio track:', audioError);
+				// Clean up video track if audio fails
+				if (videoTrack) {
+					videoTrack.stop();
+					videoTrack.close();
+				}
+				throw new Error(`Microphone error: ${audioError.message}`);
+			}
 
 			// Play video preview immediately
 			if (videoRef.current) {
@@ -246,18 +266,36 @@ const LiveStudioModal = ({
 		return { ...baseStyle, ...filterStyle };
 	};
 
+	const testConnection = async () => {
+		setConnectionStatus('connecting');
+		
+		try {
+			// Test Agora connection
+			const testClient = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
+			
+			await testClient.join(
+				'24ce08654e5c4232bac73ee7946ee769',
+				`test_${Date.now()}`,
+				null,
+				null
+			);
+			
+			await testClient.leave();
+			setConnectionStatus('connected');
+			
+			setTimeout(() => setConnectionStatus('disconnected'), 3000);
+		} catch (error) {
+			console.error('Connection test failed:', error);
+			setConnectionStatus('error');
+			setTimeout(() => setConnectionStatus('disconnected'), 3000);
+		}
+	};
+
 	const handleStartStream = () => {
 		if (!streamTitle.trim()) {
 			alert('Please enter a stream title');
 			return;
 		}
-
-		// Debug Agora configuration
-		console.log('Agora App ID:', process.env.REACT_APP_AGORA_APP_ID);
-		console.log('Local tracks available:', {
-			video: !!localVideoTrack,
-			audio: !!localAudioTrack
-		});
 
 		if (!localVideoTrack || !localAudioTrack) {
 			alert('Video or audio track not available. Please refresh and try again.');
@@ -669,6 +707,25 @@ const LiveStudioModal = ({
 										})}
 									</div>
 								</div>
+
+								{/* Connection Test */}
+								{!isStreaming && (
+									<div className="mb-3">
+										<small className="text-muted fw-bold d-block mb-2">CONNECTION TEST</small>
+										<Button
+											variant={connectionStatus === 'connected' ? 'success' : connectionStatus === 'error' ? 'danger' : 'outline-primary'}
+											size="sm"
+											onClick={testConnection}
+											disabled={connectionStatus === 'connecting'}
+											className="w-100"
+										>
+											{connectionStatus === 'connecting' && <Spinner size="sm" className="me-2" />}
+											{connectionStatus === 'connected' ? '✓ Connected' : 
+											 connectionStatus === 'error' ? '✗ Connection Failed' : 
+											 'Test Connection'}
+										</Button>
+									</div>
+								)}
 
 								{/* Stream Stats (when live) */}
 								{isStreaming && (
