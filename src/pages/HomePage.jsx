@@ -335,31 +335,19 @@ const HomePage = () => {
 
 	const startLiveStream = async () => {
 		try {
+			// Request camera and microphone permissions
+			await navigator.mediaDevices.getUserMedia({ 
+				video: true, 
+				audio: true 
+			});
+
 			// Create Agora client
 			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
 
 			// Set client role as host
 			await client.setClientRole('host');
 
-			// Create local tracks
-			const videoTrack = await AgoraRTC.createCameraVideoTrack({
-				optimizationMode: 'detail',
-				encoderConfig: {
-					width: 1280,
-					height: 720,
-					frameRate: 30,
-					bitrateMin: 1000,
-					bitrateMax: 3000,
-				}
-			});
-
-			const startAgoraLiveStream = async (streamKey) => {
-		try {
-			// Create Agora client
-			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
-			await client.setClientRole('host');
-
-			// Create media tracks
+			// Create local tracks with proper configuration
 			const videoTrack = await AgoraRTC.createCameraVideoTrack({
 				optimizationMode: 'detail',
 				encoderConfig: {
@@ -375,10 +363,36 @@ const HomePage = () => {
 				encoderConfig: 'high_quality_stereo'
 			});
 
-			// Play local video preview
+			// Play local video preview immediately
 			if (videoRef.current) {
 				videoTrack.play(videoRef.current);
 			}
+
+			// Store references
+			setMediaStream(client);
+			setMediaRecorder({ videoTrack, audioTrack });
+			setIsStreaming(true);
+
+		} catch (error) {
+			console.error('Error starting live stream:', error);
+			setError('Failed to start live stream. Please check camera permissions.');
+			
+			// Clean up on error
+			setIsStreaming(false);
+			setIsLive(false);
+			setLiveVideoUrl("");
+		}
+	};
+
+	const startAgoraLiveStream = async (streamKey) => {
+		try {
+			// Use existing tracks from preview
+			if (!mediaRecorder || !mediaRecorder.videoTrack || !mediaRecorder.audioTrack) {
+				throw new Error('Camera not initialized. Please start preview first.');
+			}
+
+			const { videoTrack, audioTrack } = mediaRecorder;
+			const client = mediaStream;
 
 			// Join channel and publish tracks
 			const agoraConfig = {
@@ -397,25 +411,10 @@ const HomePage = () => {
 
 			await client.publish([videoTrack, audioTrack]);
 
-			// Store references
-			setMediaStream(client);
-			setMediaRecorder({ videoTrack, audioTrack });
-
 			return { success: true };
 		} catch (error) {
 			console.error('Agora streaming error:', error);
 			throw error;
-		}
-	};
-
-		} catch (error) {
-			console.error('Error starting Agora live stream:', error);
-			setError('Failed to start live stream. Please check camera permissions and Agora configuration.');
-			
-			// Clean up on error
-			setIsStreaming(false);
-			setIsLive(false);
-			setLiveVideoUrl("");
 		}
 	};
 
@@ -425,6 +424,9 @@ const HomePage = () => {
 			if (!streamData.title || !streamData.title.trim()) {
 				throw new Error('Stream title is required');
 			}
+
+			// First initialize camera and preview
+			await startLiveStream();
 
 			// Generate unique stream key
 			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -447,13 +449,12 @@ const HomePage = () => {
 
 			if (response.success || response.id) {
 				setIsLive(true);
-				setIsStreaming(true);
 				setStreamTitle(streamData.title);
 				setPostText(streamData.description || streamData.title);
 				setLiveVideoUrl(streamUrl);
 				setShowLiveStudioModal(false);
 
-				// Start Agora stream
+				// Start Agora stream with existing tracks
 				await startAgoraLiveStream(streamKey);
 
 				console.log('Live stream started successfully:', response);
@@ -473,12 +474,25 @@ const HomePage = () => {
 
 	const stopLiveStream = async () => {
 		try {
-			if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-				mediaRecorder.stop();
+			// Stop Agora tracks properly
+			if (mediaRecorder) {
+				if (mediaRecorder.videoTrack) {
+					mediaRecorder.videoTrack.stop();
+					mediaRecorder.videoTrack.close();
+				}
+				if (mediaRecorder.audioTrack) {
+					mediaRecorder.audioTrack.stop();
+					mediaRecorder.audioTrack.close();
+				}
 			}
 
+			// Leave Agora channel and cleanup
 			if (mediaStream) {
-				mediaStream.getTracks().forEach(track => track.stop());
+				try {
+					await mediaStream.leave();
+				} catch (err) {
+					console.warn('Error leaving Agora channel:', err);
+				}
 				setMediaStream(null);
 			}
 
@@ -487,6 +501,7 @@ const HomePage = () => {
 			setMediaRecorder(null);
 			setLiveVideoUrl("");
 
+			// Clear video element
 			if (videoRef.current) {
 				videoRef.current.srcObject = null;
 			}

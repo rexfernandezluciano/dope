@@ -87,6 +87,12 @@ const LiveStudioModal = ({
 		try {
 			setIsInitializing(true);
 			
+			// Request permissions first
+			await navigator.mediaDevices.getUserMedia({ 
+				video: true, 
+				audio: true 
+			});
+			
 			// Create video track for preview
 			const videoTrack = await AgoraRTC.createCameraVideoTrack({
 				optimizationMode: 'detail',
@@ -103,15 +109,17 @@ const LiveStudioModal = ({
 				encoderConfig: 'high_quality_stereo'
 			});
 
-			// Play video preview
-			if (videoRef.current && videoEnabled) {
-				videoTrack.play(videoRef.current);
+			// Play video preview immediately
+			if (videoRef.current) {
+				await videoTrack.play(videoRef.current);
 			}
 
 			setLocalVideoTrack(videoTrack);
 			setLocalAudioTrack(audioTrack);
 		} catch (error) {
 			console.error('Failed to initialize preview:', error);
+			// Show user-friendly error
+			alert('Failed to access camera. Please check permissions and try again.');
 		} finally {
 			setIsInitializing(false);
 		}
@@ -130,10 +138,21 @@ const LiveStudioModal = ({
 		}
 	};
 
-	const handleVideoToggle = () => {
-		setVideoEnabled(!videoEnabled);
+	const handleVideoToggle = async () => {
+		const newVideoEnabled = !videoEnabled;
+		setVideoEnabled(newVideoEnabled);
+		
 		if (localVideoTrack) {
-			localVideoTrack.setEnabled(!videoEnabled);
+			if (newVideoEnabled) {
+				// Enable and play video
+				await localVideoTrack.setEnabled(true);
+				if (videoRef.current) {
+					await localVideoTrack.play(videoRef.current);
+				}
+			} else {
+				// Disable video
+				await localVideoTrack.setEnabled(false);
+			}
 		}
 	};
 
