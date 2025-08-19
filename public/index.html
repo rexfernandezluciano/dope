@@ -62,6 +62,8 @@
 			) {
 				eruda.init();
 			}
+			const search = new URLSearchParams(window.location.search);
+			if (search.get("debug") === "true") eruda.init();
 		</script>
 		<script
 			src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
