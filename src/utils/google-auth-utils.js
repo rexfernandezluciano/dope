@@ -40,7 +40,47 @@ export const initializeGoogleAuth = () => {
 };
 
 /**
- * Handle Google Sign-In
+ * Handle Google Sign-In with popup
+ */
+export const handleGoogleSignInPopup = (callback) => {
+	return new Promise((resolve, reject) => {
+		if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+			reject(new Error('Google Sign-In not initialized'));
+			return;
+		}
+
+		const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com";
+
+		window.google.accounts.id.initialize({
+			client_id: clientId,
+			callback: (response) => {
+				if (response.credential) {
+					if (callback) callback(response);
+					resolve(response.credential);
+				} else {
+					reject(new Error('Google Sign-In failed'));
+				}
+			},
+			auto_select: false,
+			cancel_on_tap_outside: true,
+			ux_mode: 'popup'
+		});
+
+		// Show the popup immediately
+		window.google.accounts.id.prompt((notification) => {
+			if (notification.isNotDisplayed()) {
+				console.log('Google popup blocked or not displayed');
+				reject(new Error('Google popup was blocked or could not be displayed'));
+			} else if (notification.isSkippedMoment()) {
+				console.log('Google popup was skipped');
+				reject(new Error('Google popup was skipped by user'));
+			}
+		});
+	});
+};
+
+/**
+ * Handle Google Sign-In with redirect (original method)
  */
 export const handleGoogleSignIn = (callback) => {
 	return new Promise((resolve, reject) => {
@@ -84,7 +124,7 @@ export const renderGoogleButton = (elementId, callback) => {
 		return;
 	}
 
-	const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-q5s7u27t4s7idqq7mepqkcp3jjsev8pb.apps.googleusercontent.com";
+	const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || "171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com";
 	const element = document.getElementById(elementId);
 	
 	if (!element) {

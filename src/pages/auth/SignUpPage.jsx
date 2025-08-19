@@ -10,7 +10,7 @@ import { authAPI } from "../../config/ApiConfig";
 import { userExistByEmail, getGravatar, createUsername } from "../../utils/app-utils";
 import { setAuthToken } from "../../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
-import { initializeGoogleAuth, renderGoogleButton, handleGoogleSignIn } from "../../utils/google-auth-utils";
+import { initializeGoogleAuth, renderGoogleButton, handleGoogleSignIn, handleGoogleSignInPopup } from "../../utils/google-auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
@@ -36,6 +36,7 @@ const SignUpPage = () => {
 	const [showDialog, setShowDialog] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [googleLoading, setGoogleLoading] = useState(false);
+	const [usePopup, setUsePopup] = useState(true);
 
 	const navigate = useNavigate();
 
@@ -105,21 +106,35 @@ const SignUpPage = () => {
 
 	const handleGoogleSignUp = async () => {
 		try {
+			setGoogleLoading(true);
+			setError("");
+
 			// Ensure Google is initialized first
 			if (!window.google || !window.google.accounts || !window.google.accounts.id) {
 				await initializeGoogleAuth();
 			}
 
-			// Try direct sign-in first
-			await handleGoogleSignIn(handleGoogleCallback);
+			if (usePopup) {
+				// Try popup sign-in first
+				await handleGoogleSignInPopup(handleGoogleCallback);
+			} else {
+				// Try direct sign-in
+				await handleGoogleSignIn(handleGoogleCallback);
+			}
 		} catch (err) {
 			console.error('Google signup error:', err);
-			// Fallback to button rendering
-			const buttonElement = document.getElementById('google-signup-button');
-			if (buttonElement) {
-				buttonElement.style.display = 'block';
-				renderGoogleButton('google-signup-button', handleGoogleCallback);
+			setError("Google signup failed. Please try again.");
+			
+			// Fallback to button rendering if popup fails
+			if (usePopup) {
+				const buttonElement = document.getElementById('google-signup-button');
+				if (buttonElement) {
+					buttonElement.style.display = 'block';
+					renderGoogleButton('google-signup-button', handleGoogleCallback);
+				}
 			}
+		} finally {
+			setGoogleLoading(false);
 		}
 	};
 
@@ -281,12 +296,23 @@ const SignUpPage = () => {
 								</Button>
 							</Form>
 							<hr />
+							<div className="d-flex align-items-center justify-content-between mb-2 mt-2">
+								<small className="text-muted">Signup Method:</small>
+								<Form.Check
+									type="switch"
+									id="popup-switch-signup"
+									label={usePopup ? "Popup" : "Redirect"}
+									checked={usePopup}
+									onChange={(e) => setUsePopup(e.target.checked)}
+									className="shadow-none"
+								/>
+							</div>
 							{googleLoading ? (
 								<Button
 									variant="outline-secondary"
 									size="md"
 									disabled
-									className="shadow-none d-flex align-items-center justify-content-center w-100 mt-2">
+									className="shadow-none d-flex align-items-center justify-content-center w-100">
 									<Spinner
 										animation="border"
 										size="sm"
@@ -302,8 +328,8 @@ const SignUpPage = () => {
 										onClick={handleGoogleSignUp}
 										size="md"
 										disabled={loading}
-										className="w-100 mt-2">
-										Continue with Google
+										className="w-100">
+										{usePopup ? "Continue with Google (Popup)" : "Continue with Google"}
 									</Button>
 								</div>
 							)}

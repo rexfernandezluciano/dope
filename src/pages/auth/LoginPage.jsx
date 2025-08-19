@@ -10,7 +10,8 @@ import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
 import {
 	initializeGoogleAuth,
 	renderGoogleButton,
-	handleGoogleSignIn
+	handleGoogleSignIn,
+	handleGoogleSignInPopup
 } from "../../utils/google-auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
@@ -27,6 +28,7 @@ const LoginPage = () => {
 	const [dialogTitle, setDialogTitle] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [googleLoading, setGoogleLoading] = useState(false);
+	const [usePopup, setUsePopup] = useState(true);
 
 	const navigate = useNavigate();
 
@@ -149,6 +151,9 @@ const LoginPage = () => {
 
 	const handleGoogleLogin = async () => {
 		try {
+			setGoogleLoading(true);
+			setError("");
+
 			// Ensure Google is initialized first
 			if (
 				!window.google ||
@@ -158,16 +163,27 @@ const LoginPage = () => {
 				await initializeGoogleAuth();
 			}
 
-			// Try direct sign-in first
-			await handleGoogleSignIn(handleGoogleCallback);
+			if (usePopup) {
+				// Try popup sign-in first
+				await handleGoogleSignInPopup(handleGoogleCallback);
+			} else {
+				// Try direct sign-in
+				await handleGoogleSignIn(handleGoogleCallback);
+			}
 		} catch (err) {
 			console.error("Google login error:", err);
-			// Fallback to button rendering
-			const buttonElement = document.getElementById("google-signin-button");
-			if (buttonElement) {
-				buttonElement.style.display = "block";
-				renderGoogleButton("google-signin-button", handleGoogleCallback);
+			setError("Google login failed. Please try again.");
+			
+			// Fallback to button rendering if popup fails
+			if (usePopup) {
+				const buttonElement = document.getElementById("google-signin-button");
+				if (buttonElement) {
+					buttonElement.style.display = "block";
+					renderGoogleButton("google-signin-button", handleGoogleCallback);
+				}
 			}
+		} finally {
+			setGoogleLoading(false);
 		}
 	};
 
@@ -254,34 +270,47 @@ const LoginPage = () => {
 							<hr className="border-1 p-1 w-100 rounded-3 bg-light" />
 						</div>
 
-						<div className="d-grid mb-2">
-							{googleLoading ? (
-								<Button
-									variant="outline-secondary"
-									size="md"
-									disabled
-									className="shadow-none d-flex align-items-center justify-content-center"
-								>
-									<Spinner animation="border" size="sm" className="me-2" />
-									Signing in with Google...
-								</Button>
-							) : (
-								<div>
-									<div
-										id="google-signin-button"
-										style={{ display: "none", width: "100%" }}
-									></div>
+						<div className="mb-2">
+							<div className="d-flex align-items-center justify-content-between mb-2">
+								<small className="text-muted">Login Method:</small>
+								<Form.Check
+									type="switch"
+									id="popup-switch"
+									label={usePopup ? "Popup" : "Redirect"}
+									checked={usePopup}
+									onChange={(e) => setUsePopup(e.target.checked)}
+									className="shadow-none"
+								/>
+							</div>
+							<div className="d-grid">
+								{googleLoading ? (
 									<Button
 										variant="outline-secondary"
-										onClick={handleGoogleLogin}
 										size="md"
-										disabled={loading}
-										className="shadow-none w-100"
+										disabled
+										className="shadow-none d-flex align-items-center justify-content-center"
 									>
-										Continue with Google
+										<Spinner animation="border" size="sm" className="me-2" />
+										Signing in with Google...
 									</Button>
-								</div>
-							)}
+								) : (
+									<div>
+										<div
+											id="google-signin-button"
+											style={{ display: "none", width: "100%" }}
+										></div>
+										<Button
+											variant="outline-secondary"
+											onClick={handleGoogleLogin}
+											size="md"
+											disabled={loading}
+											className="shadow-none w-100"
+										>
+											{usePopup ? "Continue with Google (Popup)" : "Continue with Google"}
+										</Button>
+									</div>
+								)}
+							</div>
 						</div>
 
 						<p className="text-center mt-3 mb-0">
