@@ -104,22 +104,4 @@ export const requestNotificationPermission = async () => {
 	}
 };
 
-export const getNotificationPermission = async () => {
-	try {
-		if (!oneSignalInitialized) {
-			await initializeOneSignal();
-		}
-		
-		const permission = await OneSignal.getNotificationPermission();
-		return permission;
-	} catch (error) {
-		console.error('Error getting notification permission:', error);
-		return 'default';
-	}
-};
-
-export const isOneSignalInitialized = () => {
-	return oneSignalInitialized;
-};
-
 export default OneSignal;
