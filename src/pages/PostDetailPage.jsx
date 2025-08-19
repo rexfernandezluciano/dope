@@ -312,9 +312,9 @@ const PostDetailPage = () => {
 			// Ensure the comment has a proper author object
 			const newCommentObj = {
 				...response.comment,
-				author: response.comment.author || {
+				author: response.comment?.author || {
 					uid: currentUser.uid,
-					name: currentUser.name || currentUser.displayName,
+					name: currentUser.name,
 					username: currentUser.username,
 					photoURL: currentUser.photoURL,
 					hasBlueCheck: currentUser.hasBlueCheck || false
