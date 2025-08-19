@@ -10,6 +10,7 @@ import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
 import {
 	initializeGoogleAuth,
 	renderGoogleButton,
+	handleGoogleSignIn
 } from "../../utils/google-auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
