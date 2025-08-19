@@ -57,8 +57,13 @@ const AnalyticsPage = () => {
 			const totalPosts = userPosts.length;
 			const totalLikes = userPosts.reduce((sum, post) => sum + (post.stats?.likes || 0), 0);
 			const totalComments = userPosts.reduce((sum, post) => sum + (post.stats?.comments || 0), 0);
-			const totalShares = userPosts.reduce((sum, post) => sum + (post?.sharesCount || 0), 0);
-			const totalViews = userPosts.reduce((sum, post) => sum + (post?.viewsCount || totalLikes + totalComments), 0);
+			const totalShares = userPosts.reduce((sum, post) => sum + (post?.sharesCount || post?.analytics?.shares || 0), 0);
+			const totalViews = userPosts.reduce((sum, post) => {
+				// Use actual analytics views if available, otherwise estimate based on engagement
+				const analyticsViews = post?.analytics?.views || 0;
+				const estimatedViews = analyticsViews > 0 ? analyticsViews : (post.stats?.likes || 0) + (post.stats?.comments || 0) + (post?.sharesCount || 0);
+				return sum + estimatedViews;
+			}, 0);
 
 			// Calculate engagement rate
 			const totalEngagement = totalLikes + totalComments + totalShares;
@@ -67,8 +72,8 @@ const AnalyticsPage = () => {
 			// Get top performing posts based on real API data
 			const topPosts = [...userPosts]
 				.sort((a, b) => {
-					const aEngagement = (a.stats?.likes || 0) + (a.stats?.comments || 0) + (a.sharesCount || 0);
-					const bEngagement = (b.stats?.likes || 0) + (b.stats?.comments || 0) + (b.sharesCount || 0);
+					const aEngagement = (a.stats?.likes || 0) + (a.stats?.comments || 0) + (a?.sharesCount || a?.analytics?.shares || 0);
+					const bEngagement = (b.stats?.likes || 0) + (b.stats?.comments || 0) + (b?.sharesCount || b?.analytics?.shares || 0);
 					return bEngagement - aEngagement;
 				})
 				.slice(0, 5);
@@ -128,8 +133,10 @@ const AnalyticsPage = () => {
 	);
 
 	const TopPostCard = ({ post, rank }) => {
-		const totalEngagement = (post.stats?.likes || 0) + (post.stats?.comments || 0) + (post.sharesCount || 0);
-		const estimatedViews = totalEngagement * 3; // Estimate views as 3x engagement
+		const totalEngagement = (post.stats?.likes || 0) + (post.stats?.comments || 0) + (post?.sharesCount || post?.analytics?.shares || 0);
+		// Use actual analytics views if available, otherwise estimate as 3x engagement
+		const actualViews = post?.analytics?.views || 0;
+		const estimatedViews = actualViews > 0 ? actualViews : totalEngagement * 3;
 		const engagementRate = estimatedViews > 0 ? ((totalEngagement / estimatedViews) * 100).toFixed(1) : 0;
 
 		return (
@@ -148,7 +155,7 @@ const AnalyticsPage = () => {
 								<span><Heart className="me-1 text-danger" size={12} />{post.stats?.likes || 0}</span>
 								<span><MessageCircle className="me-1 text-primary" size={12} />{post.stats?.comments || 0}</span>
 								<span><Share className="me-1 text-success" size={12} />{post.sharesCount || 0}</span>
-								<span><Eye className="me-1 text-info" size={12} />{estimatedViews || 0}</span>
+								<span><Eye className="me-1 text-info" size={12} />{estimatedViews}</span>
 							</div>
 							<div className="mt-2 d-flex justify-content-between align-items-center">
 								<Badge bg="success" className="rounded-pill">{engagementRate}% engagement</Badge>
