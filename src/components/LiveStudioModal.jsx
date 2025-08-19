@@ -11,7 +11,8 @@ import {
 	OverlayTrigger,
 	Tooltip,
 	ButtonGroup,
-	Spinner
+	Spinner,
+	Image
 } from 'react-bootstrap';
 import {
 	Camera,
@@ -27,7 +28,10 @@ import {
 	X,
 	Play,
 	Stop,
-	EmojiSmile
+	EmojiSmile,
+	ChatDots,
+	Heart,
+	HeartFill
 } from 'react-bootstrap-icons';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 
@@ -57,7 +61,12 @@ const LiveStudioModal = ({
 	const [localVideoTrack, setLocalVideoTrack] = useState(null);
 	const [localAudioTrack, setLocalAudioTrack] = useState(null);
 	
+	// Live comments states
+	const [liveComments, setLiveComments] = useState([]);
+	const [viewerCount, setViewerCount] = useState(0);
+	
 	const videoRef = useRef(null);
+	const commentsEndRef = useRef(null);
 	
 	const filters = [
 		{ id: 'none', name: 'None', style: {} },
@@ -82,6 +91,45 @@ const LiveStudioModal = ({
 			cleanup();
 		};
 	}, [show]);
+
+	// Simulate live comments when streaming (replace with real socket connection)
+	useEffect(() => {
+		let commentInterval;
+		if (isStreaming) {
+			// Simulate viewer count
+			setViewerCount(Math.floor(Math.random() * 50) + 5);
+			
+			// Simulate incoming comments
+			commentInterval = setInterval(() => {
+				const mockComments = [
+					{ id: Date.now(), user: 'JohnDoe23', message: 'Great stream!', timestamp: new Date() },
+					{ id: Date.now() + 1, user: 'StreamFan', message: 'Love this content 💖', timestamp: new Date() },
+					{ id: Date.now() + 2, user: 'TechGuru', message: 'Looking good!', timestamp: new Date() },
+					{ id: Date.now() + 3, user: 'MusicLover', message: 'Amazing quality', timestamp: new Date() },
+					{ id: Date.now() + 4, user: 'CoolViewer', message: 'Keep it up! 🔥', timestamp: new Date() }
+				];
+				
+				const randomComment = mockComments[Math.floor(Math.random() * mockComments.length)];
+				setLiveComments(prev => [...prev.slice(-19), randomComment]); // Keep last 20 comments
+				
+				// Update viewer count randomly
+				setViewerCount(prev => Math.max(1, prev + Math.floor(Math.random() * 3) - 1));
+			}, 3000 + Math.random() * 4000); // Random interval between 3-7 seconds
+		}
+		
+		return () => {
+			if (commentInterval) {
+				clearInterval(commentInterval);
+			}
+		};
+	}, [isStreaming]);
+
+	// Auto-scroll comments to bottom
+	useEffect(() => {
+		if (commentsEndRef.current) {
+			commentsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+		}
+	}, [liveComments]);
 
 	const initializePreview = async () => {
 		try {
@@ -222,6 +270,16 @@ const LiveStudioModal = ({
 		onStartStream(streamData);
 	};
 
+	const handleHeartReaction = (commentId) => {
+		setLiveComments(prev => 
+			prev.map(comment => 
+				comment.id === commentId 
+					? { ...comment, hearted: !comment.hearted }
+					: comment
+			)
+		);
+	};
+
 	const handleClose = () => {
 		cleanup();
 		setStreamTitle('');
@@ -232,6 +290,8 @@ const LiveStudioModal = ({
 		setSaturation(100);
 		setBlur(0);
 		setSelectedFilter('none');
+		setLiveComments([]);
+		setViewerCount(0);
 		onHide();
 	};
 
@@ -276,7 +336,7 @@ const LiveStudioModal = ({
 			<Modal.Body className="pt-2">
 				<Row>
 					{/* Video Preview Section */}
-					<Col lg={8}>
+					<Col lg={isStreaming ? 5 : 8}>
 						<Card className="border-0 shadow-sm mb-3">
 							<Card.Body className="p-0">
 								<div className="position-relative">
@@ -454,8 +514,84 @@ const LiveStudioModal = ({
 						</Card>
 					</Col>
 
+					{/* Live Comments Section - Only show when streaming */}
+					{isStreaming && (
+						<Col lg={3}>
+							<Card className="border-0 shadow-sm h-100">
+								<Card.Header className="bg-white border-0 pb-2">
+									<div className="d-flex align-items-center justify-content-between">
+										<div className="d-flex align-items-center gap-2">
+											<ChatDots size={16} className="text-primary" />
+											<h6 className="mb-0">Live Chat</h6>
+										</div>
+										<Badge bg="primary" className="rounded-pill">
+											{viewerCount} viewers
+										</Badge>
+									</div>
+								</Card.Header>
+								<Card.Body className="p-0">
+									<div 
+										className="px-3 py-2" 
+										style={{ 
+											height: '400px', 
+											overflowY: 'auto',
+											backgroundColor: '#f8f9fa'
+										}}
+									>
+										{liveComments.length === 0 ? (
+											<div className="text-center text-muted py-4">
+												<ChatDots size={32} className="mb-2 opacity-50" />
+												<p className="mb-0 small">No comments yet...</p>
+												<p className="mb-0 small">Comments will appear here when viewers start chatting!</p>
+											</div>
+										) : (
+											<>
+												{liveComments.map((comment) => (
+													<div key={comment.id} className="mb-2 p-2 bg-white rounded-3 border comment-item">
+														<div className="d-flex align-items-start gap-2">
+															<Image
+																src={`https://i.pravatar.cc/150?u=${comment.user}`}
+																alt={comment.user}
+																roundedCircle
+																width="24"
+																height="24"
+																style={{ objectFit: 'cover' }}
+															/>
+															<div className="flex-grow-1">
+																<div className="d-flex align-items-center gap-1 mb-1">
+																	<span className="fw-bold small text-primary">{comment.user}</span>
+																	<span className="text-muted" style={{ fontSize: '0.75rem' }}>
+																		{comment.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+																	</span>
+																</div>
+																<p className="mb-0 small">{comment.message}</p>
+															</div>
+															<Button
+																variant="link"
+																size="sm"
+																className="p-0 text-danger"
+																onClick={() => handleHeartReaction(comment.id)}
+															>
+																{comment.hearted ? (
+																	<HeartFill size={14} />
+																) : (
+																	<Heart size={14} />
+																)}
+															</Button>
+														</div>
+													</div>
+												))}
+												<div ref={commentsEndRef} />
+											</>
+										)}
+									</div>
+								</Card.Body>
+							</Card>
+						</Col>
+					)}
+
 					{/* Stream Settings Section */}
-					<Col lg={4}>
+					<Col lg={isStreaming ? 4 : 4}>
 						<Card className="border-0 shadow-sm h-100">
 							<Card.Header className="bg-white border-0 pb-2">
 								<h6 className="mb-0">Stream Details</h6>
@@ -540,8 +676,14 @@ const LiveStudioModal = ({
 											</Col>
 											<Col>
 												<div className="text-center p-2 bg-light rounded-3">
-													<div className="fw-bold text-primary small">0</div>
+													<div className="fw-bold text-primary small">{viewerCount}</div>
 													<small className="text-muted">Viewers</small>
+												</div>
+											</Col>
+											<Col>
+												<div className="text-center p-2 bg-light rounded-3">
+													<div className="fw-bold text-info small">{liveComments.length}</div>
+													<small className="text-muted">Comments</small>
 												</div>
 											</Col>
 										</Row>
