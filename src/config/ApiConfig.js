@@ -1,8 +1,5 @@
 /** @format */
 
-// Import the real App Check utility
-import { addAppCheckHeaders } from '../utils/app-check-utils';
-
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://natasha.dopp.eu.org/api';
 
 // Validate API URL is HTTPS
@@ -10,42 +7,23 @@ if (!API_BASE_URL.startsWith('https://')) {
 	console.error('API URL must use HTTPS');
 }
 
-// Real Firebase App Check implementation
-const addFirebaseAppCheckHeaders = async (headers) => {
-	try {
-		return await addAppCheckHeaders(headers);
-	} catch (error) {
-		console.error('Error adding App Check headers:', error);
-		// Return headers without App Check token on error to maintain functionality
-		return headers;
-	}
-};
-
 
 const apiRequest = async (endpoint, options = {}) => {
 	const url = `${API_BASE_URL}${endpoint}`;
-	const token = getAuthToken();
-
-	const defaultHeaders = {
-		'Content-Type': 'application/json',
-		...(token && { 'Authorization': `Bearer ${token}` })
-	};
-
-	// Add App Check token to headers
-	const headersWithAppCheck = await addFirebaseAppCheckHeaders({ ...defaultHeaders, ...options.headers });
-
-	const config = {
-		method: 'GET',
-		headers: headersWithAppCheck,
-		...options
-	};
-
-	if (config.body && typeof config.body === 'object') {
-		config.body = JSON.stringify(config.body);
-	}
-
+	
 	try {
-		const response = await fetch(url, config);
+		// Import SecurityMiddleware dynamically to avoid circular imports
+		const { SecurityMiddleware } = await import('../utils/security-middleware');
+		
+		// Use SecurityMiddleware to add all security headers including App Check
+		const secureOptions = await SecurityMiddleware.secureApiRequest(url, options);
+		
+		// Ensure body is properly stringified
+		if (secureOptions.body && typeof secureOptions.body === 'object') {
+			secureOptions.body = JSON.stringify(secureOptions.body);
+		}
+
+		const response = await fetch(url, secureOptions);
 
 		if (!response.ok) {
 			const errorData = await response.json().catch(() => ({}));
@@ -278,11 +256,24 @@ const postAPI = {
 			method: 'GET'
 		}),
 
-	createPost: (data) => apiRequest('/posts', 'POST', data),
-	updatePost: (id, data) => apiRequest(`/posts/${id}`, 'PUT', data),
-	deletePost: (id) => apiRequest(`/posts/${id}`, 'DELETE'),
-	likePost: (id) => apiRequest(`/posts/${id}/like`, 'POST'),
-	sharePost: (id, data) => apiRequest(`/posts/${id}/share`, 'POST', data),
+	createPost: (data) => apiRequest('/posts', {
+		method: 'POST',
+		body: data
+	}),
+	updatePost: (id, data) => apiRequest(`/posts/${id}`, {
+		method: 'PUT',
+		body: data
+	}),
+	deletePost: (id) => apiRequest(`/posts/${id}`, {
+		method: 'DELETE'
+	}),
+	likePost: (id) => apiRequest(`/posts/${id}/like`, {
+		method: 'POST'
+	}),
+	sharePost: (id, data) => apiRequest(`/posts/${id}/share`, {
+		method: 'POST',
+		body: data
+	}),
 	// Notifications now handled via Firestore
 
 	deletePostWithImages: async (postId) => {
