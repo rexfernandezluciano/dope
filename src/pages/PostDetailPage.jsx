@@ -539,17 +539,37 @@ const PostDetailPage = () => {
 
 							<div className="d-flex align-items-center justify-content-between">
 								<div className="d-flex flex-wrap gap-3 small text-muted">
-									{post.likes.length > 0 &&
-										(post.likes[0].user.uid === currentUser.uid ? (
-											<span>
-												<span className="fw-bold">You</span>{" "}
-												{post.likes.length > 1
-													? "& " + (post.likes.length - 1) + " reacted."
-													: " reacted."}
-											</span>
-										) : (
-											""
-										))}
+									{post.likes.length > 0 && (() => {
+										const currentUserLiked = post.likes.some(like => like.user.uid === currentUser.uid);
+										const otherLikesCount = currentUserLiked ? post.likes.length - 1 : post.likes.length;
+										
+										if (currentUserLiked && otherLikesCount > 0) {
+											return (
+												<span>
+													<span className="fw-bold">You</span> & {otherLikesCount} others reacted.
+												</span>
+											);
+										} else if (currentUserLiked && otherLikesCount === 0) {
+											return (
+												<span>
+													<span className="fw-bold">You</span> reacted.
+												</span>
+											);
+										} else if (!currentUserLiked && post.likes.length === 1) {
+											return (
+												<span>
+													<span className="fw-bold">{post.likes[0].user.name || 'Someone'}</span> reacted.
+												</span>
+											);
+										} else if (!currentUserLiked && post.likes.length > 1) {
+											return (
+												<span>
+													<span className="fw-bold">{post.likes[0].user.name || 'Someone'}</span> & {post.likes.length - 1} others reacted.
+												</span>
+											);
+										}
+										return null;
+									})()}
 								</div>
 								<div className="d-flex flex-wrap gap-3 small text-muted">
 									{post.analytics?.views > 0 && (
