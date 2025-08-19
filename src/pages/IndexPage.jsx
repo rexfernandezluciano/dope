@@ -41,6 +41,15 @@ const IndexPage = () => {
 		);
 	}
 
+	// For home page, post detail pages, and settings pages, use Outlet
+	if (pathname === "/home" || pathname.startsWith("/post/") || pathname.endsWith("/settings")) {
+		return (
+			<NavigationView user={user}>
+				<Outlet />
+			</NavigationView>
+		);
+	}
+
 	// Check if it's a profile page (username path)
 	if (pathname !== "/home" && pathname !== "/" && !pathname.startsWith("/post/")) {
 		return (
