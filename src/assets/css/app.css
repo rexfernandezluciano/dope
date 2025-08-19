@@ -432,6 +432,35 @@ button, [role="button"] {
   animation: slideIn 0.3s ease-out;
 }
 
+/* Desktop Navigation Sidebar Scrollbar */
+.desktop-nav-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 105, 181, 0.3) transparent;
+}
+
+.desktop-nav-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.desktop-nav-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.desktop-nav-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(0, 105, 181, 0.3);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.desktop-nav-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 105, 181, 0.5);
+}
+
+.desktop-nav-sidebar::-webkit-scrollbar-thumb:active {
+  background: rgba(0, 105, 181, 0.7);
+}
+
 /* Enhanced Live Studio Styles */
 .live-studio-card {
   border: 2px solid transparent;

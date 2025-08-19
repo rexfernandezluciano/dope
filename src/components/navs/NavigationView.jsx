@@ -514,8 +514,8 @@ const NavigationView = ({ children }) => {
 					</Container>
 				</Navbar>
 				<div
-					className="bg-white border-end vh-100 shadow-sm"
-					style={{ width: "250px", position: "fixed" }}
+					className="bg-white border-end vh-100 shadow-sm desktop-nav-sidebar"
+					style={{ width: "250px", position: "fixed", overflowY: "auto" }}
 				>
 					<Container className="ps-0 pe-3 py-4">
 						<Row className="justify-content-center mb-3">
