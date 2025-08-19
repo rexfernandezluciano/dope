@@ -160,7 +160,7 @@ const LiveStudioModal = ({
 					}, 
 					audio: true
 				});
-				
+
 				// Stop test stream immediately
 				testStream.getTracks().forEach(track => {
 					track.stop();
@@ -184,23 +184,23 @@ const LiveStudioModal = ({
 
 			// Create Agora tracks with very basic settings
 			let videoTrack, audioTrack;
-			
+
 			try {
-				// Use most basic configuration to avoid conflicts
+				// Use most basic configuration for maximum compatibility
 				videoTrack = await AgoraRTC.createCameraVideoTrack({
 					optimizationMode: 'motion',
 					encoderConfig: {
 						width: 320,
 						height: 240,
-						frameRate: 15,
+						frameRate: 10,
 						bitrateMin: 200,
-						bitrateMax: 1000,
+						bitrateMax: 800,
 					}
 				});
 				console.log('Agora video track created successfully');
 			} catch (videoError) {
 				console.error('Failed to create Agora video track:', videoError);
-				
+
 				// Try with even simpler settings
 				try {
 					videoTrack = await AgoraRTC.createCameraVideoTrack();
@@ -218,13 +218,13 @@ const LiveStudioModal = ({
 				console.log('Agora audio track created successfully');
 			} catch (audioError) {
 				console.error('Failed to create Agora audio track:', audioError);
-				
+
 				// Clean up video track if audio fails
 				if (videoTrack) {
 					videoTrack.stop();
 					videoTrack.close();
 				}
-				
+
 				// Try with default settings
 				try {
 					audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
@@ -250,10 +250,10 @@ const LiveStudioModal = ({
 			setLocalAudioTrack(audioTrack);
 		} catch (error) {
 			console.error('Failed to initialize preview:', error);
-			
+
 			// Clean up any partial state
 			cleanup();
-			
+
 			// Show user-friendly error with specific guidance
 			const errorMessage = error.message || 'Failed to access camera. Please check permissions and try again.';
 			alert(`${errorMessage}\n\nTroubleshooting:\n1. Refresh the page and try again\n2. Check that no other application is using your camera\n3. Enable camera permissions in your browser\n4. Try using a different browser`);
@@ -273,7 +273,7 @@ const LiveStudioModal = ({
 		} catch (error) {
 			console.warn('Error stopping video track:', error);
 		}
-		
+
 		try {
 			if (localAudioTrack) {
 				localAudioTrack.stop();
@@ -322,14 +322,14 @@ const LiveStudioModal = ({
 
 	const testConnection = async () => {
 		setConnectionStatus('connecting');
-		
+
 		try {
 			// Test basic network connectivity first
 			const response = await fetch('https://api.agora.io/v1/projects', {
 				method: 'HEAD',
 				mode: 'no-cors'
 			});
-			
+
 			// If we get here, basic connectivity works
 			setConnectionStatus('connected');
 			setTimeout(() => setConnectionStatus('disconnected'), 3000);

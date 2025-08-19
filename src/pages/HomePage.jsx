@@ -360,9 +360,14 @@ const HomePage = () => {
 			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 			const streamUrl = `${window.location.origin}/live/${streamKey}`;
 
-			// Create Agora client for publishing with most compatible settings
-			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
-			
+			// Create Agora client with optimized settings for network reliability
+			const client = AgoraRTC.createClient({ 
+				mode: 'live', 
+				codec: 'vp8',
+				// Enable network quality optimization
+				optimizeForNetworkQuality: true
+			});
+
 			// Add error handlers
 			client.on('connection-state-change', (curState, revState) => {
 				console.log('Agora connection state changed:', curState, 'from', revState);
@@ -397,11 +402,11 @@ const HomePage = () => {
 					agoraConfig.token,
 					agoraConfig.uid
 				);
-				
+
 				const timeoutPromise = new Promise((_, reject) => 
 					setTimeout(() => reject(new Error('Connection timeout')), 15000)
 				);
-				
+
 				await Promise.race([joinPromise, timeoutPromise]);
 				console.log('Successfully joined Agora channel');
 			} catch (joinError) {
