@@ -58,18 +58,16 @@ const cleanTextContent = (text) => {
 };
 
 // Utility function to extract hashtags from text
-const extractHashtags = (text) => {
-	const hashtagRegex = /(?:^|\s)(#[\w]+)/g;
-	const matches = text.matchAll(hashtagRegex);
-	return Array.from(matches, (match) => match[1]);
-};
+// const extractHashtags = (text) => {
+// 	const hashtagRegex = /#\w+/g;
+// 	return text.match(hashtagRegex) || [];
+// };
 
 // Utility function to extract mentions from text
-const extractMentions = (text) => {
-	const mentionRegex = /(?:^|\s)(@[\w]+)/g;
-	const matches = text.matchAll(mentionRegex);
-	return Array.from(matches, (match) => match[1]);
-};
+// const extractMentions = (text) => {
+// 	const mentionRegex = /@\w+/g;
+// 	return text.match(mentionRegex) || [];
+// };
 
 const HomePage = () => {
 	const navigate = useNavigate();
@@ -92,7 +90,7 @@ const HomePage = () => {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [mediaStream, setMediaStream] = useState(null);
 	const [mediaRecorder, setMediaRecorder] = useState(null);
-	
+
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
@@ -190,7 +188,8 @@ const HomePage = () => {
 
 	const handleHashtagClick = (hashtag) => {
 		setFilterBy("hashtag");
-		setHashtagFilter(hashtag);
+		// Removed undefined setHashtagFilter call
+		// setActiveTab("hashtags");
 	};
 
 	const handleInput = (e) => {
@@ -806,10 +805,14 @@ const HomePage = () => {
 		setCurrentImageIndex(0);
 	};
 
-	const handleImageClick = (postImages, index) => {
-		setCurrentImageIndex(index);
-		setCurrentImages(postImages);
-		setShowImageViewer(true);
+	const handleImageClick = (postImages, postId, e) => {
+		// Find the post object by its ID
+		const clickedPost = posts.find((post) => post.id === postId);
+		if (clickedPost && clickedPost.images) {
+			setCurrentImageIndex(0); // Reset index for new images
+			setCurrentImages(clickedPost.images);
+			setShowImageViewer(true);
+		}
 	};
 
 	const privacyOptions = {

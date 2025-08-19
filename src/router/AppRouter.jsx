@@ -11,6 +11,7 @@ import SignUpPage from "../pages/auth/SignUpPage";
 import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
 import IndexPage from "../pages/IndexPage";
 import HomePage from "../pages/HomePage";
+import PostDetailPage from "../pages/PostDetailPage";
 import ProfilePage from "../pages/ProfilePage";
 import SettingsPage from "../pages/SettingsPage";
 import SubscriptionPage from "../pages/SubscriptionPage";
@@ -65,7 +66,9 @@ const router = createBrowserRouter([
 		path: "/post/:postId",
 		element: (
 			<RequireAuth>
-				<IndexPage />
+				<NavigationView>
+					<PostDetailPage />
+				</NavigationView>
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
