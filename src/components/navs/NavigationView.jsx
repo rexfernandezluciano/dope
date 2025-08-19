@@ -41,7 +41,6 @@ import {
 import { getUser } from "../../utils/auth-utils";
 
 import logo from "../../assets/images/dope.png";
-import dopeImage from "../../assets/images/dope.png";
 import AlertDialog from "../dialogs/AlertDialog";
 import NotificationsDropdown from "../NotificationsDropdown";
 
@@ -53,7 +52,6 @@ const NavigationView = ({ children }) => {
 	const [showModal, setShowModal] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-	const [filterBy, setFilterBy] = useState("for-you"); // Assuming this state is needed for the tabs
 	const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 	const [user, setUser] = useState(null);
 	const [notifications, setNotifications] = useState([]);
@@ -270,11 +268,11 @@ const NavigationView = ({ children }) => {
 							className="shadow-none border-0 text-black"
 							onClick={() => setShowModal(true)}
 						/>
-						<Navbar.Brand as={Link} to="/home" className="text-primary">
+						<Navbar.Brand as={Link} to="/home" className="text-primary mx-auto">
 							<div
 								style={{
-									width: "150px",
-									height: "35px",
+									width: "120px",
+									height: "30px",
 									backgroundColor: "#0069B5",
 									WebkitMaskImage: `url(${logo})`,
 									WebkitMaskRepeat: "no-repeat",
