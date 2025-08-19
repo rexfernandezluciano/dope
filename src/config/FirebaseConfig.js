@@ -27,14 +27,18 @@ try {
 	if (typeof window !== 'undefined') {
 		try {
 			// Set debug token for development and mobile environments
-			if (process.env.NODE_ENV === 'development' || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+			const isDevelopment = window.location.hostname === 'localhost' || 
+			                     window.location.hostname === '127.0.0.1' ||
+			                     window.location.hostname.includes('replit.dev');
+			
+			if (isDevelopment || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
 				window.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.REACT_APP_FIREBASE_APPCHECK_DEBUG_TOKEN || 'BDE92789-B377-47C0-A021-C3CBD7A48';
 				console.log('Using App Check debug token for development/mobile environment');
 			}
 
 			// Try ReCAPTCHA provider first, fallback to debug in mobile environments
 			let provider;
-			const isDebugMode = process.env.NODE_ENV === 'development' || window.FIREBASE_APPCHECK_DEBUG_TOKEN;
+			const isDebugMode = isDevelopment || window.FIREBASE_APPCHECK_DEBUG_TOKEN;
 			
 			if (isDebugMode) {
 				// In debug mode, we still initialize with ReCAPTCHA but it will use debug tokens
