@@ -284,13 +284,6 @@ const PostDetailPage = () => {
 				console.error('Failed to send comment notification:', notificationError);
 			}
 
-			// Send comment notification to post owner
-			try {
-				await handleCommentNotification(postId, post, currentUser, newComment);
-			} catch (notificationError) {
-				console.error('Failed to send comment notification:', notificationError);
-			}
-
 			setNewComment("");
 			// Reload to get updated comments
 			const [postResponse, commentsResponse] = await Promise.all([

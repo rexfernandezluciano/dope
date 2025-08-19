@@ -14,14 +14,24 @@ import {
  */
 export const handleLikeNotification = async (postId, post, currentUser) => {
 	try {
-		if (!post || !currentUser) return;
+		if (!post || !currentUser || !postId) {
+			console.warn('Missing required data for like notification');
+			return;
+		}
 		
 		// Don't notify if user likes their own post
-		if (post.author.uid === currentUser.uid) return;
+		if (post.author?.uid === currentUser.uid) return;
 		
-		await sendLikeNotification(postId, post, currentUser);
+		// Send notification in background without blocking main operation
+		setTimeout(async () => {
+			try {
+				await sendLikeNotification(postId, post, currentUser);
+			} catch (notificationError) {
+				console.error('Background like notification failed:', notificationError);
+			}
+		}, 0);
 	} catch (error) {
-		console.error('Error sending like notification:', error);
+		console.error('Error preparing like notification:', error);
 	}
 };
 
@@ -49,14 +59,24 @@ export const handleFollowNotification = async (followedUserId, currentUser) => {
  */
 export const handleCommentNotification = async (postId, post, currentUser, commentText) => {
 	try {
-		if (!post || !currentUser || !commentText) return;
+		if (!post || !currentUser || !commentText || !postId) {
+			console.warn('Missing required data for comment notification');
+			return;
+		}
 		
 		// Don't notify if user comments on their own post
-		if (post.author.uid === currentUser.uid) return;
+		if (post.author?.uid === currentUser.uid) return;
 		
-		await sendCommentNotification(postId, post, currentUser, commentText);
+		// Send notification in background without blocking main operation
+		setTimeout(async () => {
+			try {
+				await sendCommentNotification(postId, post, currentUser, commentText);
+			} catch (notificationError) {
+				console.error('Background comment notification failed:', notificationError);
+			}
+		}, 0);
 	} catch (error) {
-		console.error('Error sending comment notification:', error);
+		console.error('Error preparing comment notification:', error);
 	}
 };
 
