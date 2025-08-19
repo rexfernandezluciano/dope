@@ -61,10 +61,13 @@ const getHeaders = () => {
 // Secure cookie utilities using js-cookie
 const setCookie = (name, value, options = {}) => {
 	try {
+		const isProduction = process.env.NODE_ENV === 'production';
+		const isHttps = window.location.protocol === "https:";
+		
 		const defaults = {
 			path: "/",
-			secure: window.location.protocol === "https:",
-			sameSite: "Strict",
+			secure: isProduction && isHttps, // Only require secure in production with HTTPS
+			sameSite: isProduction ? "Strict" : "Lax", // Use Lax in development
 			expires: 1, // 1 day default
 		};
 
@@ -77,7 +80,8 @@ const setCookie = (name, value, options = {}) => {
 		}
 
 		Cookies.set(name, value, config);
-		console.log(`Cookie '${name}' set successfully`);
+		console.log(`Cookie '${name}' set successfully with config:`, config);
+		console.log(`All cookies after setting:`, document.cookie);
 	} catch (e) {
 		console.error("Failed to set secure cookie:", e);
 	}
@@ -95,10 +99,13 @@ const getCookie = (name) => {
 
 const deleteCookie = (name, options = {}) => {
 	try {
+		const isProduction = process.env.NODE_ENV === 'production';
+		const isHttps = window.location.protocol === "https:";
+		
 		const config = {
 			path: "/",
-			secure: window.location.protocol === "https:",
-			sameSite: "Strict",
+			secure: isProduction && isHttps, // Only require secure in production with HTTPS
+			sameSite: isProduction ? "Strict" : "Lax", // Use Lax in development
 			...options,
 		};
 
@@ -148,12 +155,15 @@ const getAuthToken = () => {
 
 const setAuthToken = (token, rememberMe = false) => {
 	try {
+		const isProduction = process.env.NODE_ENV === 'production';
+		const isHttps = window.location.protocol === "https:";
+		
 		// Set secure cookie with appropriate expiration (in days)
 		const expires = rememberMe ? 30 : 1; // 30 days or 1 day
 		setCookie("authToken", token, {
 			expires,
-			secure: window.location.protocol === "https:",
-			sameSite: "Strict",
+			secure: isProduction && isHttps, // Only require secure in production with HTTPS
+			sameSite: isProduction ? "Strict" : "Lax", // Use Lax in development
 		});
 
 		console.log("Auth token stored in secure cookie");
@@ -166,6 +176,7 @@ const setAuthToken = (token, rememberMe = false) => {
 		// Fallback to sessionStorage if cookie fails
 		try {
 			sessionStorage.setItem("authToken", token);
+			console.log("Fallback: Auth token stored in sessionStorage");
 		} catch (storageError) {
 			console.error("Fallback storage also failed:", storageError);
 		}
@@ -174,11 +185,14 @@ const setAuthToken = (token, rememberMe = false) => {
 
 const removeAuthToken = () => {
 	try {
+		const isProduction = process.env.NODE_ENV === 'production';
+		const isHttps = window.location.protocol === "https:";
+		
 		// Remove secure cookie with proper options
 		deleteCookie("authToken", {
 			path: "/",
-			secure: window.location.protocol === "https:",
-			sameSite: "Strict",
+			secure: isProduction && isHttps, // Only require secure in production with HTTPS
+			sameSite: isProduction ? "Strict" : "Lax", // Use Lax in development
 		});
 
 		// Clean up storage as well (for backward compatibility)
