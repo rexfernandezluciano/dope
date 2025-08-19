@@ -116,7 +116,7 @@ const PostDetailPage = () => {
 
 			// Send like notification to post owner
 			try {
-				await handleLikeNotification(postId, post, currentUser);
+				await handleLikeNotification(postId, response.post, currentUser);
 			} catch (notificationError) {
 				console.error('Failed to send like notification:', notificationError);
 			}
@@ -276,6 +276,13 @@ const PostDetailPage = () => {
 			setSubmitting(true);
 			const response = await commentAPI.createComment(postId, newComment.trim());
 			setComments((prevComments) => [response.comment, ...prevComments]);
+
+			// Send comment notification to post owner
+			try {
+				await handleCommentNotification(postId, post, currentUser, newComment);
+			} catch (notificationError) {
+				console.error('Failed to send comment notification:', notificationError);
+			}
 
 			// Send comment notification to post owner
 			try {

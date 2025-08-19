@@ -16,6 +16,9 @@ export const handleLikeNotification = async (postId, post, currentUser) => {
 	try {
 		if (!post || !currentUser) return;
 		
+		// Don't notify if user likes their own post
+		if (post.author.uid === currentUser.uid) return;
+		
 		await sendLikeNotification(postId, post, currentUser);
 	} catch (error) {
 		console.error('Error sending like notification:', error);
@@ -47,6 +50,9 @@ export const handleFollowNotification = async (followedUserId, currentUser) => {
 export const handleCommentNotification = async (postId, post, currentUser, commentText) => {
 	try {
 		if (!post || !currentUser || !commentText) return;
+		
+		// Don't notify if user comments on their own post
+		if (post.author.uid === currentUser.uid) return;
 		
 		await sendCommentNotification(postId, post, currentUser, commentText);
 	} catch (error) {
