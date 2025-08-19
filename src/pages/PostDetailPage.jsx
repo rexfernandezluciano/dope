@@ -71,6 +71,14 @@ const PostDetailPage = () => {
 
 			setPost(postResponse.post);
 			setComments(commentsResponse.comments || []);
+
+			// Track view after successfully loading the post
+			try {
+				await postAPI.trackView(postId);
+			} catch (viewError) {
+				console.error('Failed to track view:', viewError);
+				// Don't throw here as view tracking shouldn't break the page
+			}
 		} catch (err) {
 			setError(err.message);
 		} finally {

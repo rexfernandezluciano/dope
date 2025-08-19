@@ -97,8 +97,25 @@ const PostCard = ({
 		setCurrentImageIndex(0);
 	};
 
-	const handlePostClick = (e) => {
-		handlePostClickUtil(post.id, e, onPostClick, navigate);
+	const handlePostClick = async (e) => {
+		// Don't navigate if clicking on interactive elements
+		const target = e.target;
+		const isButton = target.closest('button');
+		const isLink = target.closest('a');
+		const isModal = target.closest('.modal');
+
+		if (isButton || isLink || isModal) {
+			return;
+		}
+
+		// Track view before navigating
+		try {
+			await postAPI.trackView(post.id);
+		} catch (viewError) {
+			console.error('Failed to track view:', viewError);
+		}
+
+		handlePostClickUtil(post.id, navigate);
 	};
 
 	const handleLike = (e) => {

@@ -166,6 +166,21 @@ export const formatNumber = (number) => {
 	return number.toString();
 };
 
+/**
+ * Track post view
+ * @param {string} postId - Post ID to track view for
+ * @returns {Promise} Promise that resolves when view is tracked
+ */
+export const trackPostView = async (postId) => {
+	try {
+		const { postAPI } = await import('../config/ApiConfig');
+		await postAPI.trackView(postId);
+	} catch (error) {
+		console.error('Failed to track post view:', error);
+		// Don't throw to avoid breaking user experience
+	}
+};
+
 export const getGrowthPercentage = (current, previous) => {
 	if (!previous || previous === 0) return 0;
 	return (((current - previous) / previous) * 100).toFixed(1);

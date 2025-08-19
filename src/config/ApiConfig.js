@@ -327,6 +327,9 @@ const postAPI = {
 		method: 'POST',
 		body: data
 	}),
+	trackView: (id) => apiRequest(`/posts/${id}/view`, {
+		method: 'POST'
+	}),
 	// Notifications now handled via Firestore
 
 	deletePostWithImages: async (postId) => {
