@@ -8,7 +8,8 @@ import { authAPI, userAPI } from '../config/ApiConfig';
  */
 export const getUser = async () => {
 	try {
-		// Use direct token retrieval
+		// Import getAuthToken from ApiConfig to avoid circular dependencies
+		const { getAuthToken } = await import('../config/ApiConfig');
 		const token = getAuthToken();
 		if (!token) return null;
 
@@ -25,6 +26,7 @@ export const getUser = async () => {
 		console.error('Error getting user:', error);
 		// Only remove token if it's an auth error (401/403)
 		if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
+			const { removeAuthToken } = await import('../config/ApiConfig');
 			removeAuthToken();
 		}
 		return null;
