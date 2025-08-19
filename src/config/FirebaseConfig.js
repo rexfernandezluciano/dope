@@ -31,7 +31,7 @@ try {
 			                     window.location.hostname === '127.0.0.1' ||
 			                     window.location.hostname.includes('replit.dev');
 			
-			if (isDevelopment || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+			if (isDevelopment) {
 				window.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.REACT_APP_FIREBASE_APPCHECK_DEBUG_TOKEN || 'BDE92789-B377-47C0-A021-C3CBD7A48';
 				console.log('Using App Check debug token for development/mobile environment');
 			}
