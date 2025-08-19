@@ -1,18 +1,15 @@
+
 /** @format */
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
 import { authAPI, setAuthToken } from "../../config/ApiConfig";
 import { verifyUser } from "../../utils/app-utils";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
-import {
-	initializeGoogleAuth,
-	renderGoogleButton,
-	handleGoogleSignIn,
-	handleGoogleSignInPopup
-} from "../../utils/google-auth-utils";
+import { getGoogleClientId, handleGoogleSuccess, handleGoogleError } from "../../utils/google-auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
@@ -28,24 +25,11 @@ const LoginPage = () => {
 	const [dialogTitle, setDialogTitle] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [googleLoading, setGoogleLoading] = useState(false);
-	const [usePopup, setUsePopup] = useState(true);
 
 	const navigate = useNavigate();
 
 	useEffect(() => {
 		updatePageMeta(pageMetaData.login);
-
-		// Initialize Google Sign-In
-		const initGoogle = async () => {
-			try {
-				await initializeGoogleAuth();
-				console.log("Google Sign-In initialized successfully");
-			} catch (err) {
-				console.error("Failed to initialize Google Sign-In:", err);
-			}
-		};
-
-		initGoogle();
 	}, []);
 
 	const handleEmailLogin = async (e) => {
@@ -149,140 +133,102 @@ const LoginPage = () => {
 		}
 	};
 
-	const handleGoogleLogin = async () => {
+	const onGoogleSuccess = async (credentialResponse) => {
 		try {
-			setGoogleLoading(true);
-			setError("");
-
-			// Ensure Google is initialized first
-			await initializeGoogleAuth();
-
-			if (usePopup) {
-				// Try popup sign-in first
-				await handleGoogleSignInPopup(handleGoogleCallback);
-			} else {
-				// Try direct sign-in
-				await handleGoogleSignIn(handleGoogleCallback);
-			}
-		} catch (err) {
-			console.error("Google login error:", err);
-			
-			// Show specific error message
-			const errorMessage = err.message || "Google login failed. Please try again.";
-			setError(errorMessage);
-			
-			// Fallback to button rendering if popup fails or is blocked
-			if (err.message && (err.message.includes('popup') || err.message.includes('blocked') || err.message.includes('prompt'))) {
-				const buttonElement = document.getElementById("google-signin-button");
-				if (buttonElement) {
-					buttonElement.style.display = "block";
-					const success = renderGoogleButton("google-signin-button", handleGoogleCallback);
-					if (success) {
-						setError("Please use the Google button below to sign in.");
-					}
-				}
-			}
-		} finally {
-			setGoogleLoading(false);
+			await handleGoogleSuccess(credentialResponse, handleGoogleCallback);
+		} catch (error) {
+			handleGoogleError(error);
+			setError(error.message);
 		}
 	};
 
-	useEffect(() => {
-		updatePageMeta(pageMetaData.login);
-	}, []);
+	const onGoogleError = () => {
+		const error = new Error('Google login failed');
+		handleGoogleError(error);
+		setError('Google login failed. Please try again.');
+	};
 
 	return (
-		<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
-			<Row className="w-100 gap-2">
-				<Col className="d-none d-md-block">
-					<IntroductionBanner />
-					<Image
-						src={socialNetIllustration}
-						alt="Social Networking Illustration"
-						fluid
-						height={100}
-						className="mt-3"
-					/>
-				</Col>
-				<Col>
-					<div>
-						<h3 className="text-center mb-3">Welcome Back</h3>
-						<p className="text-center text-muted">Sign in to your account</p>
+		<GoogleOAuthProvider clientId={getGoogleClientId()}>
+			<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
+				<Row className="w-100 gap-2">
+					<Col className="d-none d-md-block">
+						<IntroductionBanner />
+						<Image
+							src={socialNetIllustration}
+							alt="Social Networking Illustration"
+							fluid
+							height={100}
+							className="mt-3"
+						/>
+					</Col>
+					<Col>
+						<div>
+							<h3 className="text-center mb-3">Welcome Back</h3>
+							<p className="text-center text-muted">Sign in to your account</p>
 
-						{error && (
-							<Alert variant="danger" dismissible onClose={() => setError("")}>
-								{error}
-							</Alert>
-						)}
+							{error && (
+								<Alert variant="danger" dismissible onClose={() => setError("")}>
+									{error}
+								</Alert>
+							)}
 
-						<Form onSubmit={handleEmailLogin}>
-							<Form.Floating className="mb-3">
-								<Form.Control
-									id="floatingInputEmail"
-									type="email"
-									placeholder="Enter email"
-									value={email}
-									onChange={(e) => setEmail(e.target.value)}
-									disabled={loading}
-									className="shadow-none"
-									required
-								/>
-								<label htmlFor="floatingInputEmail">Email address</label>
-							</Form.Floating>
+							<Form onSubmit={handleEmailLogin}>
+								<Form.Floating className="mb-3">
+									<Form.Control
+										id="floatingInputEmail"
+										type="email"
+										placeholder="Enter email"
+										value={email}
+										onChange={(e) => setEmail(e.target.value)}
+										disabled={loading}
+										className="shadow-none"
+										required
+									/>
+									<label htmlFor="floatingInputEmail">Email address</label>
+								</Form.Floating>
 
-							<Form.Floating className="mb-3">
-								<Form.Control
-									id="floatingPassword"
-									type="password"
-									placeholder="Enter password"
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-									disabled={loading}
-									className="shadow-none"
-									required
-								/>
-								<label htmlFor="floatingPassword">Password</label>
-							</Form.Floating>
+								<Form.Floating className="mb-3">
+									<Form.Control
+										id="floatingPassword"
+										type="password"
+										placeholder="Enter password"
+										value={password}
+										onChange={(e) => setPassword(e.target.value)}
+										disabled={loading}
+										className="shadow-none"
+										required
+									/>
+									<label htmlFor="floatingPassword">Password</label>
+								</Form.Floating>
+
+								<div className="d-grid mb-3">
+									<Button
+										variant="primary"
+										type="submit"
+										size="md"
+										disabled={loading}
+										className="shadow-none d-flex align-items-center justify-content-center"
+									>
+										{loading ? (
+											<>
+												<Spinner animation="border" size="sm" className="me-2" />
+												Logging In...
+											</>
+										) : (
+											"Log In"
+										)}
+									</Button>
+								</div>
+							</Form>
+
+							<div className="d-flex align-items-center justify-content-center gap-2 mb-3">
+								<hr className="border-1 p-1 w-100 rounded-3 bg-light" />
+								<div className="text-center text-muted">OR</div>
+								<hr className="border-1 p-1 w-100 rounded-3 bg-light" />
+							</div>
 
 							<div className="d-grid mb-3">
-								<Button
-									variant="primary"
-									type="submit"
-									size="md"
-									disabled={loading}
-									className="shadow-none d-flex align-items-center justify-content-center"
-								>
-									{loading ? (
-										<>
-											<Spinner animation="border" size="sm" className="me-2" />
-											Logging In...
-										</>
-									) : (
-										"Log In"
-									)}
-								</Button>
-							</div>
-						</Form>
-
-						<div className="d-flex align-items-center justify-content-center gap-2 mb-3">
-							<hr className="border-1 p-1 w-100 rounded-3 bg-light" />
-							<div className="text-center text-muted">OR</div>
-							<hr className="border-1 p-1 w-100 rounded-3 bg-light" />
-						</div>
-
-						<div className="mb-2">
-							<div className="d-flex align-items-center justify-content-between mb-2">
-								<small className="text-muted">Login Method:</small>
-								<Form.Check
-									type="switch"
-									id="popup-switch"
-									label={usePopup ? "Popup" : "Redirect"}
-									checked={usePopup}
-									onChange={(e) => setUsePopup(e.target.checked)}
-									className="shadow-none"
-								/>
-							</div>
-							<div className="d-grid">
 								{googleLoading ? (
 									<Button
 										variant="outline-secondary"
@@ -294,43 +240,40 @@ const LoginPage = () => {
 										Signing in with Google...
 									</Button>
 								) : (
-									<div>
-										<div
-											id="google-signin-button"
-											style={{ display: "none", width: "100%" }}
-										></div>
-										<Button
-											variant="outline-secondary"
-											onClick={handleGoogleLogin}
-											size="md"
-											disabled={loading}
-											className="shadow-none w-100"
-										>
-											{usePopup ? "Continue with Google (Popup)" : "Continue with Google"}
-										</Button>
+									<div className="d-flex justify-content-center">
+										<GoogleLogin
+											onSuccess={onGoogleSuccess}
+											onError={onGoogleError}
+											size="large"
+											theme="outline"
+											text="continue_with"
+											shape="rectangular"
+											logo_alignment="left"
+											width="100%"
+										/>
 									</div>
 								)}
 							</div>
-						</div>
 
-						<p className="text-center mt-3 mb-0">
-							Don't have an account yet? <Link to="/auth/signup">Sign Up</Link>
-						</p>
-					</div>
-				</Col>
-			</Row>
-			{showDialog && (
-				<AlertDialog
-					title={dialogTitle}
-					message={dialogMessage}
-					dialogButtonMessage="Okay"
-					onDialogButtonClick={() => setShowDialog(false)}
-					type="dark"
-					show={showDialog}
-					onHide={() => setShowDialog(false)}
-				/>
-			)}
-		</div>
+							<p className="text-center mt-3 mb-0">
+								Don't have an account yet? <Link to="/auth/signup">Sign Up</Link>
+							</p>
+						</div>
+					</Col>
+				</Row>
+				{showDialog && (
+					<AlertDialog
+						title={dialogTitle}
+						message={dialogMessage}
+						dialogButtonMessage="Okay"
+						onDialogButtonClick={() => setShowDialog(false)}
+						type="dark"
+						show={showDialog}
+						onHide={() => setShowDialog(false)}
+					/>
+				)}
+			</div>
+		</GoogleOAuthProvider>
 	);
 };
 
