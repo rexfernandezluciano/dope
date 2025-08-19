@@ -113,13 +113,41 @@ const PostDetailPage = () => {
 		try {
 			const response = await postAPI.likePost(postId);
 			
-			// Update post state with the response
-			setPost(response.post);
+			// Update post state locally based on the liked response
+			setPost(prevPost => {
+				if (!prevPost) return prevPost;
+				
+				const isCurrentlyLiked = prevPost.likes.some(like => like.user.uid === currentUser.uid);
+				
+				if (response.liked && !isCurrentlyLiked) {
+					// Add like
+					return {
+						...prevPost,
+						likes: [...prevPost.likes, { user: { uid: currentUser.uid } }],
+						stats: {
+							...prevPost.stats,
+							likes: prevPost.stats.likes + 1
+						}
+					};
+				} else if (!response.liked && isCurrentlyLiked) {
+					// Remove like
+					return {
+						...prevPost,
+						likes: prevPost.likes.filter(like => like.user.uid !== currentUser.uid),
+						stats: {
+							...prevPost.stats,
+							likes: prevPost.stats.likes - 1
+						}
+					};
+				}
+				
+				return prevPost;
+			});
 			
 			// Send like notification to post owner only if liked (not unliked)
 			if (response.liked) {
 				try {
-					await handleLikeNotification(postId, response.post, currentUser);
+					await handleLikeNotification(postId, post, currentUser);
 				} catch (notificationError) {
 					console.error('Failed to send like notification:', notificationError);
 				}
