@@ -8,16 +8,16 @@ import SettingsPage from "./SettingsPage";
 import SubscriptionPage from "./SubscriptionPage";
 import AnalyticsPage from "./AnalyticsPage";
 
-const IndexPage = () => {
-  const loaderData = useLoaderData() || {};
-  const { user } = loaderData;
-  const location = useLocation();
-  const pathname = location.pathname;
+import PostDetailPage from "./PostDetailPage";
 
-  
+const IndexPage = () => {
+	const loaderData = useLoaderData() || {};
+	const { user } = loaderData;
+	const location = useLocation();
+	const pathname = location.pathname;
 
 	// Check if it's settings page
-	if (pathname.endsWith('/settings')) {
+	if (pathname.endsWith("/settings")) {
 		return (
 			<NavigationView user={user}>
 				<SettingsPage />
@@ -26,7 +26,7 @@ const IndexPage = () => {
 	}
 
 	// Check if it's subscription page
-	if (pathname === '/subscription') {
+	if (pathname === "/subscription") {
 		return (
 			<NavigationView user={user}>
 				<SubscriptionPage />
@@ -35,7 +35,7 @@ const IndexPage = () => {
 	}
 
 	// Check if it's analytics page
-	if (pathname === '/analytics') {
+	if (pathname === "/analytics") {
 		return (
 			<NavigationView user={user}>
 				<AnalyticsPage />
@@ -43,10 +43,17 @@ const IndexPage = () => {
 		);
 	}
 
-	
+	// Check if it's a post detail page (post id path)
+	if (pathname.startsWith("/post/")) {
+		return (
+			<NavigationView user={user}>
+				<PostDetailPage />
+			</NavigationView>
+		);
+	}
 
 	// Check if it's a profile page (username path)
-	if (pathname !== '/home' && pathname !== '/') {
+	if (pathname !== "/home" && pathname !== "/") {
 		return (
 			<NavigationView user={user}>
 				<ProfilePage />
@@ -54,11 +61,11 @@ const IndexPage = () => {
 		);
 	}
 
-  return (
-    <NavigationView user={user}>
-      <Outlet />
-    </NavigationView>
-  );
+	return (
+		<NavigationView user={user}>
+			<Outlet />
+		</NavigationView>
+	);
 };
 
 export default IndexPage;
