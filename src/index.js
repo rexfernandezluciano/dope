@@ -22,12 +22,16 @@ setupCSP();
 // Disable console in production based on hostname
 const isProduction = window.location.hostname !== 'localhost' && 
                      window.location.hostname !== '127.0.0.1' &&
-                     !window.location.hostname.includes('replit.dev');
+                     !window.location.hostname.includes('replit.dev') &&
+                     !window.location.hostname.includes('replit.co') &&
+                     !window.location.hostname.includes('replit.app');
 
 if (isProduction) {
   console.log = () => {};
   console.warn = () => {};
   console.error = () => {};
+  console.info = () => {};
+  console.debug = () => {};
 }
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
