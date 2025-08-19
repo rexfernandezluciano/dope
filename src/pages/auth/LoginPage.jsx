@@ -56,13 +56,6 @@ const LoginPage = () => {
 				setError(
 					<>
 						Please verify your account first to continue.{" "}
-						<Link 
-							to={`/auth/verify/verify?email=${encodeURIComponent(email)}`}
-							className="fw-bold text-decoration-none"
-						>
-							Verify Now
-						</Link>
-						{" or "}
 						<a
 							href="#verify"
 							role="button"
@@ -99,13 +92,6 @@ const LoginPage = () => {
 				err.message === "Email not verified" ? (
 					<>
 						Please verify your account first to continue.{" "}
-						<Link 
-							to={`/auth/verify/verify?email=${encodeURIComponent(email)}`}
-							className="fw-bold text-decoration-none"
-						>
-							Verify Now
-						</Link>
-						{" or "}
 						<a
 							href="#verify"
 							role="button"

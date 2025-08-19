@@ -84,17 +84,7 @@ const SignUpPage = () => {
 			const result = await authAPI.googleSignup(response.credential);
 
 			if (result.user && !result.user.hasVerifiedEmail) {
-				setError(
-					<>
-						Please verify your account first to continue.{" "}
-						<Link 
-							to={`/auth/verify/verify?email=${encodeURIComponent(result.user.email)}`}
-							className="fw-bold text-decoration-none"
-						>
-							Verify Now
-						</Link>
-					</>
-				);
+				setError("Please verify your account first to continue. Check your email for the verification link.");
 				setGoogleLoading(false);
 				return;
 			}

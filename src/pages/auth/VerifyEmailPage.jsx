@@ -22,15 +22,34 @@ const VerifyEmailPage = () => {
 	const [showDialog, setShowDialog] = useState(false);
 	const [dialogMessage, setDialogMessage] = useState("");
 	const [dialogTitle, setDialogTitle] = useState("");
+	const [verificationValidated, setVerificationValidated] = useState(false);
 
 	useEffect(() => {
-		// Get email from URL params or localStorage
-		const urlParams = new URLSearchParams(window.location.search);
-		const emailParam = urlParams.get('email');
-		if (emailParam) {
-			setEmail(decodeURIComponent(emailParam));
-		}
-	}, []);
+		// Validate verification ID and get email
+		const validateVerificationId = async () => {
+			if (!verificationId) {
+				setError("Invalid verification link. Please check your email for the correct link.");
+				return;
+			}
+
+			try {
+				setLoading(true);
+				const response = await authAPI.validateVerificationId(verificationId);
+				if (response.email) {
+					setEmail(response.email);
+					setVerificationValidated(true);
+				} else {
+					setError("Invalid or expired verification link.");
+				}
+			} catch (err) {
+				setError(err.message || "Invalid or expired verification link.");
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		validateVerificationId();
+	}, [verificationId]);
 
 	const handleVerifyEmail = async (e) => {
 		e.preventDefault();
@@ -40,8 +59,8 @@ const VerifyEmailPage = () => {
 			return;
 		}
 
-		if (!email) {
-			setError("Email address is required. Please go back to signup.");
+		if (!verificationValidated) {
+			setError("Invalid verification link. Please check your email for the correct link.");
 			return;
 		}
 
@@ -60,8 +79,8 @@ const VerifyEmailPage = () => {
 	};
 
 	const handleResendCode = async () => {
-		if (!email) {
-			setError("Email address is required to resend verification code.");
+		if (!verificationValidated || !email) {
+			setError("Invalid verification link. Please check your email for the correct link.");
 			return;
 		}
 
@@ -95,9 +114,15 @@ const VerifyEmailPage = () => {
 				<Col>
 					<div>
 						<h3 className="text-center mb-3">Verify Your Email</h3>
-						<p className="text-center text-muted mb-4">
-							We've sent a 6-digit verification code to {email}
-						</p>
+						{email ? (
+							<p className="text-center text-muted mb-4">
+								We've sent a 6-digit verification code to {email}
+							</p>
+						) : (
+							<p className="text-center text-muted mb-4">
+								Validating verification link...
+							</p>
+						)}
 
 						{error && (
 							<Alert
@@ -119,7 +144,7 @@ const VerifyEmailPage = () => {
 										const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
 										setCode(value);
 									}}
-									disabled={loading}
+									disabled={loading || !verificationValidated}
 									className="text-center"
 									style={{ letterSpacing: '0.5rem', fontSize: '1.2rem' }}
 									maxLength={6}
@@ -133,7 +158,7 @@ const VerifyEmailPage = () => {
 									variant="primary"
 									type="submit"
 									size="md"
-									disabled={loading || code.length !== 6}
+									disabled={loading || code.length !== 6 || !verificationValidated}
 									className="d-flex align-items-center justify-content-center">
 									{loading ? (
 										<>
@@ -156,7 +181,7 @@ const VerifyEmailPage = () => {
 							<Button
 								variant="link"
 								onClick={handleResendCode}
-								disabled={loading}
+								disabled={loading || !verificationValidated}
 								className="p-0 text-decoration-none">
 								Resend verification code
 							</Button>

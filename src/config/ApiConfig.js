@@ -178,6 +178,16 @@ const authAPI = {
 			body: { email }
 		}),
 
+	validateVerificationId: (verificationId) => {
+		if (!verificationId || typeof verificationId !== 'string') {
+			throw new Error('Invalid verification ID');
+		}
+		
+		return apiRequest(`/auth/validate-verification-id/${encodeURIComponent(verificationId)}`, {
+			method: 'GET'
+		});
+	},
+
 	getCurrentUser: () =>
 		apiRequest('/auth/me', {
 			method: 'GET'
