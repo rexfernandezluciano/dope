@@ -509,7 +509,7 @@ const HomePage = () => {
 				content: streamData.description || streamData.title,
 				postType: "live_video",
 				liveVideoUrl: streamUrl,
-				privacy: streamData.privacy || "public",
+				privacy: streamData.privacy.toLowerCase() || "public",
 			};
 
 			// Create the live stream post using the API
@@ -771,8 +771,8 @@ const HomePage = () => {
 							...post,
 							...response.post,
 							comments: post.comments || [], // Preserve existing comments
-							stats: response.post.stats || post.stats, // Update stats if available
-							likes: response.post.likes || post.likes // Update likes
+							stats: response.post.stats || post.stats || [], // Update stats if available
+							likes: response.post.likes || post.likes || [] // Update likes
 						};
 					}
 					return post;
