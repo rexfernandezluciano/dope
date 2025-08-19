@@ -160,13 +160,15 @@ const ProfilePage = () => {
 					const followersResponse = await userAPI.getFollowers(username);
 					setFollowers(followersResponse.followers || []);
 
-					// Check if current user is following this profile
+					// Check if current user is following this profile from user data or followers list
 					if (currentUser) {
-						setIsFollowing(
-							(followersResponse.followers || []).some(
-								(f) => f.uid === currentUser.uid,
-							),
+						const isFollowingFromUserData = profileUserData.isFollowedByCurrentUser;
+						const isFollowingFromFollowers = (followersResponse.followers || []).some(
+							(f) => f.uid === currentUser.uid,
 						);
+						
+						// Prefer the user data value if available, otherwise check followers list
+						setIsFollowing(isFollowingFromUserData !== undefined ? isFollowingFromUserData : isFollowingFromFollowers);
 					}
 				} catch (err) {
 					console.error("Error loading followers:", err);
@@ -202,15 +204,25 @@ const ProfilePage = () => {
 
 	const handleFollow = async () => {
 		try {
-			await userAPI.followUser(username);
-			setIsFollowing(!isFollowing);
+			const response = await userAPI.followUser(username);
+			
+			// Update following state based on API response
+			setIsFollowing(response.following);
 
-			// Update followers count
-			if (isFollowing) {
-				setFollowers((prev) => prev.filter((f) => f.uid !== currentUser.uid));
-			} else {
+			// Update followers list based on the action
+			if (response.following) {
+				// User just followed - add current user to followers
 				setFollowers((prev) => [...prev, currentUser]);
+			} else {
+				// User just unfollowed - remove current user from followers
+				setFollowers((prev) => prev.filter((f) => f.uid !== currentUser.uid));
 			}
+
+			// Update profile user's isFollowedByCurrentUser status
+			setProfileUser(prev => ({
+				...prev,
+				isFollowedByCurrentUser: response.following
+			}));
 		} catch (err) {
 			setError(err.message);
 		}
@@ -472,7 +484,7 @@ const ProfilePage = () => {
 							size="sm"
 							onClick={handleFollow}
 						>
-							{isFollowing ? "Unfollow" : "Follow"}
+							{isFollowing ? "Following" : "Follow"}
 						</Button>
 					)}
 				</div>
