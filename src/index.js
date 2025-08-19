@@ -19,8 +19,12 @@ import "./assets/css/app.css";
 // Setup Content Security Policy
 setupCSP();
 
-// Disable console in production
-if (process.env.NODE_ENV === 'production') {
+// Disable console in production based on hostname
+const isProduction = window.location.hostname !== 'localhost' && 
+                     window.location.hostname !== '127.0.0.1' &&
+                     !window.location.hostname.includes('replit.dev');
+
+if (isProduction) {
   console.log = () => {};
   console.warn = () => {};
   console.error = () => {};
