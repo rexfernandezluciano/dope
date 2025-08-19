@@ -25,16 +25,23 @@ try {
 
 	// Initialize App Check
 	if (typeof window !== 'undefined') {
-		// For development, use debug token
-		if (process.env.NODE_ENV === 'development') {
-			// Debug token for development - replace with your debug token
-			window.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.REACT_APP_FIREBASE_APPCHECK_DEBUG_TOKEN || true;
-		}
+		try {
+			// For development, use debug token
+			if (process.env.NODE_ENV === 'development') {
+				// Debug token for development - replace with your debug token
+				window.FIREBASE_APPCHECK_DEBUG_TOKEN = process.env.REACT_APP_FIREBASE_APPCHECK_DEBUG_TOKEN || 'BDE92789-B377-47C0-A021-C3CBD7A24A48';
+			}
 
-		appCheck = initializeAppCheck(app, { // Assign to appCheck
-			provider: new ReCaptchaV3Provider(process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeXsKkrAAAAAIZ_HaIAbxmU6XIrxVlLguh78xx_'),
-			isTokenAutoRefreshEnabled: true
-		});
+			appCheck = initializeAppCheck(app, { // Assign to appCheck
+				provider: new ReCaptchaV3Provider(process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeXsKkrAAAAAIZ_HaIAbxmU6XIrxVlLguh78xx_'),
+				isTokenAutoRefreshEnabled: true
+			});
+			
+			console.log('App Check initialized successfully');
+		} catch (error) {
+			console.warn('App Check initialization failed:', error);
+			appCheck = null; // Set to null if initialization fails
+		}
 	}
 
 	db = getFirestore(app);

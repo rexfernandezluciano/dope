@@ -6,7 +6,7 @@ import { appCheck } from "../config/FirebaseConfig";
  * Get App Check token for API requests
  * @returns {Promise<string|null>} App Check token or null if failed
  */
-export const getAppCheckToken = async () => {
+export const getAppCheckToken = async (timeout = 5000) => {
 	try {
 		if (typeof window === 'undefined') return null;
 		
@@ -16,13 +16,24 @@ export const getAppCheckToken = async () => {
 			return null;
 		}
 		
-		// Get the token using the App Check instance with forceRefresh false
-		const appCheckTokenResponse = await getToken(appCheck, false);
+		// Add timeout to prevent hanging requests
+		const tokenPromise = getToken(appCheck, false);
+		const timeoutPromise = new Promise((_, reject) => 
+			setTimeout(() => reject(new Error('App Check token timeout')), timeout)
+		);
+		
+		const appCheckTokenResponse = await Promise.race([tokenPromise, timeoutPromise]);
 		return appCheckTokenResponse.token;
 	} catch (error) {
 		console.error('Error getting App Check token:', error);
 		
-		// Try once more with force refresh if the first attempt failed
+		// For network errors, don't retry to avoid hanging the app
+		if (error.code === 'appCheck/fetch-network-error') {
+			console.warn('Network error fetching App Check token - continuing without it');
+			return null;
+		}
+		
+		// Try once more with force refresh for other errors
 		try {
 			if (appCheck) {
 				const retryResponse = await getToken(appCheck, true);
