@@ -155,35 +155,30 @@ const ProfilePage = () => {
 					}
 				}
 
-				// Use counts from user response if available
-				if (userResponse.user.stats) {
-					setFollowers(new Array(userResponse.user.stats.followers).fill({}));
-					setFollowing(new Array(userResponse.user.stats.following).fill({}));
-				} else {
-					try {
-						const followersResponse = await userAPI.getFollowers(username);
-						setFollowers(followersResponse.followers || []);
+				// Load followers and following data
+				try {
+					const followersResponse = await userAPI.getFollowers(username);
+					setFollowers(followersResponse.followers || []);
 
-						// Check if current user is following this profile
-						if (currentUser) {
-							setIsFollowing(
-								(followersResponse.followers || []).some(
-									(f) => f.uid === currentUser.uid,
-								),
-							);
-						}
-					} catch (err) {
-						console.error("Error loading followers:", err);
-						setFollowers([]);
+					// Check if current user is following this profile
+					if (currentUser) {
+						setIsFollowing(
+							(followersResponse.followers || []).some(
+								(f) => f.uid === currentUser.uid,
+							),
+						);
 					}
+				} catch (err) {
+					console.error("Error loading followers:", err);
+					setFollowers([]);
+				}
 
-					try {
-						const followingResponse = await userAPI.getFollowing(username);
-						setFollowing(followingResponse.following || []);
-					} catch (err) {
-						console.error("Error loading following:", err);
-						setFollowing([]);
-					}
+				try {
+					const followingResponse = await userAPI.getFollowing(username);
+					setFollowing(followingResponse.following || []);
+				} catch (err) {
+					console.error("Error loading following:", err);
+					setFollowing([]);
 				}
 			} catch (err) {
 				console.error("Error loading profile:", err);

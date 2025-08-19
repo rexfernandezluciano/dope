@@ -37,6 +37,18 @@ const apiRequest = async (endpoint, options = {}) => {
 	}
 };
 
+// Helper function to get headers, including Authorization
+const getHeaders = () => {
+	const token = getAuthToken();
+	const headers = {
+		'Content-Type': 'application/json',
+	};
+	if (token) {
+		headers['Authorization'] = `Bearer ${token}`;
+	}
+	return headers;
+};
+
 // Secure token storage helper
 const getAuthToken = () => {
 	try {
@@ -222,10 +234,33 @@ const userAPI = {
 			body: userData
 		}),
 
-	followUser: (username) =>
-		apiRequest(`/users/${username}/follow`, {
-			method: 'POST'
-		}),
+	followUser: async (username) => {
+		const response = await fetch(`${API_BASE_URL}/users/${username}/follow`, {
+			method: 'POST',
+			headers: getHeaders(),
+		});
+
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({}));
+			throw new Error(errorData.error || 'Failed to follow user');
+		}
+
+		return response.json();
+	},
+
+	unfollowUser: async (username) => {
+		const response = await fetch(`${API_BASE_URL}/users/${username}/unfollow`, {
+			method: 'POST',
+			headers: getHeaders(),
+		});
+
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({}));
+			throw new Error(errorData.error || 'Failed to unfollow user');
+		}
+
+		return response.json();
+	},
 
 	getFollowers: (username) =>
 		apiRequest(`/users/${username}/followers`, {
