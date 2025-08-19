@@ -31,8 +31,8 @@ export class SecurityMiddleware {
 			const isAuthEndpoint = url.includes('/auth/') || url.includes('/login') || url.includes('/signup');
 			if (!isAuthEndpoint) {
 				try {
-					const { getAuthToken } = await import("../config/ApiConfig");
-					const token = getAuthToken();
+					const ApiConfig = await import("../config/ApiConfig");
+					const token = ApiConfig.getAuthToken ? ApiConfig.getAuthToken() : null;
 					if (token) {
 						secureHeaders["Authorization"] = `Bearer ${token}`;
 					}
@@ -66,8 +66,8 @@ export class SecurityMiddleware {
 
 	static async getUserId() {
 		try {
-			const { getAuthToken } = await import("../config/ApiConfig");
-			const token = getAuthToken();
+			const ApiConfig = await import("../config/ApiConfig");
+			const token = ApiConfig.getAuthToken ? ApiConfig.getAuthToken() : null;
 			if (!token) return null;
 
 			const payload = JSON.parse(atob(token.split(".")[1]));
