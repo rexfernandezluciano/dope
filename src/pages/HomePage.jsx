@@ -339,15 +339,29 @@ const HomePage = () => {
 				throw new Error('Stream title is required');
 			}
 
+			// Use the tracks from LiveStudioModal
+			const { videoTrack, audioTrack } = streamData;
+
+			// Validate tracks are available and ready
+			if (!videoTrack || !audioTrack) {
+				throw new Error('Video or audio track not available. Please try again.');
+			}
+
+			// Check track readiness
+			if (videoTrack.getMediaStreamTrack().readyState !== 'live') {
+				throw new Error('Video track is not ready. Please try again.');
+			}
+
+			if (audioTrack.getMediaStreamTrack().readyState !== 'live') {
+				throw new Error('Audio track is not ready. Please try again.');
+			}
+
 			// Generate unique stream key
 			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 			const streamUrl = `${window.location.origin}/live/${streamKey}`;
 
-			// Use the tracks from LiveStudioModal
-			const { videoTrack, audioTrack } = streamData;
-
-			// Create Agora client for publishing with simpler codec
-			const client = AgoraRTC.createClient({ mode: 'live', codec: 'h264' });
+			// Create Agora client for publishing with most compatible settings
+			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
 			
 			// Add error handlers
 			client.on('connection-state-change', (curState, revState) => {

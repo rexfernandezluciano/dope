@@ -131,88 +131,132 @@ const LiveStudioModal = ({
 		try {
 			setIsInitializing(true);
 
+			// Clean up any existing tracks first
+			cleanup();
+
 			// Check if browser supports getUserMedia
 			if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
 				throw new Error('Camera access is not supported in this browser');
 			}
 
-			// Request permissions with better error handling
-			let stream;
+			// Check camera permissions first
 			try {
-				stream = await navigator.mediaDevices.getUserMedia({ 
-					video: {
-						width: { ideal: 1280 },
-						height: { ideal: 720 },
-						frameRate: { ideal: 30 }
+				const permissions = await navigator.permissions.query({ name: 'camera' });
+				if (permissions.state === 'denied') {
+					throw new Error('Camera permission is denied. Please enable camera access in your browser settings.');
+				}
+			} catch (permError) {
+				console.warn('Cannot check camera permissions:', permError);
+			}
+
+			// Test basic camera access with minimal requirements
+			let testStream;
+			try {
+				testStream = await navigator.mediaDevices.getUserMedia({ 
+					video: { 
+						width: { min: 320, ideal: 640, max: 1280 },
+						height: { min: 240, ideal: 480, max: 720 },
+						frameRate: { min: 10, ideal: 15, max: 30 }
 					}, 
-					audio: {
-						echoCancellation: true,
-						noiseSuppression: true,
-						autoGainControl: true
-					}
+					audio: true
+				});
+				
+				// Stop test stream immediately
+				testStream.getTracks().forEach(track => {
+					track.stop();
 				});
 			} catch (permissionError) {
 				if (permissionError.name === 'NotAllowedError') {
-					throw new Error('Camera and microphone access denied. Please allow permissions and try again.');
+					throw new Error('Camera and microphone access denied. Please click "Allow" when prompted and try again.');
 				} else if (permissionError.name === 'NotFoundError') {
 					throw new Error('No camera or microphone found. Please connect a camera/microphone and try again.');
 				} else if (permissionError.name === 'NotReadableError') {
-					throw new Error('Camera is being used by another application. Please close other apps and try again.');
+					throw new Error('Camera is being used by another application. Please close other applications using the camera and try again.');
+				} else if (permissionError.name === 'OverconstrainedError') {
+					throw new Error('Camera does not support the required video settings. Please try with a different camera.');
 				} else {
 					throw new Error(`Failed to access camera: ${permissionError.message}`);
 				}
 			}
 
-			// Stop the test stream immediately since we'll use Agora tracks
-			stream.getTracks().forEach(track => track.stop());
+			// Wait a moment to ensure camera is released
+			await new Promise(resolve => setTimeout(resolve, 500));
 
-			// Create Agora video track for preview
+			// Create Agora tracks with very basic settings
 			let videoTrack, audioTrack;
 			
 			try {
-				// Use simpler configuration for better compatibility
+				// Use most basic configuration to avoid conflicts
 				videoTrack = await AgoraRTC.createCameraVideoTrack({
 					optimizationMode: 'motion',
 					encoderConfig: {
-						width: 640,
-						height: 480,
+						width: 320,
+						height: 240,
 						frameRate: 15,
-						bitrateMin: 500,
-						bitrateMax: 1500,
+						bitrateMin: 200,
+						bitrateMax: 1000,
 					}
 				});
-				console.log('Video track created successfully');
+				console.log('Agora video track created successfully');
 			} catch (videoError) {
-				console.error('Failed to create video track:', videoError);
-				throw new Error(`Camera error: ${videoError.message}`);
+				console.error('Failed to create Agora video track:', videoError);
+				
+				// Try with even simpler settings
+				try {
+					videoTrack = await AgoraRTC.createCameraVideoTrack();
+					console.log('Agora video track created with default settings');
+				} catch (fallbackError) {
+					console.error('Fallback video track creation failed:', fallbackError);
+					throw new Error('Cannot start video source. Please ensure no other application is using your camera and try again.');
+				}
 			}
 
 			try {
 				audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-					encoderConfig: 'music_standard'
+					encoderConfig: 'speech_low_quality'
 				});
-				console.log('Audio track created successfully');
+				console.log('Agora audio track created successfully');
 			} catch (audioError) {
-				console.error('Failed to create audio track:', audioError);
+				console.error('Failed to create Agora audio track:', audioError);
+				
 				// Clean up video track if audio fails
 				if (videoTrack) {
 					videoTrack.stop();
 					videoTrack.close();
 				}
-				throw new Error(`Microphone error: ${audioError.message}`);
+				
+				// Try with default settings
+				try {
+					audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+					console.log('Agora audio track created with default settings');
+				} catch (fallbackAudioError) {
+					console.error('Fallback audio track creation failed:', fallbackAudioError);
+					throw new Error('Cannot access microphone. Please check your microphone permissions and try again.');
+				}
 			}
 
-			// Play video preview immediately
-			if (videoRef.current) {
-			videoTrack.play(videoRef.current);
+			// Play video preview
+			if (videoRef.current && videoTrack) {
+				try {
+					await videoTrack.play(videoRef.current);
+					console.log('Video preview started successfully');
+				} catch (playError) {
+					console.error('Failed to play video preview:', playError);
+					// Continue anyway, the track is created
+				}
 			}
 
 			setLocalVideoTrack(videoTrack);
 			setLocalAudioTrack(audioTrack);
 		} catch (error) {
 			console.error('Failed to initialize preview:', error);
+			
+			// Clean up any partial state
+			cleanup();
+			
 			// Show user-friendly error with specific guidance
-			alert(error.message || 'Failed to access camera. Please check permissions and try again.');
+			const errorMessage = error.message || 'Failed to access camera. Please check permissions and try again.';
+			alert(`${errorMessage}\n\nTroubleshooting:\n1. Refresh the page and try again\n2. Check that no other application is using your camera\n3. Enable camera permissions in your browser\n4. Try using a different browser`);
 			onHide(); // Close modal on error
 		} finally {
 			setIsInitializing(false);
@@ -220,15 +264,24 @@ const LiveStudioModal = ({
 	};
 
 	const cleanup = () => {
-		if (localVideoTrack) {
-			localVideoTrack.stop();
-			localVideoTrack.close();
-			setLocalVideoTrack(null);
+		try {
+			if (localVideoTrack) {
+				localVideoTrack.stop();
+				localVideoTrack.close();
+				setLocalVideoTrack(null);
+			}
+		} catch (error) {
+			console.warn('Error stopping video track:', error);
 		}
-		if (localAudioTrack) {
-			localAudioTrack.stop();
-			localAudioTrack.close();
-			setLocalAudioTrack(null);
+		
+		try {
+			if (localAudioTrack) {
+				localAudioTrack.stop();
+				localAudioTrack.close();
+				setLocalAudioTrack(null);
+			}
+		} catch (error) {
+			console.warn('Error stopping audio track:', error);
 		}
 	};
 
