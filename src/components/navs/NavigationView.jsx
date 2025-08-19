@@ -52,7 +52,7 @@ const NavigationView = ({ children }) => {
 	const [showModal, setShowModal] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-	const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+	const [, setNotificationsEnabled] = useState(false);
 	const [user, setUser] = useState(null);
 	const [notifications, setNotifications] = useState([]);
 	const [unreadCount, setUnreadCount] = useState(0);
