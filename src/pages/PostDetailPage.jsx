@@ -510,6 +510,8 @@ const PostDetailPage = () => {
 										) : (
 											""
 										))}
+								</div>
+								<div className="d-flex flex-wrap gap-3 small text-muted">
 									{post.analytics?.views > 0 && (
 										<span>{post.analytics.views} views</span>
 									)}
