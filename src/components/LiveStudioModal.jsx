@@ -373,6 +373,34 @@ const LiveStudioModal = ({
 			return;
 		}
 
+		// Validate tracks are functional
+		try {
+			const videoMediaTrack = localVideoTrack.getMediaStreamTrack();
+			const audioMediaTrack = localAudioTrack.getMediaStreamTrack();
+			
+			if (!videoMediaTrack || !audioMediaTrack) {
+				alert('Media tracks are not properly initialized. Please refresh and try again.');
+				return;
+			}
+
+			console.log('Track status:', {
+				video: {
+					enabled: videoMediaTrack.enabled,
+					readyState: videoMediaTrack.readyState,
+					muted: videoMediaTrack.muted
+				},
+				audio: {
+					enabled: audioMediaTrack.enabled,
+					readyState: audioMediaTrack.readyState,
+					muted: audioMediaTrack.muted
+				}
+			});
+		} catch (trackError) {
+			console.error('Error validating tracks:', trackError);
+			alert('Track validation failed. Please refresh and try again.');
+			return;
+		}
+
 		const streamData = {
 			title: streamTitle,
 			description: streamDescription,

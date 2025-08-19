@@ -342,18 +342,40 @@ const HomePage = () => {
 			// Use the tracks from LiveStudioModal
 			const { videoTrack, audioTrack } = streamData;
 
-			// Validate tracks are available and ready
+			// Validate tracks are available
 			if (!videoTrack || !audioTrack) {
 				throw new Error('Video or audio track not available. Please try again.');
 			}
 
-			// Check track readiness
-			if (videoTrack.getMediaStreamTrack().readyState !== 'live') {
-				throw new Error('Video track is not ready. Please try again.');
+			// Wait for tracks to be ready with timeout
+			const waitForTrackReady = async (track, trackType, maxWait = 5000) => {
+				const startTime = Date.now();
+				while (Date.now() - startTime < maxWait) {
+					try {
+						const mediaStreamTrack = track.getMediaStreamTrack();
+						if (mediaStreamTrack && mediaStreamTrack.readyState === 'live') {
+							return true;
+						}
+					} catch (e) {
+						console.warn(`Error checking ${trackType} track readiness:`, e);
+					}
+					await new Promise(resolve => setTimeout(resolve, 100));
+				}
+				return false;
+			};
+
+			// Wait for both tracks to be ready
+			const [videoReady, audioReady] = await Promise.all([
+				waitForTrackReady(videoTrack, 'video'),
+				waitForTrackReady(audioTrack, 'audio')
+			]);
+
+			if (!videoReady) {
+				console.warn('Video track not ready, but proceeding anyway');
 			}
 
-			if (audioTrack.getMediaStreamTrack().readyState !== 'live') {
-				throw new Error('Audio track is not ready. Please try again.');
+			if (!audioReady) {
+				console.warn('Audio track not ready, but proceeding anyway');
 			}
 
 			// Clean up any existing stream first
@@ -369,11 +391,14 @@ const HomePage = () => {
 			const streamKey = `live_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 			const streamUrl = `${window.location.origin}/live/${streamKey}`;
 
-			// Create Agora client with simpler configuration to avoid network issues
+			// Create Agora client with more robust configuration
 			const client = AgoraRTC.createClient({ 
 				mode: 'live', 
-				codec: 'vp8'  // VP8 might work better in some network conditions
+				codec: 'h264'  // H264 is more widely supported
 			});
+
+			// Enable debug mode to get more information
+			AgoraRTC.setLogLevel(1);
 
 			// Enhanced error handlers
 			client.on('connection-state-change', (curState, revState, reason) => {
@@ -419,28 +444,45 @@ const HomePage = () => {
 				hasAudio: !!audioTrack
 			});
 
+			// Retry join with exponential backoff
+			const joinWithRetry = async (maxRetries = 3) => {
+				for (let attempt = 1; attempt <= maxRetries; attempt++) {
+					try {
+						console.log(`Joining Agora channel - attempt ${attempt}/${maxRetries}`);
+						
+						const joinPromise = client.join(
+							agoraConfig.appId,
+							agoraConfig.channel,
+							agoraConfig.token,
+							agoraConfig.uid
+						);
+
+						// Shorter timeout for each attempt
+						const timeoutPromise = new Promise((_, reject) => 
+							setTimeout(() => reject(new Error('Join timeout')), 8000)
+						);
+
+						await Promise.race([joinPromise, timeoutPromise]);
+						console.log('Successfully joined Agora channel');
+						return true;
+					} catch (attemptError) {
+						console.log(`Join attempt ${attempt} failed:`, attemptError);
+						
+						if (attempt === maxRetries) {
+							throw attemptError;
+						}
+						
+						// Wait before retry with exponential backoff
+						const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+						await new Promise(resolve => setTimeout(resolve, waitTime));
+					}
+				}
+			};
+
 			try {
-				console.log('Joining Agora channel with config:', {
-					appId: agoraConfig.appId,
-					channel: agoraConfig.channel
-				});
-
-				// Single join attempt with shorter timeout to prevent hanging
-				const joinPromise = client.join(
-					agoraConfig.appId,
-					agoraConfig.channel,
-					agoraConfig.token,
-					agoraConfig.uid
-				);
-
-				const timeoutPromise = new Promise((_, reject) => 
-					setTimeout(() => reject(new Error('Connection timeout - please try again')), 10000)
-				);
-
-				await Promise.race([joinPromise, timeoutPromise]);
-				console.log('Successfully joined Agora channel');
+				await joinWithRetry();
 			} catch (joinError) {
-				console.error('Failed to join Agora channel:', joinError);
+				console.error('Failed to join Agora channel after retries:', joinError);
 				
 				// Clean up client on error
 				try {
@@ -459,7 +501,7 @@ const HomePage = () => {
 					audioTrack.close();
 				}
 				
-				throw new Error(`Failed to join live stream channel. Please check your internet connection and try again.`);
+				throw new Error(`Unable to connect to streaming servers. This might be due to network restrictions. Please try again later.`);
 			}
 
 			try {
