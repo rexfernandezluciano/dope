@@ -16,6 +16,26 @@ import { setupCSP } from "./utils/security-utils";
 import "animate.css";
 import "./assets/css/app.css";
 
+// Disable React error overlay
+if (process.env.NODE_ENV === 'development') {
+  const originalError = console.error;
+  console.error = (...args) => {
+    if (typeof args[0] === 'string' && args[0].includes('Warning:')) {
+      return;
+    }
+    originalError(...args);
+  };
+  
+  // Hide error overlay
+  window.addEventListener('error', (e) => {
+    e.stopImmediatePropagation();
+  });
+  
+  window.addEventListener('unhandledrejection', (e) => {
+    e.stopImmediatePropagation();
+  });
+}
+
 // Setup Content Security Policy
 setupCSP();
 
