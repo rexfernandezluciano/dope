@@ -1,7 +1,9 @@
 
 /**
- * Secure storage utilities for sensitive data
+ * Secure storage utilities for sensitive data using js-cookie
  */
+
+import Cookies from 'js-cookie';
 
 // Encrypt data before storing (basic implementation)
 const encryptData = (data) => {
@@ -24,7 +26,7 @@ const decryptData = (encryptedData) => {
 	}
 };
 
-// Secure cookie storage with encryption
+// Secure cookie storage with encryption using js-cookie
 export const setSecureData = (key, data, options = {}) => {
 	try {
 		const encryptedData = encryptData(data);
@@ -34,18 +36,18 @@ export const setSecureData = (key, data, options = {}) => {
 			path: '/',
 			secure: window.location.protocol === 'https:',
 			sameSite: 'Strict',
-			maxAge: 3600 // 1 hour default
+			expires: 1/24 // 1 hour default (in days)
 		};
 		
 		const config = { ...defaults, ...options };
-		let cookieString = `${key}=${encodeURIComponent(encryptedData)}`;
 		
-		if (config.path) cookieString += `; path=${config.path}`;
-		if (config.secure) cookieString += `; secure`;
-		if (config.sameSite) cookieString += `; samesite=${config.sameSite}`;
-		if (config.maxAge) cookieString += `; max-age=${config.maxAge}`;
+		// Convert maxAge to expires if provided
+		if (config.maxAge) {
+			config.expires = config.maxAge / (24 * 60 * 60); // Convert seconds to days
+			delete config.maxAge;
+		}
 		
-		document.cookie = cookieString;
+		Cookies.set(key, encryptedData, config);
 		return true;
 	} catch (e) {
 		console.error('Failed to set secure data:', e);
@@ -53,13 +55,11 @@ export const setSecureData = (key, data, options = {}) => {
 	}
 };
 
-// Get and decrypt secure data
+// Get and decrypt secure data using js-cookie
 export const getSecureData = (key) => {
 	try {
-		const value = `; ${document.cookie}`;
-		const parts = value.split(`; ${key}=`);
-		if (parts.length === 2) {
-			const encryptedData = decodeURIComponent(parts.pop().split(';').shift());
+		const encryptedData = Cookies.get(key);
+		if (encryptedData) {
 			return decryptData(encryptedData);
 		}
 		return null;
@@ -69,10 +69,17 @@ export const getSecureData = (key) => {
 	}
 };
 
-// Remove secure data
-export const removeSecureData = (key, path = '/') => {
+// Remove secure data using js-cookie
+export const removeSecureData = (key, options = {}) => {
 	try {
-		document.cookie = `${key}=; path=${path}; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=Strict`;
+		const config = {
+			path: '/',
+			secure: window.location.protocol === 'https:',
+			sameSite: 'Strict',
+			...options
+		};
+		
+		Cookies.remove(key, config);
 		return true;
 	} catch (e) {
 		console.error('Failed to remove secure data:', e);
@@ -80,16 +87,13 @@ export const removeSecureData = (key, path = '/') => {
 	}
 };
 
-// Clear all secure cookies (for logout)
+// Clear all secure cookies (for logout) using js-cookie
 export const clearAllSecureData = () => {
 	try {
-		const cookies = document.cookie.split(';');
-		cookies.forEach(cookie => {
-			const eqPos = cookie.indexOf('=');
-			const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-			if (name) {
-				removeSecureData(name);
-			}
+		// Get all cookie names
+		const allCookies = Cookies.get();
+		Object.keys(allCookies).forEach(cookieName => {
+			removeSecureData(cookieName);
 		});
 		return true;
 	} catch (e) {

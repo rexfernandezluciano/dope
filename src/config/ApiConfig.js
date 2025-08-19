@@ -50,26 +50,29 @@ const getHeaders = () => {
 };
 
 // Secure token storage helper
-// Secure cookie utilities
+// Import js-cookie for secure cookie management
+import Cookies from 'js-cookie';
+
+// Secure cookie utilities using js-cookie
 const setCookie = (name, value, options = {}) => {
 	try {
 		const defaults = {
 			path: '/',
 			secure: window.location.protocol === 'https:',
-			httpOnly: false, // Client-side cookies can't be httpOnly
 			sameSite: 'Strict',
-			maxAge: 86400 // 24 hours
+			expires: 1 // 1 day default
 		};
 		
 		const config = { ...defaults, ...options };
-		let cookieString = `${name}=${encodeURIComponent(value)}`;
 		
-		if (config.path) cookieString += `; path=${config.path}`;
-		if (config.secure) cookieString += `; secure`;
-		if (config.sameSite) cookieString += `; samesite=${config.sameSite}`;
-		if (config.maxAge) cookieString += `; max-age=${config.maxAge}`;
+		// Convert maxAge to expires (days) for js-cookie
+		if (config.maxAge) {
+			config.expires = config.maxAge / (24 * 60 * 60); // Convert seconds to days
+			delete config.maxAge;
+		}
 		
-		document.cookie = cookieString;
+		Cookies.set(name, value, config);
+		console.log(`Cookie '${name}' set successfully`);
 	} catch (e) {
 		console.error('Failed to set secure cookie:', e);
 	}
@@ -77,21 +80,25 @@ const setCookie = (name, value, options = {}) => {
 
 const getCookie = (name) => {
 	try {
-		const value = `; ${document.cookie}`;
-		const parts = value.split(`; ${name}=`);
-		if (parts.length === 2) {
-			return decodeURIComponent(parts.pop().split(';').shift());
-		}
-		return null;
+		const value = Cookies.get(name);
+		return value || null;
 	} catch (e) {
 		console.error('Failed to get cookie:', e);
 		return null;
 	}
 };
 
-const deleteCookie = (name, path = '/') => {
+const deleteCookie = (name, options = {}) => {
 	try {
-		document.cookie = `${name}=; path=${path}; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=Strict`;
+		const config = {
+			path: '/',
+			secure: window.location.protocol === 'https:',
+			sameSite: 'Strict',
+			...options
+		};
+		
+		Cookies.remove(name, config);
+		console.log(`Cookie '${name}' removed successfully`);
 	} catch (e) {
 		console.error('Failed to delete cookie:', e);
 	}
@@ -133,15 +140,15 @@ const getAuthToken = () => {
 
 const setAuthToken = (token, rememberMe = false) => {
 	try {
-		// Set secure cookie with appropriate expiration
-		const maxAge = rememberMe ? 2592000 : 86400; // 30 days or 24 hours
+		// Set secure cookie with appropriate expiration (in days)
+		const expires = rememberMe ? 30 : 1; // 30 days or 1 day
 		setCookie('authToken', token, { 
-			maxAge,
+			expires,
 			secure: window.location.protocol === 'https:',
 			sameSite: 'Strict'
 		});
 		
-		console.log('Auth token stored in secure cookie:', token);
+		console.log('Auth token stored in secure cookie');
 		
 		// Clean up any existing storage tokens
 		sessionStorage.removeItem('authToken');
@@ -159,8 +166,12 @@ const setAuthToken = (token, rememberMe = false) => {
 
 const removeAuthToken = () => {
 	try {
-		// Remove secure cookie
-		deleteCookie('authToken');
+		// Remove secure cookie with proper options
+		deleteCookie('authToken', {
+			path: '/',
+			secure: window.location.protocol === 'https:',
+			sameSite: 'Strict'
+		});
 		
 		// Clean up storage as well (for backward compatibility)
 		sessionStorage.removeItem('authToken');
