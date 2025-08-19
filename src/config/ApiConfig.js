@@ -141,7 +141,7 @@ const setAuthToken = (token, rememberMe = false) => {
 			sameSite: 'Strict'
 		});
 		
-		console.log('Auth token stored in secure cookie');
+		console.log('Auth token stored in secure cookie:', token);
 		
 		// Clean up any existing storage tokens
 		sessionStorage.removeItem('authToken');
