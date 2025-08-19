@@ -13,7 +13,10 @@ const RequireAuth = ({ children }) => {
 	useEffect(() => {
 		const checkAuth = async () => {
 			try {
-				const token = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+				// Import token utilities
+				const { getAuthToken, removeAuthToken } = await import('../../config/ApiConfig');
+				
+				const token = getAuthToken();
 				if (!token || typeof token !== 'string' || token.length < 10) {
 					setUser(null);
 					setLoading(false);
@@ -23,8 +26,7 @@ const RequireAuth = ({ children }) => {
 				// Validate token format (basic JWT structure check)
 				const tokenParts = token.split('.');
 				if (tokenParts.length !== 3) {
-					localStorage.removeItem('authToken');
-					sessionStorage.removeItem('authToken');
+					removeAuthToken();
 					setUser(null);
 					setLoading(false);
 					return;
@@ -34,9 +36,9 @@ const RequireAuth = ({ children }) => {
 				setUser(currentUser);
 			} catch (error) {
 				console.error('Auth check failed');
-				// Clear potentially invalid token
-				localStorage.removeItem('authToken');
-				sessionStorage.removeItem('authToken');
+				// Clear potentially invalid token using secure method
+				const { removeAuthToken } = await import('../../config/ApiConfig');
+				removeAuthToken();
 				setUser(null);
 			} finally {
 				setLoading(false);

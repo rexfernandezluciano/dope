@@ -50,43 +50,122 @@ const getHeaders = () => {
 };
 
 // Secure token storage helper
+// Secure cookie utilities
+const setCookie = (name, value, options = {}) => {
+	try {
+		const defaults = {
+			path: '/',
+			secure: window.location.protocol === 'https:',
+			httpOnly: false, // Client-side cookies can't be httpOnly
+			sameSite: 'Strict',
+			maxAge: 86400 // 24 hours
+		};
+		
+		const config = { ...defaults, ...options };
+		let cookieString = `${name}=${encodeURIComponent(value)}`;
+		
+		if (config.path) cookieString += `; path=${config.path}`;
+		if (config.secure) cookieString += `; secure`;
+		if (config.sameSite) cookieString += `; samesite=${config.sameSite}`;
+		if (config.maxAge) cookieString += `; max-age=${config.maxAge}`;
+		
+		document.cookie = cookieString;
+	} catch (e) {
+		console.error('Failed to set secure cookie:', e);
+	}
+};
+
+const getCookie = (name) => {
+	try {
+		const value = `; ${document.cookie}`;
+		const parts = value.split(`; ${name}=`);
+		if (parts.length === 2) {
+			return decodeURIComponent(parts.pop().split(';').shift());
+		}
+		return null;
+	} catch (e) {
+		console.error('Failed to get cookie:', e);
+		return null;
+	}
+};
+
+const deleteCookie = (name, path = '/') => {
+	try {
+		document.cookie = `${name}=; path=${path}; expires=Thu, 01 Jan 1970 00:00:01 GMT; secure; samesite=Strict`;
+	} catch (e) {
+		console.error('Failed to delete cookie:', e);
+	}
+};
+
 const getAuthToken = () => {
 	try {
-		// Try sessionStorage first, then localStorage as fallback
+		// Try secure cookie first, then fallback to storage for backward compatibility
+		const cookieToken = getCookie('authToken');
+		if (cookieToken) {
+			console.log('Auth token found in secure cookie');
+			return cookieToken;
+		}
+
+		// Fallback to storage (for backward compatibility)
 		const sessionToken = sessionStorage.getItem('authToken');
 		const localToken = localStorage.getItem('authToken');
-
-		const token = sessionToken || localToken;
-		if (token) {
-			console.log('Auth token found');
-			return token;
-		} else {
-			console.warn('No auth token found in storage');
-			return null;
+		const storageToken = sessionToken || localToken;
+		
+		if (storageToken) {
+			console.log('Auth token found in storage, migrating to secure cookie');
+			// Migrate to secure cookie and remove from storage
+			setAuthToken(storageToken);
+			sessionStorage.removeItem('authToken');
+			localStorage.removeItem('authToken');
+			return storageToken;
 		}
+
+		console.warn('No auth token found');
+		return null;
 	} catch (e) {
 		console.error('Failed to get auth token:', e);
 		return null;
 	}
 };
 
-const setAuthToken = (token) => {
+const setAuthToken = (token, rememberMe = false) => {
 	try {
-		// Prefer sessionStorage for better security
-		sessionStorage.setItem('authToken', token);
-		// Keep localStorage as fallback for "remember me" functionality
-		localStorage.setItem('authToken', token);
+		// Set secure cookie with appropriate expiration
+		const maxAge = rememberMe ? 2592000 : 86400; // 30 days or 24 hours
+		setCookie('authToken', token, { 
+			maxAge,
+			secure: window.location.protocol === 'https:',
+			sameSite: 'Strict'
+		});
+		
+		console.log('Auth token stored in secure cookie');
+		
+		// Clean up any existing storage tokens
+		sessionStorage.removeItem('authToken');
+		localStorage.removeItem('authToken');
 	} catch (e) {
-		console.error('Failed to store auth token');
+		console.error('Failed to store auth token in secure cookie:', e);
+		// Fallback to sessionStorage if cookie fails
+		try {
+			sessionStorage.setItem('authToken', token);
+		} catch (storageError) {
+			console.error('Fallback storage also failed:', storageError);
+		}
 	}
 };
 
 const removeAuthToken = () => {
 	try {
+		// Remove secure cookie
+		deleteCookie('authToken');
+		
+		// Clean up storage as well (for backward compatibility)
 		sessionStorage.removeItem('authToken');
 		localStorage.removeItem('authToken');
+		
+		console.log('Auth token removed from all storage');
 	} catch (e) {
-		console.error('Failed to remove auth token');
+		console.error('Failed to remove auth token:', e);
 	}
 };
 

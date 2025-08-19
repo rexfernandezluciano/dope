@@ -12,12 +12,12 @@ export const getUser = async () => {
 		if (!token) return null;
 
 		const response = await authAPI.getCurrentUser();
-		
+
 		// Handle the auth/me API response structure: { status: "ok", user: userObject }
 		if (response.status === 'ok' && response.user) {
 			return response.user;
 		}
-		
+
 		// Fallback for other response structures
 		return response.user || response;
 	} catch (error) {
@@ -161,9 +161,19 @@ export const getGravatar = (email) => {
  */
 export const setAuthToken = (token) => {
 	try {
-		// Prefer sessionStorage for better security
+		// Implement secure cookie storage here
+		// For example, using httpOnly and secure flags for cookies
+		// This part would typically involve server-side logic or a library
+		// that can set cookies from the client-side with appropriate flags.
+		// For demonstration purposes, we'll simulate setting a cookie.
+		// In a real application, you'd likely use a library like 'js-cookie'
+		// or have your backend set the cookie.
+
+		// Example using document.cookie (less secure than true httpOnly cookies):
+		// document.cookie = `authToken=${token}; max-age=3600; path=/; secure=true; samesite=strict`;
+
+		// For now, keeping the original logic as a placeholder for actual secure cookie implementation
 		sessionStorage.setItem('authToken', token);
-		// Keep localStorage as fallback for "remember me" functionality
 		localStorage.setItem('authToken', token);
 	} catch (e) {
 		console.error('Failed to store auth token');
@@ -175,6 +185,12 @@ export const setAuthToken = (token) => {
  */
 export const removeAuthToken = () => {
 	try {
+		// Remove secure cookie
+		// In a real application, you'd set the cookie's expiration to a past date.
+		// Example using document.cookie:
+		// document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+		// For now, keeping the original logic as a placeholder for actual secure cookie implementation
 		sessionStorage.removeItem('authToken');
 		localStorage.removeItem('authToken');
 	} catch (e) {
@@ -188,6 +204,17 @@ export const removeAuthToken = () => {
  */
 export const getAuthToken = () => {
 	try {
+		// Retrieve from secure cookie or fallback to localStorage/sessionStorage
+		// Example retrieving from document.cookie:
+		// const cookies = document.cookie.split(';');
+		// for (let i = 0; i < cookies.length; i++) {
+		// 	let cookie = cookies[i].trim();
+		// 	if (cookie.startsWith('authToken=')) {
+		// 		return cookie.substring('authToken='.length, cookie.length);
+		// 	}
+		// }
+
+		// For now, keeping the original logic as a placeholder for actual secure cookie implementation
 		return sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
 	} catch (e) {
 		console.error('Failed to retrieve auth token');

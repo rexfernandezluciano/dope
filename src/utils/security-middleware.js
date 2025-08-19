@@ -22,10 +22,9 @@ export class SecurityMiddleware {
 				secureHeaders["X-CSRF-Token"] = generateCSRFToken();
 			}
 
-			// Add authentication headers
-			const token =
-				sessionStorage.getItem("authToken") ||
-				localStorage.getItem("authToken");
+			// Add authentication headers using secure method
+			const { getAuthToken } = await import("../config/ApiConfig");
+			const token = getAuthToken();
 			if (token) {
 				secureHeaders["Authorization"] = `Bearer ${token}`;
 			}
@@ -44,11 +43,10 @@ export class SecurityMiddleware {
 		}
 	}
 
-	static getUserId() {
+	static async getUserId() {
 		try {
-			const token =
-				sessionStorage.getItem("authToken") ||
-				localStorage.getItem("authToken");
+			const { getAuthToken } = await import("../config/ApiConfig");
+			const token = getAuthToken();
 			if (!token) return null;
 
 			const payload = JSON.parse(atob(token.split(".")[1]));

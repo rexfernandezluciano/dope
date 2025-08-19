@@ -80,7 +80,9 @@ const LoginPage = () => {
 			}
 
 			if (result.token) {
-				setAuthToken(result.token);
+				// You can add a "Remember Me" checkbox and pass that value here
+				const rememberMe = false; // Set this based on user preference
+				setAuthToken(result.token, rememberMe);
 				// Clear any existing errors
 				setError("");
 				// Use replace to prevent going back to login
