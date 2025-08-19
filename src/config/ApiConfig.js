@@ -382,35 +382,45 @@ const postAPI = {
 };
 
 const commentAPI = {
-	getComments: (postId, params = {}) => {
-		const searchParams = new URLSearchParams();
-		Object.keys(params).forEach(key => {
-			if (params[key] !== undefined && params[key] !== null) {
-				searchParams.append(key, params[key]);
-			}
+	getComments: async (postId) => {
+		const response = await fetch(`${API_BASE_URL}/posts/${postId}/comments`, {
+			headers: await getAuthHeaders(),
 		});
-		const queryString = searchParams.toString();
-		return apiRequest(`/comments/post/${postId}${queryString ? `?${queryString}` : ''}`, {
-			method: 'GET'
-		});
+		return handleApiResponse(response);
 	},
 
-	createComment: (postId, content) =>
-		apiRequest(`/comments/post/${postId}`, {
-			method: 'POST',
-			body: { content }
-		}),
+	createComment: async (postId, content) => {
+		const response = await fetch(`${API_BASE_URL}/posts/${postId}/comments`, {
+			method: "POST",
+			headers: await getAuthHeaders(),
+			body: JSON.stringify({ content }),
+		});
+		return handleApiResponse(response);
+	},
 
-	updateComment: (commentId, content) =>
-		apiRequest(`/comments/${commentId}`, {
-			method: 'PUT',
-			body: { content }
-		}),
+	deleteComment: async (commentId) => {
+		const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
+			method: "DELETE",
+			headers: await getAuthHeaders(),
+		});
+		return handleApiResponse(response);
+	},
 
-	deleteComment: (commentId) =>
-		apiRequest(`/comments/${commentId}`, {
-			method: 'DELETE'
-		})
+	searchComments: async (query, limit = 20, cursor = null) => {
+		const params = new URLSearchParams({
+			q: query,
+			limit: limit.toString(),
+		});
+
+		if (cursor) {
+			params.append('cursor', cursor);
+		}
+
+		const response = await fetch(`${API_BASE_URL}/comments/search?${params}`, {
+			headers: await getAuthHeaders(),
+		});
+		return handleApiResponse(response);
+	},
 };
 
 export { authAPI, postAPI, userAPI, commentAPI, setAuthToken, removeAuthToken, validateEmail, sanitizeInput };

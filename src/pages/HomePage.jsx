@@ -26,6 +26,7 @@ import {
 	ChevronRight,
 	CheckCircleFill,
 	Person,
+	ChatDots,
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
@@ -37,6 +38,7 @@ import { postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
 import LiveStudioModal from "../components/LiveStudioModal";
+import ThreadedPost from "../components/ThreadedPost";
 import {
 	deletePost as deletePostUtil,
 	sharePost,
@@ -102,7 +104,9 @@ const HomePage = () => {
 	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
-	const [filterBy, setFilterBy] = useState("for-you"); // State for filter selection
+	const [filterBy, setFilterBy] = useState("all"); // 'all', 'following', 'hashtag'
+	const [hashtagFilter, setHashtagFilter] = useState("");
+	const [showThreaded, setShowThreaded] = useState(false);
 	const [user, setUser] = useState(null); // State to hold the current user
 
 	const loaderData = useLoaderData() || {};
@@ -114,12 +118,16 @@ const HomePage = () => {
 
 		loadPosts();
 		checkUser();
+		// Initialize notifications and request permission
+		initializeNotifications();
+		requestNotificationPermission();
+		setupMessageListener();
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-	// Effect to load posts when filterBy changes
+	// Effect to load posts when filterBy or hashtagFilter changes
 	useEffect(() => {
 		loadPosts();
-	}, [filterBy]);
+	}, [filterBy, hashtagFilter]);
 
 	const checkUser = async () => {
 		try {
@@ -140,9 +148,11 @@ const HomePage = () => {
 
 			let response;
 
-			// Use specific endpoint for following feed
 			if (filter === "following") {
 				response = await postAPI.getFollowingFeed(params);
+			} else if (filter === "hashtag" && hashtagFilter) {
+				params.hashtag = hashtagFilter;
+				response = await postAPI.getPostsByHashtag(params);
 			} else {
 				// For "For You" tab, sort by engagement (likes + comments)
 				params.sortBy = "engagement";
@@ -151,43 +161,20 @@ const HomePage = () => {
 
 			let processedPosts = response.posts;
 
-			// Client-side filtering as backup in case API doesn't support it
-			if (filter === "following") {
-				// Filter out current user's own posts
-				processedPosts = response.posts.filter(
-					(post) => post.author.uid !== currentUser.uid,
-				);
-			} else if (filter === "for-you") {
-				// Sort by engagement (likes + comments) if not already sorted by API
-				processedPosts = response.posts.sort((a, b) => {
-					const engagementA = (a.stats?.likes || 0) + (a.stats?.comments || 0);
-					const engagementB = (b.stats?.likes || 0) + (b.stats?.comments || 0);
-					return engagementB - engagementA; // Higher engagement first
-				});
-			}
-
 			// Filter posts based on profile privacy settings
 			const privacyFilteredPosts = processedPosts.filter((post) => {
 				const authorPrivacy = post.author.privacy?.profile || "public";
 
-				// Always show public posts
 				if (authorPrivacy === "public") return true;
-
-				// Don't show private posts unless it's the current user's post
 				if (authorPrivacy === "private") {
 					return post.author.uid === currentUser.uid;
 				}
-
-				// Show followers-only posts if current user follows the author or is the author
 				if (authorPrivacy === "followers") {
-					// Assuming `post.author.isFollowedByCurrentUser` is provided by the API
-					// If not, this logic might need to be adjusted based on how follow status is checked
 					return (
 						post.author.uid === currentUser.uid ||
 						post.author.isFollowedByCurrentUser
 					);
 				}
-
 				return false;
 			});
 
@@ -205,8 +192,17 @@ const HomePage = () => {
 		}
 	};
 
-	// All posts are already filtered by the API, so we don't need to filter here
-	const filteredPosts = posts;
+	const handleFilterChange = (value) => {
+		setFilterBy(value);
+		if (value !== "hashtag") {
+			setHashtagFilter(""); // Clear hashtag filter if not selected
+		}
+	};
+
+	const handleHashtagClick = (hashtag) => {
+		setFilterBy("hashtag");
+		setHashtagFilter(hashtag);
+	};
 
 	const handleInput = (e) => {
 		const textarea = textareaRef.current;
@@ -843,6 +839,11 @@ const HomePage = () => {
 		setSearchTerm(e.target.value);
 	};
 
+	// Filter posts based on the showThreaded state
+	const displayedPosts = showThreaded
+		? posts.filter((post) => post.comments && post.comments.length > 0)
+		: posts;
+
 	return (
 		<>
 			<Container className="py-3 px-0">
@@ -944,7 +945,7 @@ const HomePage = () => {
 					</Card>
 				)}
 
-				<div className="d-flex align-items-center justify-content-center px-0 pt-2 border-bottom bg-white sticky-top">
+				<div className="d-flex align-items-center justify-content-between px-0 pt-2 border-bottom bg-white sticky-top">
 					<div className="d-flex w-100">
 						<Button
 							variant="link"
@@ -953,7 +954,7 @@ const HomePage = () => {
 									? "text-primary border-bottom border-primary pb-3 border-2"
 									: "text-muted"
 							}`}
-							onClick={() => setFilterBy("for-you")}
+							onClick={() => handleFilterChange("for-you")}
 							style={{ borderRadius: 0 }}
 						>
 							For you
@@ -965,10 +966,41 @@ const HomePage = () => {
 									? "text-primary border-bottom border-primary pb-3 border-2"
 									: "text-muted"
 							}`}
-							onClick={() => setFilterBy("following")}
+							onClick={() => handleFilterChange("following")}
 							style={{ borderRadius: 0 }}
 						>
 							Following
+						</Button>
+						<Button
+							variant="link"
+							className={`flex-fill px-4 py-2 fw-bold text-decoration-none border-0 ${
+								filterBy === "hashtag"
+									? "text-primary border-bottom border-primary pb-3 border-2"
+									: "text-muted"
+							}`}
+							onClick={() => handleFilterChange("hashtag")}
+							style={{ borderRadius: 0 }}
+						>
+							Hashtags
+						</Button>
+					</div>
+					<div>
+						<Form.Control
+							type="text"
+							placeholder="Search hashtag..."
+							value={hashtagFilter}
+							onChange={(e) => setHashtagFilter(e.target.value)}
+							className="border-0 shadow-none me-2"
+							style={{ display: filterBy === "hashtag" ? "inline-block" : "none" }}
+						/>
+						<Button
+							variant={showThreaded ? "primary" : "outline-secondary"}
+							size="sm"
+							onClick={() => setShowThreaded(!showThreaded)}
+							className="me-2"
+						>
+							<ChatDots size={16} className="me-1" />
+							{showThreaded ? "List View" : "Threaded"}
 						</Button>
 					</div>
 				</div>
@@ -979,25 +1011,39 @@ const HomePage = () => {
 					</div>
 				) : (
 					<>
-						{filteredPosts.length === 0 && !loading ? (
+						{displayedPosts.length === 0 && !loading ? (
 							<div className="text-center text-muted py-5">
 								<h5>No posts available</h5>
 								<p>Be the first to share something!</p>
 							</div>
 						) : (
-							filteredPosts.map((post, index) => (
-								<PostCard
-									key={post.id}
-									post={post}
-									currentUser={user}
-									onLike={handleLikePost}
-									onShare={() => handleSharePost(post.id)}
-									onDeletePost={handleDeletePost}
-									onPostClick={(e) => handleImageClick(post.images, post.id, e)}
-									showComments={post.comments && post.comments.length > 0}
-									comments={post.comments || []}
-								/>
-							))
+							displayedPosts.map((post, index) =>
+								showThreaded && post.comments && post.comments.length > 0 ? (
+									<ThreadedPost
+										key={post.id}
+										post={post}
+										currentUser={user}
+										onLike={handleLikePost}
+										onShare={() => handleSharePost(post.id)}
+										onDeletePost={handleDeletePost}
+										onPostClick={(e) => handleImageClick(post.images, post.id, e)}
+										onHashtagClick={handleHashtagClick}
+									/>
+								) : (
+									!showThreaded && (
+										<PostCard
+											key={post.id}
+											post={post}
+											currentUser={user}
+											onLike={handleLikePost}
+											onShare={() => handleSharePost(post.id)}
+											onDeletePost={handleDeletePost}
+											onPostClick={(e) => handleImageClick(post.images, post.id, e)}
+											onHashtagClick={handleHashtagClick}
+										/>
+									)
+								),
+							)
 						)}
 
 						{hasMore && (

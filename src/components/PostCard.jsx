@@ -171,7 +171,7 @@ const PostCard = ({
 	};
 
 	const handleHashtagClick = (hashtag) => {
-		navigate(`/search?q=%23${encodeURIComponent(hashtag)}`);
+		navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=comments`);
 	};
 
 	const handleMentionClick = (username) => {
