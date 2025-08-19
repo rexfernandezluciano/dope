@@ -25,13 +25,13 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	CheckCircleFill,
-	Person
+	Person,
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import heic2any from "heic2any";
-import AgoraRTC from 'agora-rtc-sdk-ng';
+import AgoraRTC from "agora-rtc-sdk-ng";
 
 import { postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -46,31 +46,30 @@ import {
 	initializeNotifications,
 	requestNotificationPermission,
 	setupMessageListener,
-	notifyFollowersOfNewPost
+	notifyFollowersOfNewPost,
 } from "../utils/messaging-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { getUser } from "../utils/auth-utils";
 import { useNavigate } from "react-router-dom";
 
-
 // Utility function to clean text content
 const cleanTextContent = (text) => {
 	// Replace multiple line breaks with a single one, and trim whitespace
-	return text.replace(/(\r\n|\n|\r){2,}/g, '$1$2').trim();
+	return text.replace(/(\r\n|\n|\r){2,}/g, "$1$2").trim();
 };
 
 // Utility function to extract hashtags from text
 const extractHashtags = (text) => {
 	const hashtagRegex = /(?:^|\s)(#[\w]+)/g;
 	const matches = text.matchAll(hashtagRegex);
-	return Array.from(matches, match => match[1]);
+	return Array.from(matches, (match) => match[1]);
 };
 
 // Utility function to extract mentions from text
 const extractMentions = (text) => {
 	const mentionRegex = /(?:^|\s)(@[\w]+)/g;
 	const matches = text.matchAll(mentionRegex);
-	return Array.from(matches, match => match[1]);
+	return Array.from(matches, (match) => match[1]);
 };
 
 const HomePage = () => {
@@ -127,7 +126,7 @@ const HomePage = () => {
 			const currentUser = await getUser();
 			setUser(currentUser);
 		} catch (error) {
-			console.log('No authenticated user');
+			console.log("No authenticated user");
 			setUser(null);
 		}
 	};
@@ -335,7 +334,7 @@ const HomePage = () => {
 		try {
 			// Validate required fields
 			if (!streamData.title || !streamData.title.trim()) {
-				throw new Error('Stream title is required');
+				throw new Error("Stream title is required");
 			}
 
 			// Use the tracks from LiveStudioModal
@@ -343,7 +342,9 @@ const HomePage = () => {
 
 			// Validate tracks are available
 			if (!videoTrack || !audioTrack) {
-				throw new Error('Video or audio track not available. Please try again.');
+				throw new Error(
+					"Video or audio track not available. Please try again.",
+				);
 			}
 
 			// Wait for tracks to be ready with timeout
@@ -352,29 +353,29 @@ const HomePage = () => {
 				while (Date.now() - startTime < maxWait) {
 					try {
 						const mediaStreamTrack = track.getMediaStreamTrack();
-						if (mediaStreamTrack && mediaStreamTrack.readyState === 'live') {
+						if (mediaStreamTrack && mediaStreamTrack.readyState === "live") {
 							return true;
 						}
 					} catch (e) {
 						console.warn(`Error checking ${trackType} track readiness:`, e);
 					}
-					await new Promise(resolve => setTimeout(resolve, 100));
+					await new Promise((resolve) => setTimeout(resolve, 100));
 				}
 				return false;
 			};
 
 			// Wait for both tracks to be ready
 			const [videoReady, audioReady] = await Promise.all([
-				waitForTrackReady(videoTrack, 'video'),
-				waitForTrackReady(audioTrack, 'audio')
+				waitForTrackReady(videoTrack, "video"),
+				waitForTrackReady(audioTrack, "audio"),
 			]);
 
 			if (!videoReady) {
-				console.warn('Video track not ready, but proceeding anyway');
+				console.warn("Video track not ready, but proceeding anyway");
 			}
 
 			if (!audioReady) {
-				console.warn('Audio track not ready, but proceeding anyway');
+				console.warn("Audio track not ready, but proceeding anyway");
 			}
 
 			// Clean up any existing stream first
@@ -382,7 +383,7 @@ const HomePage = () => {
 				try {
 					await mediaStream.leave();
 				} catch (cleanupError) {
-					console.warn('Error cleaning up existing stream:', cleanupError);
+					console.warn("Error cleaning up existing stream:", cleanupError);
 				}
 			}
 
@@ -391,78 +392,92 @@ const HomePage = () => {
 			const streamUrl = `${window.location.origin}/live/${streamKey}`;
 
 			// Create Agora client with more robust configuration
-			const client = AgoraRTC.createClient({ 
-				mode: 'live', 
-				codec: 'h264'  // H264 is more widely supported
+			const client = AgoraRTC.createClient({
+				mode: "live",
+				codec: "h264", // H264 is more widely supported
 			});
 
 			// Enable debug mode to get more information
 			AgoraRTC.setLogLevel(1);
 
 			// Enhanced error handlers
-			client.on('connection-state-change', (curState, revState, reason) => {
-				console.log('Agora connection state changed:', curState, 'from', revState, 'reason:', reason);
+			client.on("connection-state-change", (curState, revState, reason) => {
+				console.log(
+					"Agora connection state changed:",
+					curState,
+					"from",
+					revState,
+					"reason:",
+					reason,
+				);
 
-				if (curState === 'FAILED' || curState === 'DISCONNECTED') {
-					console.warn('Agora connection lost, attempting to reconnect...');
+				if (curState === "FAILED" || curState === "DISCONNECTED") {
+					console.warn("Agora connection lost, attempting to reconnect...");
 				}
 			});
 
-			client.on('exception', (evt) => {
-				console.error('Agora exception:', evt);
-				if (evt.code === 'NETWORK_ERROR') {
-					console.warn('Network error detected, connection may be unstable');
+			client.on("exception", (evt) => {
+				console.error("Agora exception:", evt);
+				if (evt.code === "NETWORK_ERROR") {
+					console.warn("Network error detected, connection may be unstable");
 				}
 			});
 
-			client.on('network-quality', (stats) => {
-				if (stats.uplinkNetworkQuality < 3 || stats.downlinkNetworkQuality < 3) {
-					console.warn('Poor network quality detected');
+			client.on("network-quality", (stats) => {
+				if (
+					stats.uplinkNetworkQuality < 3 ||
+					stats.downlinkNetworkQuality < 3
+				) {
+					console.warn("Poor network quality detected");
 				}
 			});
 
 			try {
-				await client.setClientRole('host');
+				await client.setClientRole("host");
 			} catch (roleError) {
-				console.error('Failed to set client role:', roleError);
-				throw new Error('Failed to initialize streaming role');
+				console.error("Failed to set client role:", roleError);
+				throw new Error("Failed to initialize streaming role");
 			}
 
 			// Join channel and publish tracks with timeout
 			const agoraConfig = {
-				appId: process.env.REACT_APP_AGORA_APP_ID || '24ce08654e5c4232bac73ee7946ee769',
+				appId:
+					process.env.REACT_APP_AGORA_APP_ID ||
+					"24ce08654e5c4232bac73ee7946ee769",
 				token: null,
 				channel: streamKey,
-				uid: null
+				uid: null,
 			};
 
-			console.log('Joining Agora channel with config:', {
+			console.log("Joining Agora channel with config:", {
 				appId: agoraConfig.appId,
 				channel: agoraConfig.channel,
 				hasVideo: !!videoTrack,
-				hasAudio: !!audioTrack
+				hasAudio: !!audioTrack,
 			});
 
 			// Retry join with exponential backoff
 			const joinWithRetry = async (maxRetries = 3) => {
 				for (let attempt = 1; attempt <= maxRetries; attempt++) {
 					try {
-						console.log(`Joining Agora channel - attempt ${attempt}/${maxRetries}`);
+						console.log(
+							`Joining Agora channel - attempt ${attempt}/${maxRetries}`,
+						);
 
 						const joinPromise = client.join(
 							agoraConfig.appId,
 							agoraConfig.channel,
 							agoraConfig.token,
-							agoraConfig.uid
+							agoraConfig.uid,
 						);
 
 						// Shorter timeout for each attempt
-						const timeoutPromise = new Promise((_, reject) => 
-							setTimeout(() => reject(new Error('Join timeout')), 8000)
+						const timeoutPromise = new Promise((_, reject) =>
+							setTimeout(() => reject(new Error("Join timeout")), 8000),
 						);
 
 						await Promise.race([joinPromise, timeoutPromise]);
-						console.log('Successfully joined Agora channel');
+						console.log("Successfully joined Agora channel");
 						return true;
 					} catch (attemptError) {
 						console.log(`Join attempt ${attempt} failed:`, attemptError);
@@ -473,7 +488,7 @@ const HomePage = () => {
 
 						// Wait before retry with exponential backoff
 						const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-						await new Promise(resolve => setTimeout(resolve, waitTime));
+						await new Promise((resolve) => setTimeout(resolve, waitTime));
 					}
 				}
 			};
@@ -481,13 +496,13 @@ const HomePage = () => {
 			try {
 				await joinWithRetry();
 			} catch (joinError) {
-				console.error('Failed to join Agora channel after retries:', joinError);
+				console.error("Failed to join Agora channel after retries:", joinError);
 
 				// Clean up client on error
 				try {
 					await client.leave();
 				} catch (leaveError) {
-					console.warn('Error during cleanup:', leaveError);
+					console.warn("Error during cleanup:", leaveError);
 				}
 
 				// Clean up tracks on error
@@ -500,23 +515,27 @@ const HomePage = () => {
 					audioTrack.close();
 				}
 
-				throw new Error(`Unable to connect to streaming servers. This might be due to network restrictions. Please try again later.`);
+				throw new Error(
+					`Unable to connect to streaming servers. This might be due to network restrictions. Please try again later.`,
+				);
 			}
 
 			try {
 				await client.publish([videoTrack, audioTrack]);
-				console.log('Successfully published tracks to Agora');
+				console.log("Successfully published tracks to Agora");
 			} catch (publishError) {
-				console.error('Failed to publish tracks:', publishError);
-				throw new Error(`Failed to start broadcasting: ${publishError.message}`);
+				console.error("Failed to publish tracks:", publishError);
+				throw new Error(
+					`Failed to start broadcasting: ${publishError.message}`,
+				);
 			}
 
 			// Prepare the live stream post payload
 			const postPayload = {
 				content: streamData.description || streamData.title,
-				postType: 'live_video',
+				postType: "live_video",
 				liveVideoUrl: streamUrl,
-				privacy: streamData.privacy || 'public'
+				privacy: streamData.privacy || "public",
 			};
 
 			// Create the live stream post using the API
@@ -532,30 +551,42 @@ const HomePage = () => {
 				setMediaRecorder({ videoTrack, audioTrack });
 
 				// Set broadcast status in localStorage
-				localStorage.setItem('isCurrentlyBroadcasting', 'true');
-				localStorage.setItem('currentStreamTitle', streamData.title);
+				localStorage.setItem("isCurrentlyBroadcasting", "true");
+				localStorage.setItem("currentStreamTitle", streamData.title);
 
-				console.log('Live stream started successfully:', response);
+				console.log("Live stream started successfully:", response);
 			} else {
-				throw new Error('Failed to create live stream post');
+				throw new Error("Failed to create live stream post");
 			}
 		} catch (error) {
-			console.error('Error starting live stream:', error);
+			console.error("Error starting live stream:", error);
 
 			// Provide specific error messages based on error type
 			let errorMessage = error.message;
-			if (error.message.includes('NETWORK_ERROR') || error.message.includes('timeout')) {
-				errorMessage = 'Network connection issues detected. Please check your internet connection and try again.';
-			} else if (error.message.includes('camera') || error.message.includes('video')) {
-				errorMessage = 'Camera access issue. Please ensure your camera is not being used by another application.';
-			} else if (error.message.includes('microphone') || error.message.includes('audio')) {
-				errorMessage = 'Microphone access issue. Please check your microphone permissions.';
+			if (
+				error.message.includes("NETWORK_ERROR") ||
+				error.message.includes("timeout")
+			) {
+				errorMessage =
+					"Network connection issues detected. Please check your internet connection and try again.";
+			} else if (
+				error.message.includes("camera") ||
+				error.message.includes("video")
+			) {
+				errorMessage =
+					"Camera access issue. Please ensure your camera is not being used by another application.";
+			} else if (
+				error.message.includes("microphone") ||
+				error.message.includes("audio")
+			) {
+				errorMessage =
+					"Microphone access issue. Please check your microphone permissions.";
 			}
 
 			setError(`Failed to start live stream: ${errorMessage}`);
 
 			// Clean up localStorage on error
-			localStorage.removeItem('isCurrentlyBroadcasting');
+			localStorage.removeItem("isCurrentlyBroadcasting");
 		}
 	};
 
@@ -572,16 +603,19 @@ const HomePage = () => {
 					// Unpublish tracks first
 					if (mediaRecorder) {
 						try {
-							await mediaStream.unpublish([mediaRecorder.videoTrack, mediaRecorder.audioTrack]);
+							await mediaStream.unpublish([
+								mediaRecorder.videoTrack,
+								mediaRecorder.audioTrack,
+							]);
 						} catch (unpublishError) {
-							console.warn('Error unpublishing tracks:', unpublishError);
+							console.warn("Error unpublishing tracks:", unpublishError);
 						}
 					}
 
 					await mediaStream.leave();
-					console.log('Left Agora channel successfully');
+					console.log("Left Agora channel successfully");
 				} catch (err) {
-					console.warn('Error leaving Agora channel:', err);
+					console.warn("Error leaving Agora channel:", err);
 				}
 				setMediaStream(null);
 			}
@@ -594,7 +628,7 @@ const HomePage = () => {
 						await mediaRecorder.videoTrack.close();
 					}
 				} catch (videoError) {
-					console.warn('Error stopping video track:', videoError);
+					console.warn("Error stopping video track:", videoError);
 				}
 
 				try {
@@ -603,7 +637,7 @@ const HomePage = () => {
 						await mediaRecorder.audioTrack.close();
 					}
 				} catch (audioError) {
-					console.warn('Error stopping audio track:', audioError);
+					console.warn("Error stopping audio track:", audioError);
 				}
 			}
 
@@ -613,14 +647,12 @@ const HomePage = () => {
 			setLiveVideoUrl("");
 
 			// Clear broadcast status from localStorage
-			localStorage.removeItem('isCurrentlyBroadcasting');
-			localStorage.removeItem('currentStreamTitle');
+			localStorage.removeItem("isCurrentlyBroadcasting");
+			localStorage.removeItem("currentStreamTitle");
 		} catch (error) {
-			console.error('Error stopping live stream:', error);
+			console.error("Error stopping live stream:", error);
 		}
 	};
-
-
 
 	const toggleLiveMode = () => {
 		if (!isLive) {
@@ -670,8 +702,10 @@ const HomePage = () => {
 			let uploadedImageUrls = [];
 			if (selectedImages.length > 0) {
 				// Upload images if they are files, otherwise assume they are already URLs
-				if (typeof selectedImages[0] === 'object') {
-					const uploadPromises = selectedImages.map(img => uploadImageToCloudinary(img));
+				if (typeof selectedImages[0] === "object") {
+					const uploadPromises = selectedImages.map((img) =>
+						uploadImageToCloudinary(img),
+					);
 					uploadedImageUrls = await Promise.all(uploadPromises);
 				} else {
 					uploadedImageUrls = selectedImages; // Already URLs
@@ -683,14 +717,11 @@ const HomePage = () => {
 				imageUrls: uploadedImageUrls,
 				gifUrl: selectedGif ? selectedGif.images.fixed_height.url : null,
 				privacy: selectedPrivacy,
-				hashtags,
-				mentions,
+				postType: "text",
 			};
 
 			if (liveVideoUrl && isLive && isStreaming) {
 				postData.liveVideoUrl = liveVideoUrl;
-				postData.isLiveStreaming = true;
-				postData.streamKey = streamUrlRef.current;
 			}
 
 			const response = await postAPI.createPost(postData);
@@ -700,10 +731,10 @@ const HomePage = () => {
 				try {
 					await notifyFollowersOfNewPost(response.post.id, {
 						...response.post,
-						author: currentUser
+						author: currentUser,
 					});
 				} catch (notificationError) {
-					console.error('Failed to send notifications:', notificationError);
+					console.error("Failed to send notifications:", notificationError);
 					// Don't fail the post creation if notification fails
 				}
 			}
@@ -832,15 +863,15 @@ const HomePage = () => {
 									borderRadius: "50%",
 									backgroundColor: "#fff",
 									display: "inline-block",
-									animation: "pulse 1.5s infinite"
+									animation: "pulse 1.5s infinite",
 								}}
 							></span>
 							<strong>🔴 LIVE BROADCASTING</strong>
 							<span className="text-white-50">|</span>
-							<span>{streamTitle || 'Untitled Stream'}</span>
+							<span>{streamTitle || "Untitled Stream"}</span>
 						</div>
-						<Button 
-							variant="outline-light" 
+						<Button
+							variant="outline-light"
 							size="sm"
 							onClick={() => setShowLiveStudioModal(true)}
 						>
@@ -856,18 +887,19 @@ const HomePage = () => {
 							<Person size={48} className="text-primary mb-3" />
 							<h4 className="text-primary">Welcome to DOPE Network!</h4>
 							<p className="text-muted mb-3">
-								Join our community to create posts, go live, and connect with others.
+								Join our community to create posts, go live, and connect with
+								others.
 							</p>
 							<div className="d-flex gap-2 justify-content-center">
-								<Button 
+								<Button
 									variant="primary"
-									onClick={() => navigate('/auth/signup')}
+									onClick={() => navigate("/auth/signup")}
 								>
 									Sign Up
 								</Button>
-								<Button 
+								<Button
 									variant="outline-primary"
-									onClick={() => navigate('/auth/login')}
+									onClick={() => navigate("/auth/login")}
 								>
 									Login
 								</Button>
@@ -885,9 +917,7 @@ const HomePage = () => {
 						<Card.Body className="px-3 py-3">
 							<div className="d-flex gap-3">
 								<Image
-									src={
-										user?.photoURL || "https://i.pravatar.cc/150?img=10"
-									}
+									src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
 									alt="avatar"
 									roundedCircle
 									width="45"
@@ -1006,7 +1036,10 @@ const HomePage = () => {
 					<Modal.Body className="overflow-x-hidden">
 						{/* Live Broadcasting Status Alert */}
 						{isStreaming && (
-							<div className="alert alert-danger mb-3 d-flex align-items-center gap-2" role="alert">
+							<div
+								className="alert alert-danger mb-3 d-flex align-items-center gap-2"
+								role="alert"
+							>
 								<span
 									style={{
 										width: "12px",
@@ -1014,21 +1047,19 @@ const HomePage = () => {
 										borderRadius: "50%",
 										backgroundColor: "#dc3545",
 										display: "inline-block",
-										animation: "pulse 1.5s infinite"
+										animation: "pulse 1.5s infinite",
 									}}
 								></span>
 								<strong>🔴 You are currently broadcasting live!</strong>
 								<span className="ms-auto">
-									<small>Stream: {streamTitle || 'Untitled Stream'}</small>
+									<small>Stream: {streamTitle || "Untitled Stream"}</small>
 								</span>
 							</div>
 						)}
 
 						<div className="d-flex gap-3 mb-3">
 							<Image
-								src={
-									user?.photoURL ?? "https://i.pravatar.cc/150?img=10"
-								}
+								src={user?.photoURL ?? "https://i.pravatar.cc/150?img=10"}
 								alt="avatar"
 								roundedCircle
 								width="48"
@@ -1134,12 +1165,10 @@ const HomePage = () => {
 									className={`p-1 ${photos?.length >= getImageUploadLimit(user?.subscription) ? "text-secondary" : "text-muted"}`}
 									onClick={handlePhotoClick}
 									disabled={
-										photos?.length >=
-										getImageUploadLimit(user?.subscription)
+										photos?.length >= getImageUploadLimit(user?.subscription)
 									}
 									title={
-										photos?.length >=
-										getImageUploadLimit(user?.subscription)
+										photos?.length >= getImageUploadLimit(user?.subscription)
 											? `Maximum ${getImageUploadLimit(user?.subscription)} images allowed`
 											: "Add photo"
 									}
@@ -1160,12 +1189,10 @@ const HomePage = () => {
 									className={`p-1 ${photos?.length >= getImageUploadLimit(user?.subscription) ? "text-secondary" : "text-muted"}`}
 									onClick={() => setShowStickerModal(true)}
 									disabled={
-										photos?.length >=
-										getImageUploadLimit(user?.subscription)
+										photos?.length >= getImageUploadLimit(user?.subscription)
 									}
 									title={
-										photos?.length >=
-										getImageUploadLimit(user?.subscription)
+										photos?.length >= getImageUploadLimit(user?.subscription)
 											? `Maximum ${getImageUploadLimit(user?.subscription)} images allowed`
 											: "Add GIF"
 									}
@@ -1186,7 +1213,7 @@ const HomePage = () => {
 												borderRadius: "50%",
 												backgroundColor: isLive ? "#fff" : "#dc3545",
 												display: "inline-block",
-												animation: isStreaming ? "pulse 1s infinite" : "none"
+												animation: isStreaming ? "pulse 1s infinite" : "none",
 											}}
 										></span>
 										{isStreaming ? "BROADCASTING" : isLive ? "LIVE" : "Go Live"}
@@ -1208,7 +1235,7 @@ const HomePage = () => {
 										borderRadius: "50%",
 										backgroundColor: "#dc3545",
 										display: "inline-block",
-										animation: "pulse 1.5s infinite"
+										animation: "pulse 1.5s infinite",
 									}}
 								></span>
 								<small className="fw-bold">Broadcasting Live</small>
