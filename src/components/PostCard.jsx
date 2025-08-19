@@ -170,7 +170,7 @@ const PostCard = ({
 				}
 			}
 		}
-	}, [onLike, post.id, post, currentUser]);
+	}, [onLike, post, currentUser]);
 
 	const handleShare = useCallback((e) => {
 		e.stopPropagation();
