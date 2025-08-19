@@ -252,6 +252,18 @@ const LiveStudioModal = ({
 			return;
 		}
 
+		// Debug Agora configuration
+		console.log('Agora App ID:', process.env.REACT_APP_AGORA_APP_ID);
+		console.log('Local tracks available:', {
+			video: !!localVideoTrack,
+			audio: !!localAudioTrack
+		});
+
+		if (!localVideoTrack || !localAudioTrack) {
+			alert('Video or audio track not available. Please refresh and try again.');
+			return;
+		}
+
 		const streamData = {
 			title: streamTitle,
 			description: streamDescription,

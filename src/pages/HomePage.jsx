@@ -348,24 +348,48 @@ const HomePage = () => {
 
 			// Create Agora client for publishing
 			const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
+			
+			// Add error handlers
+			client.on('connection-state-change', (curState, revState) => {
+				console.log('Agora connection state changed:', curState, 'from', revState);
+			});
+
+			client.on('exception', (evt) => {
+				console.error('Agora exception:', evt);
+			});
+
 			await client.setClientRole('host');
 
 			// Join channel and publish tracks
 			const agoraConfig = {
-				appId: process.env.REACT_APP_AGORA_APP_ID || 'your-agora-app-id',
+				appId: process.env.REACT_APP_AGORA_APP_ID || '24ce08654e5c4232bac73ee7946ee769',
 				token: null, // Generate server-side for production
 				channel: streamKey,
 				uid: null
 			};
 
-			await client.join(
-				agoraConfig.appId,
-				agoraConfig.channel,
-				agoraConfig.token,
-				agoraConfig.uid
-			);
+			console.log('Joining Agora channel with config:', agoraConfig);
 
-			await client.publish([videoTrack, audioTrack]);
+			try {
+				await client.join(
+					agoraConfig.appId,
+					agoraConfig.channel,
+					agoraConfig.token,
+					agoraConfig.uid
+				);
+				console.log('Successfully joined Agora channel');
+			} catch (joinError) {
+				console.error('Failed to join Agora channel:', joinError);
+				throw new Error(`Failed to join live stream channel: ${joinError.message}`);
+			}
+
+			try {
+				await client.publish([videoTrack, audioTrack]);
+				console.log('Successfully published tracks to Agora');
+			} catch (publishError) {
+				console.error('Failed to publish tracks:', publishError);
+				throw new Error(`Failed to start broadcasting: ${publishError.message}`);
+			}
 
 			// Prepare the live stream post payload
 			const postPayload = {
