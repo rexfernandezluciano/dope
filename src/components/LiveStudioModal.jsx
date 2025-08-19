@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
 	Modal,
@@ -49,25 +48,25 @@ const LiveStudioModal = ({
 	const [videoEnabled, setVideoEnabled] = useState(true);
 	const [audioEnabled, setAudioEnabled] = useState(true);
 	const [isInitializing, setIsInitializing] = useState(false);
-	
+
 	// Video effects states
 	const [brightness, setBrightness] = useState(100);
 	const [contrast, setContrast] = useState(100);
 	const [saturation, setSaturation] = useState(100);
 	const [blur, setBlur] = useState(0);
 	const [selectedFilter, setSelectedFilter] = useState('none');
-	
+
 	// Agora states
 	const [localVideoTrack, setLocalVideoTrack] = useState(null);
 	const [localAudioTrack, setLocalAudioTrack] = useState(null);
-	
+
 	// Live comments states
 	const [liveComments, setLiveComments] = useState([]);
 	const [viewerCount, setViewerCount] = useState(0);
-	
+
 	const videoRef = useRef(null);
 	const commentsEndRef = useRef(null);
-	
+
 	const filters = [
 		{ id: 'none', name: 'None', style: {} },
 		{ id: 'warm', name: 'Warm', style: { filter: 'sepia(0.3) saturate(1.2)' } },
@@ -75,7 +74,7 @@ const LiveStudioModal = ({
 		{ id: 'vintage', name: 'Vintage', style: { filter: 'sepia(0.5) contrast(1.2) brightness(0.9)' } },
 		{ id: 'dramatic', name: 'Dramatic', style: { filter: 'contrast(1.5) brightness(0.8) saturate(1.3)' } }
 	];
-	
+
 	const privacyOptions = [
 		{ value: 'public', label: 'Public', icon: Globe, description: 'Anyone can watch' },
 		{ value: 'followers', label: 'Followers', icon: People, description: 'Only your followers' },
@@ -86,7 +85,7 @@ const LiveStudioModal = ({
 		if (show && !isStreaming) {
 			initializePreview();
 		}
-		
+
 		return () => {
 			cleanup();
 		};
@@ -98,7 +97,7 @@ const LiveStudioModal = ({
 		if (isStreaming) {
 			// Simulate viewer count
 			setViewerCount(Math.floor(Math.random() * 50) + 5);
-			
+
 			// Simulate incoming comments
 			commentInterval = setInterval(() => {
 				const mockComments = [
@@ -108,15 +107,15 @@ const LiveStudioModal = ({
 					{ id: Date.now() + 3, user: 'MusicLover', message: 'Amazing quality', timestamp: new Date() },
 					{ id: Date.now() + 4, user: 'CoolViewer', message: 'Keep it up! 🔥', timestamp: new Date() }
 				];
-				
+
 				const randomComment = mockComments[Math.floor(Math.random() * mockComments.length)];
 				setLiveComments(prev => [...prev.slice(-19), randomComment]); // Keep last 20 comments
-				
+
 				// Update viewer count randomly
 				setViewerCount(prev => Math.max(1, prev + Math.floor(Math.random() * 3) - 1));
 			}, 3000 + Math.random() * 4000); // Random interval between 3-7 seconds
 		}
-		
+
 		return () => {
 			if (commentInterval) {
 				clearInterval(commentInterval);
@@ -134,7 +133,7 @@ const LiveStudioModal = ({
 	const initializePreview = async () => {
 		try {
 			setIsInitializing(true);
-			
+
 			// Check if browser supports getUserMedia
 			if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
 				throw new Error('Camera access is not supported in this browser');
@@ -169,7 +168,7 @@ const LiveStudioModal = ({
 
 			// Stop the test stream immediately since we'll use Agora tracks
 			stream.getTracks().forEach(track => track.stop());
-			
+
 			// Create Agora video track for preview
 			const videoTrack = await AgoraRTC.createCameraVideoTrack({
 				optimizationMode: 'detail',
@@ -219,7 +218,7 @@ const LiveStudioModal = ({
 	const handleVideoToggle = async () => {
 		const newVideoEnabled = !videoEnabled;
 		setVideoEnabled(newVideoEnabled);
-		
+
 		if (localVideoTrack) {
 			if (newVideoEnabled) {
 				// Enable and play video
@@ -245,22 +244,19 @@ const LiveStudioModal = ({
 		const baseStyle = {
 			filter: `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%) blur(${blur}px)`,
 		};
-		
+
 		const filterStyle = filters.find(f => f.id === selectedFilter)?.style || {};
-		
+
 		return { ...baseStyle, ...filterStyle };
 	};
 
 	const handleStartStream = () => {
-		console.log('Stream title value:', `"${streamTitle}"`);
-		console.log('Stream title length:', streamTitle.length);
-		console.log('Stream title after trim:', `"${streamTitle.trim()}"`);
-		
+
 		if (!streamTitle.trim()) {
 			alert('Please enter a stream title');
 			return;
 		}
-		
+
 		const streamData = {
 			title: streamTitle,
 			description: streamDescription,
@@ -270,7 +266,7 @@ const LiveStudioModal = ({
 			videoEnabled,
 			audioEnabled
 		};
-		
+
 		onStartStream(streamData);
 	};
 
@@ -367,7 +363,7 @@ const LiveStudioModal = ({
 												}}
 											/>
 										)}
-										
+
 										{!videoEnabled && !isInitializing && (
 											<div className="text-center text-white">
 												<Camera size={48} className="mb-2 opacity-50" />
