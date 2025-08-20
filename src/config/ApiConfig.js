@@ -1,8 +1,10 @@
+
 /** @format */
 
 // Secure token storage helper
 // Import js-cookie for secure cookie management
 import Cookies from "js-cookie";
+import axios from "axios";
 
 const API_BASE_URL =
 	process.env.REACT_APP_API_URL || "https://social.dopp.eu.org/api";
@@ -12,34 +14,71 @@ if (!API_BASE_URL.startsWith("https://")) {
 	console.error("API URL must use HTTPS");
 }
 
-const apiRequest = async (endpoint, options = {}) => {
-	const url = `${API_BASE_URL}${endpoint}`;
+// Create axios instance
+const apiClient = axios.create({
+	baseURL: API_BASE_URL,
+	timeout: 30000,
+	headers: {
+		'Content-Type': 'application/json',
+	},
+});
 
+// Request interceptor to add security headers
+apiClient.interceptors.request.use(async (config) => {
 	try {
 		// Import SecurityMiddleware dynamically to avoid circular imports
 		const { SecurityMiddleware } = await import("../utils/security-middleware");
-
+		
 		// Use SecurityMiddleware to add all security headers including App Check
 		const secureOptions = await SecurityMiddleware.secureApiRequest(
-			url,
-			options,
+			config.url,
+			{ headers: config.headers }
 		);
-
-		// Ensure body is properly stringified
-		if (secureOptions.body && typeof secureOptions.body === "object") {
-			secureOptions.body = JSON.stringify(secureOptions.body);
+		
+		// Merge security headers
+		config.headers = { ...config.headers, ...secureOptions.headers };
+		
+		// Add auth token if available
+		const token = getAuthToken();
+		if (token) {
+			config.headers["Authorization"] = `Bearer ${token}`;
 		}
+		
+		return config;
+	} catch (error) {
+		console.error("Request interceptor failed:", error);
+		return config;
+	}
+});
 
-		const response = await fetch(url, secureOptions);
-
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-			throw new Error(
-				errorData.message || `HTTP error! status: ${response.status}`,
-			);
+// Response interceptor to handle errors
+apiClient.interceptors.response.use(
+	(response) => response.data,
+	(error) => {
+		if (error.response) {
+			// Server responded with error status
+			const message = error.response.data?.message || `HTTP error! status: ${error.response.status}`;
+			throw new Error(message);
+		} else if (error.request) {
+			// Request was made but no response received
+			throw new Error("Network error - no response received");
+		} else {
+			// Something else happened
+			throw new Error(error.message || "Request failed");
 		}
+	}
+);
 
-		return await response.json();
+const apiRequest = async (endpoint, options = {}) => {
+	try {
+		const response = await apiClient({
+			url: endpoint,
+			method: options.method || 'GET',
+			data: options.body,
+			...options
+		});
+		
+		return response;
 	} catch (error) {
 		console.error("API request failed:", error);
 		throw error;
@@ -423,18 +462,8 @@ const userAPI = {
 		}),
 
 	followUser: async (username) => {
-		const response = await fetch(`${API_BASE_URL}/users/${username}/follow`, {
-			method: "POST",
-			headers: getHeaders(),
-		});
-
-		if (!response.ok) {
-			const errorData = await response.json().catch(() => ({}));
-			throw new Error(errorData.error || "Failed to follow/unfollow user");
-		}
-
-		const data = await response.json();
-		return data; // Returns { message: "...", following: true/false }
+		const response = await apiClient.post(`/users/${username}/follow`);
+		return response; // Returns { message: "...", following: true/false }
 	},
 
 	getFollowers: (username) =>
@@ -532,28 +561,10 @@ const postAPI = {
 		apiRequest(`/posts/${id}/view`, {
 			method: "POST",
 		}),
-	// Notifications now handled via Firestore
 
 	deletePostWithImages: async (postId) => {
 		try {
-			const token = getAuthToken();
-			const response = await fetch(
-				`${API_BASE_URL}/posts/${postId}/with-images`,
-				{
-					method: "DELETE",
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				},
-			);
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(
-					errorData.message || "Failed to delete post with images",
-				);
-			}
-
+			const response = await apiClient.delete(`/posts/${postId}/with-images`);
 			return { success: true };
 		} catch (error) {
 			throw error;
@@ -636,13 +647,7 @@ const getAuthHeaders = async () => {
 
 // Helper function to handle API responses
 const handleApiResponse = async (response) => {
-	if (!response.ok) {
-		const errorData = await response.json().catch(() => ({}));
-		throw new Error(
-			errorData.message || `HTTP error! status: ${response.status}`,
-		);
-	}
-	return await response.json();
+	return response; // Axios interceptor already handles error responses
 };
 
 const commentAPI = {
@@ -652,19 +657,10 @@ const commentAPI = {
 				throw new Error("Post ID is required");
 			}
 			console.log("Fetching comments for post:", postId);
-			const response = await fetch(`${API_BASE_URL}/comments/post/${postId}`, {
-				headers: await getAuthHeaders(),
-			});
+			const response = await apiClient.get(`/comments/post/${postId}`);
 
-			if (!response.ok) {
-				console.warn(
-					`Comments API returned ${response.status} for post ${postId}`,
-				);
-			}
-
-			const result = await handleApiResponse(response);
-			console.log("Comments response for post", postId, ":", result);
-			return result;
+			console.log("Comments response for post", postId, ":", response);
+			return response;
 		} catch (error) {
 			console.error("Failed to get comments for post", postId, ":", error);
 			return { comments: [] }; // Return empty array on error
@@ -676,12 +672,10 @@ const commentAPI = {
 			if (!postId || !content) {
 				throw new Error("Post ID and content are required");
 			}
-			const response = await fetch(`${API_BASE_URL}/comments/post/${postId}`, {
-				method: "POST",
-				headers: await getAuthHeaders(),
-				body: JSON.stringify({ content }),
+			const response = await apiClient.post(`/comments/post/${postId}`, {
+				content
 			});
-			return handleApiResponse(response);
+			return response;
 		} catch (error) {
 			console.error("Failed to create comment:", error);
 			throw error;
@@ -693,11 +687,8 @@ const commentAPI = {
 			if (!commentId) {
 				throw new Error("Comment ID is required");
 			}
-			const response = await fetch(`${API_BASE_URL}/comments/${commentId}`, {
-				method: "DELETE",
-				headers: await getAuthHeaders(),
-			});
-			return handleApiResponse(response);
+			const response = await apiClient.delete(`/comments/${commentId}`);
+			return response;
 		} catch (error) {
 			console.error("Failed to delete comment:", error);
 			throw error;
@@ -718,13 +709,8 @@ const commentAPI = {
 				params.append("cursor", cursor);
 			}
 
-			const response = await fetch(
-				`${API_BASE_URL}/comments/search?${params}`,
-				{
-					headers: await getAuthHeaders(),
-				},
-			);
-			return handleApiResponse(response);
+			const response = await apiClient.get(`/comments/search?${params}`);
+			return response;
 		} catch (error) {
 			console.error("Failed to search comments:", error);
 			return { comments: [], cursor: null }; // Return empty result on error
