@@ -186,7 +186,10 @@ const setAuthToken = (token, rememberMe = false) => {
 			window.location.hostname.includes("replit") ||
 			window.location.hostname.includes("repl.co");
 
-		console.log("Setting auth token - environment:", { isProduction, isReplit });
+		console.log("Setting auth token - environment:", {
+			isProduction,
+			isReplit,
+		});
 
 		// For Replit development, use sessionStorage as primary
 		if (isReplit && !isProduction) {
@@ -457,6 +460,11 @@ const userAPI = {
 			method: "GET",
 		});
 	},
+
+	getUserEarnings: async () =>
+		apiRequest("/users/analytics/earnings", {
+			method: "GET",
+		}),
 };
 
 const postAPI = {
@@ -607,6 +615,11 @@ const postAPI = {
 			method: "GET",
 		});
 	},
+
+	getCurrentUserPosts: () =>
+		apiRequest("/posts/user/me", {
+			method: "GET",
+		}),
 };
 
 // Helper function to get auth headers

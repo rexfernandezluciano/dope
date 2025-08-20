@@ -466,11 +466,11 @@ const PostCard = ({
 									})()}
 								</div>
 								<div className="d-flex flex-wrap gap-3 small text-muted">
-									{post.analytics?.views > 0 && (
-										<span>{post.analytics.views} views</span>
+									{post.stats?.views > 0 && (
+										<span>{post.stats.views} views</span>
 									)}
-									{post.analytics?.shares > 0 && (
-										<span>{post.analytics.shares} shares</span>
+									{post.stats?.shares > 0 && (
+										<span>{post.stats.shares} shares</span>
 									)}
 								</div>
 							</div>

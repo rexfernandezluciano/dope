@@ -70,10 +70,7 @@ const AnalyticsPage = () => {
 			setError("");
 
 			// Fetch real user posts data from DOPE API
-			const userPostsResponse = await postAPI.getPosts({
-				author: user?.username,
-				limit: 100
-			});
+			const userPostsResponse = await postAPI.getCurrentUserPosts();
 
 			const userPosts = userPostsResponse?.posts || [];
 
@@ -81,9 +78,9 @@ const AnalyticsPage = () => {
 			const totalPosts = userPosts.length;
 			const totalLikes = userPosts.reduce((sum, post) => sum + (post.stats?.likes || 0), 0);
 			const totalComments = userPosts.reduce((sum, post) => sum + (post.stats?.comments || 0), 0);
-			const totalShares = userPosts.reduce((sum, post) => sum + (post?.sharesCount || post?.analytics?.shares || 0), 0);
+			const totalShares = userPosts.reduce((sum, post) => sum + (post?.sharesCount || post?.stats?.shares || 0), 0);
 			const totalViews = userPosts.reduce((sum, post) => {
-				const analyticsViews = post?.analytics?.views || 0;
+				const analyticsViews = post?.stats?.views || 0;
 				const estimatedViews = analyticsViews > 0 ? analyticsViews : (post.stats?.likes || 0) + (post.stats?.comments || 0) + (post?.sharesCount || 0);
 				return sum + estimatedViews;
 			}, 0);
@@ -95,8 +92,8 @@ const AnalyticsPage = () => {
 			// Get top performing posts
 			const topPosts = [...userPosts]
 				.sort((a, b) => {
-					const aEngagement = (a.stats?.likes || 0) + (a.stats?.comments || 0) + (a?.sharesCount || a?.analytics?.shares || 0);
-					const bEngagement = (b.stats?.likes || 0) + (b.stats?.comments || 0) + (b?.sharesCount || b?.analytics?.shares || 0);
+					const aEngagement = (a.stats?.likes || 0) + (a.stats?.comments || 0) + (a?.sharesCount || a?.stats?.shares || 0);
+					const bEngagement = (b.stats?.likes || 0) + (b.stats?.comments || 0) + (b?.sharesCount || b?.stats?.shares || 0);
 					return bEngagement - aEngagement;
 				})
 				.slice(0, 5);
@@ -111,9 +108,9 @@ const AnalyticsPage = () => {
 			// Generate mock earnings data for monetization
 			const earningPosts = topPosts.map((post, index) => ({
 				...post,
-				earnings: (Math.random() * 50 + 10).toFixed(2),
-				views: (post.stats?.likes || 0) * (Math.random() * 10 + 5),
-				cpm: (Math.random() * 3 + 1).toFixed(2)
+				earnings: (post.stats?.earnings).toFixed(2),
+				views: (post.stats?.views || 0) * (Math.random() * 10 + 5),
+				cpm: (post.stats?.earnings * 3 + 1).toFixed(2)
 			}));
 
 			setAnalytics({
@@ -122,8 +119,8 @@ const AnalyticsPage = () => {
 				totalComments,
 				totalShares,
 				totalViews,
-				followers: user?.followersCount || 0,
-				following: user?.followingCount || 0,
+				followers: user.stats?.followers || 0,
+				following: user.stats?.following || 0,
 				engagementRate,
 				reachGrowth: recentGrowth,
 				topPosts,
@@ -219,7 +216,7 @@ const AnalyticsPage = () => {
 								<span><MessageCircle className="me-1 text-primary" size={12} />{post.stats?.comments || 0}</span>
 								<span><Share className="me-1 text-success" size={12} />{post.sharesCount || 0}</span>
 								<span><Eye className="me-1 text-info" size={12} />{estimatedViews}</span>
-								{showEarnings && <span><CurrencyDollar className="me-1 text-warning" size={12} />${post.earnings}</span>}
+								{showEarnings && <span><CurrencyDollar className="me-1 text-warning" size={12} />{post.stats?.earnings}</span>}
 							</div>
 							<div className="mt-2 d-flex justify-content-between align-items-center">
 								<Badge bg="success" className="rounded-pill">{engagementRate}% engagement</Badge>
@@ -335,25 +332,25 @@ const AnalyticsPage = () => {
 						<Nav.Item>
 							<Nav.Link eventKey="home" className="d-flex align-items-center gap-2">
 								<House size={16} />
-								<span className="d-none d-inline">Home</span>
+								<span className="d-inline">Home</span>
 							</Nav.Link>
 						</Nav.Item>
 						<Nav.Item>
 							<Nav.Link eventKey="growth" className="d-flex align-items-center gap-2">
 								<TrendingUp size={16} />
-								<span className="d-none d-md-inline">Growth</span>
+								<span className="d--inline">Growth</span>
 							</Nav.Link>
 						</Nav.Item>
 						<Nav.Item>
 							<Nav.Link eventKey="monetization" className="d-flex align-items-center gap-2">
 								<CurrencyDollar size={16} />
-								<span className="d-none d-md-inline">Monetization</span>
+								<span className="d-inline">Monetization</span>
 							</Nav.Link>
 						</Nav.Item>
 						<Nav.Item>
 							<Nav.Link eventKey="audience" className="d-flex align-items-center gap-2">
 								<PersonCheck size={16} />
-								<span className="d-none d-md-inline">Audience</span>
+								<span className="d-inline">Audience</span>
 							</Nav.Link>
 						</Nav.Item>
 					</Nav>
@@ -670,7 +667,7 @@ const AnalyticsPage = () => {
 											<StatCard
 												icon={TrendingUp}
 												title="Revenue Growth"
-												value={`+${Math.floor(Math.random() * 25) + 5}%`}
+												value={`+${(analytics?.totalEarnings * 25) + 5}%`}
 												color="success"
 												subtitle="This month"
 											/>
