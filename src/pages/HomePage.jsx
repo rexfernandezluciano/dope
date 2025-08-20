@@ -871,34 +871,6 @@ const HomePage = () => {
 					</div>
 				)}
 
-				{/* Guest Welcome Section */}
-				{!user && (
-					<Card className="mb-4 shadow-sm border-primary">
-						<Card.Body className="text-center py-4">
-							<Person size={48} className="text-primary mb-3" />
-							<h4 className="text-primary">Welcome to DOPE Network!</h4>
-							<p className="text-muted mb-3">
-								Join our community to create posts, go live, and connect with
-								others.
-							</p>
-							<div className="d-flex gap-2 justify-content-center">
-								<Button
-									variant="primary"
-									onClick={() => navigate("/auth/signup")}
-								>
-									Sign Up
-								</Button>
-								<Button
-									variant="outline-primary"
-									onClick={() => navigate("/auth/login")}
-								>
-									Login
-								</Button>
-							</div>
-						</Card.Body>
-					</Card>
-				)}
-
 				{/* Create Post Section */}
 				{user && (
 					<Card

@@ -523,11 +523,11 @@ const postAPI = {
 		apiRequest(`/posts/${id}/like`, {
 			method: "POST",
 		}),
-	sharePost: (id, data) =>
+	sharePost: (id) =>
 		apiRequest(`/posts/share/${id}`, {
 			method: "POST",
-			body: data,
 		}),
+	
 	trackView: (id) =>
 		apiRequest(`/posts/${id}/view`, {
 			method: "POST",

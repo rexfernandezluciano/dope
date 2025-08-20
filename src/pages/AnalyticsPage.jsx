@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -16,6 +15,7 @@ import {
 	Nav,
 	Tab,
 	Table,
+	Button,
 } from "react-bootstrap";
 import {
 	BarChartFill,
@@ -33,6 +33,8 @@ import {
 	GraphUp as TrendingUp,
 	House,
 	PersonCheck,
+	CheckCircle,
+	X,
 } from "react-bootstrap-icons";
 import {
 	LineChart,
@@ -77,24 +79,47 @@ const AnalyticsPage = () => {
 
 			// Calculate real analytics from DOPE API posts data
 			const totalPosts = userPosts.length;
-			const totalLikes = userPosts.reduce((sum, post) => sum + (post.stats?.likes || 0), 0);
-			const totalComments = userPosts.reduce((sum, post) => sum + (post.stats?.comments || 0), 0);
-			const totalShares = userPosts.reduce((sum, post) => sum + (post?.sharesCount || post?.stats?.shares || 0), 0);
+			const totalLikes = userPosts.reduce(
+				(sum, post) => sum + (post.stats?.likes || 0),
+				0,
+			);
+			const totalComments = userPosts.reduce(
+				(sum, post) => sum + (post.stats?.comments || 0),
+				0,
+			);
+			const totalShares = userPosts.reduce(
+				(sum, post) => sum + (post?.sharesCount || post?.stats?.shares || 0),
+				0,
+			);
 			const totalViews = userPosts.reduce((sum, post) => {
 				const analyticsViews = post?.stats?.views || 0;
-				const estimatedViews = analyticsViews > 0 ? analyticsViews : (post.stats?.likes || 0) + (post.stats?.comments || 0) + (post?.sharesCount || 0);
+				const estimatedViews =
+					analyticsViews > 0
+						? analyticsViews
+						: (post.stats?.likes || 0) +
+							(post.stats?.comments || 0) +
+							(post?.stats?.shares || 0);
 				return sum + estimatedViews;
 			}, 0);
 
 			// Calculate engagement rate
 			const totalEngagement = totalLikes + totalComments + totalShares;
-			const engagementRate = totalViews > 0 ? ((totalEngagement / totalViews) * 100).toFixed(1) : "0.0";
+			const engagementRate =
+				totalViews > 0
+					? ((totalEngagement / totalViews) * 100).toFixed(1)
+					: "0.0";
 
 			// Get top performing posts
 			const topPosts = [...userPosts]
 				.sort((a, b) => {
-					const aEngagement = (a.stats?.likes || 0) + (a.stats?.comments || 0) + (a?.sharesCount || a?.stats?.shares || 0);
-					const bEngagement = (b.stats?.likes || 0) + (b.stats?.comments || 0) + (b?.sharesCount || b?.stats?.shares || 0);
+					const aEngagement =
+						(a.stats?.likes || 0) +
+						(a.stats?.comments || 0) +
+						(a?.sharesCount || a?.stats?.shares || 0);
+					const bEngagement =
+						(b.stats?.likes || 0) +
+						(b.stats?.comments || 0) +
+						(b?.sharesCount || b?.stats?.shares || 0);
 					return bEngagement - aEngagement;
 				})
 				.slice(0, 5);
@@ -102,16 +127,22 @@ const AnalyticsPage = () => {
 			// Calculate growth metrics
 			const now = new Date();
 			const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-			const recentPosts = userPosts.filter(post => new Date(post.createdAt) >= thirtyDaysAgo);
-			const recentLikes = recentPosts.reduce((sum, post) => sum + (post.stats?.likes || 0), 0);
-			const recentGrowth = totalLikes > 0 ? ((recentLikes / totalLikes) * 100).toFixed(1) : "0.0";
+			const recentPosts = userPosts.filter(
+				(post) => new Date(post.createdAt) >= thirtyDaysAgo,
+			);
+			const recentLikes = recentPosts.reduce(
+				(sum, post) => sum + (post.stats?.likes || 0),
+				0,
+			);
+			const recentGrowth =
+				totalLikes > 0 ? ((recentLikes / totalLikes) * 100).toFixed(1) : "0.0";
 
 			// Generate mock earnings data for monetization
-			const earningPosts = topPosts.map((post, index) => ({
+			const earningPosts = topPosts.map((post) => ({
 				...post,
 				earnings: (post.stats?.earnings).toFixed(2),
 				views: (post.stats?.views || 0) * (Math.random() * 10 + 5),
-				cpm: (post.stats?.earnings * 3 + 1).toFixed(2)
+				cpm: (post.stats?.earnings * 3 + 1).toFixed(2),
 			}));
 
 			const analyticsData = {
@@ -127,11 +158,10 @@ const AnalyticsPage = () => {
 				topPosts,
 				recentPostsCount: recentPosts.length,
 				earningPosts,
-				totalEarnings: userEarnings
+				totalEarnings: userEarnings,
 			};
-			
-			setAnalytics(analyticsData);
 
+			setAnalytics(analyticsData);
 		} catch (err) {
 			console.error("Analytics loading error:", err);
 			setError("Failed to load analytics data");
@@ -143,23 +173,28 @@ const AnalyticsPage = () => {
 	const loadUserEarnings = useCallback(async () => {
 		const earnings = await userAPI.getUserEarnings();
 		const totalEarnings = earnings.totalEarnings;
-		setUserEarnings(totalEarnings ?? 0)
-	}, [])
+		setUserEarnings(totalEarnings ?? 0);
+	}, []);
 
 	const checkMonetizationEligibility = useCallback(() => {
 		if (!user || !analytics) return false;
 
 		// Check if account is created more than 7 days ago
-		const accountCreatedDate = new Date(user.createdAt || user.metadata?.creationTime);
+		const accountCreatedDate = new Date(
+			user.createdAt || user.metadata?.creationTime,
+		);
 		const sevenDaysAgo = new Date();
-		sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+		sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 3);
 		const accountOldEnough = accountCreatedDate < sevenDaysAgo;
 
 		// Check followers count (1000+) OR premium/pro subscription
 		const hasEnoughFollowers = (user.stats?.followers || 0) >= 1000;
-		const userSubscription = user.membership?.subscription || user.subscription || "free";
-		const hasPremiumSubscription = userSubscription === "premium" || userSubscription === "pro";
-		const followersOrSubscription = hasEnoughFollowers || hasPremiumSubscription;
+		const userSubscription =
+			user.membership?.subscription || user.subscription || "free";
+		const hasPremiumSubscription =
+			userSubscription === "premium" || userSubscription === "pro";
+		const followersOrSubscription =
+			hasEnoughFollowers || hasPremiumSubscription;
 
 		// Check if user has at least 1 post within the last day
 		const oneDayAgo = new Date();
@@ -167,17 +202,21 @@ const AnalyticsPage = () => {
 		const recentPosts = analytics.recentPostsCount || 0;
 		const hasRecentPost = recentPosts > 0;
 
-		const isEligible = accountOldEnough && followersOrSubscription && hasRecentPost;
+		const isEligible =
+			accountOldEnough && followersOrSubscription && hasRecentPost;
 		setIsMonetizationEligible(isEligible);
 
 		return isEligible;
-	}, [user, analytics])
+	}, [user, analytics]);
 
 	useEffect(() => {
 		if (user?.uid && user?.username) {
 			loadAnalytics();
 			loadUserEarnings();
-			updatePageMeta("Analytics", `View your content performance and growth metrics on DOPE. Your username is ${user?.username}.`);
+			updatePageMeta(
+				"Analytics",
+				`View your content performance and growth metrics on DOPE. Your username is ${user?.username}.`,
+			);
 		}
 	}, [loadAnalytics, loadUserEarnings, user?.uid, user?.username]);
 
@@ -190,12 +229,15 @@ const AnalyticsPage = () => {
 	// Chart data
 	const chartData = useMemo(() => {
 		if (!analytics) return [];
-		
+
 		const last7Days = Array.from({ length: 7 }, (_, i) => {
 			const date = new Date();
 			date.setDate(date.getDate() - (6 - i));
 			return {
-				date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+				date: date.toLocaleDateString("en-US", {
+					month: "short",
+					day: "numeric",
+				}),
 				likes: Math.floor(Math.random() * 50) + 10,
 				views: Math.floor(Math.random() * 200) + 50,
 				comments: Math.floor(Math.random() * 20) + 5,
@@ -205,24 +247,45 @@ const AnalyticsPage = () => {
 		return last7Days;
 	}, [analytics]);
 
-	const engagementData = useMemo(() => [
-		{ name: 'Likes', value: analytics?.totalLikes || 0, color: '#dc3545' },
-		{ name: 'Comments', value: analytics?.totalComments || 0, color: '#0d6efd' },
-		{ name: 'Shares', value: analytics?.totalShares || 0, color: '#198754' },
-	], [analytics]);
+	const engagementData = useMemo(
+		() => [
+			{ name: "Likes", value: analytics?.totalLikes || 0, color: "#dc3545" },
+			{
+				name: "Comments",
+				value: analytics?.totalComments || 0,
+				color: "#0d6efd",
+			},
+			{ name: "Shares", value: analytics?.totalShares || 0, color: "#198754" },
+		],
+		[analytics],
+	);
 
-	const StatCard = ({ icon: Icon, title, value, subtitle, color = "primary", growth, size = "normal" }) => (
+	const StatCard = ({
+		icon: Icon,
+		title,
+		value,
+		subtitle,
+		color = "primary",
+		growth,
+		size = "normal",
+	}) => (
 		<Card className="border-0 shadow-sm h-100 stat-card">
 			<Card.Body className={`${size === "large" ? "p-4" : "p-3"}`}>
 				<div className="d-flex align-items-center justify-content-between mb-2">
 					<Icon className={`text-${color}`} size={size === "large" ? 28 : 24} />
 					{growth && (
-						<Badge bg={growth > 0 ? "success" : "secondary"} className="rounded-pill">
-							{growth > 0 ? "+" : ""}{growth}%
+						<Badge
+							bg={growth > 0 ? "success" : "secondary"}
+							className="rounded-pill"
+						>
+							{growth > 0 ? "+" : ""}
+							{growth}%
 						</Badge>
 					)}
 				</div>
-				<h3 className={`mb-1 fw-bold ${size === "large" ? "display-6" : ""}`}>{value}</h3>
+				<h3 className={`mb-1 fw-bold ${size === "large" ? "display-6" : ""}`}>
+					{value}
+				</h3>
 				<p className="text-muted mb-1 small">{title}</p>
 				{subtitle && <small className="text-muted">{subtitle}</small>}
 			</Card.Body>
@@ -230,10 +293,16 @@ const AnalyticsPage = () => {
 	);
 
 	const TopPostCard = ({ post, rank, showEarnings = false }) => {
-		const totalEngagement = (post.stats?.likes || 0) + (post.stats?.comments || 0) + (post?.sharesCount || post?.analytics?.shares || 0);
-		const actualViews = post?.analytics?.views || 0;
+		const totalEngagement =
+			(post.stats?.likes || 0) +
+			(post.stats?.comments || 0) +
+			(post.stats?.shares|| 0);
+		const actualViews = post.stats?.views || 0;
 		const estimatedViews = actualViews > 0 ? actualViews : totalEngagement * 3;
-		const engagementRate = estimatedViews > 0 ? ((totalEngagement / estimatedViews) * 100).toFixed(1) : 0;
+		const engagementRate =
+			estimatedViews > 0
+				? ((totalEngagement / estimatedViews) * 100).toFixed(1)
+				: 0;
 
 		return (
 			<Card className="border-0 shadow-sm mb-3 post-card">
@@ -248,15 +317,36 @@ const AnalyticsPage = () => {
 						<div className="flex-grow-1">
 							<p className="mb-2 post-content">{post.content}</p>
 							<div className="d-flex flex-wrap gap-3 text-muted small">
-								<span><Heart className="me-1 text-danger" size={12} />{post.stats?.likes || 0}</span>
-								<span><MessageCircle className="me-1 text-primary" size={12} />{post.stats?.comments || 0}</span>
-								<span><Share className="me-1 text-success" size={12} />{post.sharesCount || 0}</span>
-								<span><Eye className="me-1 text-info" size={12} />{estimatedViews}</span>
-								{showEarnings && <span><CurrencyDollar className="me-1 text-warning" size={12} />{post.stats?.earnings}</span>}
+								<span>
+									<Heart className="me-1 text-danger" size={12} />
+									{post.stats?.likes || 0}
+								</span>
+								<span>
+									<MessageCircle className="me-1 text-primary" size={12} />
+									{post.stats?.comments || 0}
+								</span>
+								<span>
+									<Share className="me-1 text-success" size={12} />
+									{post.sharesCount || 0}
+								</span>
+								<span>
+									<Eye className="me-1 text-info" size={12} />
+									{estimatedViews}
+								</span>
+								{showEarnings && (
+									<span>
+										<CurrencyDollar className="me-1 text-warning" size={12} />
+										{post.stats?.earnings}
+									</span>
+								)}
 							</div>
 							<div className="mt-2 d-flex justify-content-between align-items-center">
-								<Badge bg="success" className="rounded-pill">{engagementRate}% engagement</Badge>
-								<small className="text-muted">{formatTimeAgo(post.createdAt)}</small>
+								<Badge bg="success" className="rounded-pill">
+									{engagementRate}% engagement
+								</Badge>
+								<small className="text-muted">
+									{formatTimeAgo(post.createdAt)}
+								</small>
 							</div>
 						</div>
 					</div>
@@ -345,18 +435,34 @@ const AnalyticsPage = () => {
 							<BarChartFill className="me-2 text-primary" />
 							Analytics Dashboard
 						</h2>
-						<p className="text-muted mb-0">Track your content performance and growth</p>
+						<p className="text-muted mb-0">
+							Track your content performance and growth
+						</p>
 					</div>
 					<div className="d-flex gap-2">
 						<Dropdown>
-							<Dropdown.Toggle variant="outline-primary" size="sm" className="rounded-3">
+							<Dropdown.Toggle
+								variant="outline-primary"
+								size="sm"
+								className="rounded-3"
+							>
 								<Calendar3 className="me-1" size={14} />
-								{timeRange === "7d" ? "Last 7 days" : timeRange === "30d" ? "Last 30 days" : "Last 90 days"}
+								{timeRange === "7d"
+									? "Last 7 days"
+									: timeRange === "30d"
+										? "Last 30 days"
+										: "Last 90 days"}
 							</Dropdown.Toggle>
 							<Dropdown.Menu>
-								<Dropdown.Item onClick={() => setTimeRange("7d")}>Last 7 days</Dropdown.Item>
-								<Dropdown.Item onClick={() => setTimeRange("30d")}>Last 30 days</Dropdown.Item>
-								<Dropdown.Item onClick={() => setTimeRange("90d")}>Last 90 days</Dropdown.Item>
+								<Dropdown.Item onClick={() => setTimeRange("7d")}>
+									Last 7 days
+								</Dropdown.Item>
+								<Dropdown.Item onClick={() => setTimeRange("30d")}>
+									Last 30 days
+								</Dropdown.Item>
+								<Dropdown.Item onClick={() => setTimeRange("90d")}>
+									Last 90 days
+								</Dropdown.Item>
 							</Dropdown.Menu>
 						</Dropdown>
 					</div>
@@ -364,27 +470,39 @@ const AnalyticsPage = () => {
 
 				{/* Tabs Navigation */}
 				<Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
-					<Nav variant="tabs" className="mb-4">
+					<Nav variant="tabs" className="d-flex justify-content-start overflow-x-auto mb-4">
 						<Nav.Item>
-							<Nav.Link eventKey="home" className="d-flex align-items-center gap-2">
+							<Nav.Link
+								eventKey="home"
+								className="d-flex align-items-center gap-2"
+							>
 								<House size={16} />
 								<span className="d-inline">Home</span>
 							</Nav.Link>
 						</Nav.Item>
 						<Nav.Item>
-							<Nav.Link eventKey="growth" className="d-flex align-items-center gap-2">
+							<Nav.Link
+								eventKey="growth"
+								className="d-flex align-items-center gap-2"
+							>
 								<TrendingUp size={16} />
 								<span className="d--inline">Growth</span>
 							</Nav.Link>
 						</Nav.Item>
 						<Nav.Item>
-							<Nav.Link eventKey="monetization" className="d-flex align-items-center gap-2">
+							<Nav.Link
+								eventKey="monetization"
+								className="d-flex align-items-center gap-2"
+							>
 								<CurrencyDollar size={16} />
 								<span className="d-inline">Monetization</span>
 							</Nav.Link>
 						</Nav.Item>
 						<Nav.Item>
-							<Nav.Link eventKey="audience" className="d-flex align-items-center gap-2">
+							<Nav.Link
+								eventKey="audience"
+								className="d-flex align-items-center gap-2"
+							>
 								<PersonCheck size={16} />
 								<span className="d-inline">Audience</span>
 							</Nav.Link>
@@ -449,9 +567,24 @@ const AnalyticsPage = () => {
 														<XAxis dataKey="date" />
 														<YAxis />
 														<Tooltip />
-														<Line type="monotone" dataKey="views" stroke="#0d6efd" strokeWidth={2} />
-														<Line type="monotone" dataKey="likes" stroke="#dc3545" strokeWidth={2} />
-														<Line type="monotone" dataKey="comments" stroke="#198754" strokeWidth={2} />
+														<Line
+															type="monotone"
+															dataKey="views"
+															stroke="#0d6efd"
+															strokeWidth={2}
+														/>
+														<Line
+															type="monotone"
+															dataKey="likes"
+															stroke="#dc3545"
+															strokeWidth={2}
+														/>
+														<Line
+															type="monotone"
+															dataKey="comments"
+															stroke="#198754"
+															strokeWidth={2}
+														/>
 													</LineChart>
 												</ResponsiveContainer>
 											</div>
@@ -477,7 +610,10 @@ const AnalyticsPage = () => {
 															dataKey="value"
 														>
 															{engagementData.map((entry, index) => (
-																<Cell key={`cell-${index}`} fill={entry.color} />
+																<Cell
+																	key={`cell-${index}`}
+																	fill={entry.color}
+																/>
 															))}
 														</Pie>
 														<Tooltip />
@@ -486,11 +622,18 @@ const AnalyticsPage = () => {
 											</div>
 											<div className="mt-3">
 												{engagementData.map((item, index) => (
-													<div key={index} className="d-flex justify-content-between align-items-center mb-2">
+													<div
+														key={index}
+														className="d-flex justify-content-between align-items-center mb-2"
+													>
 														<div className="d-flex align-items-center">
-															<div 
-																className="rounded-circle me-2" 
-																style={{ width: 12, height: 12, backgroundColor: item.color }}
+															<div
+																className="rounded-circle me-2"
+																style={{
+																	width: 12,
+																	height: 12,
+																	backgroundColor: item.color,
+																}}
 															></div>
 															<small>{item.name}</small>
 														</div>
@@ -509,7 +652,9 @@ const AnalyticsPage = () => {
 									<Card className="border-0 bg-light h-100">
 										<Card.Body className="text-center p-3">
 											<MessageCircle className="text-primary mb-2" size={20} />
-											<div className="fw-bold">{analytics?.totalComments || 0}</div>
+											<div className="fw-bold">
+												{analytics?.totalComments || 0}
+											</div>
 											<small className="text-muted">Comments</small>
 										</Card.Body>
 									</Card>
@@ -518,7 +663,9 @@ const AnalyticsPage = () => {
 									<Card className="border-0 bg-light h-100">
 										<Card.Body className="text-center p-3">
 											<Share className="text-success mb-2" size={20} />
-											<div className="fw-bold">{analytics?.totalShares || 0}</div>
+											<div className="fw-bold">
+												{analytics?.totalShares || 0}
+											</div>
 											<small className="text-muted">Shares</small>
 										</Card.Body>
 									</Card>
@@ -541,21 +688,44 @@ const AnalyticsPage = () => {
 											</h6>
 											<div className="row g-2">
 												<div className="col-6">
-													<small className="text-muted d-block">Avg. likes per post</small>
-													<div className="fw-bold">{analytics?.totalPosts > 0 ? Math.round(analytics.totalLikes / analytics.totalPosts) : 0}</div>
+													<small className="text-muted d-block">
+														Avg. likes per post
+													</small>
+													<div className="fw-bold">
+														{analytics?.totalPosts > 0
+															? Math.round(
+																	analytics.totalLikes / analytics.totalPosts,
+																)
+															: 0}
+													</div>
 												</div>
 												<div className="col-6">
-													<small className="text-muted d-block">Avg. engagement</small>
-													<div className="fw-bold">{analytics?.totalPosts > 0 ? Math.round((analytics.totalLikes + analytics.totalComments) / analytics.totalPosts) : 0}</div>
+													<small className="text-muted d-block">
+														Avg. engagement
+													</small>
+													<div className="fw-bold">
+														{analytics?.totalPosts > 0
+															? Math.round(
+																	(analytics.totalLikes +
+																		analytics.totalComments) /
+																		analytics.totalPosts,
+																)
+															: 0}
+													</div>
 												</div>
 											</div>
 											<div className="mt-3">
-												<small className="text-muted d-block mb-1">Content Performance</small>
+												<small className="text-muted d-block mb-1">
+													Content Performance
+												</small>
 												<ProgressBar
-													now={Math.min((analytics?.engagementRate || 0) * 10, 100)}
+													now={Math.min(
+														(analytics?.engagementRate || 0) * 10,
+														100,
+													)}
 													variant="success"
 													className="rounded-3"
-													style={{ height: '8px' }}
+													style={{ height: "8px" }}
 												/>
 											</div>
 										</Card.Body>
@@ -580,8 +750,22 @@ const AnalyticsPage = () => {
 														<XAxis dataKey="date" />
 														<YAxis />
 														<Tooltip />
-														<Area type="monotone" dataKey="views" stackId="1" stroke="#0d6efd" fill="#0d6efd" fillOpacity={0.6} />
-														<Area type="monotone" dataKey="likes" stackId="2" stroke="#dc3545" fill="#dc3545" fillOpacity={0.6} />
+														<Area
+															type="monotone"
+															dataKey="views"
+															stackId="1"
+															stroke="#0d6efd"
+															fill="#0d6efd"
+															fillOpacity={0.6}
+														/>
+														<Area
+															type="monotone"
+															dataKey="likes"
+															stackId="2"
+															stroke="#dc3545"
+															fill="#dc3545"
+															fillOpacity={0.6}
+														/>
 													</AreaChart>
 												</ResponsiveContainer>
 											</div>
@@ -597,37 +781,45 @@ const AnalyticsPage = () => {
 											<div className="mb-3">
 												<div className="d-flex justify-content-between align-items-center mb-1">
 													<small className="text-muted">Follower Growth</small>
-													<Badge bg="success" className="rounded-pill">+{analytics?.reachGrowth || 0}%</Badge>
+													<Badge bg="success" className="rounded-pill">
+														+{analytics?.reachGrowth || 0}%
+													</Badge>
 												</div>
 												<ProgressBar
 													now={Math.min(analytics?.reachGrowth || 0, 100)}
 													variant="success"
 													className="rounded-3"
-													style={{ height: '6px' }}
+													style={{ height: "6px" }}
 												/>
 											</div>
 											<div className="mb-3">
 												<div className="d-flex justify-content-between align-items-center mb-1">
-													<small className="text-muted">Engagement Growth</small>
-													<span className="small fw-bold">+{Math.floor(Math.random() * 20) + 5}%</span>
+													<small className="text-muted">
+														Engagement Growth
+													</small>
+													<span className="small fw-bold">
+														+{Math.floor(Math.random() * 20) + 5}%
+													</span>
 												</div>
 												<ProgressBar
 													now={Math.floor(Math.random() * 60) + 20}
 													variant="primary"
 													className="rounded-3"
-													style={{ height: '6px' }}
+													style={{ height: "6px" }}
 												/>
 											</div>
 											<div>
 												<div className="d-flex justify-content-between align-items-center mb-1">
 													<small className="text-muted">Content Reach</small>
-													<span className="small fw-bold">+{Math.floor(Math.random() * 30) + 10}%</span>
+													<span className="small fw-bold">
+														+{Math.floor(Math.random() * 30) + 10}%
+													</span>
 												</div>
 												<ProgressBar
 													now={Math.floor(Math.random() * 50) + 30}
 													variant="warning"
 													className="rounded-3"
-													style={{ height: '6px' }}
+													style={{ height: "6px" }}
 												/>
 											</div>
 										</Card.Body>
@@ -640,9 +832,13 @@ const AnalyticsPage = () => {
 												<h6 className="mb-0 fw-bold">Growth Tips</h6>
 											</div>
 											<ul className="small mb-0 ps-3">
-												<li className="mb-1">Post consistently to maintain growth</li>
+												<li className="mb-1">
+													Post consistently to maintain growth
+												</li>
 												<li className="mb-1">Engage with trending topics</li>
-												<li className="mb-1">Collaborate with other creators</li>
+												<li className="mb-1">
+													Collaborate with other creators
+												</li>
 												<li>Optimize posting times</li>
 											</ul>
 										</Card.Body>
@@ -655,55 +851,96 @@ const AnalyticsPage = () => {
 						<Tab.Pane eventKey="monetization">
 							{!isMonetizationEligible ? (
 								<div className="text-center py-5">
-									<Card className="border-0 shadow-sm mx-auto" style={{ maxWidth: "600px" }}>
-										<Card.Body className="p-5">
+									<Card
+										className="border-0 shadow-none mx-auto"
+										style={{ maxWidth: "600px" }}
+									>
+										<Card.Body className="p-0">
 											<CurrencyDollar className="text-muted mb-3" size={48} />
 											<h4 className="mb-3">Monetization Not Available</h4>
 											<p className="text-muted mb-4">
-												To access monetization features, you need to meet the following requirements:
+												To access monetization features, you need to meet the
+												following requirements:
 											</p>
-											
+
 											<div className="text-start mb-4">
 												<div className="d-flex align-items-center mb-2">
-													<div className={`me-3 rounded-circle d-flex align-items-center justify-content-center ${(user?.stats?.followers || 0) >= 1000 || ["premium", "pro"].includes(user?.membership?.subscription || user?.subscription) ? "bg-success text-white" : "bg-light text-muted"}`} style={{ width: "24px", height: "24px" }}>
-														{(user?.stats?.followers || 0) >= 1000 || ["premium", "pro"].includes(user?.membership?.subscription || user?.subscription) ? "✓" : "×"}
+													<div
+														className={`me-3 p-2 rounded-circle d-flex align-items-center justify-content-center ${(user?.stats?.followers || 0) >= 1000 || ["premium", "pro"].includes(user?.membership?.subscription || user?.subscription) ? "bg-success text-white" : "bg-light text-muted"}`}
+													>
+														{(user?.stats?.followers || 0) >= 1000 ||
+														["premium", "pro"].includes(
+															user?.membership?.subscription ||
+																user?.subscription,
+														) ? (
+															<CheckCircle size={14} />
+														) : (
+															<X size={14} />
+														)}
 													</div>
-													<span>1,000+ followers OR Premium/Pro subscription</span>
+													<span>
+														1,000+ followers OR Premium/Pro subscription
+													</span>
 												</div>
 												<div className="d-flex align-items-center mb-2">
-													<div className={`me-3 rounded-circle d-flex align-items-center justify-content-center ${(analytics?.recentPostsCount || 0) > 0 ? "bg-success text-white" : "bg-light text-muted"}`} style={{ width: "24px", height: "24px" }}>
-														{(analytics?.recentPostsCount || 0) > 0 ? "✓" : "×"}
+													<div
+														className={`me-3 p-2 rounded-circle d-flex align-items-center justify-content-center ${(analytics?.recentPostsCount || 0) > 0 ? "bg-success text-white" : "bg-light text-muted"}`}
+													>
+														{(analytics?.recentPostsCount || 0) > 0 ? (
+															<CheckCircle size={14} />
+														) : (
+															<X size={14} />
+														)}
 													</div>
 													<span>At least 1 post within the last day</span>
 												</div>
 												<div className="d-flex align-items-center mb-2">
-													<div className={`me-3 rounded-circle d-flex align-items-center justify-content-center ${(() => {
-														const accountCreatedDate = new Date(user?.createdAt || user?.metadata?.creationTime);
-														const sevenDaysAgo = new Date();
-														sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-														return accountCreatedDate < sevenDaysAgo;
-													})() ? "bg-success text-white" : "bg-light text-muted"}`} style={{ width: "24px", height: "24px" }}>
+													<div
+														className={`me-3 p-2 rounded-circle d-flex align-items-center justify-content-center ${
+															(() => {
+																const accountCreatedDate = new Date(
+																	user?.createdAt ||
+																		user?.metadata?.creationTime,
+																);
+																const sevenDaysAgo = new Date();
+																sevenDaysAgo.setDate(
+																	sevenDaysAgo.getDate() - 3,
+																);
+																return accountCreatedDate < sevenDaysAgo;
+															})()
+																? "bg-success text-white"
+																: "bg-light text-muted"
+														}`}
+													>
 														{(() => {
-															const accountCreatedDate = new Date(user?.createdAt || user?.metadata?.creationTime);
+															const accountCreatedDate = new Date(
+																user?.createdAt || user?.metadata?.creationTime,
+															);
 															const sevenDaysAgo = new Date();
-															sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-															return accountCreatedDate < sevenDaysAgo ? "✓" : "×";
+															sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 3);
+															return accountCreatedDate < sevenDaysAgo ? (
+																<CheckCircle size={14} />
+															) : (
+																<X size={14} />
+															);
 														})()}
 													</div>
-													<span>Account created more than 7 days ago</span>
+													<span>Account created more than 3 days ago</span>
 												</div>
 											</div>
-											
+
 											<div className="d-flex gap-2 justify-content-center">
-												<Button 
-													variant="primary" 
+												<Button
+													variant="primary"
 													onClick={() => setActiveTab("growth")}
 												>
 													View Growth Tips
 												</Button>
-												<Button 
-													variant="outline-primary" 
-													onClick={() => window.location.href = "/subscription"}
+												<Button
+													variant="outline-primary"
+													onClick={() =>
+														(window.location.href = "/subscription")
+													}
 												>
 													Upgrade Membership
 												</Button>
@@ -720,18 +957,30 @@ const AnalyticsPage = () => {
 													<CurrencyDollar className="me-2 text-success" />
 													Earning Posts
 												</h5>
-												<small className="text-muted">Posts that generated revenue</small>
+												<small className="text-muted">
+													Posts that generated revenue
+												</small>
 											</Card.Header>
 											<Card.Body className="p-3">
 												{analytics?.earningPosts?.length > 0 ? (
 													analytics.earningPosts.map((post, index) => (
-														<TopPostCard key={post.id} post={post} rank={index + 1} showEarnings={true} />
+														<TopPostCard
+															key={post.id}
+															post={post}
+															rank={index + 1}
+															showEarnings={true}
+														/>
 													))
 												) : (
 													<div className="text-center py-4">
-														<CurrencyDollar className="text-muted mb-2" size={32} />
+														<CurrencyDollar
+															className="text-muted mb-2"
+															size={32}
+														/>
 														<p className="text-muted">No earning posts yet</p>
-														<small className="text-muted">Start creating monetizable content</small>
+														<small className="text-muted">
+															Start creating monetizable content
+														</small>
 													</div>
 												)}
 											</Card.Body>
@@ -762,13 +1011,13 @@ const AnalyticsPage = () => {
 												<StatCard
 													icon={TrendingUp}
 													title="Revenue Growth"
-													value={`+${(analytics?.totalEarnings * 25) + 5}%`}
+													value={`+${analytics?.totalEarnings * 25 + 5}%`}
 													color="success"
 													subtitle="This month"
 												/>
 											</Col>
 										</Row>
-										
+
 										<Card className="border-0 bg-warning text-white mt-3">
 											<Card.Body className="p-3">
 												<div className="d-flex align-items-center mb-2">
@@ -776,7 +1025,9 @@ const AnalyticsPage = () => {
 													<h6 className="mb-0 fw-bold">Monetization Tips</h6>
 												</div>
 												<ul className="small mb-0 ps-3">
-													<li className="mb-1">Create engaging, longer content</li>
+													<li className="mb-1">
+														Create engaging, longer content
+													</li>
 													<li className="mb-1">Use relevant hashtags</li>
 													<li className="mb-1">Build a loyal audience</li>
 													<li>Partner with brands</li>
@@ -799,12 +1050,14 @@ const AnalyticsPage = () => {
 										<Card.Body>
 											<div className="chart-container">
 												<ResponsiveContainer width="100%" height="100%">
-													<BarChart data={[
-														{ age: '18-24', male: 30, female: 45 },
-														{ age: '25-34', male: 40, female: 35 },
-														{ age: '35-44', male: 25, female: 20 },
-														{ age: '45+', male: 15, female: 10 }
-													]}>
+													<BarChart
+														data={[
+															{ age: "18-24", male: 30, female: 45 },
+															{ age: "25-34", male: 40, female: 35 },
+															{ age: "35-44", male: 25, female: 20 },
+															{ age: "45+", male: 15, female: 10 },
+														]}
+													>
 														<CartesianGrid strokeDasharray="3 3" />
 														<XAxis dataKey="age" />
 														<YAxis />
@@ -826,35 +1079,51 @@ const AnalyticsPage = () => {
 											<Table responsive className="mb-0">
 												<thead>
 													<tr>
-														<th className="border-0 small text-muted">Country</th>
-														<th className="border-0 small text-muted text-end">Followers</th>
-														<th className="border-0 small text-muted text-end">%</th>
+														<th className="border-0 small text-muted">
+															Country
+														</th>
+														<th className="border-0 small text-muted text-end">
+															Followers
+														</th>
+														<th className="border-0 small text-muted text-end">
+															%
+														</th>
 													</tr>
 												</thead>
 												<tbody>
 													<tr>
 														<td>🇺🇸 United States</td>
-														<td className="text-end fw-bold">{Math.floor((analytics?.followers || 0) * 0.4)}</td>
+														<td className="text-end fw-bold">
+															{Math.floor((analytics?.followers || 0) * 0.4)}
+														</td>
 														<td className="text-end text-muted">40%</td>
 													</tr>
 													<tr>
 														<td>🇬🇧 United Kingdom</td>
-														<td className="text-end fw-bold">{Math.floor((analytics?.followers || 0) * 0.15)}</td>
+														<td className="text-end fw-bold">
+															{Math.floor((analytics?.followers || 0) * 0.15)}
+														</td>
 														<td className="text-end text-muted">15%</td>
 													</tr>
 													<tr>
 														<td>🇨🇦 Canada</td>
-														<td className="text-end fw-bold">{Math.floor((analytics?.followers || 0) * 0.12)}</td>
+														<td className="text-end fw-bold">
+															{Math.floor((analytics?.followers || 0) * 0.12)}
+														</td>
 														<td className="text-end text-muted">12%</td>
 													</tr>
 													<tr>
 														<td>🇦🇺 Australia</td>
-														<td className="text-end fw-bold">{Math.floor((analytics?.followers || 0) * 0.08)}</td>
+														<td className="text-end fw-bold">
+															{Math.floor((analytics?.followers || 0) * 0.08)}
+														</td>
 														<td className="text-end text-muted">8%</td>
 													</tr>
 													<tr>
 														<td>🌍 Others</td>
-														<td className="text-end fw-bold">{Math.floor((analytics?.followers || 0) * 0.25)}</td>
+														<td className="text-end fw-bold">
+															{Math.floor((analytics?.followers || 0) * 0.25)}
+														</td>
 														<td className="text-end text-muted">25%</td>
 													</tr>
 												</tbody>

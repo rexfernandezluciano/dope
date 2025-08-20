@@ -57,26 +57,30 @@ export const deletePost = async (postId, onSuccess, onError) => {
  * @returns {Promise<void>}
  */
 export const sharePost = async (postId) => {
-	const postUrl = `${window.location.origin}/post/${postId}`;
+	try {
+		await postAPI.sharePost(postId);
 
-	if (navigator.share) {
-		try {
-			await navigator.share({
-				title: "Check out this post! #DOPESocial",
-				url: postUrl,
-			});
-		} catch (err) {
-			// Fallback to clipboard if sharing fails
-			navigator.clipboard.writeText(postUrl);
+		const postUrl = `${window.location.origin}/post/${postId}`;
+
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: "Check out this post! #DOPESocial",
+					url: postUrl,
+				});
+			} catch (err) {
+				// Fallback to clipboard if sharing fails
+				navigator.clipboard.writeText(postUrl);
+			}
+		} else {
+			// Fallback to clipboard for browsers that don't support Web Share API
+			try {
+				await navigator.clipboard.writeText(postUrl);
+			} catch (err) {
+				console.error("Failed to copy to clipboard:", err);
+			}
 		}
-	} else {
-		// Fallback to clipboard for browsers that don't support Web Share API
-		try {
-			await navigator.clipboard.writeText(postUrl);
-		} catch (err) {
-			console.error("Failed to copy to clipboard:", err);
-		}
-	}
+	} catch (error) {}
 };
 
 /**
