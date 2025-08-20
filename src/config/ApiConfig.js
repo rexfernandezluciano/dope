@@ -5,7 +5,7 @@
 import Cookies from "js-cookie";
 
 const API_BASE_URL =
-	process.env.REACT_APP_API_URL || "https://natasha.dopp.eu.org/api";
+	process.env.REACT_APP_API_URL || "https://social.dopp.eu.org/api";
 
 // Validate API URL is HTTPS
 if (!API_BASE_URL.startsWith("https://")) {
