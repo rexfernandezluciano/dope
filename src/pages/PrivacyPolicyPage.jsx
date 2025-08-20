@@ -3,7 +3,7 @@
 
 import React, { useEffect } from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
-import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
+import { updatePageMeta } from "../utils/meta-utils";
 
 const PrivacyPolicyPage = () => {
 	useEffect(() => {
@@ -19,12 +19,12 @@ const PrivacyPolicyPage = () => {
 			<Row className="justify-content-center">
 				<Col lg={8}>
 					<Card className="shadow-sm border-0">
-						<Card.Body className="p-5">
+						<Card.Body className="px-3 p-5">
 							<h1 className="display-4 fw-bold text-primary mb-4 text-center">
 								Privacy Policy
 							</h1>
 							<p className="text-muted text-center mb-5">
-								Last updated: {new Date().toLocaleDateString()}
+								Last updated: August 20, 2025
 							</p>
 
 							<div className="mb-4">
@@ -105,8 +105,8 @@ const PrivacyPolicyPage = () => {
 									If you have any questions about this privacy policy, please contact us at:
 								</p>
 								<ul className="text-muted">
-									<li>Email: privacy@dopenetwork.com</li>
-									<li>Address: [Your Business Address]</li>
+									<li>Email: security@dopp.eu.org</li>
+									<li>Address: 75 Purok Rosal, Sampaguita, General Tinio, Nueva Ecija, Philippines</li>
 								</ul>
 							</div>
 						</Card.Body>

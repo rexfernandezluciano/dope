@@ -62,13 +62,10 @@ const StartPage = () => {
 							<p className="lead text-muted mb-4">
 								Connect, share, and discover amazing content with our community
 							</p>
-							<p className="text-success mb-4">
-								<strong>Open to Everyone!</strong> Join our growing community today.
-							</p>
 							<div className="d-grid gap-2 d-md-flex justify-content-md-center">
 								<Button
 									variant="primary"
-									size="lg"
+									size="md"
 									onClick={() => navigate('/auth/signup')}
 									className="me-md-2 px-4 py-2"
 								>
@@ -76,16 +73,13 @@ const StartPage = () => {
 								</Button>
 								<Button
 									variant="outline-primary"
-									size="lg"
+									size="md"
 									onClick={() => navigate('/auth/login')}
 									className="px-4 py-2"
 								>
 									Sign In
 								</Button>
 							</div>
-							<p className="text-muted mt-3 small">
-								Registration is free and open to all users
-							</p>
 						</Card.Body>
 					</Card>
 				</Col>
