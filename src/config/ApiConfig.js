@@ -9,6 +9,9 @@ import axios from "axios";
 const API_BASE_URL =
 	process.env.REACT_APP_API_URL || "https://social.dopp.eu.org/api";
 
+// Debug: Log the API URL being used
+console.log("Using API Base URL:", API_BASE_URL);
+
 // Validate API URL is HTTPS
 if (!API_BASE_URL.startsWith("https://")) {
 	console.error("API URL must use HTTPS");
@@ -55,13 +58,24 @@ apiClient.interceptors.request.use(async (config) => {
 apiClient.interceptors.response.use(
 	(response) => response.data,
 	(error) => {
+		console.error("API Error Details:", {
+			url: error.config?.url,
+			method: error.config?.method,
+			baseURL: error.config?.baseURL,
+			status: error.response?.status,
+			statusText: error.response?.statusText,
+			message: error.message,
+			code: error.code
+		});
+		
 		if (error.response) {
 			// Server responded with error status
 			const message = error.response.data?.message || `HTTP error! status: ${error.response.status}`;
 			throw new Error(message);
 		} else if (error.request) {
 			// Request was made but no response received
-			throw new Error("Network error - no response received");
+			console.error("Network error - request details:", error.request);
+			throw new Error(`Network error - no response received from ${API_BASE_URL}`);
 		} else {
 			// Something else happened
 			throw new Error(error.message || "Request failed");
@@ -69,8 +83,39 @@ apiClient.interceptors.response.use(
 	}
 );
 
+// Test API connectivity
+const testApiConnection = async () => {
+	try {
+		console.log("Testing API connectivity to:", API_BASE_URL);
+		const response = await fetch(`${API_BASE_URL}/health`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			signal: AbortSignal.timeout(10000) // 10 second timeout
+		});
+		
+		if (response.ok) {
+			console.log("API connection successful");
+			return true;
+		} else {
+			console.error("API connection failed:", response.status, response.statusText);
+			return false;
+		}
+	} catch (error) {
+		console.error("API connectivity test failed:", error.message);
+		return false;
+	}
+};
+
 const apiRequest = async (endpoint, options = {}) => {
 	try {
+		console.log("Making API request:", {
+			url: endpoint,
+			method: options.method || 'GET',
+			baseURL: API_BASE_URL
+		});
+		
 		const response = await apiClient({
 			url: endpoint,
 			method: options.method || 'GET',
@@ -728,6 +773,7 @@ export {
 	getAuthToken,
 	validateEmail,
 	sanitizeInput,
+	testApiConnection,
 };
 
 export default apiRequest;
