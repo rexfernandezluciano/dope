@@ -18,6 +18,8 @@ import SubscriptionPage from "../pages/SubscriptionPage";
 import SearchPage from "../pages/SearchPage";
 import AnalyticsPage from "../pages/AnalyticsPage";
 import LiveStreamPage from "../pages/LiveStreamPage";
+import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
+import TermsOfServicePage from "../pages/TermsOfServicePage";
 
 import RequireAuth from "./security/RequireAuth";
 import { IndexPageLoader } from "./loader/IndexPageLoader";
@@ -182,6 +184,16 @@ const router = createBrowserRouter([
 	{
 		path: "/live/:streamKey",
 		element: <LiveStreamPage />,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/policies/privacy",
+		element: <PrivacyPolicyPage />,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/policies/terms",
+		element: <TermsOfServicePage />,
 		hydrateFallbackElement: <LoadingView />,
 	},
 ]);
