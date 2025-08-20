@@ -81,7 +81,7 @@ export const sendLikeNotification = async (postId, post, currentUser) => {
 			type: 'like',
 			title: 'New Like',
 			message: `${currentUser.name} liked your post`,
-			url: `/posts/${postId}`,
+			url: `/post/${postId}`,
 			read: false,
 			createdAt: serverTimestamp(),
 			data: {

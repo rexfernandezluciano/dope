@@ -524,7 +524,7 @@ const postAPI = {
 			method: "POST",
 		}),
 	sharePost: (id, data) =>
-		apiRequest(`/posts/${id}/share`, {
+		apiRequest(`/posts/share/${id}`, {
 			method: "POST",
 			body: data,
 		}),

@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState, useEffect } from "react";
-import { useParams, useLoaderData } from "react-router-dom";
+import { useParams, useLoaderData, useNavigate } from "react-router-dom";
 import {
 	Container,
 	Image,
@@ -24,7 +24,13 @@ import {
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI } from "../config/ApiConfig";
-import { deletePost as deletePostUtil, sharePost, handlePostClick, handlePostOption, formatJoinDate } from "../utils/common-utils";
+import {
+	deletePost as deletePostUtil,
+	sharePost,
+	handlePostClick,
+	handlePostOption,
+	formatJoinDate,
+} from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import PostCard from "../components/PostCard";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -58,6 +64,8 @@ const ProfilePage = () => {
 	const [profileImagePreview, setProfileImagePreview] = useState("");
 	const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
 
+	const navigate = useNavigate();
+
 	useEffect(() => {
 		const loadProfile = async () => {
 			try {
@@ -72,7 +80,7 @@ const ProfilePage = () => {
 
 				// Handle response structure - the API returns user data directly
 				const profileUserData = userResponse.user;
-				const profilePrivacy = profileUserData.privacy?.profile || 'public';
+				const profilePrivacy = profileUserData.privacy?.profile || "public";
 
 				// Check if current user can view this profile
 				const canViewProfile = () => {
@@ -80,13 +88,13 @@ const ProfilePage = () => {
 					if (profileUserData.uid === currentUser.uid) return true;
 
 					// Public profiles are visible to everyone
-					if (profilePrivacy === 'public') return true;
+					if (profilePrivacy === "public") return true;
 
 					// Private profiles are only visible to the owner
-					if (profilePrivacy === 'private') return false;
+					if (profilePrivacy === "private") return false;
 
 					// Followers-only profiles are visible to followers
-					if (profilePrivacy === 'followers') {
+					if (profilePrivacy === "followers") {
 						return profileUserData.isFollowedByCurrentUser || false;
 					}
 
@@ -109,16 +117,16 @@ const ProfilePage = () => {
 				// Set posts from user response if available
 				if (userResponse.user.posts) {
 					// Filter posts based on profile privacy
-					const filteredPosts = userResponse.user.posts.filter(post => {
+					const filteredPosts = userResponse.user.posts.filter((post) => {
 						// Profile owner can see all their posts
 						if (post.author.uid === currentUser.uid) return true;
 
 						// For other users, respect the profile privacy settings
-						const authorPrivacy = post.author.privacy?.profile || 'public';
+						const authorPrivacy = post.author.privacy?.profile || "public";
 
-						if (authorPrivacy === 'public') return true;
-						if (authorPrivacy === 'private') return false;
-						if (authorPrivacy === 'followers') {
+						if (authorPrivacy === "public") return true;
+						if (authorPrivacy === "private") return false;
+						if (authorPrivacy === "followers") {
 							return post.author.isFollowedByCurrentUser || false;
 						}
 
@@ -132,16 +140,16 @@ const ProfilePage = () => {
 						const postsResponse = await postAPI.getPosts({ author: username });
 
 						// Filter posts based on profile privacy
-						const filteredPosts = (postsResponse.posts || []).filter(post => {
+						const filteredPosts = (postsResponse.posts || []).filter((post) => {
 							// Profile owner can see all their posts
 							if (post.author.uid === currentUser.uid) return true;
 
 							// For other users, respect the profile privacy settings
-							const authorPrivacy = post.author.privacy?.profile || 'public';
+							const authorPrivacy = post.author.privacy?.profile || "public";
 
-							if (authorPrivacy === 'public') return true;
-							if (authorPrivacy === 'private') return false;
-							if (authorPrivacy === 'followers') {
+							if (authorPrivacy === "public") return true;
+							if (authorPrivacy === "private") return false;
+							if (authorPrivacy === "followers") {
 								return post.author.isFollowedByCurrentUser || false;
 							}
 
@@ -162,13 +170,18 @@ const ProfilePage = () => {
 
 					// Check if current user is following this profile from user data or followers list
 					if (currentUser) {
-						const isFollowingFromUserData = profileUserData.isFollowedByCurrentUser;
-						const isFollowingFromFollowers = (followersResponse.followers || []).some(
-							(f) => f.uid === currentUser.uid,
-						);
-						
+						const isFollowingFromUserData =
+							profileUserData.isFollowedByCurrentUser;
+						const isFollowingFromFollowers = (
+							followersResponse.followers || []
+						).some((f) => f.uid === currentUser.uid);
+
 						// Prefer the user data value if available, otherwise check followers list
-						setIsFollowing(isFollowingFromUserData !== undefined ? isFollowingFromUserData : isFollowingFromFollowers);
+						setIsFollowing(
+							isFollowingFromUserData !== undefined
+								? isFollowingFromUserData
+								: isFollowingFromFollowers,
+						);
 					}
 				} catch (err) {
 					console.error("Error loading followers:", err);
@@ -198,14 +211,16 @@ const ProfilePage = () => {
 	// Update page meta data when profile user changes
 	useEffect(() => {
 		if (profileUser) {
-			updatePageMeta(pageMetaData.profile(profileUser.username, profileUser.name));
+			updatePageMeta(
+				pageMetaData.profile(profileUser.username, profileUser.name),
+			);
 		}
 	}, [profileUser]);
 
 	const handleFollow = async () => {
 		try {
 			const response = await userAPI.followUser(username);
-			
+
 			// Update following state based on API response
 			setIsFollowing(response.following);
 
@@ -219,9 +234,9 @@ const ProfilePage = () => {
 			}
 
 			// Update profile user's isFollowedByCurrentUser status
-			setProfileUser(prev => ({
+			setProfileUser((prev) => ({
 				...prev,
-				isFollowedByCurrentUser: response.following
+				isFollowedByCurrentUser: response.following,
 			}));
 		} catch (err) {
 			setError(err.message);
@@ -263,11 +278,16 @@ const ProfilePage = () => {
 	const uploadProfileImageToCloudinary = async (file) => {
 		// Handle HEIC files
 		let finalFile = file;
-		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+		if (
+			file.type === "image/heic" ||
+			file.name.toLowerCase().endsWith(".heic")
+		) {
 			try {
 				const heic2any = (await import("heic2any")).default;
 				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+					type: "image/jpeg",
+				});
 			} catch (err) {
 				console.error("Error converting HEIC:", err);
 				return null;
@@ -302,7 +322,9 @@ const ProfilePage = () => {
 
 			// Upload profile image if a new file was selected
 			if (editForm.profileImageFile) {
-				const uploadedUrl = await uploadProfileImageToCloudinary(editForm.profileImageFile);
+				const uploadedUrl = await uploadProfileImageToCloudinary(
+					editForm.profileImageFile,
+				);
 				if (uploadedUrl) {
 					updateData.photoURL = uploadedUrl;
 				}
@@ -382,15 +404,15 @@ const ProfilePage = () => {
 
 	const handleOptionAction = (action, postId) => {
 		handlePostOption(action, postId, {
-			copyLink: () => navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`),
+			copyLink: () =>
+				navigator.clipboard.writeText(
+					`${window.location.origin}/post/${postId}`,
+				),
 			delete: () => handleDeletePost(postId),
 			// Add other actions as needed
 		});
 		closePostOptionsModal();
 	};
-
-
-
 
 	if (loading || !currentUser) {
 		return (
@@ -402,7 +424,7 @@ const ProfilePage = () => {
 
 	if (error || !profileUser) {
 		return (
-			<Container className="py-3">
+			<Container className="px-3 py-3">
 				<Alert variant="danger">{error || "User not found"}</Alert>
 			</Container>
 		);
@@ -451,19 +473,26 @@ const ProfilePage = () => {
 									<CheckCircleFill className="text-primary" size={16} />
 								</span>
 							)}
-							{((profileUser.membership?.subscription || profileUser.subscription) &&
-								(profileUser.membership?.subscription || profileUser.subscription) !== "free") && (
+							{(profileUser.membership?.subscription ||
+								profileUser.subscription) &&
+								(profileUser.membership?.subscription ||
+									profileUser.subscription) !== "free" && (
 									<span
 										className={`badge ${
-											(profileUser.membership?.subscription || profileUser.subscription) === "premium"
+											(profileUser.membership?.subscription ||
+												profileUser.subscription) === "premium"
 												? "bg-warning text-dark"
-												: (profileUser.membership?.subscription || profileUser.subscription) === "pro"
+												: (profileUser.membership?.subscription ||
+															profileUser.subscription) === "pro"
 													? "bg-primary"
 													: "bg-secondary"
 										}`}
 										style={{ fontSize: "0.7rem" }}
 									>
-										{(profileUser.membership?.subscription || profileUser.subscription).toUpperCase()}
+										{(
+											profileUser.membership?.subscription ||
+											profileUser.subscription
+										).toUpperCase()}
 									</span>
 								)}
 						</div>
@@ -609,6 +638,7 @@ const ProfilePage = () => {
 								<Card
 									key={followedUser.uid}
 									className="border-0 border-bottom rounded-0"
+									onClick={() => navigate(`/${followedUser.username}`)}
 								>
 									<Card.Body className="px-3 py-3">
 										<div className="d-flex align-items-center gap-3">
@@ -626,7 +656,12 @@ const ProfilePage = () => {
 												<div className="d-flex align-items-center gap-1">
 													<span className="fw-bold">{followedUser.name}</span>
 													{followedUser.hasBlueCheck && (
-														<span className="text-primary">✓</span>
+														<span className="text-primary">
+															<CheckCircleFill
+																className="text-primary"
+																size={16}
+															/>
+														</span>
 													)}
 												</div>
 												<p className="text-muted mb-0">
@@ -665,27 +700,37 @@ const ProfilePage = () => {
 								<div className="d-flex flex-column align-items-center gap-3">
 									<div className="position-relative">
 										<Image
-											src={profileImagePreview || editForm.photoURL || "https://i.pravatar.cc/150?img=10"}
+											src={
+												profileImagePreview ||
+												editForm.photoURL ||
+												"https://i.pravatar.cc/150?img=10"
+											}
 											alt="Profile Preview"
 											roundedCircle
 											width={120}
 											height={120}
 											style={{ objectFit: "cover", cursor: "pointer" }}
-											onClick={() => document.getElementById("profile-image-upload").click()}
+											onClick={() =>
+												document.getElementById("profile-image-upload").click()
+											}
 										/>
 										<Button
 											variant="primary"
 											size="sm"
 											className="position-absolute bottom-0 end-0 rounded-circle p-2"
 											style={{ width: "35px", height: "35px" }}
-											onClick={() => document.getElementById("profile-image-upload").click()}
+											onClick={() =>
+												document.getElementById("profile-image-upload").click()
+											}
 										>
 											<Camera size={16} />
 										</Button>
 									</div>
 									<Button
 										variant="outline-primary"
-										onClick={() => document.getElementById("profile-image-upload").click()}
+										onClick={() =>
+											document.getElementById("profile-image-upload").click()
+										}
 									>
 										Choose Photo
 									</Button>

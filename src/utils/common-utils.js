@@ -62,7 +62,7 @@ export const sharePost = async (postId) => {
 	if (navigator.share) {
 		try {
 			await navigator.share({
-				title: "Check out this post",
+				title: "Check out this post! #DOPESocial",
 				url: postUrl,
 			});
 		} catch (err) {
