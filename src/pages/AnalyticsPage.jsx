@@ -63,6 +63,7 @@ const AnalyticsPage = () => {
 	const [timeRange, setTimeRange] = useState("30d");
 	const [activeTab, setActiveTab] = useState("home");
 	const [userEarnings, setUserEarnings] = useState(0);
+	const [isMonetizationEligible, setIsMonetizationEligible] = useState(false);
 
 	const loadAnalytics = useCallback(async () => {
 		try {
@@ -113,7 +114,7 @@ const AnalyticsPage = () => {
 				cpm: (post.stats?.earnings * 3 + 1).toFixed(2)
 			}));
 
-			setAnalytics({
+			const analyticsData = {
 				totalPosts,
 				totalLikes,
 				totalComments,
@@ -127,7 +128,9 @@ const AnalyticsPage = () => {
 				recentPostsCount: recentPosts.length,
 				earningPosts,
 				totalEarnings: userEarnings
-			});
+			};
+			
+			setAnalytics(analyticsData);
 
 		} catch (err) {
 			console.error("Analytics loading error:", err);
@@ -143,6 +146,33 @@ const AnalyticsPage = () => {
 		setUserEarnings(totalEarnings ?? 0)
 	}, [])
 
+	const checkMonetizationEligibility = useCallback(() => {
+		if (!user || !analytics) return false;
+
+		// Check if account is created more than 7 days ago
+		const accountCreatedDate = new Date(user.createdAt || user.metadata?.creationTime);
+		const sevenDaysAgo = new Date();
+		sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+		const accountOldEnough = accountCreatedDate < sevenDaysAgo;
+
+		// Check followers count (1000+) OR premium/pro subscription
+		const hasEnoughFollowers = (user.stats?.followers || 0) >= 1000;
+		const userSubscription = user.membership?.subscription || user.subscription || "free";
+		const hasPremiumSubscription = userSubscription === "premium" || userSubscription === "pro";
+		const followersOrSubscription = hasEnoughFollowers || hasPremiumSubscription;
+
+		// Check if user has at least 1 post within the last day
+		const oneDayAgo = new Date();
+		oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+		const recentPosts = analytics.recentPostsCount || 0;
+		const hasRecentPost = recentPosts > 0;
+
+		const isEligible = accountOldEnough && followersOrSubscription && hasRecentPost;
+		setIsMonetizationEligible(isEligible);
+
+		return isEligible;
+	}, [user, analytics])
+
 	useEffect(() => {
 		if (user?.uid && user?.username) {
 			loadAnalytics();
@@ -150,6 +180,12 @@ const AnalyticsPage = () => {
 			updatePageMeta("Analytics", `View your content performance and growth metrics on DOPE. Your username is ${user?.username}.`);
 		}
 	}, [loadAnalytics, loadUserEarnings, user?.uid, user?.username]);
+
+	useEffect(() => {
+		if (user && analytics) {
+			checkMonetizationEligibility();
+		}
+	}, [user, analytics, checkMonetizationEligibility]);
 
 	// Chart data
 	const chartData = useMemo(() => {
@@ -617,79 +653,139 @@ const AnalyticsPage = () => {
 
 						{/* Monetization Tab */}
 						<Tab.Pane eventKey="monetization">
-							<Row className="g-4">
-								<Col lg={8}>
-									<Card className="border-0 shadow-sm">
-										<Card.Header className="bg-white border-0">
-											<h5 className="mb-0 fw-bold">
-												<CurrencyDollar className="me-2 text-success" />
-												Earning Posts
-											</h5>
-											<small className="text-muted">Posts that generated revenue</small>
-										</Card.Header>
-										<Card.Body className="p-3">
-											{analytics?.earningPosts?.length > 0 ? (
-												analytics.earningPosts.map((post, index) => (
-													<TopPostCard key={post.id} post={post} rank={index + 1} showEarnings={true} />
-												))
-											) : (
-												<div className="text-center py-4">
-													<CurrencyDollar className="text-muted mb-2" size={32} />
-													<p className="text-muted">No earning posts yet</p>
-													<small className="text-muted">Start creating monetizable content</small>
+							{!isMonetizationEligible ? (
+								<div className="text-center py-5">
+									<Card className="border-0 shadow-sm mx-auto" style={{ maxWidth: "600px" }}>
+										<Card.Body className="p-5">
+											<CurrencyDollar className="text-muted mb-3" size={48} />
+											<h4 className="mb-3">Monetization Not Available</h4>
+											<p className="text-muted mb-4">
+												To access monetization features, you need to meet the following requirements:
+											</p>
+											
+											<div className="text-start mb-4">
+												<div className="d-flex align-items-center mb-2">
+													<div className={`me-3 rounded-circle d-flex align-items-center justify-content-center ${(user?.stats?.followers || 0) >= 1000 || ["premium", "pro"].includes(user?.membership?.subscription || user?.subscription) ? "bg-success text-white" : "bg-light text-muted"}`} style={{ width: "24px", height: "24px" }}>
+														{(user?.stats?.followers || 0) >= 1000 || ["premium", "pro"].includes(user?.membership?.subscription || user?.subscription) ? "✓" : "×"}
+													</div>
+													<span>1,000+ followers OR Premium/Pro subscription</span>
 												</div>
-											)}
-										</Card.Body>
-									</Card>
-								</Col>
-								<Col lg={4}>
-									<Row className="g-3">
-										<Col xs={12}>
-											<StatCard
-												icon={CurrencyDollar}
-												title="Total Earnings"
-												value={`$${analytics?.totalEarnings || "0.00"}`}
-												color="success"
-												size="large"
-												subtitle="All time"
-											/>
-										</Col>
-										<Col xs={6} lg={12}>
-											<StatCard
-												icon={BarChartFill}
-												title="Avg. CPM"
-												value={`$${(Math.random() * 3 + 1).toFixed(2)}`}
-												color="primary"
-												subtitle="Per 1000 views"
-											/>
-										</Col>
-										<Col xs={6} lg={12}>
-											<StatCard
-												icon={TrendingUp}
-												title="Revenue Growth"
-												value={`+${(analytics?.totalEarnings * 25) + 5}%`}
-												color="success"
-												subtitle="This month"
-											/>
-										</Col>
-									</Row>
-									
-									<Card className="border-0 bg-warning text-white mt-3">
-										<Card.Body className="p-3">
-											<div className="d-flex align-items-center mb-2">
-												<CurrencyDollar className="me-2" size={20} />
-												<h6 className="mb-0 fw-bold">Monetization Tips</h6>
+												<div className="d-flex align-items-center mb-2">
+													<div className={`me-3 rounded-circle d-flex align-items-center justify-content-center ${(analytics?.recentPostsCount || 0) > 0 ? "bg-success text-white" : "bg-light text-muted"}`} style={{ width: "24px", height: "24px" }}>
+														{(analytics?.recentPostsCount || 0) > 0 ? "✓" : "×"}
+													</div>
+													<span>At least 1 post within the last day</span>
+												</div>
+												<div className="d-flex align-items-center mb-2">
+													<div className={`me-3 rounded-circle d-flex align-items-center justify-content-center ${(() => {
+														const accountCreatedDate = new Date(user?.createdAt || user?.metadata?.creationTime);
+														const sevenDaysAgo = new Date();
+														sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+														return accountCreatedDate < sevenDaysAgo;
+													})() ? "bg-success text-white" : "bg-light text-muted"}`} style={{ width: "24px", height: "24px" }}>
+														{(() => {
+															const accountCreatedDate = new Date(user?.createdAt || user?.metadata?.creationTime);
+															const sevenDaysAgo = new Date();
+															sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+															return accountCreatedDate < sevenDaysAgo ? "✓" : "×";
+														})()}
+													</div>
+													<span>Account created more than 7 days ago</span>
+												</div>
 											</div>
-											<ul className="small mb-0 ps-3">
-												<li className="mb-1">Create engaging, longer content</li>
-												<li className="mb-1">Use relevant hashtags</li>
-												<li className="mb-1">Build a loyal audience</li>
-												<li>Partner with brands</li>
-											</ul>
+											
+											<div className="d-flex gap-2 justify-content-center">
+												<Button 
+													variant="primary" 
+													onClick={() => setActiveTab("growth")}
+												>
+													View Growth Tips
+												</Button>
+												<Button 
+													variant="outline-primary" 
+													onClick={() => window.location.href = "/subscription"}
+												>
+													Upgrade Membership
+												</Button>
+											</div>
 										</Card.Body>
 									</Card>
-								</Col>
-							</Row>
+								</div>
+							) : (
+								<Row className="g-4">
+									<Col lg={8}>
+										<Card className="border-0 shadow-sm">
+											<Card.Header className="bg-white border-0">
+												<h5 className="mb-0 fw-bold">
+													<CurrencyDollar className="me-2 text-success" />
+													Earning Posts
+												</h5>
+												<small className="text-muted">Posts that generated revenue</small>
+											</Card.Header>
+											<Card.Body className="p-3">
+												{analytics?.earningPosts?.length > 0 ? (
+													analytics.earningPosts.map((post, index) => (
+														<TopPostCard key={post.id} post={post} rank={index + 1} showEarnings={true} />
+													))
+												) : (
+													<div className="text-center py-4">
+														<CurrencyDollar className="text-muted mb-2" size={32} />
+														<p className="text-muted">No earning posts yet</p>
+														<small className="text-muted">Start creating monetizable content</small>
+													</div>
+												)}
+											</Card.Body>
+										</Card>
+									</Col>
+									<Col lg={4}>
+										<Row className="g-3">
+											<Col xs={12}>
+												<StatCard
+													icon={CurrencyDollar}
+													title="Total Earnings"
+													value={`$${analytics?.totalEarnings || "0.00"}`}
+													color="success"
+													size="large"
+													subtitle="All time"
+												/>
+											</Col>
+											<Col xs={6} lg={12}>
+												<StatCard
+													icon={BarChartFill}
+													title="Avg. CPM"
+													value={`$${(Math.random() * 3 + 1).toFixed(2)}`}
+													color="primary"
+													subtitle="Per 1000 views"
+												/>
+											</Col>
+											<Col xs={6} lg={12}>
+												<StatCard
+													icon={TrendingUp}
+													title="Revenue Growth"
+													value={`+${(analytics?.totalEarnings * 25) + 5}%`}
+													color="success"
+													subtitle="This month"
+												/>
+											</Col>
+										</Row>
+										
+										<Card className="border-0 bg-warning text-white mt-3">
+											<Card.Body className="p-3">
+												<div className="d-flex align-items-center mb-2">
+													<CurrencyDollar className="me-2" size={20} />
+													<h6 className="mb-0 fw-bold">Monetization Tips</h6>
+												</div>
+												<ul className="small mb-0 ps-3">
+													<li className="mb-1">Create engaging, longer content</li>
+													<li className="mb-1">Use relevant hashtags</li>
+													<li className="mb-1">Build a loyal audience</li>
+													<li>Partner with brands</li>
+												</ul>
+											</Card.Body>
+										</Card>
+									</Col>
+								</Row>
+							)}
 						</Tab.Pane>
 
 						{/* Audience Tab */}
