@@ -51,7 +51,7 @@ import {
 	Area,
 } from "recharts";
 
-import { postAPI } from "../config/ApiConfig";
+import { postAPI, userAPI } from "../config/ApiConfig";
 import { formatTimeAgo } from "../utils/common-utils";
 import { updatePageMeta } from "../utils/meta-utils";
 
@@ -62,6 +62,7 @@ const AnalyticsPage = () => {
 	const [error, setError] = useState("");
 	const [timeRange, setTimeRange] = useState("30d");
 	const [activeTab, setActiveTab] = useState("home");
+	const [userEarnings, setUserEarnings] = useState(0);
 
 	const loadAnalytics = useCallback(async () => {
 		try {
@@ -128,7 +129,7 @@ const AnalyticsPage = () => {
 				topPosts,
 				recentPostsCount: recentPosts.length,
 				earningPosts,
-				totalEarnings: earningPosts.reduce((sum, post) => sum + parseFloat(post.earnings), 0).toFixed(2)
+				totalEarnings: userEarnings
 			});
 
 		} catch (err) {
@@ -139,12 +140,19 @@ const AnalyticsPage = () => {
 		}
 	}, [user?.username]);
 
+	const loadUserEarnings = useCallback(async () => {
+		const earnings = await userAPI.getUserEarnings();
+		const totalEarnings = earnings.totalEarnings;
+		setUserEarnings(totalEarnings ?? 0)
+	}, [])
+
 	useEffect(() => {
 		if (user?.uid && user?.username) {
 			loadAnalytics();
+			loadUserEarnings();
 			updatePageMeta("Analytics", `View your content performance and growth metrics on DOPE. Your username is ${user?.username}.`);
 		}
-	}, [loadAnalytics, user?.uid, user?.username]);
+	}, [loadAnalytics, loadUserEarnings, user?.uid, user?.username]);
 
 	// Chart data
 	const chartData = useMemo(() => {
@@ -327,7 +335,7 @@ const AnalyticsPage = () => {
 						<Nav.Item>
 							<Nav.Link eventKey="home" className="d-flex align-items-center gap-2">
 								<House size={16} />
-								<span className="d-none d-md-inline">Home</span>
+								<span className="d-none d-inline">Home</span>
 							</Nav.Link>
 						</Nav.Item>
 						<Nav.Item>
