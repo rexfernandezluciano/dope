@@ -148,9 +148,13 @@ const LoginPage = () => {
 		setError('Google login failed. Please try again.');
 	};
 
+	const googleClientId = getGoogleClientId();
+
 	return (
-		<GoogleOAuthProvider clientId={getGoogleClientId()}>
-			<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
+		<>
+			{googleClientId ? (
+				<GoogleOAuthProvider clientId={googleClientId}>
+					<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
 				<Row className="w-100 gap-2">
 					<Col className="d-none d-md-block">
 						<IntroductionBanner />
@@ -272,8 +276,16 @@ const LoginPage = () => {
 						onHide={() => setShowDialog(false)}
 					/>
 				)}
-			</div>
-		</GoogleOAuthProvider>
+				</div>
+			</GoogleOAuthProvider>
+			) : (
+				<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
+					<Alert variant="warning">
+						Google Login is not configured. Please set up REACT_APP_GOOGLE_CLIENT_ID environment variable.
+					</Alert>
+				</div>
+			)}
+		</>
 	);
 };
 

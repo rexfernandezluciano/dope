@@ -2,14 +2,16 @@
  * Google Sign-In utility functions using @react-oauth/google
  */
 
-const GOOGLE_CLIENT_ID =
-	process.env.REACT_APP_GOOGLE_CLIENT_ID ||
-	"171033182022-n0bjlqf0i7eao67miq6mrgtjcbid3obc.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 /**
  * Get Google Client ID
  */
 export const getGoogleClientId = () => {
+	if (!GOOGLE_CLIENT_ID) {
+		console.error('REACT_APP_GOOGLE_CLIENT_ID environment variable is not set');
+		return null;
+	}
 	return GOOGLE_CLIENT_ID;
 };
 
