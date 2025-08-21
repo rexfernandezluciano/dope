@@ -9,6 +9,7 @@ const NetworkDiagnostics = () => {
     apiReachability: { status: 'pending', message: '', timestamp: null },
     corsPolicy: { status: 'pending', message: '', timestamp: null },
     healthCheck: { status: 'pending', message: '', timestamp: null },
+    loginEndpoint: { status: 'pending', message: '', timestamp: null },
   });
   
   const [running, setRunning] = useState(false);
@@ -104,13 +105,32 @@ const NetworkDiagnostics = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
       
-      const response = await fetch(API_BASE_URL, {
-        method: 'HEAD',
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'DOPE-Network-Diagnostics/1.0'
+      // First try a simple GET to the base URL
+      let response;
+      try {
+        response = await fetch(API_BASE_URL, {
+          method: 'GET',
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'DOPE-Network-Diagnostics/1.0',
+            'Accept': 'application/json'
+          }
+        });
+      } catch (baseError) {
+        // If base URL fails, try with /health endpoint
+        try {
+          response = await fetch(`${API_BASE_URL}/health`, {
+            method: 'GET',
+            signal: controller.signal,
+            headers: {
+              'User-Agent': 'DOPE-Network-Diagnostics/1.0',
+              'Accept': 'application/json'
+            }
+          });
+        } catch (healthError) {
+          throw new Error(`Both base URL and /health endpoint failed. Base: ${baseError.message}, Health: ${healthError.message}`);
         }
-      });
+      }
       
       clearTimeout(timeoutId);
       const duration = Date.now() - startTime;
@@ -177,6 +197,31 @@ const NetworkDiagnostics = () => {
     }
   };
 
+  const testLoginEndpoint = async () => {
+    try {
+      updateTest('loginEndpoint', 'running', 'Testing login endpoint availability...');
+      
+      // Test if the login endpoint responds (we expect a 400 or similar for empty request)
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({}), // Empty body should return validation error
+        signal: AbortSignal.timeout(10000)
+      });
+      
+      // Any response (even error) means the endpoint is reachable
+      updateTest('loginEndpoint', 'success', 
+        `Login endpoint reachable (${response.status} ${response.statusText})`);
+      
+    } catch (error) {
+      updateTest('loginEndpoint', 'error', 
+        `Login endpoint unreachable: ${error.message}`);
+    }
+  };
+
   const runAllTests = async () => {
     setRunning(true);
     
@@ -191,6 +236,7 @@ const NetworkDiagnostics = () => {
       await testApiReachability();
       await testCorsPolicy();
       await testHealthCheck();
+      await testLoginEndpoint();
     } catch (error) {
       console.error('Test suite error:', error);
     } finally {

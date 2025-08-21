@@ -169,10 +169,10 @@ class HttpClient {
 						signal: AbortSignal.timeout(3000)
 					});
 					// If Google is reachable, it's likely an API server issue
-					throw new Error(`API server unreachable at ${API_BASE_URL}. The server may be down or there could be a firewall blocking the connection.`);
+					throw new Error(`API server unreachable at ${API_BASE_URL}. The server appears to be down, under maintenance, or there may be a firewall blocking the connection. Please try again later or contact support if the issue persists.`);
 				} catch (connectTest) {
 					// If Google is not reachable, it's a general connectivity issue
-					throw new Error(`Network connectivity issue detected. Please check your internet connection and try again.`);
+					throw new Error(`Network connectivity issue detected. Please check your internet connection and try again. If you're on a restricted network, the API endpoint may be blocked.`);
 				}
 			}
 
