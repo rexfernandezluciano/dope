@@ -568,12 +568,12 @@ export const commentAPI = {
 	getComments: async (postId, params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
 		return await apiRequest(
-			`/comments/post/${postId}${queryString ? `?${queryString}` : ""}`,
+			`/posts/${postId}/comments${queryString ? `?${queryString}` : ""}`,
 		);
 	},
 
 	createComment: async (postId, commentData) => {
-		return await apiRequest(`/comments/post/${postId}`, {
+		return await apiRequest(`/posts/${postId}/comments`, {
 			method: "POST",
 			data: commentData,
 		});
@@ -597,7 +597,7 @@ export const commentAPI = {
 			query,
 			...params,
 		});
-		return await apiRequest(`/comments/search?${searchParams.toString()}`);
+		return await apiRequest(`/search/comments?${searchParams.toString()}`);
 	},
 
 	// Comment likes
