@@ -406,8 +406,8 @@ export const userAPI = {
 	},
 
 	revokeAllSessions: async () => {
-		return await apiRequest("/sessions", {
-			method: "DELETE",
+		return await apiRequest("/sessions/revoke-all", {
+			method: "POST",
 		});
 	},
 
