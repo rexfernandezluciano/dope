@@ -20,7 +20,7 @@ import {
 	Shield,
 } from "react-bootstrap-icons";
 
-import { userAPI, apiRequest } from "../../config/ApiConfig";
+import { apiRequest } from "../../config/ApiConfig";
 
 const SessionSettingsPage = () => {
 	const loaderData = useLoaderData() || {};

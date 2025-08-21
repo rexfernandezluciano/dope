@@ -9,8 +9,6 @@ import {
 	Eye,
 	Bell,
 	X,
-	Clock,
-	Activity,
 	Shield,
 } from "react-bootstrap-icons";
 import { Link } from "react-router-dom";

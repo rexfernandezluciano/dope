@@ -14,14 +14,7 @@ const IndexPage = () => {
 	const location = useLocation();
 	const pathname = location.pathname;
 
-	// Check if it's settings page
-	if (pathname.endsWith("/settings")) {
-		return (
-			<NavigationView user={user}>
-				<SettingsPage />
-			</NavigationView>
-		);
-	}
+	
 
 	// Check if it's subscription page
 	if (pathname === "/subscription") {
@@ -41,8 +34,8 @@ const IndexPage = () => {
 		);
 	}
 
-	// For home page, post detail pages, and settings pages, use Outlet
-	if (pathname === "/home" || pathname.startsWith("/post/") || pathname.endsWith("/settings")) {
+	// For home page and post detail pages, use Outlet
+	if (pathname === "/home" || pathname.startsWith("/post/")) {
 		return (
 			<NavigationView user={user}>
 				<Outlet />

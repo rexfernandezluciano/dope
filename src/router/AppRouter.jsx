@@ -111,37 +111,25 @@ const router = createBrowserRouter([
 		path: "/settings",
 		element: (
 			<RequireAuth>
-				<IndexPage />
+				<NavigationView>
+					<SettingsPage />
+				</NavigationView>
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
 		hydrateFallbackElement: <LoadingView />,
-		children: [
-			{
-				index: true,
-				element: <SettingsPage />,
-				loader: IndexPageLoader,
-				hydrateFallbackElement: <LoadingView />,
-			},
-		],
 	},
 	{
 		path: "/settings/:tab",
 		element: (
 			<RequireAuth>
-				<IndexPage />
+				<NavigationView>
+					<SettingsPage />
+				</NavigationView>
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
 		hydrateFallbackElement: <LoadingView />,
-		children: [
-			{
-				index: true,
-				element: <SettingsPage />,
-				loader: IndexPageLoader,
-				hydrateFallbackElement: <LoadingView />,
-			},
-		],
 	},
 	{
 		path: "/search",

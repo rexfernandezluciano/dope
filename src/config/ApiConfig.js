@@ -396,22 +396,7 @@ export const userAPI = {
 		return await apiRequest("/users/analytics/earnings");
 	},
 
-	getSessions: async () => {
-		console.log("Making getSessions API call to /sessions");
-		return await apiRequest("/sessions");
-	},
-
-	revokeSession: async (sessionId) => {
-		return await apiRequest(`/sessions/${sessionId}`, {
-			method: "DELETE",
-		});
-	},
-
-	revokeAllSessions: async () => {
-		return await apiRequest("/sessions/revoke-all", {
-			method: "POST",
-		});
-	},
+	
 
 	getUserStats: async (userId) => {
 		return await apiRequest(`/users/${userId}/stats`);
