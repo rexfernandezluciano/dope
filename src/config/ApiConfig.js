@@ -445,6 +445,21 @@ export const userAPI = {
 			data: subscriptionData,
 		});
 	},
+
+	isAdmin: async (uid) => {
+		return await apiRequest(`/users/${uid}/is-admin`);
+	},
+
+	checkUserExists: async (uid) => {
+		return await apiRequest(`/users/${uid}/exists`);
+	},
+
+	checkEmailExists: async (email) => {
+		return await apiRequest(`/users/check-email`, {
+			method: "POST",
+			data: { email },
+		});
+	},
 };
 
 export const postAPI = {
@@ -466,6 +481,11 @@ export const postAPI = {
 	},
 	searchPosts: async (query, page = 1) => {
 		return await apiRequest(`/posts/search?q=${encodeURIComponent(query)}&page=${page}`);
+	},
+
+	getFollowingFeed: async (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/posts/following${queryString ? `?${queryString}` : ""}`);
 	},
 };
 
