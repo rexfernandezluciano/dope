@@ -1,4 +1,3 @@
-
 /** @format */
 
 import Cookies from "js-cookie";
@@ -217,19 +216,19 @@ export const setAuthToken = (token, rememberMe = false) => {
 	try {
 		// Always store in sessionStorage for current session
 		sessionStorage.setItem("authToken", token);
-		
+
 		// Store in localStorage only if rememberMe is true
 		if (rememberMe) {
 			localStorage.setItem("authToken", token);
 		}
-		
+
 		// Also store in cookie as fallback
 		Cookies.set("authToken", token, {
 			expires: rememberMe ? 30 : 1, // 30 days if remember me, 1 day otherwise
 			secure: true,
 			sameSite: "strict"
 		});
-		
+
 		console.log("Auth token stored successfully");
 	} catch (error) {
 		console.error("Error storing auth token:", error);
@@ -277,7 +276,7 @@ export const removeAuthToken = () => {
 		sessionStorage.removeItem("authToken");
 		localStorage.removeItem("authToken");
 		Cookies.remove("authToken");
-		
+
 		console.log("Auth token removed from all storage locations");
 	} catch (error) {
 		console.error("Error removing auth token:", error);
@@ -460,17 +459,17 @@ export const postAPI = {
 		const params = new URLSearchParams({
 			...additionalParams
 		});
-		
+
 		// Add limit to params if provided
 		if (limit) {
 			params.set('limit', limit.toString());
 		}
-		
+
 		// Add cursor for pagination instead of page
 		if (additionalParams.cursor) {
 			params.set('cursor', additionalParams.cursor);
 		}
-		
+
 		return await apiRequest(`/posts${params.toString() ? `?${params.toString()}` : ""}`);
 	},
 
@@ -543,7 +542,18 @@ export const postAPI = {
 	},
 };
 
-// Comment API
+export const imageAPI = {
+	uploadImages: async (formData) => {
+		return await apiRequest("/images/upload", {
+			method: "POST",
+			data: formData,
+			headers: {
+				"Content-Type": "multipart/form-data",
+			},
+		});
+	},
+};
+
 export const commentAPI = {
 	getComments: async (postId, params = {}) => {
 		const queryString = new URLSearchParams(params).toString();

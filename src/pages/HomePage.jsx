@@ -28,12 +28,12 @@ import {
 	Person,
 } from "react-bootstrap-icons";
 
-import { Grid } from "@giphy/react-components";
+import { Grid } from "@giphy.com/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import heic2any from "heic2any";
 import AgoraRTC from "agora-rtc-sdk-ng";
 
-import { postAPI } from "../config/ApiConfig";
+import { postAPI, userAPI, imageAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
 import LiveStudioModal from "../components/LiveStudioModal";
@@ -208,7 +208,8 @@ const HomePage = () => {
 		}
 	};
 
-	const uploadImageToCloudinary = async (file) => {
+	// Updated uploadImage function using the new imageAPI
+	const uploadImage = async (file) => {
 		// Handle HEIC files
 		let finalFile = file;
 		if (
@@ -228,23 +229,17 @@ const HomePage = () => {
 		}
 
 		const formData = new FormData();
-		formData.append("file", finalFile);
-		formData.append("upload_preset", "dope-network"); // Replace with your actual upload preset
-		formData.append("folder", "posts"); // Replace with your desired folder
-		formData.append("api_key", "552259847565352"); // Add the Cloudinary API key
+		formData.append("images", finalFile); // Use 'images' as per the new API spec
 
 		try {
-			const response = await fetch(
-				"https://api.cloudinary.com/v1_1/zxpic/image/upload", // Replace zxpic with your Cloudinary cloud name
-				{
-					method: "POST",
-					body: formData,
-				},
-			);
-			const data = await response.json();
-			return data.secure_url;
+			const response = await imageAPI.uploadImages(formData); // Use imageAPI.uploadImages
+			// Assuming the API returns { imageUrls: [...] }
+			if (response && response.imageUrls && response.imageUrls.length > 0) {
+				return response.imageUrls[0]; // Return the first URL for single upload
+			}
+			return null;
 		} catch (error) {
-			console.error("Error uploading to Cloudinary:", error);
+			console.error("Error uploading image:", error);
 			return null;
 		}
 	};
@@ -261,8 +256,6 @@ const HomePage = () => {
 			return;
 		}
 
-		// This part of the code was previously `setPhotos(files)` but is now `setPhotos((prev) => [...(prev || []), ...uploadedUrls]);`
-		// The following logic reflects the original intention of uploading and setting photos.
 		const currentPhotos = photos || [];
 		const remainingSlots = imageLimit - currentPhotos.length;
 		const filesToUpload = files.slice(0, remainingSlots);
@@ -289,7 +282,8 @@ const HomePage = () => {
 					});
 				}
 
-				const url = await uploadImageToCloudinary(finalFile);
+				// Use the new uploadImage function
+				const url = await uploadImage(finalFile);
 				if (url) {
 					uploadedUrls.push(url);
 				}
@@ -678,10 +672,13 @@ const HomePage = () => {
 			if (selectedImages.length > 0) {
 				// Upload images if they are files, otherwise assume they are already URLs
 				if (typeof selectedImages[0] === "object") {
-					const uploadPromises = selectedImages.map((img) =>
-						uploadImageToCloudinary(img),
-					);
-					uploadedImageUrls = await Promise.all(uploadPromises);
+					// Use the new batch upload functionality
+					const formData = new FormData();
+					selectedImages.forEach((file) => {
+						formData.append("images", file);
+					});
+					const response = await imageAPI.uploadImages(formData);
+					uploadedImageUrls = response.imageUrls || [];
 				} else {
 					uploadedImageUrls = selectedImages; // Already URLs
 				}
