@@ -259,7 +259,7 @@ const SearchPage = () => {
 			)}
 
 			{/* Posts Results */}
-			{activeTab === "posts" && (
+			{activeTab === "posts" && searchQuery.trim() && (
 				<div>
 					{loading ? (
 						<div className="text-center py-5">
@@ -299,7 +299,7 @@ const SearchPage = () => {
 			)}
 
 			{/* Users Results */}
-			{activeTab === "users" && (
+			{activeTab === "users" && searchQuery.trim() && (
 				<div>
 					{loading ? (
 						<div className="text-center py-5">
@@ -364,7 +364,7 @@ const SearchPage = () => {
 			)}
 
 			{/* Comments Results */}
-			{activeTab === "comments" && (
+			{activeTab === "comments" && searchQuery.trim() && (
 				<div>
 					{loading ? (
 						<div className="text-center py-5">
