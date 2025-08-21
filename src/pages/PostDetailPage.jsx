@@ -25,7 +25,7 @@ import {
 	X,
 	ThreeDots,
 	ChevronLeft,
-	ChevronRight
+	ChevronRight,
 } from "react-bootstrap-icons";
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -36,7 +36,10 @@ import {
 } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
-import { handleLikeNotification, handleCommentNotification } from "../utils/notification-helpers";
+import {
+	handleLikeNotification,
+	handleCommentNotification,
+} from "../utils/notification-helpers";
 
 const PostDetailPage = () => {
 	const { postId } = useParams();
@@ -76,7 +79,7 @@ const PostDetailPage = () => {
 				const commentsResponse = await commentAPI.getComments(postId);
 				setComments(commentsResponse.comments || []);
 			} catch (commentError) {
-				console.error('Failed to load comments:', commentError);
+				console.error("Failed to load comments:", commentError);
 				setComments([]); // Set empty comments on error
 			}
 
@@ -84,11 +87,11 @@ const PostDetailPage = () => {
 			try {
 				await postAPI.trackView(postId);
 			} catch (viewError) {
-				console.error('Failed to track view:', viewError);
+				console.error("Failed to track view:", viewError);
 				// Don't throw here as view tracking shouldn't break the page
 			}
 		} catch (err) {
-			console.error('Failed to load post:', err);
+			console.error("Failed to load post:", err);
 			setError(err.message);
 		} finally {
 			setLoading(false);
@@ -108,16 +111,17 @@ const PostDetailPage = () => {
 		}
 	}, [post]);
 
-
 	const handleLikePost = async () => {
 		try {
 			const response = await postAPI.likePost(postId);
 
 			// Update post state locally based on the liked response
-			setPost(prevPost => {
+			setPost((prevPost) => {
 				if (!prevPost) return prevPost;
 
-				const isCurrentlyLiked = prevPost.likes.some(like => like.user.uid === currentUser.uid);
+				const isCurrentlyLiked = prevPost.likes.some(
+					(like) => like.user.uid === currentUser.uid,
+				);
 
 				if (response.liked && !isCurrentlyLiked) {
 					// Add like
@@ -126,18 +130,20 @@ const PostDetailPage = () => {
 						likes: [...prevPost.likes, { user: { uid: currentUser.uid } }],
 						stats: {
 							...prevPost.stats,
-							likes: prevPost.stats.likes + 1
-						}
+							likes: prevPost.stats.likes + 1,
+						},
 					};
 				} else if (!response.liked && isCurrentlyLiked) {
 					// Remove like
 					return {
 						...prevPost,
-						likes: prevPost.likes.filter(like => like.user.uid !== currentUser.uid),
+						likes: prevPost.likes.filter(
+							(like) => like.user.uid !== currentUser.uid,
+						),
 						stats: {
 							...prevPost.stats,
-							likes: prevPost.stats.likes - 1
-						}
+							likes: prevPost.stats.likes - 1,
+						},
 					};
 				}
 
@@ -145,12 +151,14 @@ const PostDetailPage = () => {
 			});
 
 			// Send like notification to post owner only when user actually likes (not unlikes)
-			const wasLiked = post.likes.some(like => like.user.uid === currentUser.uid);
+			const wasLiked = post.likes.some(
+				(like) => like.user.uid === currentUser.uid,
+			);
 			if (response.liked && !wasLiked) {
 				try {
 					await handleLikeNotification(postId, post, currentUser);
 				} catch (notificationError) {
-					console.error('Failed to send like notification:', notificationError);
+					console.error("Failed to send like notification:", notificationError);
 				}
 			}
 		} catch (error) {
@@ -173,10 +181,8 @@ const PostDetailPage = () => {
 	};
 
 	const handleLinkClick = (url) => {
-		window.open(url, '_blank', 'noopener,noreferrer');
+		window.open(url, "_blank", "noopener,noreferrer");
 	};
-
-
 
 	const confirmDeleteComment = async () => {
 		if (!commentToDelete) return;
@@ -196,8 +202,6 @@ const PostDetailPage = () => {
 			setCommentToDelete(null);
 		}
 	};
-
-	
 
 	const handleCopyComment = () => {
 		if (selectedComment) {
@@ -234,7 +238,7 @@ const PostDetailPage = () => {
 			// Delete associated images from Cloudinary first
 			if (post && post.imageUrls && post.imageUrls.length > 0) {
 				for (const imageUrl of post.imageUrls) {
-					if (imageUrl.includes('cloudinary.com')) {
+					if (imageUrl.includes("cloudinary.com")) {
 						await deletePostUtil(imageUrl);
 					}
 				}
@@ -304,7 +308,9 @@ const PostDetailPage = () => {
 
 		try {
 			setSubmitting(true);
-			const response = await commentAPI.createComment(postId, newComment.trim());
+			const response = await commentAPI.createComment(postId, {
+				content: newComment.trim(),
+			});
 
 			// Ensure the comment has a proper author object
 			const newCommentObj = {
@@ -314,8 +320,8 @@ const PostDetailPage = () => {
 					name: currentUser.name,
 					username: currentUser.username,
 					photoURL: currentUser.photoURL,
-					hasBlueCheck: currentUser.hasBlueCheck || false
-				}
+					hasBlueCheck: currentUser.hasBlueCheck || false,
+				},
 			};
 
 			setComments((prevComments) => [newCommentObj, ...prevComments]);
@@ -324,7 +330,10 @@ const PostDetailPage = () => {
 			try {
 				await handleCommentNotification(postId, post, currentUser, newComment);
 			} catch (notificationError) {
-				console.error('Failed to send comment notification:', notificationError);
+				console.error(
+					"Failed to send comment notification:",
+					notificationError,
+				);
 			}
 
 			setNewComment("");
@@ -366,8 +375,8 @@ const PostDetailPage = () => {
 			<div
 				className="d-flex align-items-center gap-3 p-3 border-bottom bg-white sticky-top d-none d-md-block"
 				style={{
-					top: '112px', /* Below navbar (56px) + tabs (56px) */
-					zIndex: 1018 /* Below tabs but above content */
+					top: "112px" /* Below navbar (56px) + tabs (56px) */,
+					zIndex: 1018 /* Below tabs but above content */,
 				}}
 			>
 				<Button
@@ -403,7 +412,11 @@ const PostDetailPage = () => {
 							roundedCircle
 							width="40"
 							height="40"
-							style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
+							style={{
+								objectFit: "cover",
+								minWidth: "40px",
+								minHeight: "40px",
+							}}
 						/>
 						<div className="flex-grow-1">
 							<div className="d-flex align-items-center justify-content-between">
@@ -446,11 +459,10 @@ const PostDetailPage = () => {
 									{parseTextContent(post.content, {
 										onHashtagClick: handleHashtagClick,
 										onMentionClick: handleMentionClick,
-										onLinkClick: handleLinkClick
+										onLinkClick: handleLinkClick,
 									})}
 								</div>
 							)}
-
 
 							{post.imageUrls && post.imageUrls.length > 0 && (
 								<div className="mb-2">
@@ -550,37 +562,49 @@ const PostDetailPage = () => {
 
 							<div className="d-flex align-items-center justify-content-between">
 								<div className="d-flex flex-wrap gap-3 small text-muted">
-									{post.likes.length > 0 && (() => {
-										const currentUserLiked = post.likes.some(like => like.user.uid === currentUser.uid);
-										const otherLikesCount = currentUserLiked ? post.likes.length - 1 : post.likes.length;
+									{post.likes.length > 0 &&
+										(() => {
+											const currentUserLiked = post.likes.some(
+												(like) => like.user.uid === currentUser.uid,
+											);
+											const otherLikesCount = currentUserLiked
+												? post.likes.length - 1
+												: post.likes.length;
 
-										if (currentUserLiked && otherLikesCount > 0) {
-											return (
-												<span>
-													<span className="fw-bold">You</span> & {otherLikesCount} others reacted.
-												</span>
-											);
-										} else if (currentUserLiked && otherLikesCount === 0) {
-											return (
-												<span>
-													<span className="fw-bold">You</span> reacted.
-												</span>
-											);
-										} else if (!currentUserLiked && post.likes.length === 1) {
-											return (
-												<span>
-													<span className="fw-bold">{post.likes[0].user.name || 'Someone'}</span> reacted.
-												</span>
-											);
-										} else if (!currentUserLiked && post.likes.length > 1) {
-											return (
-												<span>
-													<span className="fw-bold">{post.likes[0].user.name || 'Someone'}</span> & {post.likes.length - 1} others reacted.
-												</span>
-											);
-										}
-										return null;
-									})()}
+											if (currentUserLiked && otherLikesCount > 0) {
+												return (
+													<span>
+														<span className="fw-bold">You</span> &{" "}
+														{otherLikesCount} others reacted.
+													</span>
+												);
+											} else if (currentUserLiked && otherLikesCount === 0) {
+												return (
+													<span>
+														<span className="fw-bold">You</span> reacted.
+													</span>
+												);
+											} else if (!currentUserLiked && post.likes.length === 1) {
+												return (
+													<span>
+														<span className="fw-bold">
+															{post.likes[0].user.name || "Someone"}
+														</span>{" "}
+														reacted.
+													</span>
+												);
+											} else if (!currentUserLiked && post.likes.length > 1) {
+												return (
+													<span>
+														<span className="fw-bold">
+															{post.likes[0].user.name || "Someone"}
+														</span>{" "}
+														& {post.likes.length - 1} others reacted.
+													</span>
+												);
+											}
+											return null;
+										})()}
 								</div>
 								<div className="d-flex flex-wrap gap-3 small text-muted">
 									{post.analytics?.views > 0 && (
@@ -718,12 +742,18 @@ const PostDetailPage = () => {
 						<Form onSubmit={handleSubmitComment}>
 							<div className="d-flex gap-3">
 								<Image
-									src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
+									src={
+										currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"
+									}
 									alt="avatar"
 									roundedCircle
 									width="40"
 									height="40"
-									style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
+									style={{
+										objectFit: "cover",
+										minWidth: "40px",
+										minHeight: "40px",
+									}}
 								/>
 								<div className="flex-grow-1">
 									<Form.Control
@@ -785,37 +815,42 @@ const PostDetailPage = () => {
 						>
 							<Image
 								src={
-									comment.author.photoURL ||
-									"https://i.pravatar.cc/150?img=10"
+									comment.author.photoURL || "https://i.pravatar.cc/150?img=10"
 								}
 								alt="avatar"
 								roundedCircle
 								width="40"
 								height="40"
 								className="comment-avatar"
-								style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
+								style={{
+									objectFit: "cover",
+									minWidth: "40px",
+									minHeight: "40px",
+								}}
 							/>
 							<div className="comment-content flex-grow-1">
 								<div className="d-flex align-items-center gap-1 mb-1">
-										<span className="fw-bold">{comment.author?.name || 'Unknown User'}</span>
-										{comment.author?.hasBlueCheck && (
-											<span className="text-primary">
-												<CheckCircleFill className="text-primary" size={16} />
-											</span>
-										)}
-										<span className="text-muted">·</span>
-										<span className="text-muted small">
-											{formatTimeAgo(comment.createdAt)}
+									<span className="fw-bold">
+										{comment.author?.name || "Unknown User"}
+									</span>
+									{comment.author?.hasBlueCheck && (
+										<span className="text-primary">
+											<CheckCircleFill className="text-primary" size={16} />
 										</span>
-									</div>
+									)}
+									<span className="text-muted">·</span>
+									<span className="text-muted small">
+										{formatTimeAgo(comment.createdAt)}
+									</span>
+								</div>
 
 								<div className="mb-2">
-												{parseTextContent(comment.content, {
-													onHashtagClick: handleHashtagClick,
-													onMentionClick: handleMentionClick,
-													onLinkClick: handleLinkClick
-												})}
-											</div>
+									{parseTextContent(comment.content, {
+										onHashtagClick: handleHashtagClick,
+										onMentionClick: handleMentionClick,
+										onLinkClick: handleLinkClick,
+									})}
+								</div>
 							</div>
 						</div>
 					))}

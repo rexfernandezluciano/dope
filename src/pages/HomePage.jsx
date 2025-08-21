@@ -24,16 +24,15 @@ import {
 	Search,
 	ChevronLeft,
 	ChevronRight,
-	CheckCircleFill,
-	Person,
+	CheckCircleFill
 } from "react-bootstrap-icons";
 
-import { Grid } from "@giphy.com/react-components";
+import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import heic2any from "heic2any";
 import AgoraRTC from "agora-rtc-sdk-ng";
 
-import { postAPI, userAPI, imageAPI } from "../config/ApiConfig";
+import { postAPI, imageAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
 import LiveStudioModal from "../components/LiveStudioModal";
