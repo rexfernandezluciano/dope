@@ -23,9 +23,9 @@ const NetworkTestPage = () => {
               <div className="mb-3">
                 <Activity size={48} className="text-primary" />
               </div>
-              <h2 className="fw-bold mb-2">Network Diagnostics</h2>
+              <h2 className="fw-bold mb-2">API Testing</h2>
               <p className="text-muted mb-3">
-                Comprehensive connectivity testing and API diagnostics
+                Simple API connectivity testing using Axios
               </p>
               <div className="d-flex justify-content-center gap-2 flex-wrap">
                 <Badge bg="light" text="dark" className="d-flex align-items-center gap-1">
@@ -49,7 +49,7 @@ const NetworkTestPage = () => {
             <Card.Header className="bg-light">
               <h5 className="mb-0 d-flex align-items-center">
                 <Activity className="me-2 text-primary" />
-                Diagnostic Tools
+                API Testing Tools
               </h5>
             </Card.Header>
             <Card.Body>

@@ -1,10 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, Spinner } from 'react-bootstrap';
-import { testApiConnection } from '../config/ApiConfig';
-
-import NetworkDiagnostics from './NetworkDiagnostics';
-import QuickNetworkTest from './QuickNetworkTest';
+import api from '../config/ApiConfig';
 
 const NetworkTest = () => {
   const [testing, setTesting] = useState(false);
@@ -15,17 +12,16 @@ const NetworkTest = () => {
     setResult(null);
     
     try {
-      const success = await testApiConnection();
+      // Simple API connectivity test
+      await api.me();
       setResult({
-        success,
-        message: success 
-          ? 'API connection successful!' 
-          : 'API connection failed. Check console for details.'
+        success: true,
+        message: 'API connection successful!'
       });
     } catch (error) {
       setResult({
         success: false,
-        message: `Connection test failed: ${error.message}`
+        message: `API connection failed: ${error.message}`
       });
     } finally {
       setTesting(false);
@@ -62,9 +58,6 @@ const NetworkTest = () => {
           {result.message}
         </Alert>
       )}
-      
-      <QuickNetworkTest />
-      <NetworkDiagnostics />
     </div>
   );
 };

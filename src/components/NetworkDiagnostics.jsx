@@ -1,19 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Alert, Spinner, Card, Badge } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Button, Alert, Card, Badge } from 'react-bootstrap';
+import axios from 'axios';
 
 const NetworkDiagnostics = () => {
   const [tests, setTests] = useState({
-    internetConnectivity: { status: 'pending', message: '', timestamp: null },
-    dnsResolution: { status: 'pending', message: '', timestamp: null },
-    apiReachability: { status: 'pending', message: '', timestamp: null },
-    corsPolicy: { status: 'pending', message: '', timestamp: null },
-    healthCheck: { status: 'pending', message: '', timestamp: null },
-    loginEndpoint: { status: 'pending', message: '', timestamp: null },
+    apiConnectivity: { status: 'pending', message: '', timestamp: null },
+    apiHealth: { status: 'pending', message: '', timestamp: null },
   });
 
   const [running, setRunning] = useState(false);
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1";
   const API_ENDPOINTS = [
     "https://api.dopp.eu.org/v1",
     "https://social.dopp.eu.org/v1"
@@ -30,97 +26,21 @@ const NetworkDiagnostics = () => {
     }));
   };
 
-  const testInternetConnectivity = async () => {
+  const testApiConnectivity = async () => {
     try {
-      updateTest('internetConnectivity', 'running', 'Testing internet connectivity...');
-
-      // Check if browser reports online status
-      if (!navigator.onLine) {
-        updateTest('internetConnectivity', 'error', 'Browser reports offline status');
-        return;
-      }
-
-      // Test connectivity to multiple reliable endpoints
-      const testEndpoints = [
-        'https://www.google.com/favicon.ico',
-        'https://cloudflare.com/favicon.ico',
-        'https://github.com/favicon.ico'
-      ];
-
-      const startTime = Date.now();
-      let successfulTests = 0;
-
-      for (const endpoint of testEndpoints) {
-        try {
-          await fetch(endpoint, { 
-            method: 'HEAD', 
-            mode: 'no-cors',
-            signal: AbortSignal.timeout(3000)
-          });
-          successfulTests++;
-        } catch (error) {
-          console.log(`Connectivity test failed for ${endpoint}:`, error.message);
-        }
-      }
-
-      const duration = Date.now() - startTime;
-
-      if (successfulTests > 0) {
-        updateTest('internetConnectivity', 'success', 
-          `Internet connectivity confirmed (${successfulTests}/${testEndpoints.length} tests passed) in ${duration}ms`);
-      } else {
-        updateTest('internetConnectivity', 'error', 
-          'No internet connectivity detected - all test endpoints failed');
-      }
-    } catch (error) {
-      updateTest('internetConnectivity', 'error', 
-        `Internet connectivity test failed: ${error.message}`);
-    }
-  };
-
-  const testDnsResolution = async () => {
-    try {
-      updateTest('dnsResolution', 'running', 'Testing DNS resolution...');
-
-      const url = new URL(API_BASE_URL);
-      const hostname = url.hostname;
-
-      // Try to resolve the hostname
-      const startTime = Date.now();
-      const response = await fetch(`https://${hostname}`, { 
-        method: 'HEAD', 
-        mode: 'no-cors',
-        signal: AbortSignal.timeout(5000)
-      });
-      const duration = Date.now() - startTime;
-
-      updateTest('dnsResolution', 'success', `DNS resolved in ${duration}ms`);
-    } catch (error) {
-      updateTest('dnsResolution', 'error', `DNS resolution failed: ${error.message}`);
-    }
-  };
-
-  const testApiReachability = async () => {
-    try {
-      updateTest('apiReachability', 'running', 'Testing API server reachability...');
+      updateTest('apiConnectivity', 'running', 'Testing API connectivity...');
 
       let workingEndpoints = [];
       let failedEndpoints = [];
 
       for (const endpoint of API_ENDPOINTS) {
         try {
-          const url = new URL(endpoint);
-          const hostname = url.hostname;
-
           const startTime = Date.now();
-          const response = await fetch(`https://${hostname}`, { 
-            method: 'HEAD', 
-            mode: 'no-cors',
-            signal: AbortSignal.timeout(5000)
-          });
+          const response = await axios.get(endpoint, { timeout: 5000 });
           const duration = Date.now() - startTime;
 
-          workingEndpoints.push(`${hostname} (${duration}ms)`);
+          const url = new URL(endpoint);
+          workingEndpoints.push(`${url.hostname} (${duration}ms)`);
         } catch (error) {
           const url = new URL(endpoint);
           failedEndpoints.push(`${url.hostname}: ${error.message}`);
@@ -128,65 +48,30 @@ const NetworkDiagnostics = () => {
       }
 
       if (workingEndpoints.length > 0) {
-        updateTest('apiReachability', 'success', 
+        updateTest('apiConnectivity', 'success', 
           `API servers reachable: ${workingEndpoints.join(', ')}`);
       } else {
-        updateTest('apiReachability', 'error', 
+        updateTest('apiConnectivity', 'error', 
           `All API servers unreachable: ${failedEndpoints.join('; ')}`);
       }
     } catch (error) {
-      updateTest('apiReachability', 'error', 
-        `API reachability test failed: ${error.message}`);
+      updateTest('apiConnectivity', 'error', 
+        `API connectivity test failed: ${error.message}`);
     }
   };
 
-  const testCorsPolicy = async () => {
+  const testApiHealth = async () => {
     try {
-      updateTest('corsPolicy', 'running', 'Testing CORS policy...');
-
-      const response = await fetch(`${API_BASE_URL}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Origin': window.location.origin
-        },
-        signal: AbortSignal.timeout(8000)
-      });
-
-      const corsHeaders = {
-        'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
-        'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
-        'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
-      };
-
-      updateTest('corsPolicy', 'success', 
-        `CORS policy allows requests. Headers: ${JSON.stringify(corsHeaders, null, 2)}`);
-    } catch (error) {
-      updateTest('corsPolicy', 'error', 
-        `CORS policy test failed: ${error.message}`);
-    }
-  };
-
-  const testHealthCheck = async () => {
-    try {
-      updateTest('healthCheck', 'running', 'Testing API health endpoints...');
+      updateTest('apiHealth', 'running', 'Testing API health endpoints...');
 
       let workingHealthChecks = [];
       let failedHealthChecks = [];
 
       for (const endpoint of API_ENDPOINTS) {
         try {
-          const response = await fetch(`${endpoint}/health`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            signal: AbortSignal.timeout(8000)
-          });
+          const response = await axios.get(`${endpoint}/health`, { timeout: 8000 });
 
-          if (response.ok) {
-            const data = await response.text();
+          if (response.status === 200) {
             const url = new URL(endpoint);
             workingHealthChecks.push(`${url.hostname} (${response.status})`);
           } else {
@@ -200,40 +85,15 @@ const NetworkDiagnostics = () => {
       }
 
       if (workingHealthChecks.length > 0) {
-        updateTest('healthCheck', 'success', 
+        updateTest('apiHealth', 'success', 
           `Health endpoints working: ${workingHealthChecks.join(', ')}`);
       } else {
-        updateTest('healthCheck', 'error', 
+        updateTest('apiHealth', 'error', 
           `All health endpoints failed: ${failedHealthChecks.join('; ')}`);
       }
     } catch (error) {
-      updateTest('healthCheck', 'error', 
+      updateTest('apiHealth', 'error', 
         `Health check test failed: ${error.message}`);
-    }
-  };
-
-  const testLoginEndpoint = async () => {
-    try {
-      updateTest('loginEndpoint', 'running', 'Testing login endpoint availability...');
-
-      // Test if the login endpoint responds (we expect a 400 or similar for empty request)
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({}), // Empty body should return validation error
-        signal: AbortSignal.timeout(10000)
-      });
-
-      // Any response (even error) means the endpoint is reachable
-      updateTest('loginEndpoint', 'success', 
-        `Login endpoint reachable (${response.status} ${response.statusText})`);
-
-    } catch (error) {
-      updateTest('loginEndpoint', 'error', 
-        `Login endpoint unreachable: ${error.message}`);
     }
   };
 
@@ -246,12 +106,8 @@ const NetworkDiagnostics = () => {
     });
 
     try {
-      await testInternetConnectivity();
-      await testDnsResolution();
-      await testApiReachability();
-      await testCorsPolicy();
-      await testHealthCheck();
-      await testLoginEndpoint();
+      await testApiConnectivity();
+      await testApiHealth();
     } catch (error) {
       console.error('Test suite error:', error);
     } finally {
@@ -268,36 +124,21 @@ const NetworkDiagnostics = () => {
     }
   };
 
-  useEffect(() => {
-    runAllTests();
-  }, []);
-
   return (
     <Card className="mt-3">
       <Card.Header className="d-flex justify-content-between align-items-center">
-        <h6 className="mb-0">Network Diagnostics</h6>
+        <h6 className="mb-0">API Diagnostics</h6>
         <Button 
           variant="outline-primary" 
           size="sm" 
           onClick={runAllTests} 
           disabled={running}
         >
-          {running ? (
-            <>
-              <Spinner size="sm" className="me-1" />
-              Running Tests...
-            </>
-          ) : (
-            'Run Tests'
-          )}
+          {running ? 'Running Tests...' : 'Run Tests'}
         </Button>
       </Card.Header>
 
       <Card.Body>
-        <div className="mb-2">
-          <small className="text-muted">API Base URL: {API_BASE_URL}</small>
-        </div>
-
         {Object.entries(tests).map(([testName, test]) => (
           <div key={testName} className="mb-2">
             <div className="d-flex justify-content-between align-items-start">
@@ -319,14 +160,10 @@ const NetworkDiagnostics = () => {
         ))}
 
         <Alert variant="info" className="small mt-3">
-          <strong>Troubleshooting Tips:</strong>
-          <ul className="mb-0 mt-1">
-            <li>If internet connectivity fails: Check your network connection and try refreshing the page</li>
-            <li>If DNS fails: Check if the API domain is accessible or try changing DNS servers</li>
-            <li>If reachability fails: Check network connectivity and firewall settings</li>
-            <li>If CORS fails: API server needs to allow your origin domain</li>
-            <li>If health check fails: API server may be down or misconfigured</li>
-          </ul>
+          <strong>Using Axios for HTTP requests</strong>
+          <p className="mb-0 mt-1">
+            This simplified diagnostic tool uses axios to test API connectivity and health endpoints.
+          </p>
         </Alert>
       </Card.Body>
     </Card>
