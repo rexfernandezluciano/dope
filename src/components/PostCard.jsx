@@ -109,7 +109,7 @@ const PostCard = ({
 	}, [post.privacy]);
 
 	const currentUserLiked = useMemo(() => 
-		post.likes.some(like => like.user.uid === currentUser.uid),
+		post.likes.some(like => like.user?.uid === currentUser.uid),
 		[post.likes, currentUser.uid]
 	);
 
