@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Nav, Button } from "react-bootstrap";
 import { ChevronLeft, Person, Eye, Bell, X, Clock, Activity, Shield } from "react-bootstrap-icons";
@@ -27,7 +27,7 @@ const SettingsPage = () => {
 		navigate("/");
 	};
 
-	const settingsTabs = [
+	const settingsTabs = useMemo(() => [
 		{
 			key: "account",
 			label: "Account",
@@ -58,7 +58,7 @@ const SettingsPage = () => {
 			icon: <Shield size={20} />,
 			component: <SessionSettingsPage />
 		}
-	];
+	], []);
 
 	const currentTab = settingsTabs.find(tab => tab.key === activeTab);
 
@@ -71,19 +71,17 @@ const SettingsPage = () => {
 			updatePageMeta(pageMetaData.settings);
 		}
 
-		// Parse URL parameters to determine active section
-		const params = new URLSearchParams(window.location.search);
-		const section = params.get('section');
-		if (section && settingsTabs.find(tab => tab.key === section)) {
-			setActiveTab(section);
-		} else if (location.pathname.includes("/settings")) {
+		// Parse URL to determine active section
+		if (location.pathname.includes("/settings/")) {
 			const pathSegments = location.pathname.split("/");
 			const lastSegment = pathSegments[pathSegments.length - 1];
 			if (settingsTabs.find(tab => tab.key === lastSegment)) {
 				setActiveTab(lastSegment);
 			}
+		} else if (location.pathname === "/settings") {
+			setActiveTab("account"); // Default to account tab
 		}
-	}, [activeTab, settingsTabs, location.pathname]);
+	}, [activeTab, location.pathname]);
 
 	return (
 		<Container className="py-0 px-0">

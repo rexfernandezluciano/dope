@@ -100,7 +100,7 @@ const SessionSettingsPage = () => {
 		return date.toLocaleDateString();
 	};
 
-	
+
 
 	if (!user) {
 		return (
