@@ -485,7 +485,7 @@ export const postAPI = {
 
 	getFollowingFeed: async (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/posts/following${queryString ? `?${queryString}` : ""}`);
+		return await apiRequest(`/posts/feed/following${queryString ? `?${queryString}` : ""}`);
 	},
 };
 
