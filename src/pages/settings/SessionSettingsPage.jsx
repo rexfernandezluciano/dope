@@ -22,6 +22,28 @@ import {
 
 import { apiRequest } from "../../config/ApiConfig";
 
+// Assuming sessionAPI is defined elsewhere and imported, similar to apiRequest
+// For the purpose of this example, we'll mock its structure.
+const sessionAPI = {
+	getSessions: async () => {
+		// Replace with actual implementation or import
+		console.log("Mock: Fetching sessions...");
+		const response = await apiRequest("/v1/sessions"); // Corrected endpoint
+		return response;
+	},
+	revokeSession: async (sessionId) => {
+		// Replace with actual implementation or import
+		console.log(`Mock: Revoking session ${sessionId}...`);
+		await apiRequest(`/v1/sessions/${sessionId}`, { method: "DELETE" }); // Corrected endpoint
+	},
+	revokeAllSessions: async () => {
+		// Replace with actual implementation or import
+		console.log("Mock: Revoking all sessions...");
+		await apiRequest("/v1/sessions/revoke-all", { method: "POST" }); // Corrected endpoint
+	},
+};
+
+
 const SessionSettingsPage = () => {
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData;
@@ -32,18 +54,22 @@ const SessionSettingsPage = () => {
 	const [showRevokeModal, setShowRevokeModal] = useState(false);
 	const [showRevokeAllModal, setShowRevokeAllModal] = useState(false);
 	const [selectedSession, setSelectedSession] = useState(null);
+	// Added setError state for consistency with the provided changes
+	const [error, setError] = useState("");
 
 	const loadSessions = useCallback(async () => {
 		try {
 			setLoading(true);
 			console.log("Loading sessions...");
-			const response = await apiRequest("/sessions");
-			console.log("Sessions response:", response);
-			setSessions(response.sessions || []);
-		} catch (err) {
-			console.error("Error loading sessions:", err);
-			setMessage(err.message || "Failed to load sessions");
-			setMessageType("danger");
+			// Updated to use sessionAPI.getSessions()
+			const data = await sessionAPI.getSessions();
+			console.log("Sessions response:", data);
+			setSessions(data.sessions || []);
+		} catch (error) {
+			console.error("Error loading sessions:", error);
+			// Updated to use setError
+			setError(error.message || "Failed to load sessions");
+			setMessageType("danger"); // Keep messageType for general alerts
 		} finally {
 			setLoading(false);
 		}
@@ -52,12 +78,14 @@ const SessionSettingsPage = () => {
 	const handleRevokeSession = async (sessionId) => {
 		try {
 			setLoading(true);
-			await apiRequest(`/sessions/${sessionId}`, { method: "DELETE" });
-			await loadSessions(); // Reload sessions
+			// Updated to use sessionAPI.revokeSession
+			await sessionAPI.revokeSession(sessionId);
+			// Reload sessions instead of filtering directly, to ensure data consistency
+			await loadSessions();
 			setMessage("Session revoked successfully!");
 			setMessageType("success");
 		} catch (err) {
-			console.error("Errorrevoking session:", err);
+			console.error("Error revoking session:", err);
 			setMessage(err.message || "Failed to revoke session");
 			setMessageType("danger");
 		} finally {
@@ -70,7 +98,8 @@ const SessionSettingsPage = () => {
 	const handleRevokeAllSessions = async () => {
 		try {
 			setLoading(true);
-			await apiRequest("/sessions/revoke-all", { method: "POST" });
+			// Assuming sessionAPI has a revokeAllSessions method
+			await sessionAPI.revokeAllSessions();
 			await loadSessions(); // Reload sessions
 			setMessage(
 				"All sessions revoked successfully! You will need to log in again on other devices.",

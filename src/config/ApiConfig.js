@@ -402,48 +402,6 @@ export const userAPI = {
 		return await apiRequest(`/users/${userId}/stats`);
 	},
 
-	updateNotificationSettings: async (settings) => {
-		return await apiRequest("/users/notification-settings", {
-			method: "PUT",
-			data: settings,
-		});
-	},
-
-	updatePrivacySettings: async (settings) => {
-		return await apiRequest("/users/privacy-settings", {
-			method: "PUT",
-			data: settings,
-		});
-	},
-
-	deleteAccount: async () => {
-		return await apiRequest("/users/delete", {
-			method: "DELETE",
-		});
-	},
-
-	updateSubscription: async (subscriptionData) => {
-		return await apiRequest("/users/subscription", {
-			method: "PUT",
-			data: subscriptionData,
-		});
-	},
-
-	isAdmin: async (uid) => {
-		return await apiRequest(`/users/${uid}/is-admin`);
-	},
-
-	checkUserExists: async (uid) => {
-		return await apiRequest(`/users/${uid}/exists`);
-	},
-
-	checkEmailExists: async (email) => {
-		return await apiRequest("/users/check-email", {
-			method: "POST",
-			data: { email },
-		});
-	},
-
 	getWaitingList: async () => {
 		return await apiRequest("/users/waiting-list");
 	},
@@ -514,24 +472,7 @@ export const postAPI = {
 		});
 	},
 
-	trackView: async (postId) => {
-		return await apiRequest(`/posts/${postId}/view`, {
-			method: "POST",
-		});
-	},
-
-	trackEarnings: async (postId) => {
-		return await apiRequest(`/posts/${postId}/earnings`, {
-			method: "POST",
-		});
-	},
-
-	updateEngagement: async (postId, action) => {
-		return await apiRequest(`/posts/${postId}/engagement`, {
-			method: "POST",
-			data: { action },
-		});
-	},
+	
 
 	getFollowingFeed: async (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
@@ -559,6 +500,19 @@ export const imageAPI = {
 			headers: {
 				"Content-Type": "multipart/form-data",
 			},
+		});
+	},
+};
+
+// Sessions API
+export const sessionAPI = {
+	getSessions: async () => {
+		return await apiRequest("/sessions");
+	},
+
+	revokeSession: async (sessionId) => {
+		return await apiRequest(`/sessions/${sessionId}`, {
+			method: "DELETE",
 		});
 	},
 };
