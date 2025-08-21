@@ -234,8 +234,13 @@ export const api = {
 	},
 
 	// Posts
-	getPosts: async (page = 1, limit = 10) => {
-		return await apiRequest(`/posts?page=${page}&limit=${limit}`);
+	getPosts: async (page = 1, limit = 10, additionalParams = {}) => {
+		const params = new URLSearchParams({
+			page: page.toString(),
+			limit: limit.toString(),
+			...additionalParams
+		});
+		return await apiRequest(`/posts?${params.toString()}`);
 	},
 
 	createPost: async (postData) => {

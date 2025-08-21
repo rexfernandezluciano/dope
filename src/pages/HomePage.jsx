@@ -121,17 +121,18 @@ const HomePage = () => {
 		try {
 			setLoading(true);
 			setError("");
-			const params = { limit: 20 };
-			if (cursor) params.cursor = cursor;
+			const additionalParams = {};
+			if (cursor) additionalParams.cursor = cursor;
 
 			let response;
 
 			if (filter === "following") {
+				const params = { limit: 20, ...additionalParams };
 				response = await postAPI.getFollowingFeed(params);
 			} else {
 				// For "For You" tab, sort by engagement (likes + comments)
-				params.sortBy = "engagement";
-				response = await postAPI.getPosts(params);
+				additionalParams.sortBy = "engagement";
+				response = await postAPI.getPosts(1, 20, additionalParams);
 			}
 
 			let processedPosts = response.posts;
