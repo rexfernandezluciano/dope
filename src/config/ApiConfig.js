@@ -440,6 +440,10 @@ export const postAPI = {
 			params.set("limit", limit.toString());
 		}
 
+		if (page) {
+			params.set("page", page.toString());
+		}
+
 		// Add cursor for pagination instead of page
 		if (additionalParams.cursor) {
 			params.set("cursor", additionalParams.cursor);
@@ -505,7 +509,7 @@ export const postAPI = {
 
 	searchPosts: async (query, page = 1) => {
 		return await apiRequest(
-			`/posts/search?q=${encodeURIComponent(query)}&page=${page}`,
+			`/posts?search=${encodeURIComponent(query)}&page=${page}`,
 		);
 	},
 
@@ -622,7 +626,7 @@ export const replyAPI = {
 	getCommentReplies: async (commentId, params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
 		return await apiRequest(
-			`/replies/comment/${commentId}${queryString ? `?${queryString}` : ""}`
+			`/replies/comment/${commentId}${queryString ? `?${queryString}` : ""}`,
 		);
 	},
 
@@ -735,7 +739,7 @@ export const searchAPI = {
 	globalSearch: async (query, filters = {}) => {
 		const params = new URLSearchParams({
 			query,
-			...filters
+			...filters,
 		});
 		return await apiRequest(`/search/global?${params.toString()}`);
 	},
@@ -743,7 +747,7 @@ export const searchAPI = {
 	searchUsers: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
 			query,
-			...params
+			...params,
 		});
 		return await apiRequest(`/search/users?${searchParams.toString()}`);
 	},
@@ -751,154 +755,164 @@ export const searchAPI = {
 	searchPosts: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
 			query,
-			...params
+			...params,
 		});
 		return await apiRequest(`/search/posts?${searchParams.toString()}`);
 	},
 
 	searchHashtags: async (query) => {
-		return await apiRequest(`/search/hashtags?query=${encodeURIComponent(query)}`);
-	}
+		return await apiRequest(
+			`/search/hashtags?query=${encodeURIComponent(query)}`,
+		);
+	},
 };
 
 // Analytics API
 export const analyticsAPI = {
-	getEarningsAnalytics: async (period = 'month') => {
+	getEarningsAnalytics: async (period = "month") => {
 		return await apiRequest(`/analytics/earnings?period=${period}`);
 	},
 
-	getUserAnalytics: async (userId, period = 'month') => {
+	getUserAnalytics: async (userId, period = "month") => {
 		return await apiRequest(`/analytics/user/${userId}?period=${period}`);
 	},
 
 	getPostAnalytics: async (postId) => {
 		return await apiRequest(`/analytics/post/${postId}`);
-	}
+	},
 };
 
 // Notification API
 export const notificationAPI = {
 	getNotifications: async (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/notifications${queryString ? `?${queryString}` : ''}`);
+		return await apiRequest(
+			`/notifications${queryString ? `?${queryString}` : ""}`,
+		);
 	},
 
 	markAsRead: async (notificationId) => {
 		return await apiRequest(`/notifications/${notificationId}/read`, {
-			method: 'PUT'
+			method: "PUT",
 		});
 	},
 
 	markAllAsRead: async () => {
-		return await apiRequest('/notifications/mark-all-read', {
-			method: 'PUT'
+		return await apiRequest("/notifications/mark-all-read", {
+			method: "PUT",
 		});
 	},
 
 	deleteNotification: async (notificationId) => {
 		return await apiRequest(`/notifications/${notificationId}`, {
-			method: 'DELETE'
+			method: "DELETE",
 		});
-	}
+	},
 };
 
 // Live Stream API
 export const liveStreamAPI = {
 	getLiveStreams: async (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/live-streams${queryString ? `?${queryString}` : ''}`);
+		return await apiRequest(
+			`/live-streams${queryString ? `?${queryString}` : ""}`,
+		);
 	},
 
 	createStream: async (streamData) => {
-		return await apiRequest('/live-streams', {
-			method: 'POST',
-			data: streamData
+		return await apiRequest("/live-streams", {
+			method: "POST",
+			data: streamData,
 		});
 	},
 
 	endStream: async (streamId) => {
 		return await apiRequest(`/live-streams/${streamId}/end`, {
-			method: 'POST'
+			method: "POST",
 		});
 	},
 
 	joinStream: async (streamId) => {
 		return await apiRequest(`/live-streams/${streamId}/join`, {
-			method: 'POST'
+			method: "POST",
 		});
 	},
 
 	leaveStream: async (streamId) => {
 		return await apiRequest(`/live-streams/${streamId}/leave`, {
-			method: 'POST'
+			method: "POST",
 		});
-	}
+	},
 };
 
 // Hashtag API
 export const hashtagAPI = {
 	getTrendingHashtags: async () => {
-		return await apiRequest('/hashtags/trending');
+		return await apiRequest("/hashtags/trending");
 	},
 
 	getHashtagPosts: async (hashtag, params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/hashtags/${encodeURIComponent(hashtag)}/posts${queryString ? `?${queryString}` : ''}`);
+		return await apiRequest(
+			`/hashtags/${encodeURIComponent(hashtag)}/posts${queryString ? `?${queryString}` : ""}`,
+		);
 	},
 
 	followHashtag: async (hashtag) => {
 		return await apiRequest(`/hashtags/${encodeURIComponent(hashtag)}/follow`, {
-			method: 'POST'
+			method: "POST",
 		});
-	}
+	},
 };
 
 // Subscription API
 export const subscriptionAPI = {
 	getSubscriptionInfo: async () => {
-		return await apiRequest('/subscriptions/info');
+		return await apiRequest("/subscriptions/info");
 	},
 
 	upgradeSubscription: async (tier, paymentMethodId) => {
-		return await apiRequest('/subscriptions/upgrade', {
-			method: 'POST',
-			data: { tier, paymentMethodId }
+		return await apiRequest("/subscriptions/upgrade", {
+			method: "POST",
+			data: { tier, paymentMethodId },
 		});
 	},
 
 	cancelSubscription: async () => {
-		return await apiRequest('/subscriptions/cancel', {
-			method: 'POST'
+		return await apiRequest("/subscriptions/cancel", {
+			method: "POST",
 		});
-	}
+	},
 };
 
 // Admin API
 export const adminAPI = {
 	getUsers: async (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/admin/users${queryString ? `?${queryString}` : ''}`);
+		return await apiRequest(
+			`/admin/users${queryString ? `?${queryString}` : ""}`,
+		);
 	},
 
 	banUser: async (userId, reason) => {
 		return await apiRequest(`/admin/users/${userId}/ban`, {
-			method: 'POST',
-			data: { reason }
+			method: "POST",
+			data: { reason },
 		});
 	},
 
 	unbanUser: async (userId) => {
 		return await apiRequest(`/admin/users/${userId}/unban`, {
-			method: 'POST'
+			method: "POST",
 		});
 	},
 
 	moderatePost: async (postId, action, reason) => {
 		return await apiRequest(`/admin/posts/${postId}/moderate`, {
-			method: 'POST',
-			data: { action, reason }
+			method: "POST",
+			data: { action, reason },
 		});
-	}
+	},
 };
 
 // Backward compatibility - keeping the original api object
@@ -978,7 +992,7 @@ function createRateLimiter(limit, interval) {
 		// If limit is reached, wait for the next available slot
 		if (requests.length >= limit) {
 			const waitUntil = requests[0] + interval;
-			await new Promise(resolve => setTimeout(resolve, waitUntil - now));
+			await new Promise((resolve) => setTimeout(resolve, waitUntil - now));
 		}
 		// Add current request and execute callback
 		requests.push(Date.now());
