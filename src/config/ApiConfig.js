@@ -1,3 +1,4 @@
+
 /** @format */
 
 import Cookies from "js-cookie";
@@ -16,7 +17,7 @@ const API_ENDPOINTS = isUsingProxy
 			"https://social.dopp.eu.org/v1",
 		]
 	: [
-			process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1",
+			process.env.REACT_APP_API_URL || "https://social.dopp.eu.org/v1",
 			"https://social.dopp.eu.org/v1",
 		];
 
@@ -206,98 +207,6 @@ export const apiRequest = async (endpoint, options = {}) => {
 	}
 };
 
-// API methods
-export const api = {
-	// Authentication
-	login: async (credentials) => {
-		return await apiRequest("/auth/login", {
-			method: "POST",
-			data: credentials,
-		});
-	},
-
-	register: async (userData) => {
-		return await apiRequest("/auth/register", {
-			method: "POST",
-			data: userData,
-		});
-	},
-
-	logout: async () => {
-		return await apiRequest("/auth/logout", {
-			method: "POST",
-		});
-	},
-
-	me: async () => {
-		return await apiRequest("/auth/me");
-	},
-
-	// Posts
-	getPosts: async (page = 1, limit = 10, additionalParams = {}) => {
-		const params = new URLSearchParams({
-			page: page.toString(),
-			limit: limit.toString(),
-			...additionalParams
-		});
-		return await apiRequest(`/posts?${params.toString()}`);
-	},
-
-	createPost: async (postData) => {
-		return await apiRequest("/posts", {
-			method: "POST",
-			data: postData,
-		});
-	},
-
-	getPost: async (postId) => {
-		return await apiRequest(`/posts/${postId}`);
-	},
-
-	updatePost: async (postId, postData) => {
-		return await apiRequest(`/posts/${postId}`, {
-			method: "PUT",
-			data: postData,
-		});
-	},
-
-	deletePost: async (postId) => {
-		return await apiRequest(`/posts/${postId}`, {
-			method: "DELETE",
-		});
-	},
-
-	likePost: async (postId) => {
-		return await apiRequest(`/posts/${postId}/like`, {
-			method: "POST",
-		});
-	},
-
-	// Users
-	getUser: async (userId) => {
-		return await apiRequest(`/users/${userId}`);
-	},
-
-	updateProfile: async (userData) => {
-		return await apiRequest("/users/profile", {
-			method: "PUT",
-			data: userData,
-		});
-	},
-
-	// Waiting list
-	getWaitingList: async () => {
-		return await apiRequest("/users/waiting-list");
-	},
-
-	joinWaitingList: async (userData) => {
-		return await apiRequest("/users/waiting-list", {
-			method: "POST",
-			data: userData,
-		});
-	},
-};
-
 // Token management functions
 export const setAuthToken = (token, rememberMe = false) => {
 	if (!token) {
@@ -400,50 +309,117 @@ export const testApiConnection = async () => {
 	}
 };
 
-// Export individual API modules for backward compatibility
+// Authentication API
 export const authAPI = {
-	login: api.login,
-	register: api.register,
-	logout: api.logout,
-	me: api.me,
-	verifyEmail: async (verificationId) => {
-		return await apiRequest(`/auth/verify/${verificationId}`, {
+	login: async (credentials) => {
+		return await apiRequest("/auth/login", {
+			method: "POST",
+			data: credentials,
+		});
+	},
+
+	register: async (userData) => {
+		return await apiRequest("/auth/register", {
+			method: "POST",
+			data: userData,
+		});
+	},
+
+	logout: async () => {
+		return await apiRequest("/auth/logout", {
 			method: "POST",
 		});
 	},
+
+	me: async () => {
+		return await apiRequest("/auth/me");
+	},
+
+	verifyEmail: async (verificationData) => {
+		return await apiRequest("/auth/verify-email", {
+			method: "POST",
+			data: verificationData,
+		});
+	},
+
 	resendVerification: async (email) => {
-		return await apiRequest("/auth/resend-verification", {
+		return await apiRequest("/auth/resend-code", {
 			method: "POST",
 			data: { email },
 		});
 	},
+
+	googleAuth: async (token) => {
+		return await apiRequest("/auth/google", {
+			method: "POST",
+			data: { token },
+		});
+	},
+
+	validateVerificationId: async (verificationId) => {
+		return await apiRequest(`/auth/validate-verification-id/${verificationId}`);
+	},
 };
 
+// User API
 export const userAPI = {
-	getUser: api.getUser,
-	updateProfile: api.updateProfile,
-	getWaitingList: api.getWaitingList,
-	joinWaitingList: api.joinWaitingList,
+	getAllUsers: async () => {
+		return await apiRequest("/users");
+	},
+
+	getUser: async (username) => {
+		return await apiRequest(`/users/${username}`);
+	},
+
+	updateProfile: async (username, userData) => {
+		return await apiRequest(`/users/${username}`, {
+			method: "PUT",
+			data: userData,
+		});
+	},
+
+	followUser: async (username) => {
+		return await apiRequest(`/users/${username}/follow`, {
+			method: "POST",
+		});
+	},
+
+	getFollowers: async (username) => {
+		return await apiRequest(`/users/${username}/followers`);
+	},
+
+	getFollowing: async (username) => {
+		return await apiRequest(`/users/${username}/following`);
+	},
+
+	getUserEarnings: async () => {
+		return await apiRequest("/users/analytics/earnings");
+	},
+
 	getUserStats: async (userId) => {
 		return await apiRequest(`/users/${userId}/stats`);
 	},
+
 	updateNotificationSettings: async (settings) => {
 		return await apiRequest("/users/notification-settings", {
 			method: "PUT",
 			data: settings,
 		});
 	},
+
 	updatePrivacySettings: async (settings) => {
 		return await apiRequest("/users/privacy-settings", {
 			method: "PUT",
 			data: settings,
 		});
 	},
+
 	deleteAccount: async () => {
 		return await apiRequest("/users/delete", {
 			method: "DELETE",
 		});
 	},
+
 	updateSubscription: async (subscriptionData) => {
 		return await apiRequest("/users/subscription", {
 			method: "PUT",
@@ -460,70 +436,170 @@ export const userAPI = {
 	},
 
 	checkEmailExists: async (email) => {
-		return await apiRequest(`/users/check-email`, {
+		return await apiRequest("/users/check-email", {
 			method: "POST",
 			data: { email },
 		});
 	},
 
-	getUserEarnings: async () => {
-		return await apiRequest("/users/analytics/earnings");
+	getWaitingList: async () => {
+		return await apiRequest("/users/waiting-list");
+	},
+
+	joinWaitingList: async (userData) => {
+		return await apiRequest("/users/waiting-list", {
+			method: "POST",
+			data: userData,
+		});
 	},
 };
 
+// Post API
 export const postAPI = {
-	getPosts: api.getPosts,
-	createPost: api.createPost,
-	getPost: api.getPost,
-	updatePost: api.updatePost,
-	deletePost: api.deletePost,
-	likePost: api.likePost,
-	sharePost: async (postId) => {
-		return await apiRequest(`/posts/${postId}/share`, {
+	getPosts: async (page = 1, limit = 20, additionalParams = {}) => {
+		const params = new URLSearchParams({
+			...additionalParams
+		});
+		
+		// Add limit to params if provided
+		if (limit) {
+			params.set('limit', limit.toString());
+		}
+		
+		// Add cursor for pagination instead of page
+		if (additionalParams.cursor) {
+			params.set('cursor', additionalParams.cursor);
+		}
+		
+		return await apiRequest(`/posts${params.toString() ? `?${params.toString()}` : ""}`);
+	},
+
+	getPost: async (postId) => {
+		return await apiRequest(`/posts/${postId}`);
+	},
+
+	createPost: async (postData) => {
+		return await apiRequest("/posts", {
+			method: "POST",
+			data: postData,
+		});
+	},
+
+	updatePost: async (postId, postData) => {
+		return await apiRequest(`/posts/${postId}`, {
+			method: "PUT",
+			data: postData,
+		});
+	},
+
+	deletePost: async (postId) => {
+		return await apiRequest(`/posts/${postId}`, {
+			method: "DELETE",
+		});
+	},
+
+	likePost: async (postId) => {
+		return await apiRequest(`/posts/${postId}/like`, {
 			method: "POST",
 		});
 	},
+
+	sharePost: async (postId) => {
+		return await apiRequest(`/posts/share/${postId}`, {
+			method: "POST",
+		});
+	},
+
 	trackView: async (postId) => {
 		return await apiRequest(`/posts/${postId}/view`, {
 			method: "POST",
 		});
 	},
-	searchPosts: async (query, page = 1) => {
-		return await apiRequest(`/posts/search?q=${encodeURIComponent(query)}&page=${page}`);
+
+	trackEarnings: async (postId) => {
+		return await apiRequest(`/posts/${postId}/earnings`, {
+			method: "POST",
+		});
+	},
+
+	updateEngagement: async (postId, action) => {
+		return await apiRequest(`/posts/${postId}/engagement`, {
+			method: "POST",
+			data: { action },
+		});
 	},
 
 	getFollowingFeed: async (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
 		return await apiRequest(`/posts/feed/following${queryString ? `?${queryString}` : ""}`);
 	},
+
+	getCurrentUserPosts: async () => {
+		return await apiRequest("/posts/user/me");
+	},
+
+	searchPosts: async (query, page = 1) => {
+		return await apiRequest(`/posts/search?q=${encodeURIComponent(query)}&page=${page}`);
+	},
 };
 
+// Comment API
 export const commentAPI = {
-	getComments: async (postId) => {
-		return await apiRequest(`/posts/${postId}/comments`);
+	getComments: async (postId, params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/comments/post/${postId}${queryString ? `?${queryString}` : ""}`);
 	},
+
 	createComment: async (postId, commentData) => {
-		return await apiRequest(`/posts/${postId}/comments`, {
+		return await apiRequest(`/comments/post/${postId}`, {
 			method: "POST",
 			data: commentData,
 		});
 	},
+
 	updateComment: async (commentId, commentData) => {
 		return await apiRequest(`/comments/${commentId}`, {
 			method: "PUT",
 			data: commentData,
 		});
 	},
+
 	deleteComment: async (commentId) => {
 		return await apiRequest(`/comments/${commentId}`, {
 			method: "DELETE",
 		});
 	},
-	likeComment: async (commentId) => {
-		return await apiRequest(`/comments/${commentId}/like`, {
-			method: "POST",
+
+	searchComments: async (query, params = {}) => {
+		const searchParams = new URLSearchParams({
+			query,
+			...params
 		});
+		return await apiRequest(`/comments/search?${searchParams.toString()}`);
 	},
+};
+
+// Backward compatibility - keeping the original api object
+export const api = {
+	// Authentication
+	login: authAPI.login,
+	register: authAPI.register,
+	logout: authAPI.logout,
+	me: authAPI.me,
+
+	// Posts
+	getPosts: postAPI.getPosts,
+	createPost: postAPI.createPost,
+	getPost: postAPI.getPost,
+	updatePost: postAPI.updatePost,
+	deletePost: postAPI.deletePost,
+	likePost: postAPI.likePost,
+
+	// Users
+	getUser: userAPI.getUser,
+	updateProfile: userAPI.updateProfile,
+	getWaitingList: userAPI.getWaitingList,
+	joinWaitingList: userAPI.joinWaitingList,
 };
 
 export default apiRequest;

@@ -73,7 +73,7 @@ const AnalyticsPage = () => {
 			setError("");
 
 			// Fetch real user posts data from DOPE API
-			const userPostsResponse = await postAPI.getPosts(1, 100, { userId: user.uid });
+			const userPostsResponse = await postAPI.getCurrentUserPosts();
 
 			const userPosts = userPostsResponse?.posts || [];
 
