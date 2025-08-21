@@ -100,10 +100,7 @@ const SessionSettingsPage = () => {
 		return date.toLocaleDateString();
 	};
 
-	const getCurrentSessionId = () => {
-		// This would typically come from your auth token or session info
-		return sessions.find(session => session.isCurrent)?.id;
-	};
+	
 
 	if (!user) {
 		return (

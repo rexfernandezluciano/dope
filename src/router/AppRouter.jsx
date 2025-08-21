@@ -1,6 +1,6 @@
 /** @format */
 
-import { createBrowserRouter, RouterProvider, Route } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useEffect } from "react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
@@ -22,7 +22,6 @@ import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
 import TermsOfServicePage from "../pages/TermsOfServicePage";
 import NetworkTestPage from "../pages/NetworkTestPage";
 import PrivacySettingsPage from "../pages/settings/PrivacySettingsPage";
-import ProfileSettingsPage from "../pages/settings/ProfileSettingsPage";
 import SessionSettingsPage from "../pages/settings/SessionSettingsPage";
 
 import RequireAuth from "./security/RequireAuth";
@@ -109,7 +108,7 @@ const router = createBrowserRouter([
 		],
 	},
 	{
-		path: "/:username/settings",
+		path: "/settings",
 		element: (
 			<RequireAuth>
 				<IndexPage />
@@ -127,10 +126,14 @@ const router = createBrowserRouter([
 			{
 				path: "privacy",
 				element: <PrivacySettingsPage />,
+				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
 			},
 			{
 				path: "sessions",
 				element: <SessionSettingsPage />,
+				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
 			},
 		],
 	},
