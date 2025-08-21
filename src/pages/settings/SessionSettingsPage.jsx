@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
@@ -176,10 +175,8 @@ const SessionSettingsPage = () => {
 											</td>
 											<td>
 												<div>
-													{session.location?.city && session.location?.country ? (
-														<div>
-															{session.location.city}, {session.location.country}
-														</div>
+													{session.location ? (
+														<div>{session.location}</div>
 													) : (
 														<span className="text-muted">Unknown</span>
 													)}
@@ -281,8 +278,8 @@ const SessionSettingsPage = () => {
 					<Button variant="secondary" onClick={() => setShowRevokeModal(false)}>
 						Cancel
 					</Button>
-					<Button 
-						variant="danger" 
+					<Button
+						variant="danger"
 						onClick={() => handleRevokeSession(selectedSession?.id)}
 						disabled={loading}
 					>
@@ -299,7 +296,7 @@ const SessionSettingsPage = () => {
 				<Modal.Body>
 					<p>Are you sure you want to revoke all other sessions?</p>
 					<p className="text-warning">
-						<strong>This will sign you out from all devices except this one.</strong> 
+						<strong>This will sign you out from all devices except this one.</strong>
 						You'll need to log in again on other devices.
 					</p>
 					<p className="mb-0">
@@ -310,8 +307,8 @@ const SessionSettingsPage = () => {
 					<Button variant="secondary" onClick={() => setShowRevokeAllModal(false)}>
 						Cancel
 					</Button>
-					<Button 
-						variant="danger" 
+					<Button
+						variant="danger"
 						onClick={handleRevokeAllSessions}
 						disabled={loading}
 					>

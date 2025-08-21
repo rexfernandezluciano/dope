@@ -396,17 +396,17 @@ export const userAPI = {
 	},
 
 	getSessions: async () => {
-		return await apiRequest("/users/sessions");
+		return await apiRequest("/sessions");
 	},
 
 	revokeSession: async (sessionId) => {
-		return await apiRequest(`/users/sessions/${sessionId}`, {
+		return await apiRequest(`/sessions/${sessionId}`, {
 			method: "DELETE",
 		});
 	},
 
 	revokeAllSessions: async () => {
-		return await apiRequest("/users/sessions", {
+		return await apiRequest("/sessions", {
 			method: "DELETE",
 		});
 	},
