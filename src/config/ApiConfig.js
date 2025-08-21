@@ -521,7 +521,7 @@ export const postAPI = {
 			limit: params.limit || 20,
 			...params,
 		});
-		return await apiRequest(`/posts/search?${searchParams.toString()}`);
+		return await apiRequest(`/posts?${searchParams.toString()}`);
 	},
 
 	// New endpoints from API documentation
@@ -769,7 +769,7 @@ export const searchAPI = {
 			limit: params.limit || 20,
 			...params,
 		});
-		return await apiRequest(`/posts/search?${searchParams.toString()}`);
+		return await apiRequest(`/posts?${searchParams.toString()}`);
 	},
 
 	searchHashtags: async (query) => {
