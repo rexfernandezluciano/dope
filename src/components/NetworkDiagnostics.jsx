@@ -4,6 +4,7 @@ import { Button, Alert, Spinner, Card, Badge } from 'react-bootstrap';
 
 const NetworkDiagnostics = () => {
   const [tests, setTests] = useState({
+    internetConnectivity: { status: 'pending', message: '', timestamp: null },
     dnsResolution: { status: 'pending', message: '', timestamp: null },
     apiReachability: { status: 'pending', message: '', timestamp: null },
     corsPolicy: { status: 'pending', message: '', timestamp: null },
@@ -23,6 +24,54 @@ const NetworkDiagnostics = () => {
         timestamp: new Date().toISOString()
       }
     }));
+  };
+
+  const testInternetConnectivity = async () => {
+    try {
+      updateTest('internetConnectivity', 'running', 'Testing internet connectivity...');
+      
+      // Check if browser reports online status
+      if (!navigator.onLine) {
+        updateTest('internetConnectivity', 'error', 'Browser reports offline status');
+        return;
+      }
+
+      // Test connectivity to multiple reliable endpoints
+      const testEndpoints = [
+        'https://www.google.com/favicon.ico',
+        'https://cloudflare.com/favicon.ico',
+        'https://github.com/favicon.ico'
+      ];
+
+      const startTime = Date.now();
+      let successfulTests = 0;
+
+      for (const endpoint of testEndpoints) {
+        try {
+          await fetch(endpoint, { 
+            method: 'HEAD', 
+            mode: 'no-cors',
+            signal: AbortSignal.timeout(3000)
+          });
+          successfulTests++;
+        } catch (error) {
+          console.log(`Connectivity test failed for ${endpoint}:`, error.message);
+        }
+      }
+
+      const duration = Date.now() - startTime;
+
+      if (successfulTests > 0) {
+        updateTest('internetConnectivity', 'success', 
+          `Internet connectivity confirmed (${successfulTests}/${testEndpoints.length} tests passed) in ${duration}ms`);
+      } else {
+        updateTest('internetConnectivity', 'error', 
+          'No internet connectivity detected - all test endpoints failed');
+      }
+    } catch (error) {
+      updateTest('internetConnectivity', 'error', 
+        `Internet connectivity test failed: ${error.message}`);
+    }
   };
 
   const testDnsResolution = async () => {
@@ -137,6 +186,7 @@ const NetworkDiagnostics = () => {
     });
 
     try {
+      await testInternetConnectivity();
       await testDnsResolution();
       await testApiReachability();
       await testCorsPolicy();
@@ -210,9 +260,10 @@ const NetworkDiagnostics = () => {
         <Alert variant="info" className="small mt-3">
           <strong>Troubleshooting Tips:</strong>
           <ul className="mb-0 mt-1">
-            <li>If DNS fails: Check if the API domain is accessible</li>
-            <li>If reachability fails: Check network connectivity and firewall</li>
-            <li>If CORS fails: API server needs to allow your origin</li>
+            <li>If internet connectivity fails: Check your network connection and try refreshing the page</li>
+            <li>If DNS fails: Check if the API domain is accessible or try changing DNS servers</li>
+            <li>If reachability fails: Check network connectivity and firewall settings</li>
+            <li>If CORS fails: API server needs to allow your origin domain</li>
             <li>If health check fails: API server may be down or misconfigured</li>
           </ul>
         </Alert>

@@ -141,17 +141,39 @@ class HttpClient {
 				stack: error.stack,
 				cause: error.cause,
 				isAbortError: error.name === 'AbortError',
-				isNetworkError: error.message.includes('fetch'),
-				timestamp: new Date().toISOString()
+				isNetworkError: error.message.includes('fetch') || error.message.includes('NetworkError'),
+				isConnectivityIssue: error.message.includes('Failed to fetch'),
+				timestamp: new Date().toISOString(),
+				userAgent: navigator.userAgent,
+				onlineStatus: navigator.onLine,
+				connectionType: navigator.connection?.effectiveType || 'unknown'
 			});
 
-			// Enhanced error classification
+			// Enhanced error classification with network diagnostics
 			if (error.name === 'AbortError') {
-				throw new Error(`Request timeout after ${this.timeout}ms`);
+				throw new Error(`Request timeout after ${this.timeout}ms. The server took too long to respond.`);
 			}
 			
-			if (error.message.includes('fetch')) {
-				throw new Error(`Network error: Unable to connect to ${API_BASE_URL}. Check your internet connection and API server status.`);
+			// Check if user is offline
+			if (!navigator.onLine) {
+				throw new Error(`No internet connection detected. Please check your network connection and try again.`);
+			}
+			
+			// Check for specific network errors
+			if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+				// Run a quick connectivity test
+				try {
+					await fetch('https://www.google.com/favicon.ico', { 
+						method: 'HEAD', 
+						mode: 'no-cors',
+						signal: AbortSignal.timeout(3000)
+					});
+					// If Google is reachable, it's likely an API server issue
+					throw new Error(`API server unreachable at ${API_BASE_URL}. The server may be down or there could be a firewall blocking the connection.`);
+				} catch (connectTest) {
+					// If Google is not reachable, it's a general connectivity issue
+					throw new Error(`Network connectivity issue detected. Please check your internet connection and try again.`);
+				}
 			}
 
 			throw error;
@@ -763,22 +785,7 @@ const postAPI = {
 		}),
 };
 
-// Helper function to get auth headers
-const getAuthHeaders = async () => {
-	const token = getAuthToken();
-	const headers = {
-		"Content-Type": "application/json",
-	};
-	if (token) {
-		headers["Authorization"] = `Bearer ${token}`;
-	}
-	return headers;
-};
 
-// Helper function to handle API responses
-const handleApiResponse = async (response) => {
-	return response; // Axios interceptor already handles error responses
-};
 
 const commentAPI = {
 	getComments: async (postId) => {
