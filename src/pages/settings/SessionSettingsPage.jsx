@@ -20,28 +20,7 @@ import {
 	Shield,
 } from "react-bootstrap-icons";
 
-import { apiRequest } from "../../config/ApiConfig";
-
-// Assuming sessionAPI is defined elsewhere and imported, similar to apiRequest
-// For the purpose of this example, we'll mock its structure.
-const sessionAPI = {
-	getSessions: async () => {
-		// Replace with actual implementation or import
-		console.log("Mock: Fetching sessions...");
-		const response = await apiRequest("/v1/sessions"); // Corrected endpoint
-		return response;
-	},
-	revokeSession: async (sessionId) => {
-		// Replace with actual implementation or import
-		console.log(`Mock: Revoking session ${sessionId}...`);
-		await apiRequest(`/v1/sessions/${sessionId}`, { method: "DELETE" }); // Corrected endpoint
-	},
-	revokeAllSessions: async () => {
-		// Replace with actual implementation or import
-		console.log("Mock: Revoking all sessions...");
-		await apiRequest("/v1/sessions/revoke-all", { method: "POST" }); // Corrected endpoint
-	},
-};
+import { sessionAPI } from "../../config/ApiConfig";
 
 
 const SessionSettingsPage = () => {
