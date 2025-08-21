@@ -93,7 +93,7 @@ const PostCard = ({
 			default:
 				return true;
 		}
-	}, [currentUser, post.author.uid, post.privacy, post.author.isFollowedByCurrentUser]);
+	}, [currentUser?.uid, post.author.uid, post.privacy, post.author.isFollowedByCurrentUser]);
 
 	const privacyIcon = useMemo(() => {
 		switch (post.privacy) {
@@ -109,8 +109,8 @@ const PostCard = ({
 	}, [post.privacy]);
 
 	const currentUserLiked = useMemo(() => 
-		post.likes.some(like => like.user?.uid === currentUser.uid),
-		[post.likes, currentUser.uid]
+		currentUser ? post.likes.some(like => like.user?.uid === currentUser.uid) : false,
+		[post.likes, currentUser?.uid]
 	);
 
 	const openImageViewer = useCallback((images, startIndex = 0) => {
@@ -157,7 +157,7 @@ const PostCard = ({
 
 	const handleLike = useCallback(async (e) => {
 		e.stopPropagation();
-		if (onLike) {
+		if (onLike && currentUser) {
 			const wasLiked = post.likes.some(like => like.user?.uid === currentUser.uid);
 			const response = await onLike(post.id);
 			
@@ -434,7 +434,7 @@ const PostCard = ({
 
 							<div className="d-flex align-items-center justify-content-between">
 								<div className="d-flex flex-wrap gap-3 small text-muted">
-									{post.likes.length > 0 && (() => {
+									{post.likes.length > 0 && currentUser && (() => {
 										const otherLikesCount = currentUserLiked ? post.likes.length - 1 : post.likes.length;
 										
 										if (currentUserLiked && otherLikesCount > 0) {
@@ -464,6 +464,11 @@ const PostCard = ({
 										}
 										return null;
 									})()}
+									{post.likes.length > 0 && !currentUser && (
+										<span>
+											{post.likes.length} {post.likes.length === 1 ? 'reaction' : 'reactions'}
+										</span>
+									)}
 								</div>
 								<div className="d-flex flex-wrap gap-3 small text-muted">
 									{post.stats?.views > 0 && (
@@ -742,7 +747,7 @@ const PostCard = ({
 						>
 							Repost
 						</button>
-						{post.author.uid !== currentUser.uid && (
+						{currentUser && post.author.uid !== currentUser.uid && (
 							<button
 								className="list-group-item list-group-item-action border-0 text-danger"
 								onClick={closePostOptionsModal}
@@ -750,7 +755,7 @@ const PostCard = ({
 								Report
 							</button>
 						)}
-						{post.author.uid === currentUser.uid && (
+						{currentUser && post.author.uid === currentUser.uid && (
 							<button
 								className="list-group-item list-group-item-action border-0 text-danger"
 								onClick={() => handleDeletePost(post.id)}
