@@ -1,6 +1,3 @@
-` tags.
-
-<replit_final_file>
 /** @format */
 
 import React, { useState, useEffect } from "react";
