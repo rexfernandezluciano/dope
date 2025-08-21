@@ -377,13 +377,6 @@ const PostDetailPage = () => {
 			}
 
 			setNewComment("");
-			// Reload to get updated comments
-			const [postResponse, commentsResponse] = await Promise.all([
-				postAPI.getPost(postId),
-				commentAPI.getComments(postId),
-			]);
-			setPost(postResponse.post);
-			setComments(commentsResponse.comments || []);
 		} catch (err) {
 			setError(err.message);
 		} finally {
@@ -453,6 +446,7 @@ const PostDetailPage = () => {
 		try {
 			setSubmittingReply(prev => ({ ...prev, [commentId]: true }));
 			
+			// Use the reply API, not comment API
 			const response = await replyAPI.createReply(commentId, {
 				content: replyText
 			});
@@ -475,6 +469,7 @@ const PostDetailPage = () => {
 				likes: []
 			};
 
+			// Add to replies, not comments
 			setReplies(prev => ({
 				...prev,
 				[commentId]: [newReply, ...(prev[commentId] || [])]
