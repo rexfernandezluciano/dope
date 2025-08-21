@@ -36,7 +36,9 @@ const SessionSettingsPage = () => {
 	const loadSessions = useCallback(async () => {
 		try {
 			setLoading(true);
+			console.log("Loading sessions...");
 			const response = await userAPI.getSessions();
+			console.log("Sessions response:", response);
 			setSessions(response.sessions || []);
 		} catch (err) {
 			console.error("Error loading sessions:", err);

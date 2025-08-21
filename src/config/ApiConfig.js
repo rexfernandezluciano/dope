@@ -397,6 +397,7 @@ export const userAPI = {
 	},
 
 	getSessions: async () => {
+		console.log("Making getSessions API call to /sessions");
 		return await apiRequest("/sessions");
 	},
 
