@@ -326,7 +326,7 @@ const SearchPage = () => {
 							<p>Try searching with different keywords</p>
 						</div>
 					) : (
-						<div className="row g-3 px-3">
+						<div className="row g-3">
 							{users.map((user) => (
 								<div key={user.uid} className="col-12">
 									<Card className="border-0 border-bottom rounded-0">
@@ -395,7 +395,7 @@ const SearchPage = () => {
 							{comments.map((comment) => (
 								<div key={comment.id} className="col-12">
 									<Card className="border-0 border-bottom rounded-0">
-										<Card.Body className="px-3 py-3">
+										<Card.Body className="px-0 py-3">
 											<div className="d-flex gap-3">
 												<Image
 													src={comment.author.photoURL || "https://i.pravatar.cc/150?img=10"}
