@@ -20,7 +20,7 @@ import {
 	Shield,
 } from "react-bootstrap-icons";
 
-import { userAPI } from "../../config/ApiConfig";
+import { userAPI, apiRequest } from "../../config/ApiConfig";
 
 const SessionSettingsPage = () => {
 	const loaderData = useLoaderData() || {};
@@ -37,7 +37,7 @@ const SessionSettingsPage = () => {
 		try {
 			setLoading(true);
 			console.log("Loading sessions...");
-			const response = await userAPI.getSessions();
+			const response = await apiRequest("/sessions");
 			console.log("Sessions response:", response);
 			setSessions(response.sessions || []);
 		} catch (err) {
@@ -52,7 +52,7 @@ const SessionSettingsPage = () => {
 	const handleRevokeSession = async (sessionId) => {
 		try {
 			setLoading(true);
-			await userAPI.revokeSession(sessionId);
+			await apiRequest(`/sessions/${sessionId}`, { method: "DELETE" });
 			await loadSessions(); // Reload sessions
 			setMessage("Session revoked successfully!");
 			setMessageType("success");
@@ -70,7 +70,7 @@ const SessionSettingsPage = () => {
 	const handleRevokeAllSessions = async () => {
 		try {
 			setLoading(true);
-			await userAPI.revokeAllSessions();
+			await apiRequest("/sessions/revoke-all", { method: "POST" });
 			await loadSessions(); // Reload sessions
 			setMessage(
 				"All sessions revoked successfully! You will need to log in again on other devices.",
