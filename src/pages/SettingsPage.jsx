@@ -116,7 +116,6 @@ const SettingsPage = () => {
 								className={`d-flex align-items-center gap-3 px-4 py-3 text-dark border-0 ${
 									activeTab === tab.key ? 'bg-primary bg-opacity-10 border-end border-primary border-3' : ''
 								}`}
-								onClick={() => setActiveTab(tab.key)}
 								style={{ cursor: 'pointer' }}
 							>
 								{tab.icon}

@@ -215,7 +215,7 @@ const NavigationView = ({ children }) => {
 		},
 		{
 			label: "Settings",
-			href: `/${user?.username}/settings`,
+			href: "/settings/account",
 			icon: <Gear size={18} className="me-2" />,
 		},
 		{
