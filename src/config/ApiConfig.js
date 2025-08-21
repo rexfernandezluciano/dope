@@ -467,7 +467,7 @@ export const userAPI = {
 	},
 
 	getUserEarnings: async () => {
-		return await apiRequest("/users/earnings");
+		return await apiRequest("/users/analytics/earnings");
 	},
 };
 
