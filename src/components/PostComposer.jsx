@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Card, Form, Button, Image, Alert, Spinner } from 'react-bootstrap';
 import { Camera, Globe, Lock, PersonFill } from 'react-bootstrap-icons';
 import { postAPI, imageAPI } from '../config/ApiConfig';

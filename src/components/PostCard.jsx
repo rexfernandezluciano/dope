@@ -100,7 +100,7 @@ const PostCard = ({
 			default:
 				return true;
 		}
-	}, [currentUser?.uid, post.author.uid, post.privacy, post.author.isFollowedByCurrentUser]);
+	}, [currentUser, post.author.uid, post.privacy, post.author.isFollowedByCurrentUser]);
 
 	const privacyIcon = useMemo(() => {
 		switch (post.privacy) {
@@ -117,7 +117,7 @@ const PostCard = ({
 
 	const currentUserLiked = useMemo(() => 
 		currentUser ? post.likes.some(like => like.user?.uid === currentUser.uid) : false,
-		[post.likes, currentUser?.uid]
+		[post.likes, currentUser]
 	);
 
 	const openImageViewer = useCallback((images, startIndex = 0) => {

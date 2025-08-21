@@ -2,10 +2,8 @@
 import { 
   searchAPI, 
   analyticsAPI, 
-  hashtagAPI, 
   subscriptionAPI,
   contentModerationAPI,
-  paymentAPI,
   blockAPI,
   reportAPI,
   sessionAPI

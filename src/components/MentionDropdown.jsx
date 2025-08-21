@@ -66,6 +66,9 @@ const MentionDropdown = ({
           e.preventDefault();
           onClose();
           break;
+        default:
+          // No action needed for other keys
+          break;
       }
     };
 
