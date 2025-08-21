@@ -838,7 +838,7 @@ const AnalyticsPage = () => {
 													variant="warning"
 													className="rounded-3"
 													style={{ height: "6px" }}
-												/></div>
+												/>
 											</div>
 										</Card.Body>
 									</Card>
