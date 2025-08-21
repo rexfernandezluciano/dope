@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, Spinner } from 'react-bootstrap';
-import api from '../config/ApiConfig';
+import { api } from '../config/ApiConfig';
 
 const NetworkTest = () => {
   const [testing, setTesting] = useState(false);
