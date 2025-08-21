@@ -40,6 +40,7 @@ import {
 	handleLikeNotification,
 	handleCommentNotification,
 } from "../utils/notification-helpers";
+import { replyAPI, likeAPI } from "../config/ApiConfig";
 
 const PostDetailPage = () => {
 	const { postId } = useParams();
@@ -64,6 +65,10 @@ const PostDetailPage = () => {
 	const [selectedComment, setSelectedComment] = useState(null);
 	const [deletingPost, setDeletingPost] = useState(false);
 	const [deletingComment, setDeletingComment] = useState(false);
+	const [showReplyForms, setShowReplyForms] = useState({});
+	const [replyTexts, setReplyTexts] = useState({});
+	const [submittingReply, setSubmittingReply] = useState({});
+	const [replies, setReplies] = useState({});
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -83,6 +88,19 @@ const PostDetailPage = () => {
 				const commentsResponse = await commentAPI.getComments(postId);
 				if (commentsResponse && Array.isArray(commentsResponse.comments)) {
 					setComments(commentsResponse.comments);
+					
+					// Load replies for each comment
+					const repliesData = {};
+					for (const comment of commentsResponse.comments) {
+						try {
+							const repliesResponse = await replyAPI.getReplies(comment.id);
+							repliesData[comment.id] = repliesResponse.replies || [];
+						} catch (replyError) {
+							console.error(`Failed to load replies for comment ${comment.id}:`, replyError);
+							repliesData[comment.id] = [];
+						}
+					}
+					setReplies(repliesData);
 				} else if (commentsResponse && Array.isArray(commentsResponse)) {
 					setComments(commentsResponse);
 				} else {
@@ -334,9 +352,19 @@ const PostDetailPage = () => {
 					photoURL: currentUser.photoURL,
 					hasBlueCheck: currentUser.hasBlueCheck || false,
 				},
+				stats: {
+					likes: 0,
+					replies: 0
+				},
+				likes: [],
+				replies: []
 			};
 
 			setComments((prevComments) => [newCommentObj, ...prevComments]);
+			setReplies(prevReplies => ({
+				...prevReplies,
+				[newCommentObj.id]: []
+			}));
 
 			// Send comment notification to post owner
 			try {
@@ -360,6 +388,161 @@ const PostDetailPage = () => {
 			setError(err.message);
 		} finally {
 			setSubmitting(false);
+		}
+	};
+
+	const handleLikeComment = async (commentId) => {
+		try {
+			const response = await likeAPI.likeComment(commentId);
+			
+			setComments(prevComments => 
+				prevComments.map(comment => {
+					if (comment.id === commentId) {
+						const isCurrentlyLiked = comment.likes?.some(
+							like => like.user.uid === currentUser.uid
+						);
+						
+						if (response.liked && !isCurrentlyLiked) {
+							return {
+								...comment,
+								likes: [...(comment.likes || []), { user: { uid: currentUser.uid } }],
+								stats: {
+									...comment.stats,
+									likes: (comment.stats?.likes || 0) + 1
+								}
+							};
+						} else if (!response.liked && isCurrentlyLiked) {
+							return {
+								...comment,
+								likes: (comment.likes || []).filter(
+									like => like.user.uid !== currentUser.uid
+								),
+								stats: {
+									...comment.stats,
+									likes: Math.max(0, (comment.stats?.likes || 0) - 1)
+								}
+							};
+						}
+					}
+					return comment;
+				})
+			);
+		} catch (error) {
+			console.error("Failed to like comment:", error);
+		}
+	};
+
+	const toggleReplyForm = (commentId) => {
+		setShowReplyForms(prev => ({
+			...prev,
+			[commentId]: !prev[commentId]
+		}));
+	};
+
+	const handleReplyTextChange = (commentId, text) => {
+		setReplyTexts(prev => ({
+			...prev,
+			[commentId]: text
+		}));
+	};
+
+	const handleSubmitReply = async (commentId) => {
+		const replyText = replyTexts[commentId]?.trim();
+		if (!replyText) return;
+
+		try {
+			setSubmittingReply(prev => ({ ...prev, [commentId]: true }));
+			
+			const response = await replyAPI.createReply(commentId, {
+				content: replyText
+			});
+
+			const newReply = {
+				...response.reply,
+				author: response.reply?.author || {
+					uid: currentUser.uid,
+					name: currentUser.name,
+					username: currentUser.username,
+					photoURL: currentUser.photoURL,
+					hasBlueCheck: currentUser.hasBlueCheck || false,
+				},
+				stats: {
+					likes: 0
+				},
+				likes: []
+			};
+
+			setReplies(prev => ({
+				...prev,
+				[commentId]: [newReply, ...(prev[commentId] || [])]
+			}));
+
+			// Update comment reply count
+			setComments(prevComments => 
+				prevComments.map(comment => 
+					comment.id === commentId 
+						? {
+								...comment,
+								stats: {
+									...comment.stats,
+									replies: (comment.stats?.replies || 0) + 1
+								}
+							}
+						: comment
+				)
+			);
+
+			// Clear form
+			setReplyTexts(prev => ({ ...prev, [commentId]: "" }));
+			setShowReplyForms(prev => ({ ...prev, [commentId]: false }));
+
+		} catch (error) {
+			console.error("Failed to submit reply:", error);
+			setError("Failed to submit reply");
+		} finally {
+			setSubmittingReply(prev => ({ ...prev, [commentId]: false }));
+		}
+	};
+
+	const handleLikeReply = async (replyId, commentId) => {
+		try {
+			const response = await likeAPI.likeReply(replyId);
+			
+			setReplies(prev => ({
+				...prev,
+				[commentId]: (prev[commentId] || []).map(reply => {
+					if (reply.id === replyId) {
+						const isCurrentlyLiked = reply.likes?.some(
+							like => like.user.uid === currentUser.uid
+						);
+						
+						if (response.liked && !isCurrentlyLiked) {
+							return {
+								...reply,
+								likes: [...(reply.likes || []), { user: { uid: currentUser.uid } }],
+								stats: {
+									...reply.stats,
+									likes: (reply.stats?.likes || 0) + 1
+								}
+							};
+						} else if (!response.liked && isCurrentlyLiked) {
+							return {
+								...reply,
+								likes: (reply.likes || []).filter(
+									like => like.user.uid !== currentUser.uid
+								),
+								stats: {
+									...reply.stats,
+									likes: Math.max(0, (reply.stats?.likes || 0) - 1)
+								}
+							};
+						}
+					}
+					return reply;
+				})
+			}));
+		} catch (error) {
+			console.error("Failed to like reply:", error);
 		}
 	};
 
@@ -841,19 +1024,33 @@ const PostDetailPage = () => {
 								}}
 							/>
 							<div className="comment-content flex-grow-1">
-								<div className="d-flex align-items-center gap-1 mb-1">
-									<span className="fw-bold">
-										{comment.author?.name || "Unknown User"}
-									</span>
-									{comment.author?.hasBlueCheck && (
-										<span className="text-primary">
-											<CheckCircleFill className="text-primary" size={16} />
+								<div className="d-flex align-items-center justify-content-between">
+									<div className="d-flex align-items-center gap-1 mb-1">
+										<span className="fw-bold">
+											{comment.author?.name || "Unknown User"}
 										</span>
+										{comment.author?.hasBlueCheck && (
+											<span className="text-primary">
+												<CheckCircleFill className="text-primary" size={16} />
+											</span>
+										)}
+										<span className="text-muted">·</span>
+										<span className="text-muted small">
+											{formatTimeAgo(comment.createdAt)}
+										</span>
+									</div>
+									{comment.author?.uid === currentUser?.uid && (
+										<Button
+											variant="link"
+											className="text-muted p-1 border-0"
+											onClick={() => {
+												setSelectedComment(comment);
+												setShowCommentOptionsModal(true);
+											}}
+										>
+											<ThreeDots size={14} />
+										</Button>
 									)}
-									<span className="text-muted">·</span>
-									<span className="text-muted small">
-										{formatTimeAgo(comment.createdAt)}
-									</span>
 								</div>
 
 								<div className="mb-2">
@@ -863,6 +1060,149 @@ const PostDetailPage = () => {
 										onLinkClick: handleLinkClick,
 									})}
 								</div>
+
+								{/* Comment Actions */}
+								<div className="d-flex align-items-center gap-3 mb-2">
+									<Button
+										variant="link"
+										size="sm"
+										className="p-0 border-0 d-flex align-items-center gap-1"
+										style={{
+											color: comment.likes?.some(like => like.user.uid === currentUser.uid) 
+												? "#dc3545" : "#6c757d",
+											fontSize: "0.75rem",
+										}}
+										onClick={() => handleLikeComment(comment.id)}
+									>
+										{comment.likes?.some(like => like.user.uid === currentUser.uid) ? (
+											<HeartFill size={12} />
+										) : (
+											<Heart size={12} />
+										)}
+										{comment.stats?.likes > 0 && <span>{comment.stats.likes}</span>}
+									</Button>
+
+									<Button
+										variant="link"
+										size="sm"
+										className="p-0 border-0 d-flex align-items-center gap-1 text-muted"
+										style={{ fontSize: "0.75rem" }}
+										onClick={() => toggleReplyForm(comment.id)}
+									>
+										<ChatDots size={12} />
+										Reply
+									</Button>
+
+									{comment.stats?.replies > 0 && (
+										<span className="text-muted small">
+											{comment.stats.replies} {comment.stats.replies === 1 ? 'reply' : 'replies'}
+										</span>
+									)}
+								</div>
+
+								{/* Reply Form */}
+								{showReplyForms[comment.id] && (
+									<div className="mt-2 mb-3">
+										<div className="d-flex gap-2">
+											<Image
+												src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
+												alt="avatar"
+												roundedCircle
+												width="32"
+												height="32"
+												style={{ objectFit: "cover" }}
+											/>
+											<div className="flex-grow-1">
+												<Form.Control
+													as="textarea"
+													rows={2}
+													value={replyTexts[comment.id] || ""}
+													onChange={(e) => handleReplyTextChange(comment.id, e.target.value)}
+													placeholder="Write a reply..."
+													className="border-0 shadow-none resize-none"
+													style={{ fontSize: "0.9rem" }}
+												/>
+												<div className="d-flex justify-content-end gap-2 mt-2">
+													<Button
+														variant="outline-secondary"
+														size="sm"
+														onClick={() => toggleReplyForm(comment.id)}
+													>
+														Cancel
+													</Button>
+													<Button
+														size="sm"
+														disabled={!replyTexts[comment.id]?.trim() || submittingReply[comment.id]}
+														onClick={() => handleSubmitReply(comment.id)}
+													>
+														{submittingReply[comment.id] ? (
+															<Spinner size="sm" animation="border" />
+														) : (
+															"Reply"
+														)}
+													</Button>
+												</div>
+											</div>
+										</div>
+									</div>
+								)}
+
+								{/* Replies */}
+								{replies[comment.id] && replies[comment.id].length > 0 && (
+									<div className="replies-section mt-2 ms-3 border-start border-2 ps-3">
+										{replies[comment.id].map(reply => (
+											<div key={reply.id} className="d-flex gap-2 mb-2">
+												<Image
+													src={reply.author?.photoURL || "https://i.pravatar.cc/150?img=10"}
+													alt="avatar"
+													roundedCircle
+													width="28"
+													height="28"
+													style={{ objectFit: "cover" }}
+												/>
+												<div className="flex-grow-1">
+													<div className="d-flex align-items-center gap-1 mb-1">
+														<span className="fw-bold small">
+															{reply.author?.name || "Unknown User"}
+														</span>
+														{reply.author?.hasBlueCheck && (
+															<CheckCircleFill className="text-primary" size={12} />
+														)}
+														<span className="text-muted">·</span>
+														<span className="text-muted small">
+															{formatTimeAgo(reply.createdAt)}
+														</span>
+													</div>
+													<div className="mb-1" style={{ fontSize: "0.9rem" }}>
+														{parseTextContent(reply.content, {
+															onHashtagClick: handleHashtagClick,
+															onMentionClick: handleMentionClick,
+															onLinkClick: handleLinkClick,
+														})}
+													</div>
+													<Button
+														variant="link"
+														size="sm"
+														className="p-0 border-0 d-flex align-items-center gap-1"
+														style={{
+															color: reply.likes?.some(like => like.user.uid === currentUser.uid) 
+																? "#dc3545" : "#6c757d",
+															fontSize: "0.7rem",
+														}}
+														onClick={() => handleLikeReply(reply.id, comment.id)}
+													>
+														{reply.likes?.some(like => like.user.uid === currentUser.uid) ? (
+															<HeartFill size={10} />
+														) : (
+															<Heart size={10} />
+														)}
+														{reply.stats?.likes > 0 && <span>{reply.stats.likes}</span>}
+													</Button>
+												</div>
+											</div>
+										))}
+									</div>
+								)}
 							</div>
 						</div>
 					))}
