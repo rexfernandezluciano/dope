@@ -1,9 +1,10 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import { Card, Form, Button, Image, Alert, Spinner, Modal, InputGroup } from 'react-bootstrap';
-import { Camera, Globe, Lock, PersonFill, EmojiSmile, X, Search } from 'react-bootstrap-icons';
+import { Camera, Globe, Lock, PersonFill, EmojiSmile, X, Search, CameraVideo } from 'react-bootstrap-icons';
 import { postAPI, imageAPI } from '../config/ApiConfig';
 import MentionDropdown from './MentionDropdown';
+import LiveStudioModal from './LiveStudioModal';
 import { extractHashtags, extractMentions } from '../utils/dope-api-utils';
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
@@ -24,6 +25,8 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
   const [cursorPosition, setCursorPosition] = useState(0);
   const [showStickerModal, setShowStickerModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showLiveStudioModal, setShowLiveStudioModal] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -193,6 +196,36 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
     const imageUrl = gif.images.fixed_height.url;
     setImages((prev) => [...(prev || []), imageUrl]);
     setShowStickerModal(false);
+  };
+
+  const handleStartLiveStream = async (streamData) => {
+    try {
+      setIsStreaming(true);
+      setShowLiveStudioModal(false);
+      
+      // Create a live post when stream starts
+      const postData = {
+        content: streamData.description || streamData.title,
+        postType: 'live_video',
+        liveVideoUrl: streamData.streamUrl || '',
+        privacy: streamData.privacy?.toLowerCase() || 'public',
+        hashtags: extractHashtags(streamData.description || streamData.title),
+        mentions: extractMentions(streamData.description || streamData.title)
+      };
+
+      const response = await postAPI.createPost(postData);
+      onPostCreated?.(response.post);
+      
+    } catch (error) {
+      console.error('Error starting live stream:', error);
+      setError('Failed to start live stream');
+      setIsStreaming(false);
+    }
+  };
+
+  const handleStopLiveStream = () => {
+    setIsStreaming(false);
+    setShowLiveStudioModal(false);
   };
 
   const handleSubmit = useCallback(async (e) => {
@@ -402,6 +435,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
                   size="sm"
                   className="text-primary p-1"
                   onClick={() => fileInputRef.current?.click()}
+                  title="Add Photos"
                 >
                   <Camera size={20} />
                 </Button>
@@ -418,8 +452,19 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
                   size="sm"
                   className="text-primary p-1"
                   onClick={() => setShowStickerModal(true)}
+                  title="Add GIF/Sticker"
                 >
                   <EmojiSmile size={18} />
+                </Button>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className={isStreaming ? "text-danger p-1" : "text-primary p-1"}
+                  onClick={() => setShowLiveStudioModal(true)}
+                  title={isStreaming ? "Manage Live Stream" : "Go Live"}
+                >
+                  <CameraVideo size={18} />
+                  {isStreaming && <span className="ms-1 text-danger fw-bold">LIVE</span>}
                 </Button>
 
                 <Form.Select
@@ -526,6 +571,16 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
         query={mentionQuery}
         onSelect={handleMentionSelect}
         onClose={() => setShowMentions(false)}
+      />
+
+      {/* Live Studio Modal */}
+      <LiveStudioModal
+        show={showLiveStudioModal}
+        onHide={() => setShowLiveStudioModal(false)}
+        onStartStream={handleStartLiveStream}
+        onStopStream={handleStopLiveStream}
+        isStreaming={isStreaming}
+        currentUser={currentUser}
       />
     </>
   );
