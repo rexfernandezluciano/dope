@@ -7,15 +7,16 @@ import {
 	Button,
 	Spinner,
 	Alert,
+	Modal,
+	Image,
 } from "react-bootstrap";
 import {
 	ChevronLeft,
 	ChevronRight,
+	X,
 } from "react-bootstrap-icons";
 
-import { Grid } from "@giphy/react-components";
-import { GiphyFetch } from "@giphy/js-fetch-api";
-import heic2any from "heic2any";
+// Removed unused imports: Grid, GiphyFetch, heic2any
 import AgoraRTC from "agora-rtc-sdk-ng";
 
 import { postAPI, imageAPI } from "../config/ApiConfig";
@@ -28,17 +29,12 @@ import {
 	initializeNotifications,
 	requestNotificationPermission,
 	setupMessageListener,
-	notifyFollowersOfNewPost,
 } from "../utils/messaging-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { getUser } from "../utils/auth-utils";
 import { useNavigate } from "react-router-dom";
 
-// Utility function to clean text content
-const cleanTextContent = (text) => {
-	// Replace multiple line breaks with a single one, and trim whitespace
-	return text.replace(/(\r\n|\n|\r){2,}/g, "$1$2").trim();
-};
+// Removed unused cleanTextContent function
 
 const HomePage = () => {
 	const navigate = useNavigate();
@@ -56,19 +52,16 @@ const HomePage = () => {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [mediaStream, setMediaStream] = useState(null);
 	const [mediaRecorder, setMediaRecorder] = useState(null);
-	const [submitting, setSubmitting] = useState(false); // State for post submission loading
-
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 	const [postToDelete, setPostToDelete] = useState(null);
 	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
-	const textareaRef = useRef(null);
 	// Removed unused fileInputRef as it's now part of PostComposer: const fileInputRef = useRef(null);
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
-	
+	const [postText, setPostText] = useState(""); // State for post text
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -166,53 +159,7 @@ const HomePage = () => {
 		navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=posts`);
 	};
 
-	// Function to get the image upload limit based on subscription plan
-	const getImageUploadLimit = (subscription) => {
-		switch (subscription) {
-			case "premium":
-				return 10;
-			case "pro":
-				return Infinity;
-			default:
-				return 3;
-		}
-	};
-
-	// Updated uploadImage function using the new imageAPI
-	const uploadImage = async (file) => {
-		// Handle HEIC files
-		let finalFile = file;
-		if (
-			file.type === "image/heic" ||
-			file.name.toLowerCase().endsWith(".heic")
-		) {
-			try {
-				const heic2any = (await import("heic2any")).default;
-				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
-					type: "image/jpeg",
-				});
-			} catch (err) {
-				console.error("Error converting HEIC:", err);
-				return null;
-			}
-		}
-
-		const formData = new FormData();
-		formData.append("images", finalFile); // Use 'images' as per the new API spec
-
-		try {
-			const response = await imageAPI.uploadImages(formData); // Use imageAPI.uploadImages
-			// Assuming the API returns { imageUrls: [...] }
-			if (response && response.imageUrls && response.imageUrls.length > 0) {
-				return response.imageUrls[0]; // Return the first URL for single upload
-			}
-			return null;
-		} catch (error) {
-			console.error("Error uploading image:", error);
-			return null;
-		}
-	};
+	// Removed unused utility functions (now handled by PostComposer)
 
 	
 
@@ -542,14 +489,7 @@ const HomePage = () => {
 		}
 	};
 
-	const toggleLiveMode = () => {
-		if (!isLive) {
-			setShowLiveStudioModal(true);
-		} else {
-			stopLiveStream();
-			setPostText("");
-		}
-	};
+	// Removed unused toggleLiveMode function
 
 	
 

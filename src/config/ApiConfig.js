@@ -511,10 +511,18 @@ export const postAPI = {
 		);
 	},
 
-	trackPostView: async (postId) => {
-		return await apiRequest(`/posts/${postId}/view`, {
-			method: "POST",
-		});
+	// Track post view
+	trackView: async (postId) => {
+		try {
+			const response = await apiRequest(`/posts/${postId}/view`, {
+				method: 'POST'
+			});
+			return response;
+		} catch (error) {
+			console.error('Error tracking view:', error);
+			// Don't throw error for view tracking failures
+			return null;
+		}
 	},
 
 	updatePostEngagement: async (postId, action) => {
