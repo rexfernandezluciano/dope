@@ -411,6 +411,14 @@ export const userAPI = {
 		});
 	},
 
+	searchUsers: async (query, params = {}) => {
+		const searchParams = new URLSearchParams({
+			query,
+			...params,
+		});
+		return await apiRequest(`/search/users?${searchParams.toString()}`);
+	},
+
 	// New endpoints from API documentation
 	checkUserExists: async (uid) => {
 		return await apiRequest(`/users/exists/${uid}`);
@@ -587,7 +595,7 @@ export const commentAPI = {
 			query,
 			...params,
 		});
-		return await apiRequest(`/search/comments?${searchParams.toString()}`);
+		return await apiRequest(`/comments/search?${searchParams.toString()}`);
 	},
 
 	// Comment likes

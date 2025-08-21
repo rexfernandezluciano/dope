@@ -21,7 +21,7 @@ import {
 	ChatDots,
 } from "react-bootstrap-icons";
 
-import { postAPI, userAPI, commentAPI } from "../config/ApiConfig";
+import { postAPI, userAPI, commentAPI, apiRequest } from "../config/ApiConfig";
 import { updatePageMeta } from "../utils/meta-utils";
 import PostCard from "../components/PostCard";
 import { formatTimeAgo } from "../utils/common-utils";
@@ -78,7 +78,8 @@ const SearchPage = () => {
 				const response = await userAPI.searchUsers(searchQueryParam);
 				setUsers(response.users || []);
 			} else if (tab === "comments") {
-				const response = await commentAPI.searchComments(searchQueryParam);
+				// Use the correct API endpoint for comment search
+				const response = await apiRequest(`/comments/search?query=${encodeURIComponent(searchQueryParam)}`);
 				setComments(response.comments || []);
 			}
 		} catch (err) {
