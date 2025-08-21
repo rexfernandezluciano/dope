@@ -36,7 +36,7 @@ class HttpClient {
 		try {
 			// Prepare headers
 			const headers = {
-				'Content-Type': 'application/json',
+				'Content-Type': 'application/json; charset=utf8',
 				'Accept': 'application/json',
 				'User-Agent': 'DOPE-Network-Client/1.0',
 				...options.headers
@@ -53,7 +53,7 @@ class HttpClient {
 
 			// Add auth token
 			const token = getAuthToken();
-			if (token && !url.includes('/auth/login') && !url.includes('/auth/signup')) {
+			if (token && !url.includes('/auth/login') && !url.includes('/auth/register')) {
 				headers['Authorization'] = `Bearer ${token}`;
 			}
 
