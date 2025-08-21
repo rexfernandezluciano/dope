@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Button, Alert, Spinner } from 'react-bootstrap';
 import { testApiConnection } from '../config/ApiConfig';
 
+import NetworkDiagnostics from './NetworkDiagnostics';
+
 const NetworkTest = () => {
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState(null);
@@ -59,6 +61,8 @@ const NetworkTest = () => {
           {result.message}
         </Alert>
       )}
+      
+      <NetworkDiagnostics />
     </div>
   );
 };

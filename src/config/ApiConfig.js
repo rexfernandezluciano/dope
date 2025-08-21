@@ -3,8 +3,6 @@
 // Secure token storage helper
 // Import js-cookie for secure cookie management
 import Cookies from "js-cookie";
-import axios from "axios";
-
 const API_BASE_URL =
 	process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1";
 
@@ -13,77 +11,172 @@ if (!API_BASE_URL.startsWith("https://")) {
 	console.error("API URL must use HTTPS");
 }
 
-// Create axios instance
-const apiClient = axios.create({
-	baseURL: API_BASE_URL,
-	timeout: 60000,
-	headers: {
-		"Content-Type": "application/json",
-	},
-});
-
-// Request interceptor to add security headers
-apiClient.interceptors.request.use(async (config) => {
-	try {
-		// Import SecurityMiddleware dynamically to avoid circular imports
-		const { SecurityMiddleware } = await import("../utils/security-middleware");
-
-		// Use SecurityMiddleware to add all security headers including App Check
-		const secureOptions = await SecurityMiddleware.secureApiRequest(
-			config.url,
-			{ headers: config.headers },
-		);
-
-		// Merge security headers
-		config.headers = { ...config.headers, ...secureOptions.headers };
-
-		// Add auth token if available
-		const token = getAuthToken();
-		if (token) {
-			config.headers["Authorization"] = `Bearer ${token}`;
-		}
-
-		return config;
-	} catch (error) {
-		console.error("Request interceptor failed:", error);
-		return config;
+// Enhanced fetch-based HTTP client with better error handling
+class HttpClient {
+	constructor(baseURL, timeout = 60000) {
+		this.baseURL = baseURL;
+		this.timeout = timeout;
 	}
-});
 
-// Response interceptor to handle errors
-apiClient.interceptors.response.use(
-	(response) => response.data,
-	(error) => {
-		console.error("API Error Details:", {
-			url: error.config?.url,
-			method: error.config?.method,
-			baseURL: error.config?.baseURL,
-			status: error.response?.status,
-			statusText: error.response?.statusText,
-			message: error.message,
-			code: error.code,
+	async request(url, options = {}) {
+		const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
+		
+		console.log("🚀 Making HTTP request:", {
+			url: fullUrl,
+			method: options.method || 'GET',
+			headers: options.headers,
+			hasBody: !!options.body,
+			timestamp: new Date().toISOString()
 		});
 
-		console.error("Full Error Object:", error);
+		// Create AbortController for timeout
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-		if (error.response) {
-			// Server responded with error status
-			const message =
-				error.response.data?.message ||
-				`HTTP error! status: ${error.response.status}`;
-			throw new Error(message);
-		} else if (error.request) {
-			// Request was made but no response received
-			console.error("Network error - request details:", error.request);
-			throw new Error(
-				`Network error - no response received from ${API_BASE_URL}`,
-			);
-		} else {
-			// Something else happened
-			throw new Error(error.message || "Request failed");
+		try {
+			// Prepare headers
+			const headers = {
+				'Content-Type': 'application/json',
+				'Accept': 'application/json',
+				'User-Agent': 'DOPE-Network-Client/1.0',
+				...options.headers
+			};
+
+			// Add security headers
+			try {
+				const { SecurityMiddleware } = await import("../utils/security-middleware");
+				const secureOptions = await SecurityMiddleware.secureApiRequest(url, { headers });
+				Object.assign(headers, secureOptions.headers);
+			} catch (securityError) {
+				console.warn("Security middleware failed:", securityError);
+			}
+
+			// Add auth token
+			const token = getAuthToken();
+			if (token && !url.includes('/auth/login') && !url.includes('/auth/signup')) {
+				headers['Authorization'] = `Bearer ${token}`;
+			}
+
+			const fetchOptions = {
+				method: options.method || 'GET',
+				headers,
+				signal: controller.signal,
+				credentials: 'omit', // Don't send cookies
+				mode: 'cors',
+				cache: 'no-cache'
+			};
+
+			if (options.body) {
+				fetchOptions.body = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
+			}
+
+			console.log("📡 Fetch options:", {
+				url: fullUrl,
+				method: fetchOptions.method,
+				headers: Object.keys(fetchOptions.headers),
+				bodyLength: fetchOptions.body?.length || 0
+			});
+
+			const response = await fetch(fullUrl, fetchOptions);
+			
+			clearTimeout(timeoutId);
+
+			console.log("📥 Response received:", {
+				url: fullUrl,
+				status: response.status,
+				statusText: response.statusText,
+				headers: Object.fromEntries(response.headers.entries()),
+				ok: response.ok,
+				type: response.type,
+				redirected: response.redirected
+			});
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error("❌ HTTP Error Response:", {
+					status: response.status,
+					statusText: response.statusText,
+					body: errorText,
+					url: fullUrl
+				});
+				
+				let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+				try {
+					const errorData = JSON.parse(errorText);
+					errorMessage = errorData.message || errorData.error || errorMessage;
+				} catch (parseError) {
+					if (errorText.length > 0 && errorText.length < 200) {
+						errorMessage = errorText;
+					}
+				}
+				
+				throw new Error(errorMessage);
+			}
+
+			const contentType = response.headers.get('content-type');
+			let data;
+			
+			if (contentType && contentType.includes('application/json')) {
+				data = await response.json();
+			} else {
+				data = await response.text();
+			}
+
+			console.log("✅ Request successful:", {
+				url: fullUrl,
+				status: response.status,
+				dataType: typeof data,
+				dataPreview: typeof data === 'object' ? Object.keys(data) : data.substring?.(0, 100)
+			});
+
+			return data;
+
+		} catch (error) {
+			clearTimeout(timeoutId);
+			
+			console.error("💥 Request failed:", {
+				url: fullUrl,
+				error: error.name,
+				message: error.message,
+				stack: error.stack,
+				cause: error.cause,
+				isAbortError: error.name === 'AbortError',
+				isNetworkError: error.message.includes('fetch'),
+				timestamp: new Date().toISOString()
+			});
+
+			// Enhanced error classification
+			if (error.name === 'AbortError') {
+				throw new Error(`Request timeout after ${this.timeout}ms`);
+			}
+			
+			if (error.message.includes('fetch')) {
+				throw new Error(`Network error: Unable to connect to ${API_BASE_URL}. Check your internet connection and API server status.`);
+			}
+
+			throw error;
 		}
-	},
-);
+	}
+
+	async get(url, options = {}) {
+		return this.request(url, { ...options, method: 'GET' });
+	}
+
+	async post(url, data, options = {}) {
+		return this.request(url, { ...options, method: 'POST', body: data });
+	}
+
+	async put(url, data, options = {}) {
+		return this.request(url, { ...options, method: 'PUT', body: data });
+	}
+
+	async delete(url, options = {}) {
+		return this.request(url, { ...options, method: 'DELETE' });
+	}
+}
+
+// Create HTTP client instance
+const apiClient = new HttpClient(API_BASE_URL, 60000);
 
 // Test API connectivity
 const testApiConnection = async () => {
@@ -116,22 +209,20 @@ const testApiConnection = async () => {
 
 const apiRequest = async (endpoint, options = {}) => {
 	try {
-		console.log("Making API request:", {
-			url: endpoint,
+		const response = await apiClient.request(endpoint, {
 			method: options.method || "GET",
-			baseURL: API_BASE_URL,
-		});
-
-		const response = await apiClient({
-			url: endpoint,
-			method: options.method || "GET",
-			data: options.body,
+			body: options.body,
+			headers: options.headers,
 			...options,
 		});
 
 		return response;
 	} catch (error) {
-		console.error("API request failed:", error);
+		console.error("🚨 API request failed:", {
+			endpoint,
+			error: error.message,
+			stack: error.stack
+		});
 		throw error;
 	}
 };
