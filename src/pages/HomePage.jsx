@@ -355,30 +355,44 @@ const HomePage = () => {
 				);
 			}
 
-			// Prepare the live stream post payload
+			// Set streaming state first
+			setStreamTitle(streamData.title);
+			setIsStreaming(true);
+			setMediaStream(client);
+			setMediaRecorder({ videoTrack, audioTrack });
+
+			// Set broadcast status in localStorage
+			localStorage.setItem("isCurrentlyBroadcasting", "true");
+			localStorage.setItem("currentStreamTitle", streamData.title);
+
+			// Now create the live stream post with the proper URL
 			const postPayload = {
 				content: streamData.description || streamData.title,
 				postType: "live_video",
 				liveVideoUrl: streamUrl,
 				privacy: streamData.privacy.toLowerCase() || "public",
+				hashtags: extractHashtags(streamData.description || streamData.title),
+				mentions: extractMentions(streamData.description || streamData.title)
 			};
 
-			// Create the live stream post using the API
-			const response = await postAPI.createPost(postPayload);
-
-			if (response.success || response.id) {
-				setStreamTitle(streamData.title);
-				setIsStreaming(true);
-				setMediaStream(client);
-				setMediaRecorder({ videoTrack, audioTrack });
-
-				// Set broadcast status in localStorage
-				localStorage.setItem("isCurrentlyBroadcasting", "true");
-				localStorage.setItem("currentStreamTitle", streamData.title);
-
-				console.log("Live stream started successfully:", response);
-			} else {
-				throw new Error("Failed to create live stream post");
+			try {
+				const response = await postAPI.createPost(postPayload);
+				console.log("Live stream post created successfully:", response);
+				
+				// Add the new post to the feed if we have an onPostCreated callback
+				if (response.post) {
+					const postWithDefaults = {
+						...response.post,
+						comments: response.post.comments || [],
+						stats: response.post.stats || { comments: 0, likes: 0, shares: 0 },
+						likes: response.post.likes || [],
+						isLiveStreaming: true
+					};
+					setPosts(prevPosts => [postWithDefaults, ...prevPosts]);
+				}
+			} catch (postError) {
+				console.warn("Failed to create live stream post, but stream is active:", postError);
+				// Don't fail the entire stream if post creation fails
 			}
 		} catch (error) {
 			console.error("Error starting live stream:", error);

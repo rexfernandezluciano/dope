@@ -203,18 +203,8 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
       setIsStreaming(true);
       setShowLiveStudioModal(false);
       
-      // Create a live post when stream starts
-      const postData = {
-        content: streamData.description || streamData.title,
-        postType: 'live_video',
-        liveVideoUrl: streamData.streamUrl || '',
-        privacy: streamData.privacy?.toLowerCase() || 'public',
-        hashtags: extractHashtags(streamData.description || streamData.title),
-        mentions: extractMentions(streamData.description || streamData.title)
-      };
-
-      const response = await postAPI.createPost(postData);
-      onPostCreated?.(response.post);
+      // Don't create post here - let HomePage handle the actual stream creation
+      // Just update local state to show live indicator
       
     } catch (error) {
       console.error('Error starting live stream:', error);
