@@ -44,6 +44,12 @@ const PostCard = ({
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
 	const cardRef = useRef(null);
 	const [viewTracked, setViewTracked] = useState(false);
+	const [localComments, setLocalComments] = useState(comments);
+
+	// Update local comments when prop changes
+	useEffect(() => {
+		setLocalComments(comments);
+	}, [comments]);
 
 	// Track view when post comes into view
 	useEffect(() => {
@@ -588,7 +594,7 @@ const PostCard = ({
 							{/* Threaded Comments - show when enabled and post has comment capability */}
 							{showComments && (
 								<div className="mt-3 pt-2 border-top comment-thread">
-									{comments.map((comment, index) => (
+									{localComments.map((comment, index) => (
 										<CommentItem
 											key={comment.id}
 											comment={comment}
@@ -597,7 +603,7 @@ const PostCard = ({
 												try {
 													const response = await commentAPI.likeComment(commentId);
 													// Update local comment state
-													setComments(prev => prev.map(c => 
+													setLocalComments(prev => prev.map(c => 
 														c.id === commentId 
 															? { ...c, likes: response.likes, isLiked: response.liked }
 															: c
@@ -611,7 +617,7 @@ const PostCard = ({
 												try {
 													const response = await replyAPI.createReply(commentId, { content: replyContent });
 													// Update local comment state with new reply
-													setComments(prev => prev.map(c => 
+													setLocalComments(prev => prev.map(c => 
 														c.id === commentId 
 															? { ...c, replies: [...(c.replies || []), response.reply] }
 															: c
@@ -625,7 +631,7 @@ const PostCard = ({
 											onMentionClick={handleMentionClick}
 											onLinkClick={handleLinkClick}
 											navigate={navigate}
-											isLast={index === comments.length - 1}
+											isLast={index === localComments.length - 1}
 										/>
 									))}
 								</div>
