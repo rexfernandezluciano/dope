@@ -3,9 +3,17 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Container, Nav, Button } from "react-bootstrap";
-import { ChevronLeft, Person, Eye, Bell, X, Clock, Activity, Shield } from "react-bootstrap-icons";
+import {
+	ChevronLeft,
+	Person,
+	Eye,
+	Bell,
+	X,
+	Clock,
+	Activity,
+	Shield,
+} from "react-bootstrap-icons";
 import { Link } from "react-router-dom";
-
 
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import AccountSettingsPage from "./settings/AccountSettingsPage";
@@ -27,44 +35,47 @@ const SettingsPage = () => {
 		navigate("/");
 	};
 
-	const settingsTabs = useMemo(() => [
-		{
-			key: "account",
-			label: "Account",
-			icon: <Person size={20} />,
-			component: <AccountSettingsPage />
-		},
-		{
-			key: "profile",
-			label: "Profile",
-			icon: <Person size={20} />,
-			component: <ProfileSettingsPage />
-		},
-		{
-			key: "privacy",
-			label: "Privacy and safety",
-			icon: <Eye size={20} />,
-			component: <PrivacySettingsPage />
-		},
-		{
-			key: "notifications",
-			label: "Notifications",
-			icon: <Bell size={20} />,
-			component: <NotificationSettingsPage />
-		},
-		{
-			key: "sessions",
-			label: "Sessions",
-			icon: <Shield size={20} />,
-			component: <SessionSettingsPage />
-		}
-	], []);
+	const settingsTabs = useMemo(
+		() => [
+			{
+				key: "account",
+				label: "Account",
+				icon: <Person size={20} />,
+				component: <AccountSettingsPage />,
+			},
+			{
+				key: "profile",
+				label: "Profile",
+				icon: <Person size={20} />,
+				component: <ProfileSettingsPage />,
+			},
+			{
+				key: "privacy",
+				label: "Privacy and safety",
+				icon: <Eye size={20} />,
+				component: <PrivacySettingsPage />,
+			},
+			{
+				key: "notifications",
+				label: "Notifications",
+				icon: <Bell size={20} />,
+				component: <NotificationSettingsPage />,
+			},
+			{
+				key: "sessions",
+				label: "Sessions",
+				icon: <Shield size={20} />,
+				component: <SessionSettingsPage />,
+			},
+		],
+		[],
+	);
 
-	const currentTab = settingsTabs.find(tab => tab.key === activeTab);
+	const currentTab = settingsTabs.find((tab) => tab.key === activeTab);
 
 	useEffect(() => {
 		// Set active tab based on URL parameter
-		if (tab && settingsTabs.find(tabItem => tabItem.key === tab)) {
+		if (tab && settingsTabs.find((tabItem) => tabItem.key === tab)) {
 			setActiveTab(tab);
 		} else {
 			setActiveTab("account"); // Default to account tab
@@ -84,7 +95,10 @@ const SettingsPage = () => {
 	return (
 		<Container className="py-0 px-0">
 			{/* Header */}
-			<div className="d-flex align-items-center justify-content-between p-3 border-bottom bg-white sticky-top" style={{ zIndex: 100 }}>
+			<div
+				className="d-flex align-items-center justify-content-between p-3 border-bottom bg-white sticky-top"
+				style={{ zIndex: 100 }}
+			>
 				<div className="d-flex align-items-center gap-3">
 					<Button
 						variant="link"
@@ -114,9 +128,11 @@ const SettingsPage = () => {
 								as={Link}
 								to={`/settings/${tab.key}`}
 								className={`d-flex align-items-center gap-3 px-4 py-3 text-dark border-0 ${
-									activeTab === tab.key ? 'bg-primary bg-opacity-10 border-end border-primary border-3' : ''
+									activeTab === tab.key
+										? "bg-primary bg-opacity-10 border-end border-primary border-3"
+										: ""
 								}`}
-								style={{ cursor: 'pointer' }}
+								style={{ cursor: "pointer" }}
 							>
 								{tab.icon}
 								<span className="fw-medium">{tab.label}</span>
@@ -125,33 +141,10 @@ const SettingsPage = () => {
 
 						<hr className="mx-3" />
 
-						<Link
-							to="/waiting-list"
-							className="list-group-item list-group-item-action border-0 d-flex align-items-center"
-						>
-							<Clock className="me-3 text-warning" />
-							<div>
-								<div className="fw-medium">Waiting List</div>
-								<small className="text-muted">Join our waiting list</small>
-							</div>
-						</Link>
-						<Link
-							to="/network-test"
-							className="list-group-item list-group-item-action border-0 d-flex align-items-center"
-						>
-							<Activity className="me-3 text-info" />
-							<div>
-								<div className="fw-medium">Network Diagnostics</div>
-								<small className="text-muted">Test connectivity and troubleshoot issues</small>
-							</div>
-						</Link>
-
-						<hr className="mx-3" />
-
 						<Nav.Link
 							className="d-flex align-items-center gap-3 px-4 py-3 text-danger border-0"
 							onClick={handleLogout}
-							style={{ cursor: 'pointer' }}
+							style={{ cursor: "pointer" }}
 						>
 							<X size={20} />
 							<span className="fw-medium">Logout</span>
