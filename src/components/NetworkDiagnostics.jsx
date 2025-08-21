@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button, Alert, Spinner, Card, Badge } from 'react-bootstrap';
 
@@ -11,10 +10,14 @@ const NetworkDiagnostics = () => {
     healthCheck: { status: 'pending', message: '', timestamp: null },
     loginEndpoint: { status: 'pending', message: '', timestamp: null },
   });
-  
+
   const [running, setRunning] = useState(false);
 
   const API_BASE_URL = process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1";
+  const API_ENDPOINTS = [
+    "https://api.dopp.eu.org/v1",
+    "https://social.dopp.eu.org/v1"
+  ];
 
   const updateTest = (testName, status, message) => {
     setTests(prev => ({
@@ -30,7 +33,7 @@ const NetworkDiagnostics = () => {
   const testInternetConnectivity = async () => {
     try {
       updateTest('internetConnectivity', 'running', 'Testing internet connectivity...');
-      
+
       // Check if browser reports online status
       if (!navigator.onLine) {
         updateTest('internetConnectivity', 'error', 'Browser reports offline status');
@@ -78,10 +81,10 @@ const NetworkDiagnostics = () => {
   const testDnsResolution = async () => {
     try {
       updateTest('dnsResolution', 'running', 'Testing DNS resolution...');
-      
+
       const url = new URL(API_BASE_URL);
       const hostname = url.hostname;
-      
+
       // Try to resolve the hostname
       const startTime = Date.now();
       const response = await fetch(`https://${hostname}`, { 
@@ -90,7 +93,7 @@ const NetworkDiagnostics = () => {
         signal: AbortSignal.timeout(5000)
       });
       const duration = Date.now() - startTime;
-      
+
       updateTest('dnsResolution', 'success', `DNS resolved in ${duration}ms`);
     } catch (error) {
       updateTest('dnsResolution', 'error', `DNS resolution failed: ${error.message}`);
@@ -100,53 +103,47 @@ const NetworkDiagnostics = () => {
   const testApiReachability = async () => {
     try {
       updateTest('apiReachability', 'running', 'Testing API server reachability...');
-      
-      const startTime = Date.now();
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-      
-      // First try a simple GET to the base URL
-      let response;
-      try {
-        response = await fetch(API_BASE_URL, {
-          method: 'GET',
-          signal: controller.signal,
-          headers: {
-            'User-Agent': 'DOPE-Network-Diagnostics/1.0',
-            'Accept': 'application/json'
-          }
-        });
-      } catch (baseError) {
-        // If base URL fails, try with /health endpoint
+
+      let workingEndpoints = [];
+      let failedEndpoints = [];
+
+      for (const endpoint of API_ENDPOINTS) {
         try {
-          response = await fetch(`${API_BASE_URL}/health`, {
-            method: 'GET',
-            signal: controller.signal,
-            headers: {
-              'User-Agent': 'DOPE-Network-Diagnostics/1.0',
-              'Accept': 'application/json'
-            }
+          const url = new URL(endpoint);
+          const hostname = url.hostname;
+
+          const startTime = Date.now();
+          const response = await fetch(`https://${hostname}`, { 
+            method: 'HEAD', 
+            mode: 'no-cors',
+            signal: AbortSignal.timeout(5000)
           });
-        } catch (healthError) {
-          throw new Error(`Both base URL and /health endpoint failed. Base: ${baseError.message}, Health: ${healthError.message}`);
+          const duration = Date.now() - startTime;
+
+          workingEndpoints.push(`${hostname} (${duration}ms)`);
+        } catch (error) {
+          const url = new URL(endpoint);
+          failedEndpoints.push(`${url.hostname}: ${error.message}`);
         }
       }
-      
-      clearTimeout(timeoutId);
-      const duration = Date.now() - startTime;
-      
-      updateTest('apiReachability', 'success', 
-        `API server reachable (${response.status} ${response.statusText}) in ${duration}ms`);
+
+      if (workingEndpoints.length > 0) {
+        updateTest('apiReachability', 'success', 
+          `API servers reachable: ${workingEndpoints.join(', ')}`);
+      } else {
+        updateTest('apiReachability', 'error', 
+          `All API servers unreachable: ${failedEndpoints.join('; ')}`);
+      }
     } catch (error) {
       updateTest('apiReachability', 'error', 
-        `API server unreachable: ${error.message}`);
+        `API reachability test failed: ${error.message}`);
     }
   };
 
   const testCorsPolicy = async () => {
     try {
       updateTest('corsPolicy', 'running', 'Testing CORS policy...');
-      
+
       const response = await fetch(`${API_BASE_URL}/health`, {
         method: 'GET',
         headers: {
@@ -155,13 +152,13 @@ const NetworkDiagnostics = () => {
         },
         signal: AbortSignal.timeout(8000)
       });
-      
+
       const corsHeaders = {
         'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
         'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
         'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers'),
       };
-      
+
       updateTest('corsPolicy', 'success', 
         `CORS policy allows requests. Headers: ${JSON.stringify(corsHeaders, null, 2)}`);
     } catch (error) {
@@ -172,35 +169,53 @@ const NetworkDiagnostics = () => {
 
   const testHealthCheck = async () => {
     try {
-      updateTest('healthCheck', 'running', 'Testing API health endpoint...');
-      
-      const response = await fetch(`${API_BASE_URL}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        signal: AbortSignal.timeout(10000)
-      });
-      
-      if (response.ok) {
-        const data = await response.text();
+      updateTest('healthCheck', 'running', 'Testing API health endpoints...');
+
+      let workingHealthChecks = [];
+      let failedHealthChecks = [];
+
+      for (const endpoint of API_ENDPOINTS) {
+        try {
+          const response = await fetch(`${endpoint}/health`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            signal: AbortSignal.timeout(8000)
+          });
+
+          if (response.ok) {
+            const data = await response.text();
+            const url = new URL(endpoint);
+            workingHealthChecks.push(`${url.hostname} (${response.status})`);
+          } else {
+            const url = new URL(endpoint);
+            failedHealthChecks.push(`${url.hostname}: ${response.status} ${response.statusText}`);
+          }
+        } catch (error) {
+          const url = new URL(endpoint);
+          failedHealthChecks.push(`${url.hostname}: ${error.message}`);
+        }
+      }
+
+      if (workingHealthChecks.length > 0) {
         updateTest('healthCheck', 'success', 
-          `Health check passed: ${data.substring(0, 100)}`);
+          `Health endpoints working: ${workingHealthChecks.join(', ')}`);
       } else {
         updateTest('healthCheck', 'error', 
-          `Health check failed: ${response.status} ${response.statusText}`);
+          `All health endpoints failed: ${failedHealthChecks.join('; ')}`);
       }
     } catch (error) {
       updateTest('healthCheck', 'error', 
-        `Health check error: ${error.message}`);
+        `Health check test failed: ${error.message}`);
     }
   };
 
   const testLoginEndpoint = async () => {
     try {
       updateTest('loginEndpoint', 'running', 'Testing login endpoint availability...');
-      
+
       // Test if the login endpoint responds (we expect a 400 or similar for empty request)
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -211,11 +226,11 @@ const NetworkDiagnostics = () => {
         body: JSON.stringify({}), // Empty body should return validation error
         signal: AbortSignal.timeout(10000)
       });
-      
+
       // Any response (even error) means the endpoint is reachable
       updateTest('loginEndpoint', 'success', 
         `Login endpoint reachable (${response.status} ${response.statusText})`);
-      
+
     } catch (error) {
       updateTest('loginEndpoint', 'error', 
         `Login endpoint unreachable: ${error.message}`);
@@ -224,7 +239,7 @@ const NetworkDiagnostics = () => {
 
   const runAllTests = async () => {
     setRunning(true);
-    
+
     // Reset all tests
     Object.keys(tests).forEach(testName => {
       updateTest(testName, 'pending', 'Waiting...');
@@ -277,12 +292,12 @@ const NetworkDiagnostics = () => {
           )}
         </Button>
       </Card.Header>
-      
+
       <Card.Body>
         <div className="mb-2">
           <small className="text-muted">API Base URL: {API_BASE_URL}</small>
         </div>
-        
+
         {Object.entries(tests).map(([testName, test]) => (
           <div key={testName} className="mb-2">
             <div className="d-flex justify-content-between align-items-start">
@@ -302,7 +317,7 @@ const NetworkDiagnostics = () => {
             <hr className="my-2" />
           </div>
         ))}
-        
+
         <Alert variant="info" className="small mt-3">
           <strong>Troubleshooting Tips:</strong>
           <ul className="mb-0 mt-1">

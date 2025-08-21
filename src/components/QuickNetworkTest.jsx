@@ -13,9 +13,12 @@ const QuickNetworkTest = () => {
     const testUrls = [
       { name: 'Google', url: 'https://www.google.com/favicon.ico', method: 'HEAD', mode: 'no-cors' },
       { name: 'Cloudflare', url: 'https://cloudflare.com/favicon.ico', method: 'HEAD', mode: 'no-cors' },
-      { name: 'API Domain (Base)', url: 'https://api.dopp.eu.org', method: 'GET', mode: 'cors' },
-      { name: 'API Health', url: 'https://api.dopp.eu.org/v1/health', method: 'GET', mode: 'cors' },
-      { name: 'API Login (Empty POST)', url: 'https://api.dopp.eu.org/v1/auth/login', method: 'POST', mode: 'cors', body: '{}' }
+      { name: 'API Primary Domain', url: 'https://api.dopp.eu.org', method: 'GET', mode: 'cors' },
+      { name: 'API Secondary Domain', url: 'https://social.dopp.eu.org', method: 'GET', mode: 'cors' },
+      { name: 'API Primary Health', url: 'https://api.dopp.eu.org/v1/health', method: 'GET', mode: 'cors' },
+      { name: 'API Secondary Health', url: 'https://social.dopp.eu.org/v1/health', method: 'GET', mode: 'cors' },
+      { name: 'API Primary Login', url: 'https://api.dopp.eu.org/v1/auth/login', method: 'POST', mode: 'cors', body: '{}' },
+      { name: 'API Secondary Login', url: 'https://social.dopp.eu.org/v1/auth/login', method: 'POST', mode: 'cors', body: '{}' }
     ];
 
     for (const test of testUrls) {

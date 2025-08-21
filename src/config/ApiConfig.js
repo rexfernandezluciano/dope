@@ -3,23 +3,137 @@
 // Secure token storage helper
 // Import js-cookie for secure cookie management
 import Cookies from "js-cookie";
-const API_BASE_URL =
-	process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1";
+// Multiple API endpoints for failover
+const API_ENDPOINTS = [
+	process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1",
+	"https://social.dopp.eu.org/v1"
+];
+
+// Current active API base URL
+let API_BASE_URL = API_ENDPOINTS[0];
 
 // Validate API URL is HTTPS
 if (!API_BASE_URL.startsWith("https://")) {
 	console.error("API URL must use HTTPS");
 }
 
-// Enhanced fetch-based HTTP client with better error handling
+// Enhanced fetch-based HTTP client with better error handling and failover
 class HttpClient {
 	constructor(baseURL, timeout = 60000) {
 		this.baseURL = baseURL;
 		this.timeout = timeout;
+		this.failedEndpoints = new Set();
+		this.lastHealthCheck = 0;
+		this.healthCheckInterval = 5 * 60 * 1000; // 5 minutes
 	}
 
+	// Check endpoint health
+	async checkEndpointHealth(endpoint) {
+		try {
+			const response = await fetch(`${endpoint}/health`, {
+				method: 'GET',
+				signal: AbortSignal.timeout(5000),
+				mode: 'cors'
+			});
+			return response.ok;
+		} catch (error) {
+			console.warn(`Health check failed for ${endpoint}:`, error.message);
+			return false;
+		}
+	}
+
+	// Find the best available endpoint
+	async findWorkingEndpoint() {
+		const now = Date.now();
+		
+		// Only check health if enough time has passed
+		if (now - this.lastHealthCheck > this.healthCheckInterval) {
+			this.lastHealthCheck = now;
+			this.failedEndpoints.clear();
+			
+			console.log("🔍 Checking endpoint health...");
+			
+			for (const endpoint of API_ENDPOINTS) {
+				const isHealthy = await this.checkEndpointHealth(endpoint);
+				console.log(`🏥 Health check for ${endpoint}: ${isHealthy ? '✅ Healthy' : '❌ Failed'}`);
+				
+				if (isHealthy) {
+					API_BASE_URL = endpoint;
+					this.baseURL = endpoint;
+					console.log(`🎯 Using endpoint: ${endpoint}`);
+					return endpoint;
+				} else {
+					this.failedEndpoints.add(endpoint);
+				}
+			}
+		}
+		
+		// Use current endpoint if no health check needed
+		return this.baseURL;
+	}
+
+	// Try request with failover to other endpoints
+	async requestWithFailover(url, options = {}) {
+		let lastError = null;
+		
+		for (const endpoint of API_ENDPOINTS) {
+			// Skip endpoints that recently failed (unless it's our last option)
+			if (this.failedEndpoints.has(endpoint) && API_ENDPOINTS.indexOf(endpoint) < API_ENDPOINTS.length - 1) {
+				continue;
+			}
+			
+			try {
+				const fullUrl = url.startsWith('http') ? url : `${endpoint}${url}`;
+				console.log(`🔄 Trying endpoint: ${endpoint}`);
+				
+				const response = await this.makeRequest(fullUrl, options);
+				
+				// If successful, update our primary endpoint
+				if (API_BASE_URL !== endpoint) {
+					API_BASE_URL = endpoint;
+					this.baseURL = endpoint;
+					console.log(`✅ Switched to working endpoint: ${endpoint}`);
+				}
+				
+				// Remove from failed endpoints
+				this.failedEndpoints.delete(endpoint);
+				
+				return response;
+				
+			} catch (error) {
+				console.warn(`❌ Request failed on ${endpoint}:`, error.message);
+				this.failedEndpoints.add(endpoint);
+				lastError = error;
+				
+				// If this is a network connectivity issue, don't try other endpoints
+				if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+					// Quick test if it's a general connectivity issue
+					try {
+						await fetch('https://www.google.com/favicon.ico', { 
+							method: 'HEAD', 
+							mode: 'no-cors',
+							signal: AbortSignal.timeout(3000)
+						});
+						// If Google works, continue trying other endpoints
+						continue;
+					} catch (connectTest) {
+						// If Google fails, it's a general connectivity issue
+						throw new Error(`Network connectivity issue detected. Please check your internet connection and try again.`);
+					}
+				}
+			}
+		}
+		
+		// If all endpoints failed
+		throw lastError || new Error('All API endpoints are currently unavailable');
+	}
+
+	// Original request method renamed
+	async makeRequest(fullUrl, options = {}) {
+
 	async request(url, options = {}) {
-		const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
+		return this.requestWithFailover(url, options);
+	}
 		
 		console.log("🚀 Making HTTP request:", {
 			url: fullUrl,

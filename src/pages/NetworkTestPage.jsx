@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
 import { Wifi, Activity, Globe, Shield } from 'react-bootstrap-icons';
 import NetworkTest from '../components/NetworkTest';
+import EndpointStatus from '../components/EndpointStatus';
 import { updatePageMeta, pageMetaData } from '../utils/meta-utils';
 
 const NetworkTestPage = () => {
@@ -44,7 +44,7 @@ const NetworkTestPage = () => {
             </Card.Body>
           </Card>
 
-          {/* Network Test Component */}
+          {/* Endpoint Status and Network Test Components */}
           <Card className="border-0 shadow-sm">
             <Card.Header className="bg-light">
               <h5 className="mb-0 d-flex align-items-center">
@@ -53,6 +53,7 @@ const NetworkTestPage = () => {
               </h5>
             </Card.Header>
             <Card.Body>
+              <EndpointStatus />
               <NetworkTest />
             </Card.Body>
           </Card>
