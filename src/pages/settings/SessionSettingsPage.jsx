@@ -2,8 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
-import { Container, Card, Button, Alert, Modal, Badge, Table } from "react-bootstrap";
-import { Globe, Phone, Laptop, Tablet, Trash, Shield } from "react-bootstrap-icons";
+import {
+	Container,
+	Card,
+	Button,
+	Alert,
+	Modal,
+	Badge,
+	Table,
+} from "react-bootstrap";
+import {
+	Globe,
+	Phone,
+	Laptop,
+	Tablet,
+	Trash,
+	Shield,
+} from "react-bootstrap-icons";
 
 import { userAPI } from "../../config/ApiConfig";
 
@@ -18,18 +33,14 @@ const SessionSettingsPage = () => {
 	const [showRevokeAllModal, setShowRevokeAllModal] = useState(false);
 	const [selectedSession, setSelectedSession] = useState(null);
 
-	useEffect(() => {
-		loadSessions();
-	}, []);
-
 	const loadSessions = async () => {
 		try {
 			setLoading(true);
 			const response = await userAPI.getSessions();
 			setSessions(response.sessions || []);
 		} catch (err) {
-			console.error('Error loading sessions:', err);
-			setMessage(err.message || 'Failed to load sessions');
+			console.error("Error loading sessions:", err);
+			setMessage(err.message || "Failed to load sessions");
 			setMessageType("danger");
 		} finally {
 			setLoading(false);
@@ -44,8 +55,8 @@ const SessionSettingsPage = () => {
 			setMessage("Session revoked successfully!");
 			setMessageType("success");
 		} catch (err) {
-			console.error('Error revoking session:', err);
-			setMessage(err.message || 'Failed to revoke session');
+			console.error("Errorrevoking session:", err);
+			setMessage(err.message || "Failed to revoke session");
 			setMessageType("danger");
 		} finally {
 			setLoading(false);
@@ -59,11 +70,13 @@ const SessionSettingsPage = () => {
 			setLoading(true);
 			await userAPI.revokeAllSessions();
 			await loadSessions(); // Reload sessions
-			setMessage("All sessions revoked successfully! You will need to log in again on other devices.");
+			setMessage(
+				"All sessions revoked successfully! You will need to log in again on other devices.",
+			);
 			setMessageType("success");
 		} catch (err) {
-			console.error('Error revoking all sessions:', err);
-			setMessage(err.message || 'Failed to revoke all sessions');
+			console.error("Error revoking all sessions:", err);
+			setMessage(err.message || "Failed to revoke all sessions");
 			setMessageType("danger");
 		} finally {
 			setLoading(false);
@@ -73,11 +86,11 @@ const SessionSettingsPage = () => {
 
 	const getDeviceIcon = (deviceType) => {
 		switch (deviceType?.toLowerCase()) {
-			case 'mobile':
+			case "mobile":
 				return <Phone size={18} />;
-			case 'tablet':
+			case "tablet":
 				return <Tablet size={18} />;
-			case 'desktop':
+			case "desktop":
 				return <Laptop size={18} />;
 			default:
 				return <Globe size={18} />;
@@ -85,7 +98,7 @@ const SessionSettingsPage = () => {
 	};
 
 	const formatLastActivity = (timestamp) => {
-		if (!timestamp) return 'Unknown';
+		if (!timestamp) return "Unknown";
 		const date = new Date(timestamp);
 		const now = new Date();
 		const diffMs = now - date;
@@ -93,14 +106,16 @@ const SessionSettingsPage = () => {
 		const diffHours = Math.floor(diffMins / 60);
 		const diffDays = Math.floor(diffHours / 24);
 
-		if (diffMins < 1) return 'Just now';
+		if (diffMins < 1) return "Just now";
 		if (diffMins < 60) return `${diffMins} minutes ago`;
 		if (diffHours < 24) return `${diffHours} hours ago`;
 		if (diffDays < 7) return `${diffDays} days ago`;
 		return date.toLocaleDateString();
 	};
 
-
+	useEffect(() => {
+		loadSessions();
+	}, [loadSessions]);
 
 	if (!user) {
 		return (
@@ -117,7 +132,8 @@ const SessionSettingsPage = () => {
 					variant={messageType}
 					dismissible
 					onClose={() => setMessage("")}
-					className="mb-4">
+					className="mb-4"
+				>
 					{message}
 				</Alert>
 			)}
@@ -127,7 +143,7 @@ const SessionSettingsPage = () => {
 				<Card.Header className="d-flex align-items-center justify-content-between">
 					<div className="d-flex align-items-center gap-2">
 						<Shield size={20} />
-						<h5 className="mb-0">Active Sessions</h5>
+						<h5 className="mb-0">Active Sessions</h5>{" "}
 					</div>
 					<Badge bg="secondary">{sessions.length} active</Badge>
 				</Card.Header>
@@ -162,7 +178,9 @@ const SessionSettingsPage = () => {
 													{getDeviceIcon(session.deviceType)}
 													<div>
 														<div className="fw-medium">
-															{session.deviceName || session.userAgent || 'Unknown Device'}
+															{session.deviceName ||
+																session.userAgent ||
+																"Unknown Device"}
 														</div>
 														<small className="text-muted">
 															{session.browser} on {session.os}
@@ -180,12 +198,15 @@ const SessionSettingsPage = () => {
 												</div>
 											</td>
 											<td>
-												<code className="small">{session.ipAddress || 'Unknown'}</code>
+												<code className="small">
+													{session.ipAddress || "Unknown"}
+												</code>
 											</td>
 											<td>
 												<div>{formatLastActivity(session.lastActivity)}</div>
 												<small className="text-muted">
-													Created: {new Date(session.createdAt).toLocaleDateString()}
+													Created:{" "}
+													{new Date(session.createdAt).toLocaleDateString()}
 												</small>
 											</td>
 											<td>
@@ -231,13 +252,16 @@ const SessionSettingsPage = () => {
 							<div>
 								<h6 className="mb-1">Revoke All Other Sessions</h6>
 								<p className="text-muted mb-0 small">
-									Sign out from all devices except this one. You'll need to log in again on other devices.
+									Sign out from all devices except this one. You'll need to log
+									in again on other devices.
 								</p>
 							</div>
 							<Button
 								variant="outline-danger"
 								onClick={() => setShowRevokeAllModal(true)}
-								disabled={loading || sessions.filter(s => !s.isCurrent).length === 0}
+								disabled={
+									loading || sessions.filter((s) => !s.isCurrent).length === 0
+								}
 							>
 								Revoke All
 							</Button>
@@ -247,7 +271,11 @@ const SessionSettingsPage = () => {
 			</Card>
 
 			{/* Revoke Single Session Modal */}
-			<Modal show={showRevokeModal} onHide={() => setShowRevokeModal(false)} centered>
+			<Modal
+				show={showRevokeModal}
+				onHide={() => setShowRevokeModal(false)}
+				centered
+			>
 				<Modal.Header closeButton>
 					<Modal.Title>Revoke Session</Modal.Title>
 				</Modal.Header>
@@ -258,15 +286,21 @@ const SessionSettingsPage = () => {
 							<div className="bg-light p-3 rounded">
 								<div className="d-flex align-items-center gap-2 mb-2">
 									{getDeviceIcon(selectedSession.deviceType)}
-									<strong>{selectedSession.deviceName || 'Unknown Device'}</strong>
+									<strong>
+										{selectedSession.deviceName || "Unknown Device"}
+									</strong>
 								</div>
 								<div className="small text-muted">
 									<div>IP: {selectedSession.ipAddress}</div>
-									<div>Last active: {formatLastActivity(selectedSession.lastActivity)}</div>
+									<div>
+										Last active:{" "}
+										{formatLastActivity(selectedSession.lastActivity)}
+									</div>
 								</div>
 							</div>
 							<p className="mt-3 mb-0">
-								<strong>This action cannot be undone.</strong> The user will be signed out from this device.
+								<strong>This action cannot be undone.</strong> The user will be
+								signed out from this device.
 							</p>
 						</div>
 					)}
@@ -280,28 +314,38 @@ const SessionSettingsPage = () => {
 						onClick={() => handleRevokeSession(selectedSession?.id)}
 						disabled={loading}
 					>
-						{loading ? 'Revoking...' : 'Revoke Session'}
+						{loading ? "Revoking..." : "Revoke Session"}
 					</Button>
 				</Modal.Footer>
 			</Modal>
 
 			{/* Revoke All Sessions Modal */}
-			<Modal show={showRevokeAllModal} onHide={() => setShowRevokeAllModal(false)} centered>
+			<Modal
+				show={showRevokeAllModal}
+				onHide={() => setShowRevokeAllModal(false)}
+				centered
+			>
 				<Modal.Header closeButton>
 					<Modal.Title className="text-danger">Revoke All Sessions</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
 					<p>Are you sure you want to revoke all other sessions?</p>
 					<p className="text-warning">
-						<strong>This will sign you out from all devices except this one.</strong>
+						<strong>
+							This will sign you out from all devices except this one.
+						</strong>
 						You'll need to log in again on other devices.
 					</p>
 					<p className="mb-0">
-						Sessions to be revoked: <strong>{sessions.filter(s => !s.isCurrent).length}</strong>
+						Sessions to be revoked:{" "}
+						<strong>{sessions.filter((s) => !s.isCurrent).length}</strong>
 					</p>
 				</Modal.Body>
 				<Modal.Footer>
-					<Button variant="secondary" onClick={() => setShowRevokeAllModal(false)}>
+					<Button
+						variant="secondary"
+						onClick={() => setShowRevokeAllModal(false)}
+					>
 						Cancel
 					</Button>
 					<Button
@@ -309,7 +353,7 @@ const SessionSettingsPage = () => {
 						onClick={handleRevokeAllSessions}
 						disabled={loading}
 					>
-						{loading ? 'Revoking...' : 'Revoke All Sessions'}
+						{loading ? "Revoking..." : "Revoke All Sessions"}
 					</Button>
 				</Modal.Footer>
 			</Modal>
