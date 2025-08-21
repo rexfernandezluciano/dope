@@ -21,6 +21,9 @@ import LiveStreamPage from "../pages/LiveStreamPage";
 import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
 import TermsOfServicePage from "../pages/TermsOfServicePage";
 import NetworkTestPage from "../pages/NetworkTestPage";
+import PrivacySettingsPage from "../pages/settings/PrivacySettingsPage";
+import ProfileSettingsPage from "../pages/settings/ProfileSettingsPage";
+import SessionSettingsPage from "../pages/settings/SessionSettingsPage";
 
 import RequireAuth from "./security/RequireAuth";
 import { IndexPageLoader } from "./loader/IndexPageLoader";
@@ -120,6 +123,14 @@ const router = createBrowserRouter([
 				element: <SettingsPage />,
 				loader: IndexPageLoader,
 				hydrateFallbackElement: <LoadingView />,
+			},
+			{
+				path: "privacy",
+				element: <PrivacySettingsPage />,
+			},
+			{
+				path: "sessions",
+				element: <SessionSettingsPage />,
 			},
 		],
 	},

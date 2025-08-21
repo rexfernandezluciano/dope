@@ -392,7 +392,23 @@ export const userAPI = {
 	},
 
 	getUserEarnings: async () => {
-		return await apiRequest("/users/analytics/earnings");
+		return await apiRequest("/users/earnings");
+	},
+
+	getSessions: async () => {
+		return await apiRequest("/users/sessions");
+	},
+
+	revokeSession: async (sessionId) => {
+		return await apiRequest(`/users/sessions/${sessionId}`, {
+			method: "DELETE",
+		});
+	},
+
+	revokeAllSessions: async () => {
+		return await apiRequest("/users/sessions", {
+			method: "DELETE",
+		});
 	},
 
 	getUserStats: async (userId) => {
