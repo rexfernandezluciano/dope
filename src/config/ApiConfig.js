@@ -465,6 +465,10 @@ export const userAPI = {
 			data: { email },
 		});
 	},
+
+	getUserEarnings: async () => {
+		return await apiRequest("/users/earnings");
+	},
 };
 
 export const postAPI = {
