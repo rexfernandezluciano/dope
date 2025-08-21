@@ -78,8 +78,8 @@ const SearchPage = () => {
 				const response = await userAPI.searchUsers(searchQueryParam);
 				setUsers(response.users || []);
 			} else if (tab === "comments") {
-				// Use the correct API endpoint for comment search
-				const response = await apiRequest(`/comments/search?q=${encodeURIComponent(searchQueryParam)}`);
+				// Use the correct API endpoint for comment search with proper parameters
+				const response = await apiRequest(`/comments/search?query=${encodeURIComponent(searchQueryParam)}&limit=20&sortBy=desc`);
 				setComments(response.comments || []);
 			}
 		} catch (err) {
@@ -87,7 +87,7 @@ const SearchPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [searchQuery, activeTab]);
+	}, []);
 
 	const handleSearch = useCallback(() => {
 		if (!searchQuery.trim()) {
@@ -102,13 +102,16 @@ const SearchPage = () => {
 
 	useEffect(() => {
 		if (searchQuery.trim()) {
-			handleSearch();
+			// Search all tabs when query changes
+			performSearch(searchQuery, "posts");
+			performSearch(searchQuery, "users"); 
+			performSearch(searchQuery, "comments");
 		} else {
 			setPosts([]);
 			setUsers([]);
 			setComments([]);
 		}
-	}, [searchQuery, handleSearch]);
+	}, [searchQuery, performSearch]);
 
 
 	// Update meta tags when search query changes
@@ -163,9 +166,6 @@ const SearchPage = () => {
 
 	const handleTabChange = (tab) => {
 		setActiveTab(tab);
-		setPosts([]);
-		setUsers([]);
-		setComments([]);
 
 		// Update URL with tab parameter
 		const newSearchParams = new URLSearchParams(searchParams);
@@ -177,7 +177,14 @@ const SearchPage = () => {
 		}
 		navigate(`/search?${newSearchParams.toString()}`, { replace: true });
 
-		performSearch(searchQuery, tab);
+		// Only search if we don't have results for this tab yet
+		if (tab === "posts" && posts.length === 0 && searchQuery.trim()) {
+			performSearch(searchQuery, tab);
+		} else if (tab === "users" && users.length === 0 && searchQuery.trim()) {
+			performSearch(searchQuery, tab);
+		} else if (tab === "comments" && comments.length === 0 && searchQuery.trim()) {
+			performSearch(searchQuery, tab);
+		}
 	};
 
 
