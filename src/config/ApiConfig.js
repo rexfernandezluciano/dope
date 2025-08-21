@@ -294,7 +294,6 @@ export const api = {
 };
 
 export {
-	api,
 	setAuthToken,
 	removeAuthToken,
 	getAuthToken,
