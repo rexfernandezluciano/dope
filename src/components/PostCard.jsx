@@ -18,7 +18,7 @@ import {
 	ChevronRight,
 } from "react-bootstrap-icons";
 
-import { postAPI } from "../config/ApiConfig";
+import { postAPI, commentAPI, replyAPI } from "../config/ApiConfig";
 import {
 	formatTimeAgo,
 	deletePost as deletePostUtil,
@@ -161,7 +161,7 @@ const PostCard = ({
 		if (onLike && currentUser) {
 			const wasLiked = post.likes.some(like => like.user?.uid === currentUser.uid);
 			const response = await onLike(post.id);
-			
+
 			// Send like notification to post owner only when user actually likes (not unlikes)
 			if (response && response.liked && !wasLiked) {
 				try {
@@ -437,7 +437,7 @@ const PostCard = ({
 								<div className="d-flex flex-wrap gap-3 small text-muted">
 									{post.likes.length > 0 && currentUser && (() => {
 										const otherLikesCount = currentUserLiked ? post.likes.length - 1 : post.likes.length;
-										
+
 										if (currentUserLiked && otherLikesCount > 0) {
 											return (
 												<span>
