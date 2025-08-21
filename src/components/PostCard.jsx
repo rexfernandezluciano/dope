@@ -57,10 +57,13 @@ const PostCard = ({
 
 		const trackView = async () => {
 			try {
-				await postAPI.trackView(post.id);
-				setViewTracked(true);
+				if (postAPI.trackView) {
+					await postAPI.trackView(post.id);
+					setViewTracked(true);
+				}
 			} catch (error) {
 				console.error("Failed to track view for post:", post.id, error);
+				// Don't set viewTracked to true on error to allow retry
 			}
 		};
 

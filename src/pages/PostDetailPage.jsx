@@ -72,12 +72,22 @@ const PostDetailPage = () => {
 
 			// Load post first
 			const postResponse = await postAPI.getPost(postId);
-			setPost(postResponse.post);
+			if (postResponse && postResponse.post) {
+				setPost(postResponse.post);
+			} else {
+				throw new Error("Post not found");
+			}
 
 			// Load comments separately to avoid 404 breaking the entire page
 			try {
 				const commentsResponse = await commentAPI.getComments(postId);
-				setComments(commentsResponse.comments || []);
+				if (commentsResponse && Array.isArray(commentsResponse.comments)) {
+					setComments(commentsResponse.comments);
+				} else if (commentsResponse && Array.isArray(commentsResponse)) {
+					setComments(commentsResponse);
+				} else {
+					setComments([]);
+				}
 			} catch (commentError) {
 				console.error("Failed to load comments:", commentError);
 				setComments([]); // Set empty comments on error
@@ -85,14 +95,16 @@ const PostDetailPage = () => {
 
 			// Track view after successfully loading the post
 			try {
-				await postAPI.trackView(postId);
+				if (postAPI.trackView) {
+					await postAPI.trackView(postId);
+				}
 			} catch (viewError) {
 				console.error("Failed to track view:", viewError);
 				// Don't throw here as view tracking shouldn't break the page
 			}
 		} catch (err) {
 			console.error("Failed to load post:", err);
-			setError(err.message);
+			setError(err.message || "Failed to load post");
 		} finally {
 			setLoading(false);
 		}
