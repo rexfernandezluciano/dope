@@ -31,6 +31,7 @@ import {
 } from "../utils/messaging-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { getUser } from "../utils/auth-utils";
+import { extractHashtags, extractMentions } from "../utils/dope-api-utils";
 import { useNavigate } from "react-router-dom";
 
 // Removed unused cleanTextContent function
@@ -428,7 +429,7 @@ const HomePage = () => {
 
 	const handleStopLiveStream = () => {
 		stopLiveStream();
-		setShowLiveStudioModal(false);
+		// Don't automatically close the modal - let user close it manually
 	};
 
 	const stopLiveStream = async () => {

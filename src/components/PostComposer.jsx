@@ -201,7 +201,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
   const handleStartLiveStream = async (streamData) => {
     try {
       setIsStreaming(true);
-      setShowLiveStudioModal(false);
+      // Keep the LiveStudioModal open - don't close it
       
       // Don't create post here - let HomePage handle the actual stream creation
       // Just update local state to show live indicator
@@ -215,7 +215,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 
   const handleStopLiveStream = () => {
     setIsStreaming(false);
-    setShowLiveStudioModal(false);
+    // Keep the LiveStudioModal open - don't close it automatically
   };
 
   const handleSubmit = useCallback(async (e) => {
