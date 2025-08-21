@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLoaderData } from "react-router-dom";
 import {
 	Container,
@@ -33,7 +33,7 @@ const SessionSettingsPage = () => {
 	const [showRevokeAllModal, setShowRevokeAllModal] = useState(false);
 	const [selectedSession, setSelectedSession] = useState(null);
 
-	const loadSessions = async () => {
+	const loadSessions = useCallback(async () => {
 		try {
 			setLoading(true);
 			const response = await userAPI.getSessions();
@@ -45,7 +45,7 @@ const SessionSettingsPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	const handleRevokeSession = async (sessionId) => {
 		try {
