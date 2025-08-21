@@ -395,4 +395,106 @@ export const testApiConnection = async () => {
 	}
 };
 
+// Export individual API modules for backward compatibility
+export const authAPI = {
+	login: api.login,
+	register: api.register,
+	logout: api.logout,
+	me: api.me,
+	verifyEmail: async (verificationId) => {
+		return await apiRequest(`/auth/verify/${verificationId}`, {
+			method: "POST",
+		});
+	},
+	resendVerification: async (email) => {
+		return await apiRequest("/auth/resend-verification", {
+			method: "POST",
+			data: { email },
+		});
+	},
+};
+
+export const userAPI = {
+	getUser: api.getUser,
+	updateProfile: api.updateProfile,
+	getWaitingList: api.getWaitingList,
+	joinWaitingList: api.joinWaitingList,
+	getUserStats: async (userId) => {
+		return await apiRequest(`/users/${userId}/stats`);
+	},
+	updateNotificationSettings: async (settings) => {
+		return await apiRequest("/users/notification-settings", {
+			method: "PUT",
+			data: settings,
+		});
+	},
+	updatePrivacySettings: async (settings) => {
+		return await apiRequest("/users/privacy-settings", {
+			method: "PUT",
+			data: settings,
+		});
+	},
+	deleteAccount: async () => {
+		return await apiRequest("/users/delete", {
+			method: "DELETE",
+		});
+	},
+	updateSubscription: async (subscriptionData) => {
+		return await apiRequest("/users/subscription", {
+			method: "PUT",
+			data: subscriptionData,
+		});
+	},
+};
+
+export const postAPI = {
+	getPosts: api.getPosts,
+	createPost: api.createPost,
+	getPost: api.getPost,
+	updatePost: api.updatePost,
+	deletePost: api.deletePost,
+	likePost: api.likePost,
+	sharePost: async (postId) => {
+		return await apiRequest(`/posts/${postId}/share`, {
+			method: "POST",
+		});
+	},
+	trackView: async (postId) => {
+		return await apiRequest(`/posts/${postId}/view`, {
+			method: "POST",
+		});
+	},
+	searchPosts: async (query, page = 1) => {
+		return await apiRequest(`/posts/search?q=${encodeURIComponent(query)}&page=${page}`);
+	},
+};
+
+export const commentAPI = {
+	getComments: async (postId) => {
+		return await apiRequest(`/posts/${postId}/comments`);
+	},
+	createComment: async (postId, commentData) => {
+		return await apiRequest(`/posts/${postId}/comments`, {
+			method: "POST",
+			data: commentData,
+		});
+	},
+	updateComment: async (commentId, commentData) => {
+		return await apiRequest(`/comments/${commentId}`, {
+			method: "PUT",
+			data: commentData,
+		});
+	},
+	deleteComment: async (commentId) => {
+		return await apiRequest(`/comments/${commentId}`, {
+			method: "DELETE",
+		});
+	},
+	likeComment: async (commentId) => {
+		return await apiRequest(`/comments/${commentId}/like`, {
+			method: "POST",
+		});
+	},
+};
+
 export default apiRequest;
