@@ -123,15 +123,21 @@ const router = createBrowserRouter([
 				loader: IndexPageLoader,
 				hydrateFallbackElement: <LoadingView />,
 			},
+		],
+	},
+	{
+		path: "/settings/:tab",
+		element: (
+			<RequireAuth>
+				<IndexPage />
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
+		children: [
 			{
-				path: "privacy",
-				element: <PrivacySettingsPage />,
-				loader: IndexPageLoader,
-				hydrateFallbackElement: <LoadingView />,
-			},
-			{
-				path: "sessions",
-				element: <SessionSettingsPage />,
+				index: true,
+				element: <SettingsPage />,
 				loader: IndexPageLoader,
 				hydrateFallbackElement: <LoadingView />,
 			},
