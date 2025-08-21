@@ -130,6 +130,164 @@ class HttpClient {
 
 	// Original request method renamed
 	async makeRequest(fullUrl, options = {}) {
+		console.log("🚀 Making HTTP request:", {
+			url: fullUrl,
+			method: options.method || 'GET',
+			headers: options.headers,
+			hasBody: !!options.body,
+			timestamp: new Date().toISOString()
+		});
+
+		// Create AbortController for timeout
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+		try {
+			// Prepare headers
+			const headers = {
+				'Content-Type': 'application/json; charset=utf8',
+				'Accept': 'application/json',
+				'User-Agent': 'DOPE-Network-Client/1.0',
+				...options.headers
+			};
+
+			// Add security headers
+			try {
+				const { SecurityMiddleware } = await import("../utils/security-middleware");
+				const secureOptions = await SecurityMiddleware.secureApiRequest(fullUrl, { headers });
+				Object.assign(headers, secureOptions.headers);
+			} catch (securityError) {
+				console.warn("Security middleware failed:", securityError);
+			}
+
+			// Add auth token
+			const token = getAuthToken();
+			if (token && !fullUrl.includes('/auth/login') && !fullUrl.includes('/auth/register')) {
+				headers['Authorization'] = `Bearer ${token}`;
+			}
+
+			const fetchOptions = {
+				method: options.method || 'GET',
+				headers,
+				signal: controller.signal,
+				credentials: 'omit', // Don't send cookies
+				mode: 'cors',
+				cache: 'no-cache'
+			};
+
+			if (options.body) {
+				fetchOptions.body = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
+			}
+
+			console.log("📡 Fetch options:", {
+				url: fullUrl,
+				method: fetchOptions.method,
+				headers: Object.keys(fetchOptions.headers),
+				bodyLength: fetchOptions.body?.length || 0
+			});
+
+			const response = await fetch(fullUrl, fetchOptions);
+			
+			clearTimeout(timeoutId);
+
+			console.log("📥 Response received:", {
+				url: fullUrl,
+				status: response.status,
+				statusText: response.statusText,
+				headers: Object.fromEntries(response.headers.entries()),
+				ok: response.ok,
+				type: response.type,
+				redirected: response.redirected
+			});
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error("❌ HTTP Error Response:", {
+					status: response.status,
+					statusText: response.statusText,
+					body: errorText,
+					url: fullUrl
+				});
+				
+				let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+				try {
+					const errorData = JSON.parse(errorText);
+					errorMessage = errorData.message || errorData.error || errorMessage;
+				} catch (parseError) {
+					if (errorText.length > 0 && errorText.length < 200) {
+						errorMessage = errorText;
+					}
+				}
+				
+				throw new Error(errorMessage);
+			}
+
+			const contentType = response.headers.get('content-type');
+			let data;
+			
+			if (contentType && contentType.includes('application/json')) {
+				data = await response.json();
+			} else {
+				data = await response.text();
+			}
+
+			console.log("✅ Request successful:", {
+				url: fullUrl,
+				status: response.status,
+				dataType: typeof data,
+				dataPreview: typeof data === 'object' ? Object.keys(data) : data.substring?.(0, 100)
+			});
+
+			return data;
+
+		} catch (error) {
+			clearTimeout(timeoutId);
+			
+			console.error("💥 Request failed:", {
+				url: fullUrl,
+				error: error.name,
+				message: error.message,
+				stack: error.stack,
+				cause: error.cause,
+				isAbortError: error.name === 'AbortError',
+				isNetworkError: error.message.includes('fetch') || error.message.includes('NetworkError'),
+				isConnectivityIssue: error.message.includes('Failed to fetch'),
+				timestamp: new Date().toISOString(),
+				userAgent: navigator.userAgent,
+				onlineStatus: navigator.onLine,
+				connectionType: navigator.connection?.effectiveType || 'unknown'
+			});
+
+			// Enhanced error classification with network diagnostics
+			if (error.name === 'AbortError') {
+				throw new Error(`Request timeout after ${this.timeout}ms. The server took too long to respond.`);
+			}
+			
+			// Check if user is offline
+			if (!navigator.onLine) {
+				throw new Error(`No internet connection detected. Please check your network connection and try again.`);
+			}
+			
+			// Check for specific network errors
+			if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+				// Run a quick connectivity test
+				try {
+					await fetch('https://www.google.com/favicon.ico', { 
+						method: 'HEAD', 
+						mode: 'no-cors',
+						signal: AbortSignal.timeout(3000)
+					});
+					// If Google is reachable, it's likely an API server issue
+					throw new Error(`API server unreachable at ${this.baseURL}. The server appears to be down, under maintenance, or there may be a firewall blocking the connection. Please try again later or contact support if the issue persists.`);
+				} catch (connectTest) {
+					// If Google is not reachable, it's a general connectivity issue
+					throw new Error(`Network connectivity issue detected. Please check your internet connection and try again. If you're on a restricted network, the API endpoint may be blocked.`);
+				}
+			}
+
+			throw error;
+		}
+	}
 
 	async request(url, options = {}) {
 		return this.requestWithFailover(url, options);
