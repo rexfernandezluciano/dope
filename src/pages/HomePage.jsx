@@ -7,10 +7,18 @@ import {
 	Button,
 	Spinner,
 	Alert,
+	Modal,
+	Image,
+	Form,
+	InputGroup,
 } from "react-bootstrap";
 import {
 	ChevronLeft,
 	ChevronRight,
+	Camera,
+	EmojiSmile,
+	X,
+	Search,
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
@@ -68,6 +76,11 @@ const HomePage = () => {
 	// Removed unused fileInputRef as it's now part of PostComposer: const fileInputRef = useRef(null);
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
+	const [postText, setPostText] = useState(""); // State for the text input in the composer
+	const [photos, setPhotos] = useState([]); // State for uploaded photos
+	const [privacy, setPrivacy] = useState("public"); // State for post privacy
+	const [showStickerModal, setShowStickerModal] = useState(false); // State for the sticker modal
+	const [searchTerm, setSearchTerm] = useState(""); // State for sticker search term
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -264,7 +277,7 @@ const HomePage = () => {
 		setPhotos((prev) => [...(prev || []), ...uploadedUrls]);
 	};
 
-	
+
 
 	const handleStartLiveStream = async (streamData) => {
 		try {
@@ -615,89 +628,14 @@ const HomePage = () => {
 		setShowStickerModal(false);
 	};
 
-	const handleCreatePost = async () => {
-		// Placeholder states for the new logic
-		const newPost = postText;
-		const selectedImages = photos || [];
-		const selectedGif = null; // Assuming this is handled elsewhere or not used here
-		const selectedPrivacy = privacy;
+	const handleSearchChange = (e) => {
+		setSearchTerm(e.target.value);
+	};
 
-		const cleanedContent = cleanTextContent(newPost);
-
-		if (!cleanedContent.trim() && selectedImages.length === 0 && !selectedGif) {
-			setError("Please enter some content or select images/GIF.");
-			return;
-		}
-
-		try {
-			setSubmitting(true); // Set submitting state
-
-			// Extract hashtags and mentions for potential future use
-			// const hashtags = extractHashtags(cleanedContent);
-			// const mentions = extractMentions(cleanedContent);
-
-			let uploadedImageUrls = [];
-			if (selectedImages.length > 0) {
-				// Upload images if they are files, otherwise assume they are already URLs
-				if (typeof selectedImages[0] === "object") {
-					// Use the new batch upload functionality
-					const formData = new FormData();
-					selectedImages.forEach((file) => {
-						formData.append("images", file);
-					});
-					const response = await imageAPI.uploadImages(formData);
-					uploadedImageUrls = response.imageUrls || [];
-				} else {
-					uploadedImageUrls = selectedImages; // Already URLs
-				}
-			}
-
-			const postData = {
-				content: cleanedContent,
-				imageUrls: uploadedImageUrls,
-				privacy: selectedPrivacy.toLowerCase(),
-				postType: "text",
-			};
-
-			if (liveVideoUrl && isLive && isStreaming) {
-				postData.liveVideoUrl = liveVideoUrl;
-			}
-
-			const response = await postAPI.createPost(postData);
-
-			// Send notification to followers
-			if (response && response.post) {
-				try {
-					await notifyFollowersOfNewPost(response.post.id, {
-						...response.post,
-						author: currentUser,
-					});
-				} catch (notificationError) {
-					console.error("Failed to send notifications:", notificationError);
-					// Don't fail the post creation if notification fails
-				}
-			}
-
-			// Reset form
-			setPostText("");
-			setPhotos(null);
-			setIsLive(false);
-			setLiveVideoUrl("");
-			setShowComposerModal(false);
-
-			// Stop live stream if active
-			if (isStreaming) {
-				stopLiveStream();
-			}
-
-			// Reload posts
-			loadPosts();
-		} catch (error) {
-			console.error("Error creating post:", error);
-			setError(error.response?.data?.message || "Failed to create post");
-		} finally {
-			setSubmitting(false);
-		}
+	// Dummy fetchGifs function for demonstration
+	const fetchGifs = (offset) => {
+		const giphyFetch = new GiphyFetch(process.env.REACT_APP_GIPHY_API_KEY);
+		return giphyFetch.animate(searchTerm || "cats", 20, offset);
 	};
 
 	const handleDeletePost = (postId) => {
@@ -783,7 +721,7 @@ const HomePage = () => {
 		}
 	};
 
-	
+
 
 	const displayedPosts = posts;
 
@@ -1112,7 +1050,14 @@ const HomePage = () => {
 						)}
 						<Button
 							className={isStreaming ? "flex-grow-1 ms-3" : "w-100"}
-							onClick={handleCreatePost}
+							onClick={() => {
+								// This is a placeholder, the actual post creation is handled by PostComposer
+								console.log("Post creation initiated from HomePage modal.");
+								// In a real scenario, you would trigger the post creation logic here
+								// or pass the data up to a parent component.
+								// For now, we'll close the modal as the PostComposer handles creation.
+								setShowComposerModal(false);
+							}}
 							disabled={
 								submitting || (!postText.trim() && !photos && !liveVideoUrl)
 							}
