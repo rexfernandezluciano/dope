@@ -88,7 +88,7 @@ const PostDetailPage = () => {
 				const commentsResponse = await commentAPI.getComments(postId);
 				if (commentsResponse && Array.isArray(commentsResponse.comments)) {
 					setComments(commentsResponse.comments);
-					
+
 					// Load replies for each comment
 					const repliesData = {};
 					for (const comment of commentsResponse.comments) {
@@ -220,9 +220,19 @@ const PostDetailPage = () => {
 		try {
 			setDeletingComment(true);
 			await commentAPI.deleteComment(commentToDelete);
-			// Reload comments after deletion
-			const commentsResponse = await commentAPI.getComments(postId);
-			setComments(commentsResponse.comments || []);
+
+			// Remove the comment from local state
+			setComments(prevComments =>
+				prevComments.filter(comment => comment.id !== commentToDelete)
+			);
+
+			// Clean up replies for the deleted comment
+			setReplies(prevReplies => {
+				const newReplies = { ...prevReplies };
+				delete newReplies[commentToDelete];
+				return newReplies;
+			});
+
 		} catch (err) {
 			console.error("Error deleting comment:", err);
 			setError("Failed to delete comment");
@@ -387,14 +397,14 @@ const PostDetailPage = () => {
 	const handleLikeComment = async (commentId) => {
 		try {
 			const response = await likeAPI.likeComment(commentId);
-			
-			setComments(prevComments => 
+
+			setComments(prevComments =>
 				prevComments.map(comment => {
 					if (comment.id === commentId) {
 						const isCurrentlyLiked = comment.likes?.some(
 							like => like.user.uid === currentUser.uid
 						);
-						
+
 						if (response.liked && !isCurrentlyLiked) {
 							return {
 								...comment,
@@ -445,7 +455,7 @@ const PostDetailPage = () => {
 
 		try {
 			setSubmittingReply(prev => ({ ...prev, [commentId]: true }));
-			
+
 			// Use the reply API, not comment API
 			const response = await replyAPI.createReply(commentId, {
 				content: replyText
@@ -476,9 +486,9 @@ const PostDetailPage = () => {
 			}));
 
 			// Update comment reply count
-			setComments(prevComments => 
-				prevComments.map(comment => 
-					comment.id === commentId 
+			setComments(prevComments =>
+				prevComments.map(comment =>
+					comment.id === commentId
 						? {
 								...comment,
 								stats: {
@@ -505,7 +515,7 @@ const PostDetailPage = () => {
 	const handleLikeReply = async (replyId, commentId) => {
 		try {
 			const response = await likeAPI.likeReply(replyId);
-			
+
 			setReplies(prev => ({
 				...prev,
 				[commentId]: (prev[commentId] || []).map(reply => {
@@ -513,7 +523,7 @@ const PostDetailPage = () => {
 						const isCurrentlyLiked = reply.likes?.some(
 							like => like.user.uid === currentUser.uid
 						);
-						
+
 						if (response.liked && !isCurrentlyLiked) {
 							return {
 								...reply,
@@ -1066,7 +1076,7 @@ const PostDetailPage = () => {
 										size="sm"
 										className="p-0 border-0 d-flex align-items-center gap-1"
 										style={{
-											color: comment.likes?.some(like => like.user.uid === currentUser.uid) 
+											color: comment.likes?.some(like => like.user.uid === currentUser.uid)
 												? "#dc3545" : "#6c757d",
 											fontSize: "0.75rem",
 										}}
@@ -1183,7 +1193,7 @@ const PostDetailPage = () => {
 														size="sm"
 														className="p-0 border-0 d-flex align-items-center gap-1"
 														style={{
-															color: reply.likes?.some(like => like.user.uid === currentUser.uid) 
+															color: reply.likes?.some(like => like.user.uid === currentUser.uid)
 																? "#dc3545" : "#6c757d",
 															fontSize: "0.7rem",
 														}}
