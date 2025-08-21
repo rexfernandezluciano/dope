@@ -7,18 +7,10 @@ import {
 	Button,
 	Spinner,
 	Alert,
-	Modal,
-	Image,
-	Form,
-	InputGroup,
 } from "react-bootstrap";
 import {
 	ChevronLeft,
 	ChevronRight,
-	Camera,
-	EmojiSmile,
-	X,
-	Search,
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
@@ -76,11 +68,7 @@ const HomePage = () => {
 	// Removed unused fileInputRef as it's now part of PostComposer: const fileInputRef = useRef(null);
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
-	const [postText, setPostText] = useState(""); // State for the text input in the composer
-	const [photos, setPhotos] = useState([]); // State for uploaded photos
-	const [privacy, setPrivacy] = useState("public"); // State for post privacy
-	const [showStickerModal, setShowStickerModal] = useState(false); // State for the sticker modal
-	const [searchTerm, setSearchTerm] = useState(""); // State for sticker search term
+	
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -226,56 +214,7 @@ const HomePage = () => {
 		}
 	};
 
-	const handleFileChange = async (e) => {
-		const files = Array.from(e.target.files);
-		const imageLimit = getImageUploadLimit(currentUser?.subscription);
-
-		if (files.length > imageLimit) {
-			alert(
-				`You can only upload ${imageLimit === Infinity ? "unlimited" : imageLimit} images per post. ${imageLimit === 3 ? "Upgrade to Premium or Pro for more uploads." : ""}`,
-			);
-			e.target.value = "";
-			return;
-		}
-
-		const currentPhotos = photos || [];
-		const remainingSlots = imageLimit - currentPhotos.length;
-		const filesToUpload = files.slice(0, remainingSlots);
-
-		if (filesToUpload.length < files.length) {
-			alert(
-				`You can only upload up to ${imageLimit} images. Only the first ${filesToUpload.length} will be uploaded.`,
-			);
-		}
-
-		const uploadedUrls = [];
-		for (const file of filesToUpload) {
-			try {
-				let finalFile = file;
-
-				// Handle HEIC files
-				if (
-					file.type === "image/heic" ||
-					file.name.toLowerCase().endsWith(".heic")
-				) {
-					const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-					finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
-						type: "image/jpeg",
-					});
-				}
-
-				// Use the new uploadImage function
-				const url = await uploadImage(finalFile);
-				if (url) {
-					uploadedUrls.push(url);
-				}
-			} catch (err) {
-				console.error("Error processing file:", err);
-				setError("Failed to process one or more images.");
-			}
-		}
-		setPhotos((prev) => [...(prev || []), ...uploadedUrls]);
-	};
+	
 
 
 
@@ -612,31 +551,7 @@ const HomePage = () => {
 		}
 	};
 
-	const handleSelectGif = (gif) => {
-		const currentPhotos = photos || [];
-		const imageLimit = getImageUploadLimit(currentUser?.subscription);
-
-		if (currentPhotos.length >= imageLimit) {
-			alert(
-				`You can only add up to ${imageLimit === Infinity ? "unlimited" : imageLimit} images/GIFs. ${imageLimit === 3 ? "Upgrade to Premium or Pro for more uploads." : ""}`,
-			);
-			return;
-		}
-
-		const imageUrl = gif.images.fixed_height.url;
-		setPhotos((prev) => [...(prev || []), imageUrl]);
-		setShowStickerModal(false);
-	};
-
-	const handleSearchChange = (e) => {
-		setSearchTerm(e.target.value);
-	};
-
-	// Dummy fetchGifs function for demonstration
-	const fetchGifs = (offset) => {
-		const giphyFetch = new GiphyFetch(process.env.REACT_APP_GIPHY_API_KEY);
-		return giphyFetch.animate(searchTerm || "cats", 20, offset);
-	};
+	
 
 	const handleDeletePost = (postId) => {
 		setPostToDelete(postId);
@@ -853,266 +768,9 @@ const HomePage = () => {
 				)}
 			</Container>
 
-			{/* Composer Modal */}
-			{showComposerModal && (
-				<Modal
-					show={showComposerModal}
-					size="md"
-					fullscreen="md-down"
-					backdrop="static"
-					onHide={() => setShowComposerModal(false)}
-					centered
-				>
-					<Modal.Header closeButton>
-						<Modal.Title>Create Post</Modal.Title>
-					</Modal.Header>
+			
 
-					<Modal.Body className="overflow-x-hidden">
-						{/* Live Broadcasting Status Alert */}
-						{isStreaming && (
-							<div
-								className="alert alert-danger mb-3 d-flex align-items-center gap-2"
-								role="alert"
-							>
-								<span
-									style={{
-										width: "12px",
-										height: "12px",
-										borderRadius: "50%",
-										backgroundColor: "#dc3545",
-										display: "inline-block",
-										animation: "pulse 1.5s infinite",
-									}}
-								></span>
-								<strong>🔴 You are currently broadcasting live!</strong>
-								<span className="ms-auto">
-									<small>Stream: {streamTitle || "Untitled Stream"}</small>
-								</span>
-							</div>
-						)}
-
-						<div className="d-flex gap-3 mb-3">
-							<Image
-								src={user?.photoURL ?? "https://i.pravatar.cc/150?img=10"}
-								alt="avatar"
-								roundedCircle
-								width="48"
-								height="48"
-								style={{
-									objectFit: "cover",
-									minWidth: "48px",
-									minHeight: "48px",
-								}}
-							/>
-							<div className="flex-grow-1">
-								<Form.Control
-									as="textarea"
-									rows={4}
-									value={postText}
-									onChange={(e) => setPostText(e.target.value)}
-									placeholder="What's happening?"
-									className="border-0 shadow-none resize-none fs-5"
-									maxLength={280}
-									style={{ fontSize: "1.25rem" }}
-								/>
-								{photos && photos.length > 0 && (
-									<div className="mt-3">
-										<div className="d-flex flex-wrap gap-2">
-											{photos.map((photo, index) => (
-												<div key={index} className="position-relative">
-													<Image
-														src={photo}
-														alt={`Upload ${index + 1}`}
-														className="rounded"
-														style={{
-															width: "120px",
-															height: "120px",
-															objectFit: "cover",
-														}}
-													/>
-													<Button
-														variant="danger"
-														size="sm"
-														className="position-absolute top-0 end-0 m-1 rounded-circle d-flex align-items-center justify-content-center"
-														style={{ width: "24px", height: "24px" }}
-														onClick={() =>
-															setPhotos((prev) =>
-																prev.filter((_, i) => i !== index),
-															)
-														}
-													>
-														<X size={12} />
-													</Button>
-												</div>
-											))}
-										</div>
-									</div>
-								)}
-								{isLive && (
-									<div className="mt-3 p-3 bg-light border rounded">
-										<div className="d-flex align-items-center gap-2 mb-2">
-											<span
-												style={{
-													width: "8px",
-													height: "8px",
-													borderRadius: "50%",
-													backgroundColor: "#dc3545",
-													display: "inline-block",
-													animation: isStreaming ? "pulse 1s infinite" : "none",
-												}}
-											></span>
-											<small className="fw-bold text-danger">
-												{isStreaming ? "BROADCASTING LIVE" : "LIVE MODE"}
-											</small>
-										</div>
-										<Form.Control
-											type="url"
-											value={liveVideoUrl}
-											onChange={(e) => setLiveVideoUrl(e.target.value)}
-											placeholder="Live video stream URL (optional)"
-											className="form-control-sm"
-										/>
-										<small className="text-muted">
-											Enter your live stream URL or leave blank for text-only live post
-										</small>
-									</div>
-								)}
-							</div>
-						</div>
-
-						<div className="d-flex justify-content-between align-items-center">
-							<div className="d-flex gap-2">
-								<Button
-									variant="link"
-									size="sm"
-									className="text-primary p-1"
-									onClick={() => document.getElementById("file-input")?.click()}
-								>
-									<Camera size={20} />
-								</Button>
-								<input
-									id="file-input"
-									type="file"
-									onChange={handleFileChange}
-									accept="image/*"
-									multiple
-									style={{ display: "none" }}
-								/>
-								<Button
-									variant="link"
-									size="sm"
-									className="text-primary p-1"
-									onClick={() => setShowStickerModal(true)}
-								>
-									<EmojiSmile size={18} />
-								</Button>
-								<Button
-									variant={isLive ? "danger" : "link"}
-									size="sm"
-									className={isLive ? "text-white p-1" : "text-muted p-1"}
-									onClick={toggleLiveMode}
-								>
-									<span className="d-flex align-items-center gap-1">
-										<span
-											style={{
-												width: "8px",
-												height: "8px",
-												borderRadius: "50%",
-												backgroundColor: isLive ? "#fff" : "#dc3545",
-												display: "inline-block",
-												animation: isStreaming ? "pulse 1s infinite" : "none",
-											}}
-										></span>
-										{isStreaming ? "BROADCASTING" : isLive ? "LIVE" : "Go Live"}
-									</span>
-								</Button>
-							</div>
-							{/* Character limit indicator */}
-							<span className="text-muted">{postText.length}/280</span>
-						</div>
-					</Modal.Body>
-
-					<Modal.Footer className="d-flex justify-content-between align-items-center">
-						{isStreaming && (
-							<div className="d-flex align-items-center gap-2 text-danger">
-								<span
-									style={{
-										width: "8px",
-										height: "8px",
-										borderRadius: "50%",
-										backgroundColor: "#dc3545",
-										display: "inline-block",
-										animation: "pulse 1.5s infinite",
-									}}
-								></span>
-								<small className="fw-bold">Broadcasting Live</small>
-							</div>
-						)}
-						<Button
-							className={isStreaming ? "flex-grow-1 ms-3" : "w-100"}
-							onClick={() => {
-								// This is a placeholder, the actual post creation is handled by PostComposer
-								console.log("Post creation initiated from HomePage modal.");
-								// In a real scenario, you would trigger the post creation logic here
-								// or pass the data up to a parent component.
-								// For now, we'll close the modal as the PostComposer handles creation.
-								setShowComposerModal(false);
-							}}
-							disabled={
-								submitting || (!postText.trim() && !photos && !liveVideoUrl)
-							}
-						>
-							{submitting ? (
-								<Spinner size="sm" animation="border" />
-							) : isStreaming ? (
-								"Post to Live Stream"
-							) : (
-								"Post"
-							)}
-						</Button>
-					</Modal.Footer>
-				</Modal>
-			)}
-
-			{/* Sticker Modal */}
-			{showStickerModal && (
-				<Modal
-					show={showStickerModal}
-					onHide={() => setShowStickerModal(false)}
-					fullscreen="md-down"
-					centered
-				>
-					<Modal.Header closeButton>
-						<Modal.Title>Stickers</Modal.Title>
-					</Modal.Header>
-					<Modal.Body>
-						<InputGroup className="mb-3">
-							<InputGroup.Text>
-								<Search />
-							</InputGroup.Text>
-							<Form.Control
-								type="text"
-								placeholder="Search stickers..."
-								value={searchTerm}
-								onChange={handleSearchChange}
-								className="shadow-none"
-							/>
-						</InputGroup>
-
-						<div style={{ maxHeight: "70vh", overflowY: "auto" }}>
-							<Grid
-								columns={3}
-								width={window.innerWidth - 40}
-								fetchGifs={fetchGifs}
-								onGifClick={(gif, e) => {
-									e.preventDefault();
-									handleSelectGif(gif);
-								}}
-							/>
-						</div>
-					</Modal.Body>
-				</Modal>
-			)}
+			
 
 			{/* Image Viewer Modal */}
 			{showImageViewer && (
