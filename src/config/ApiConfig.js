@@ -3,8 +3,15 @@
 // Secure token storage helper
 // Import js-cookie for secure cookie management
 import Cookies from "js-cookie";
+// Check if we're using proxy (in development)
+const isUsingProxy = process.env.NODE_ENV === 'development' && 
+	window.location.hostname.includes('replit');
+
 // Multiple API endpoints for failover
-const API_ENDPOINTS = [
+const API_ENDPOINTS = isUsingProxy ? [
+	"/v1",  // Use proxy in development
+	"https://social.dopp.eu.org/v1"
+] : [
 	process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1",
 	"https://social.dopp.eu.org/v1"
 ];
@@ -317,7 +324,11 @@ const apiClient = new HttpClient(API_BASE_URL, 60000);
 const testApiConnection = async () => {
 	try {
 		console.log("Testing API connectivity to:", API_BASE_URL);
-		const response = await fetch(`${API_BASE_URL}/health`, {
+		const testUrl = API_BASE_URL.startsWith('/') ? 
+			`${API_BASE_URL}/health` : 
+			`${API_BASE_URL}/health`;
+			
+		const response = await fetch(testUrl, {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
