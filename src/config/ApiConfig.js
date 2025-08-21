@@ -395,13 +395,4 @@ export const testApiConnection = async () => {
 	}
 };
 
-export {
-	setAuthToken,
-	removeAuthToken,
-	getAuthToken,
-	validateEmail,
-	sanitizeInput,
-	testApiConnection,
-};
-
 export default apiRequest;
