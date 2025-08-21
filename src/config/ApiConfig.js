@@ -1,4 +1,3 @@
-
 /** @format */
 
 // Secure token storage helper
@@ -7,10 +6,7 @@ import Cookies from "js-cookie";
 import axios from "axios";
 
 const API_BASE_URL =
-	process.env.REACT_APP_API_URL || "https://social.dopp.eu.org/api";
-
-// Debug: Log the API URL being used
-console.log("Using API Base URL:", API_BASE_URL);
+	process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1";
 
 // Validate API URL is HTTPS
 if (!API_BASE_URL.startsWith("https://")) {
@@ -20,9 +16,9 @@ if (!API_BASE_URL.startsWith("https://")) {
 // Create axios instance
 const apiClient = axios.create({
 	baseURL: API_BASE_URL,
-	timeout: 30000,
+	timeout: 60000,
 	headers: {
-		'Content-Type': 'application/json',
+		"Content-Type": "application/json",
 	},
 });
 
@@ -31,22 +27,22 @@ apiClient.interceptors.request.use(async (config) => {
 	try {
 		// Import SecurityMiddleware dynamically to avoid circular imports
 		const { SecurityMiddleware } = await import("../utils/security-middleware");
-		
+
 		// Use SecurityMiddleware to add all security headers including App Check
 		const secureOptions = await SecurityMiddleware.secureApiRequest(
 			config.url,
-			{ headers: config.headers }
+			{ headers: config.headers },
 		);
-		
+
 		// Merge security headers
 		config.headers = { ...config.headers, ...secureOptions.headers };
-		
+
 		// Add auth token if available
 		const token = getAuthToken();
 		if (token) {
 			config.headers["Authorization"] = `Bearer ${token}`;
 		}
-		
+
 		return config;
 	} catch (error) {
 		console.error("Request interceptor failed:", error);
@@ -65,22 +61,28 @@ apiClient.interceptors.response.use(
 			status: error.response?.status,
 			statusText: error.response?.statusText,
 			message: error.message,
-			code: error.code
+			code: error.code,
 		});
-		
+
+		console.error("Full Error Object:", error);
+
 		if (error.response) {
 			// Server responded with error status
-			const message = error.response.data?.message || `HTTP error! status: ${error.response.status}`;
+			const message =
+				error.response.data?.message ||
+				`HTTP error! status: ${error.response.status}`;
 			throw new Error(message);
 		} else if (error.request) {
 			// Request was made but no response received
 			console.error("Network error - request details:", error.request);
-			throw new Error(`Network error - no response received from ${API_BASE_URL}`);
+			throw new Error(
+				`Network error - no response received from ${API_BASE_URL}`,
+			);
 		} else {
 			// Something else happened
 			throw new Error(error.message || "Request failed");
 		}
-	}
+	},
 );
 
 // Test API connectivity
@@ -88,18 +90,22 @@ const testApiConnection = async () => {
 	try {
 		console.log("Testing API connectivity to:", API_BASE_URL);
 		const response = await fetch(`${API_BASE_URL}/health`, {
-			method: 'GET',
+			method: "GET",
 			headers: {
-				'Content-Type': 'application/json',
+				"Content-Type": "application/json",
 			},
-			signal: AbortSignal.timeout(10000) // 10 second timeout
+			signal: AbortSignal.timeout(10000), // 10 second timeout
 		});
-		
+
 		if (response.ok) {
 			console.log("API connection successful");
 			return true;
 		} else {
-			console.error("API connection failed:", response.status, response.statusText);
+			console.error(
+				"API connection failed:",
+				response.status,
+				response.statusText,
+			);
 			return false;
 		}
 	} catch (error) {
@@ -112,34 +118,22 @@ const apiRequest = async (endpoint, options = {}) => {
 	try {
 		console.log("Making API request:", {
 			url: endpoint,
-			method: options.method || 'GET',
-			baseURL: API_BASE_URL
+			method: options.method || "GET",
+			baseURL: API_BASE_URL,
 		});
-		
+
 		const response = await apiClient({
 			url: endpoint,
-			method: options.method || 'GET',
+			method: options.method || "GET",
 			data: options.body,
-			...options
+			...options,
 		});
-		
+
 		return response;
 	} catch (error) {
 		console.error("API request failed:", error);
 		throw error;
 	}
-};
-
-// Helper function to get headers, including Authorization
-const getHeaders = () => {
-	const token = getAuthToken();
-	const headers = {
-		"Content-Type": "application/json",
-	};
-	if (token) {
-		headers["Authorization"] = `Bearer ${token}`;
-	}
-	return headers;
 };
 
 // Secure cookie utilities using js-cookie
@@ -601,7 +595,7 @@ const postAPI = {
 		apiRequest(`/posts/share/${id}`, {
 			method: "POST",
 		}),
-	
+
 	trackView: (id) =>
 		apiRequest(`/posts/${id}/view`, {
 			method: "POST",
@@ -609,7 +603,7 @@ const postAPI = {
 
 	deletePostWithImages: async (postId) => {
 		try {
-			const response = await apiClient.delete(`/posts/${postId}/with-images`);
+			await apiClient.delete(`/posts/${postId}/with-images`);
 			return { success: true };
 		} catch (error) {
 			throw error;
@@ -718,7 +712,7 @@ const commentAPI = {
 				throw new Error("Post ID and content are required");
 			}
 			const response = await apiClient.post(`/comments/post/${postId}`, {
-				content
+				content,
 			});
 			return response;
 		} catch (error) {
