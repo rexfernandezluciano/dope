@@ -57,8 +57,13 @@ const ProfileSettingsPage = () => {
 				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
 			} catch (err) {
 				console.error("Error converting HEIC:", err);
-				return null;
+				throw new Error("Failed to convert HEIC image");
 			}
+		}
+
+		// Validate file size (5MB limit)
+		if (finalFile.size > 5 * 1024 * 1024) {
+			throw new Error("Image size must be less than 5MB");
 		}
 
 		const formData = new FormData();
@@ -67,6 +72,7 @@ const ProfileSettingsPage = () => {
 		formData.append("folder", "profile_pictures");
 
 		try {
+			console.log("Uploading image to Cloudinary...", finalFile.name);
 			const response = await fetch(
 				"https://api.cloudinary.com/v1_1/zxpic/image/upload",
 				{
@@ -74,11 +80,22 @@ const ProfileSettingsPage = () => {
 					body: formData,
 				},
 			);
+			
+			if (!response.ok) {
+				throw new Error(`Cloudinary upload failed: ${response.status} ${response.statusText}`);
+			}
+			
 			const data = await response.json();
+			console.log("Cloudinary upload successful:", data.secure_url);
+			
+			if (!data.secure_url) {
+				throw new Error("No secure URL returned from Cloudinary");
+			}
+			
 			return data.secure_url;
 		} catch (error) {
 			console.error("Error uploading to Cloudinary:", error);
-			return null;
+			throw new Error(`Failed to upload image: ${error.message}`);
 		}
 	};
 
@@ -105,12 +122,18 @@ const ProfileSettingsPage = () => {
 
 			// Upload profile image if a new file was selected
 			if (settings.profileImageFile) {
-				const uploadedUrl = await uploadProfileImageToCloudinary(settings.profileImageFile);
-				if (uploadedUrl) {
+				try {
+					const uploadedUrl = await uploadProfileImageToCloudinary(settings.profileImageFile);
 					updateData.photoURL = uploadedUrl;
+					// Remove the file from update data
+					delete updateData.profileImageFile;
+				} catch (uploadError) {
+					setMessage(`Image upload failed: ${uploadError.message}`);
+					setMessageType("danger");
+					setLoading(false);
+					setUploadingProfileImage(false);
+					return;
 				}
-				// Remove the file from update data
-				delete updateData.profileImageFile;
 			}
 
 			await userAPI.updateUser(user.username, updateData);

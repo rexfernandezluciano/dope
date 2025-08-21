@@ -315,6 +315,58 @@ const ProfilePage = () => {
 		}
 	};
 
+	const uploadProfileImageToCloudinary = async (file) => {
+		// Handle HEIC files
+		let finalFile = file;
+		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+			try {
+				const heic2any = (await import("heic2any")).default;
+				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
+				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+			} catch (err) {
+				console.error("Error converting HEIC:", err);
+				throw new Error("Failed to convert HEIC image");
+			}
+		}
+
+		// Validate file size (5MB limit)
+		if (finalFile.size > 5 * 1024 * 1024) {
+			throw new Error("Image size must be less than 5MB");
+		}
+
+		const formData = new FormData();
+		formData.append("file", finalFile);
+		formData.append("upload_preset", "dope-network");
+		formData.append("folder", "profile_pictures");
+
+		try {
+			console.log("Uploading image to Cloudinary...", finalFile.name);
+			const response = await fetch(
+				"https://api.cloudinary.com/v1_1/zxpic/image/upload",
+				{
+					method: "POST",
+					body: formData,
+				},
+			);
+			
+			if (!response.ok) {
+				throw new Error(`Cloudinary upload failed: ${response.status} ${response.statusText}`);
+			}
+			
+			const data = await response.json();
+			console.log("Cloudinary upload successful:", data.secure_url);
+			
+			if (!data.secure_url) {
+				throw new Error("No secure URL returned from Cloudinary");
+			}
+			
+			return data.secure_url;
+		} catch (error) {
+			console.error("Error uploading to Cloudinary:", error);
+			throw new Error(`Failed to upload image: ${error.message}`);
+		}
+	};
+
 	const handleUpdateProfile = async () => {
 		try {
 			setUploadingProfileImage(true);
@@ -322,14 +374,16 @@ const ProfilePage = () => {
 
 			// Upload profile image if a new file was selected
 			if (editForm.profileImageFile) {
-				const uploadedUrl = await uploadProfileImageToCloudinary(
-					editForm.profileImageFile,
-				);
-				if (uploadedUrl) {
+				try {
+					const uploadedUrl = await uploadProfileImageToCloudinary(editForm.profileImageFile);
 					updateData.photoURL = uploadedUrl;
+					// Remove the file from update data
+					delete updateData.profileImageFile;
+				} catch (uploadError) {
+					setError(`Image upload failed: ${uploadError.message}`);
+					setUploadingProfileImage(false);
+					return;
 				}
-				// Remove the file from update data
-				delete updateData.profileImageFile;
 			}
 
 			await userAPI.updateUser(username, updateData);
