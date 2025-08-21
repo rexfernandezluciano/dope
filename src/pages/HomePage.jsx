@@ -76,6 +76,7 @@ const HomePage = () => {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [mediaStream, setMediaStream] = useState(null);
 	const [mediaRecorder, setMediaRecorder] = useState(null);
+	const [submitting, setSubmitting] = useState(false); // State for post submission loading
 
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -665,7 +666,8 @@ const HomePage = () => {
 		}
 
 		try {
-			// setSubmitting(true); // This state is managed within PostComposer
+			setSubmitting(true); // Set submitting state
+
 			// Extract hashtags and mentions for potential future use
 			// const hashtags = extractHashtags(cleanedContent);
 			// const mentions = extractMentions(cleanedContent);
@@ -726,10 +728,11 @@ const HomePage = () => {
 
 			// Reload posts
 			loadPosts();
-		} catch (err) {
-			setError(err.message);
+		} catch (error) {
+			console.error("Error creating post:", error);
+			setError(error.response?.data?.message || "Failed to create post");
 		} finally {
-			// setSubmitting(false); // This state is managed within PostComposer
+			setSubmitting(false);
 		}
 	};
 
@@ -1013,114 +1016,95 @@ const HomePage = () => {
 									minHeight: "48px",
 								}}
 							/>
-
 							<div className="flex-grow-1">
-								<div className="d-flex align-items-center gap-1 mb-2">
-									<span className="fw-bold">{user?.name}</span>
-									{user?.hasBlueCheck && (
-										<CheckCircleFill className="text-primary" size={16} />
-									)}
-								</div>
-
-								<Dropdown
-									onSelect={(value) => setPrivacy(value)}
-									className="mb-3"
-								>
-									<Dropdown.Toggle
-										variant="outline-primary"
-										size="sm"
-										className="border rounded-pill px-3 py-1 d-flex align-items-center shadow-none"
-										style={{
-											fontSize: "0.875rem",
-											fontWeight: "600",
-										}}
-									>
-										{privacyOptions[privacy]} {privacy}
-									</Dropdown.Toggle>
-
-									<Dropdown.Menu>
-										{Object.keys(privacyOptions).map((opt) => (
-											<Dropdown.Item key={opt} eventKey={opt}>
-												{privacyOptions[opt]} {opt}
-											</Dropdown.Item>
-										))}
-									</Dropdown.Menu>
-								</Dropdown>
-
 								<Form.Control
 									as="textarea"
-									ref={textareaRef}
+									rows={4}
 									value={postText}
-									onInput={handleInput}
+									onChange={(e) => setPostText(e.target.value)}
 									placeholder="What's happening?"
-									className="border-0 shadow-none fs-5"
-									rows={3}
-									style={{
-										overflow: "hidden",
-										resize: "none",
-										minHeight: "120px",
-									}}
+									className="border-0 shadow-none resize-none fs-5"
+									maxLength={280}
+									style={{ fontSize: "1.25rem" }}
 								/>
+								{photos && photos.length > 0 && (
+									<div className="mt-3">
+										<div className="d-flex flex-wrap gap-2">
+											{photos.map((photo, index) => (
+												<div key={index} className="position-relative">
+													<Image
+														src={photo}
+														alt={`Upload ${index + 1}`}
+														className="rounded"
+														style={{
+															width: "120px",
+															height: "120px",
+															objectFit: "cover",
+														}}
+													/>
+													<Button
+														variant="danger"
+														size="sm"
+														className="position-absolute top-0 end-0 m-1 rounded-circle d-flex align-items-center justify-content-center"
+														style={{ width: "24px", height: "24px" }}
+														onClick={() =>
+															setPhotos((prev) =>
+																prev.filter((_, i) => i !== index),
+															)
+														}
+													>
+														<X size={12} />
+													</Button>
+												</div>
+											))}
+										</div>
+									</div>
+								)}
+								{isLive && (
+									<div className="mt-3 p-3 bg-light border rounded">
+										<div className="d-flex align-items-center gap-2 mb-2">
+											<span
+												style={{
+													width: "8px",
+													height: "8px",
+													borderRadius: "50%",
+													backgroundColor: "#dc3545",
+													display: "inline-block",
+													animation: isStreaming ? "pulse 1s infinite" : "none",
+												}}
+											></span>
+											<small className="fw-bold text-danger">
+												{isStreaming ? "BROADCASTING LIVE" : "LIVE MODE"}
+											</small>
+										</div>
+										<Form.Control
+											type="url"
+											value={liveVideoUrl}
+											onChange={(e) => setLiveVideoUrl(e.target.value)}
+											placeholder="Live video stream URL (optional)"
+											className="form-control-sm"
+										/>
+										<small className="text-muted">
+											Enter your live stream URL or leave blank for text-only live post
+										</small>
+									</div>
+								)}
 							</div>
 						</div>
-
-						{photos?.length > 0 && (
-							<div
-								className="d-flex gap-2 overflow-x-auto mt-2 pb-2"
-								style={{ scrollbarWidth: "thin" }}
-							>
-								{photos.map((file, idx) => {
-									const url =
-										typeof file === "string" ? file : URL.createObjectURL(file);
-									return (
-										<div key={idx} className="position-relative flex-shrink-0">
-											<Image
-												src={url}
-												width={120}
-												height={120}
-												className="rounded-3 border bg-light"
-												style={{ objectFit: "cover" }}
-											/>
-											<Button
-												variant="danger"
-												size="sm"
-												onClick={() => handleRemovePhoto(idx)}
-												className="position-absolute top-0 end-0 m-1 p-0 rounded-circle"
-												style={{
-													width: "20px",
-													height: "20px",
-													lineHeight: "16px",
-												}}
-											>
-												<X size={12} />
-											</Button>
-										</div>
-									);
-								})}
-							</div>
-						)}
 
 						<div className="d-flex justify-content-between align-items-center">
 							<div className="d-flex gap-2">
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-1 ${photos?.length >= getImageUploadLimit(user?.subscription) ? "text-secondary" : "text-muted"}`}
-									onClick={handlePhotoClick}
-									disabled={
-										photos?.length >= getImageUploadLimit(user?.subscription)
-									}
-									title={
-										photos?.length >= getImageUploadLimit(user?.subscription)
-											? `Maximum ${getImageUploadLimit(user?.subscription)} images allowed`
-											: "Add photo"
-									}
+									className="text-primary p-1"
+									onClick={() => document.getElementById("file-input")?.click()}
 								>
-									<Camera size={18} />
+									<Camera size={20} />
 								</Button>
 								<input
+									id="file-input"
 									type="file"
-									ref={textareaRef} // This ref is now for the textarea, not a file input. Needs correction if file input is to be used here.
 									onChange={handleFileChange}
 									accept="image/*"
 									multiple
@@ -1129,16 +1113,8 @@ const HomePage = () => {
 								<Button
 									variant="link"
 									size="sm"
-									className={`p-1 ${photos?.length >= getImageUploadLimit(user?.subscription) ? "text-secondary" : "text-muted"}`}
+									className="text-primary p-1"
 									onClick={() => setShowStickerModal(true)}
-									disabled={
-										photos?.length >= getImageUploadLimit(user?.subscription)
-									}
-									title={
-										photos?.length >= getImageUploadLimit(user?.subscription)
-											? `Maximum ${getImageUploadLimit(user?.subscription)} images allowed`
-											: "Add GIF"
-									}
 								>
 									<EmojiSmile size={18} />
 								</Button>
