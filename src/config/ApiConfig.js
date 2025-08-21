@@ -474,6 +474,12 @@ export const postAPI = {
 		});
 	},
 
+	trackView: async (postId) => {
+		return await apiRequest(`/posts/${postId}/view`, {
+			method: "POST",
+		});
+	},
+
 	likePost: async (postId) => {
 		return await apiRequest(`/posts/${postId}/like`, {
 			method: "POST",

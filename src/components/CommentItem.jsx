@@ -1,21 +1,20 @@
-
 import React, { useState, useCallback } from 'react';
 import { Image, Button, Form, Collapse } from 'react-bootstrap';
 import { Heart, HeartFill, ChatDots, CheckCircleFill } from 'react-bootstrap-icons';
 import { formatTimeAgo } from '../utils/common-utils';
 import { parseTextContent } from '../utils/text-utils';
 
-const CommentItem = ({ 
-  comment, 
-  currentUser, 
-  onLike, 
-  onReply, 
-  onHashtagClick, 
-  onMentionClick, 
-  onLinkClick, 
+const CommentItem = ({
+  comment,
+  currentUser,
+  onLike,
+  onReply,
+  onHashtagClick,
+  onMentionClick,
+  onLinkClick,
   navigate,
   isLast = false,
-  level = 0 
+  level = 0
 }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState('');
@@ -95,7 +94,7 @@ const CommentItem = ({
               onLinkClick,
             })}
           </div>
-          
+
           {/* Comment Actions */}
           <div className="d-flex align-items-center gap-3 mt-1">
             <Button
@@ -111,7 +110,7 @@ const CommentItem = ({
               {isLiked ? <HeartFill size={12} /> : <Heart size={12} />}
               {likesCount > 0 && <span>{likesCount}</span>}
             </Button>
-            
+
             <Button
               variant="link"
               size="sm"
@@ -122,7 +121,7 @@ const CommentItem = ({
               <ChatDots size={12} />
               Reply
             </Button>
-            
+
             {repliesCount > 0 && (
               <Button
                 variant="link"

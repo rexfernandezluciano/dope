@@ -34,7 +34,7 @@ const PostCard = ({
 	onLike,
 	onShare,
 	onDeletePost,
-	showComments = false,
+	showComments: propShowComments = false, // Renamed prop to avoid conflict
 	comments = [],
 }) => {
 	const navigate = useNavigate();
@@ -44,12 +44,15 @@ const PostCard = ({
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
 	const cardRef = useRef(null);
 	const [viewTracked, setViewTracked] = useState(false);
-	const [localComments, setLocalComments] = useState(comments);
+	const [showComments, setShowComments] = useState(false); // Local state for comments visibility
+	const [localComments, setLocalComments] = useState([]);
 
-	// Update local comments when prop changes
+	// Initialize local comments and showComments state based on props
 	useEffect(() => {
 		setLocalComments(comments);
-	}, [comments]);
+		// Set initial showComments state based on prop, but allow it to be toggled by user action
+		setShowComments(propShowComments); 
+	}, [comments, propShowComments]);
 
 	// Track view when post comes into view
 	useEffect(() => {
@@ -190,12 +193,23 @@ const PostCard = ({
 		}
 	}, [post.id, onShare]);
 
+	const handleCommentToggle = useCallback(() => {
+		setShowComments(prev => !prev);
+	}, []);
+
+
 	const handleComment = useCallback((e) => {
 		e.stopPropagation();
 		if (canComment) {
-			navigate(`/post/${post.id}`);
+			// If comments are already visible, do nothing. Otherwise, navigate.
+			if (!showComments) {
+				navigate(`/post/${post.id}`);
+			} else {
+				// Optionally, scroll to the comment section if already expanded
+				// This would require a ref to the comment section
+			}
 		}
-	}, [canComment, navigate, post.id]);
+	}, [canComment, navigate, post.id, showComments]);
 
 	const handleDeletePost = async (postId) => {
 		await deletePostUtil(postId, postAPI.deletePost); // Use the utility function
@@ -503,7 +517,7 @@ const PostCard = ({
 										minWidth: "40px",
 										height: "36px",
 									}}
-									onClick={handleComment}
+									onClick={handleCommentToggle} // Use toggle handler
 									disabled={!canComment}
 									title={
 										!canComment
@@ -597,7 +611,7 @@ const PostCard = ({
 							{/* Threaded Comments - show when enabled and post has comment capability */}
 							{showComments && (
 								<div className="mt-3 pt-2 border-top comment-thread">
-									{(post.comments || []).map((comment, index) => (
+									{(localComments || []).map((comment, index) => (
 										<CommentItem
 											key={comment.id}
 											comment={comment}
