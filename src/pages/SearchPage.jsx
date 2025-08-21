@@ -72,11 +72,18 @@ const SearchPage = () => {
 			setError("");
 
 			if (tab === "posts") {
-				const response = await postAPI.searchPosts(searchQueryParam);
+				const response = await apiRequest(`/posts/search?query=${encodeURIComponent(searchQueryParam)}&limit=20&sortBy=desc`);
 				setPosts(response.posts || []);
 			} else if (tab === "users") {
-				const response = await userAPI.searchUsers(searchQueryParam);
-				setUsers(response.users || []);
+				// Use /users endpoint to get all users, then filter by search query
+				const response = await apiRequest(`/users`);
+				const allUsers = response.users || [];
+				const filteredUsers = allUsers.filter(user => 
+					user.name.toLowerCase().includes(searchQueryParam.toLowerCase()) ||
+					user.username.toLowerCase().includes(searchQueryParam.toLowerCase()) ||
+					(user.bio && user.bio.toLowerCase().includes(searchQueryParam.toLowerCase()))
+				);
+				setUsers(filteredUsers);
 			} else if (tab === "comments") {
 				// Use the correct API endpoint for comment search with proper parameters
 				const response = await apiRequest(`/comments/search?query=${encodeURIComponent(searchQueryParam)}&limit=20&sortBy=desc`);

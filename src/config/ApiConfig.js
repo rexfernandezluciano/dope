@@ -515,10 +515,14 @@ export const postAPI = {
 		return await apiRequest("/posts/user/me");
 	},
 
-	searchPosts: async (query, page = 1) => {
-		return await apiRequest(
-			`/posts?search=${encodeURIComponent(query)}&page=${page}`,
-		);
+	searchPosts: async (query, params = {}) => {
+		const searchParams = new URLSearchParams({
+			query: query,
+			limit: params.limit || 20,
+			sortBy: params.sortBy || 'desc',
+			...params,
+		});
+		return await apiRequest(`/posts/search?${searchParams.toString()}`);
 	},
 
 	// New endpoints from API documentation
@@ -762,10 +766,12 @@ export const searchAPI = {
 
 	searchPosts: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
-			query,
+			query: query,
+			limit: params.limit || 20,
+			sortBy: params.sortBy || 'desc',
 			...params,
 		});
-		return await apiRequest(`/search/posts?${searchParams.toString()}`);
+		return await apiRequest(`/posts/search?${searchParams.toString()}`);
 	},
 
 	searchHashtags: async (query) => {
