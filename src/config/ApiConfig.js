@@ -349,12 +349,9 @@ export const authAPI = {
 		});
 	},
 
-	googleAuth: async (token) => {
-		return await apiRequest("/auth/google", {
-			method: "POST",
-			data: { token },
-		});
-	},
+	// Google OAuth endpoints
+	googleLogin: (googleData) => apiRequest("/auth/google/login", { method: "POST", data: googleData }),
+	googleSignup: (googleData) => apiRequest("/auth/google/signup", { method: "POST", data: googleData }),
 
 	validateVerificationId: async (verificationId) => {
 		return await apiRequest(`/auth/validate-verification-id/${verificationId}`);
@@ -934,6 +931,13 @@ export const api = {
 	register: authAPI.register,
 	logout: authAPI.logout,
 	me: authAPI.me,
+	verifyEmail: authAPI.verifyEmail,
+	forgotPassword: authAPI.forgotPassword,
+	resetPassword: authAPI.resetPassword,
+
+	// Google OAuth endpoints
+	googleLogin: (googleData) => apiRequest('POST', '/auth/google/login', googleData),
+	googleSignup: (googleData) => apiRequest('POST', '/auth/google/signup', googleData),
 
 	// Posts
 	getPosts: postAPI.getPosts,

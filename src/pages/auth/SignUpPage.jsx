@@ -1,4 +1,3 @@
-
 /** @format */
 
 import React, { useState, useEffect } from "react";
@@ -72,7 +71,11 @@ const SignUpPage = () => {
 			setGoogleLoading(true);
 			setError("");
 
-			const result = await authAPI.googleSignup(response.credential);
+			// Send Google credential to DOPE API for registration
+			const result = await authAPI.googleSignup({
+				credential: response.credential,
+				userInfo: response.userInfo
+			});
 
 			if (result.user && !result.user.hasVerifiedEmail) {
 				setError("Please verify your account first to continue. Check your email for the verification link.");
@@ -81,7 +84,10 @@ const SignUpPage = () => {
 			}
 
 			if (result.token) {
-				setAuthToken(result.token);
+				// Store the token with remember me option
+				const rememberMe = true; // Google signup users typically want to stay logged in
+				setAuthToken(result.token, rememberMe);
+				setError("");
 				navigate("/home", { replace: true });
 			} else {
 				setError("Google signup failed. Please try again.");

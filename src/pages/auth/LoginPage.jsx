@@ -112,7 +112,11 @@ const LoginPage = () => {
 			setGoogleLoading(true);
 			setError("");
 
-			const result = await authAPI.googleAuth(response.credential);
+			// Send Google credential to DOPE API for authentication
+			const result = await authAPI.googleLogin({
+				credential: response.credential,
+				userInfo: response.userInfo
+			});
 
 			if (result.user && !result.user.hasVerifiedEmail) {
 				setError("Please verify your account first to continue.");
@@ -121,7 +125,10 @@ const LoginPage = () => {
 			}
 
 			if (result.token) {
-				setAuthToken(result.token);
+				// Store the token with remember me option
+				const rememberMe = true; // Google login users typically want to stay logged in
+				setAuthToken(result.token, rememberMe);
+				setError("");
 				navigate("/home", { replace: true });
 			} else {
 				setError("Google login failed. Please try again.");
