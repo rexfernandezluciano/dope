@@ -594,7 +594,7 @@ const PostCard = ({
 							{/* Threaded Comments - show when enabled and post has comment capability */}
 							{showComments && (
 								<div className="mt-3 pt-2 border-top comment-thread">
-									{localComments.map((comment, index) => (
+									{(post.comments || []).map((comment, index) => (
 										<CommentItem
 											key={comment.id}
 											comment={comment}

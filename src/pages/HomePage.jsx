@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
 import {
 	Container,
@@ -16,10 +16,9 @@ import {
 	X,
 } from "react-bootstrap-icons";
 
-// Removed unused imports: Grid, GiphyFetch, heic2any
 import AgoraRTC from "agora-rtc-sdk-ng";
 
-import { postAPI, imageAPI } from "../config/ApiConfig";
+import { postAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
 import PostComposer from "../components/PostComposer";
@@ -46,8 +45,6 @@ const HomePage = () => {
 	const [nextCursor, setNextCursor] = useState(null);
 	// Removed unused post composer state and functions: const [newPost, setNewPost] = useState(""); const [submitting, setSubmitting] = useState(false); const [images, setImages] = useState([]); const fileInputRef = useRef(null);
 
-	const [isLive, setIsLive] = useState(false);
-	const [liveVideoUrl, setLiveVideoUrl] = useState("");
 	const [streamTitle, setStreamTitle] = useState(""); // State for stream title
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [mediaStream, setMediaStream] = useState(null);
@@ -58,10 +55,8 @@ const HomePage = () => {
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 	const [postToDelete, setPostToDelete] = useState(null);
 	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
-	// Removed unused fileInputRef as it's now part of PostComposer: const fileInputRef = useRef(null);
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
-	const [postText, setPostText] = useState(""); // State for post text
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -377,10 +372,7 @@ const HomePage = () => {
 			const response = await postAPI.createPost(postPayload);
 
 			if (response.success || response.id) {
-				setIsLive(true);
 				setStreamTitle(streamData.title);
-				setPostText(streamData.description || streamData.title);
-				setLiveVideoUrl(streamUrl);
 				setIsStreaming(true);
 				setMediaStream(client);
 				setMediaRecorder({ videoTrack, audioTrack });
@@ -477,9 +469,7 @@ const HomePage = () => {
 			}
 
 			setIsStreaming(false);
-			setIsLive(false);
 			setMediaRecorder(null);
-			setLiveVideoUrl("");
 
 			// Clear broadcast status from localStorage
 			localStorage.removeItem("isCurrentlyBroadcasting");
@@ -622,7 +612,14 @@ const HomePage = () => {
 					<PostComposer
 						currentUser={user}
 						onPostCreated={(newPost) => {
-							setPosts(prevPosts => [newPost, ...prevPosts]);
+							// Ensure the new post has all required properties
+							const postWithDefaults = {
+								...newPost,
+								comments: newPost.comments || [],
+								stats: newPost.stats || { comments: 0, likes: 0, shares: 0 },
+								likes: newPost.likes || []
+							};
+							setPosts(prevPosts => [postWithDefaults, ...prevPosts]);
 						}}
 						placeholder="What's happening?"
 					/>
