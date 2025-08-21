@@ -37,7 +37,7 @@ const LoginPage = () => {
 		try {
 			setLoading(true);
 
-			const result = await authAPI.login(email, password);
+			const result = await authAPI.login({ email, password });
 
 			if (result.user && !result.user.hasVerifiedEmail) {
 				setError(
@@ -112,7 +112,7 @@ const LoginPage = () => {
 			setGoogleLoading(true);
 			setError("");
 
-			const result = await authAPI.googleLogin(response.credential);
+			const result = await authAPI.googleAuth(response.credential);
 
 			if (result.user && !result.user.hasVerifiedEmail) {
 				setError("Please verify your account first to continue.");
