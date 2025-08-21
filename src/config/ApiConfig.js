@@ -730,6 +730,177 @@ export const paymentAPI = {
 	},
 };
 
+// Search API
+export const searchAPI = {
+	globalSearch: async (query, filters = {}) => {
+		const params = new URLSearchParams({
+			query,
+			...filters
+		});
+		return await apiRequest(`/search/global?${params.toString()}`);
+	},
+
+	searchUsers: async (query, params = {}) => {
+		const searchParams = new URLSearchParams({
+			query,
+			...params
+		});
+		return await apiRequest(`/search/users?${searchParams.toString()}`);
+	},
+
+	searchPosts: async (query, params = {}) => {
+		const searchParams = new URLSearchParams({
+			query,
+			...params
+		});
+		return await apiRequest(`/search/posts?${searchParams.toString()}`);
+	},
+
+	searchHashtags: async (query) => {
+		return await apiRequest(`/search/hashtags?query=${encodeURIComponent(query)}`);
+	}
+};
+
+// Analytics API
+export const analyticsAPI = {
+	getEarningsAnalytics: async (period = 'month') => {
+		return await apiRequest(`/analytics/earnings?period=${period}`);
+	},
+
+	getUserAnalytics: async (userId, period = 'month') => {
+		return await apiRequest(`/analytics/user/${userId}?period=${period}`);
+	},
+
+	getPostAnalytics: async (postId) => {
+		return await apiRequest(`/analytics/post/${postId}`);
+	}
+};
+
+// Notification API
+export const notificationAPI = {
+	getNotifications: async (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/notifications${queryString ? `?${queryString}` : ''}`);
+	},
+
+	markAsRead: async (notificationId) => {
+		return await apiRequest(`/notifications/${notificationId}/read`, {
+			method: 'PUT'
+		});
+	},
+
+	markAllAsRead: async () => {
+		return await apiRequest('/notifications/mark-all-read', {
+			method: 'PUT'
+		});
+	},
+
+	deleteNotification: async (notificationId) => {
+		return await apiRequest(`/notifications/${notificationId}`, {
+			method: 'DELETE'
+		});
+	}
+};
+
+// Live Stream API
+export const liveStreamAPI = {
+	getLiveStreams: async (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/live-streams${queryString ? `?${queryString}` : ''}`);
+	},
+
+	createStream: async (streamData) => {
+		return await apiRequest('/live-streams', {
+			method: 'POST',
+			data: streamData
+		});
+	},
+
+	endStream: async (streamId) => {
+		return await apiRequest(`/live-streams/${streamId}/end`, {
+			method: 'POST'
+		});
+	},
+
+	joinStream: async (streamId) => {
+		return await apiRequest(`/live-streams/${streamId}/join`, {
+			method: 'POST'
+		});
+	},
+
+	leaveStream: async (streamId) => {
+		return await apiRequest(`/live-streams/${streamId}/leave`, {
+			method: 'POST'
+		});
+	}
+};
+
+// Hashtag API
+export const hashtagAPI = {
+	getTrendingHashtags: async () => {
+		return await apiRequest('/hashtags/trending');
+	},
+
+	getHashtagPosts: async (hashtag, params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/hashtags/${encodeURIComponent(hashtag)}/posts${queryString ? `?${queryString}` : ''}`);
+	},
+
+	followHashtag: async (hashtag) => {
+		return await apiRequest(`/hashtags/${encodeURIComponent(hashtag)}/follow`, {
+			method: 'POST'
+		});
+	}
+};
+
+// Subscription API
+export const subscriptionAPI = {
+	getSubscriptionInfo: async () => {
+		return await apiRequest('/subscriptions/info');
+	},
+
+	upgradeSubscription: async (tier, paymentMethodId) => {
+		return await apiRequest('/subscriptions/upgrade', {
+			method: 'POST',
+			data: { tier, paymentMethodId }
+		});
+	},
+
+	cancelSubscription: async () => {
+		return await apiRequest('/subscriptions/cancel', {
+			method: 'POST'
+		});
+	}
+};
+
+// Admin API
+export const adminAPI = {
+	getUsers: async (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/admin/users${queryString ? `?${queryString}` : ''}`);
+	},
+
+	banUser: async (userId, reason) => {
+		return await apiRequest(`/admin/users/${userId}/ban`, {
+			method: 'POST',
+			data: { reason }
+		});
+	},
+
+	unbanUser: async (userId) => {
+		return await apiRequest(`/admin/users/${userId}/unban`, {
+			method: 'POST'
+		});
+	},
+
+	moderatePost: async (postId, action, reason) => {
+		return await apiRequest(`/admin/posts/${postId}/moderate`, {
+			method: 'POST',
+			data: { action, reason }
+		});
+	}
+};
+
 // Backward compatibility - keeping the original api object
 export const api = {
 	// Authentication
@@ -751,6 +922,71 @@ export const api = {
 	updateProfile: userAPI.updateProfile,
 	getWaitingList: userAPI.getWaitingList,
 	joinWaitingList: userAPI.joinWaitingList,
+
+	// Search
+	globalSearch: searchAPI.globalSearch,
+	searchUsers: searchAPI.searchUsers,
+	searchPosts: searchAPI.searchPosts,
+	searchHashtags: searchAPI.searchHashtags,
+
+	// Analytics
+	getEarningsAnalytics: analyticsAPI.getEarningsAnalytics,
+	getUserAnalytics: analyticsAPI.getUserAnalytics,
+	getPostAnalytics: analyticsAPI.getPostAnalytics,
+
+	// Notifications
+	getNotifications: notificationAPI.getNotifications,
+	markAsRead: notificationAPI.markAsRead,
+	markAllAsRead: notificationAPI.markAllAsRead,
+	deleteNotification: notificationAPI.deleteNotification,
+
+	// Live Streams
+	getLiveStreams: liveStreamAPI.getLiveStreams,
+	createStream: liveStreamAPI.createStream,
+	endStream: liveStreamAPI.endStream,
+	joinStream: liveStreamAPI.joinStream,
+	leaveStream: liveStreamAPI.leaveStream,
+
+	// Hashtags
+	getTrendingHashtags: hashtagAPI.getTrendingHashtags,
+	getHashtagPosts: hashtagAPI.getHashtagPosts,
+	followHashtag: hashtagAPI.followHashtag,
+
+	// Subscriptions
+	getSubscriptionInfo: subscriptionAPI.getSubscriptionInfo,
+	upgradeSubscription: subscriptionAPI.upgradeSubscription,
+	cancelSubscription: subscriptionAPI.cancelSubscription,
+
+	// Admin
+	getAdminUsers: adminAPI.getUsers,
+	banUser: adminAPI.banUser,
+	unbanUser: adminAPI.unbanUser,
+	moderatePost: adminAPI.moderatePost,
 };
 
-export default apiRequest;
+// Placeholder for createRateLimiter if it's defined elsewhere
+// If createRateLimiter is not globally available, you might need to import it
+// or define it here. For now, assuming it's available.
+function createRateLimiter(limit, interval) {
+	const requests = [];
+	return async (callback) => {
+		const now = Date.now();
+		// Remove old requests
+		while (requests.length > 0 && requests[0] <= now - interval) {
+			requests.shift();
+		}
+		// If limit is reached, wait for the next available slot
+		if (requests.length >= limit) {
+			const waitUntil = requests[0] + interval;
+			await new Promise(resolve => setTimeout(resolve, waitUntil - now));
+		}
+		// Add current request and execute callback
+		requests.push(Date.now());
+		return callback();
+	};
+}
+
+// Export commonly used rate limiters
+export const searchRateLimiter = createRateLimiter(10, 60000); // 10 requests per minute
+export const postRateLimiter = createRateLimiter(5, 60000); // 5 posts per minute
+export const commentRateLimiter = createRateLimiter(20, 60000); // 20 comments per minute
