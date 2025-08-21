@@ -9,6 +9,7 @@ import StartPage from "../pages/StartPage";
 import LoginPage from "../pages/auth/LoginPage";
 import SignUpPage from "../pages/auth/SignUpPage";
 import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
+import GoogleCallbackPage from "../pages/auth/GoogleCallbackPage"; // Assuming this component exists
 import IndexPage from "../pages/IndexPage";
 import HomePage from "../pages/HomePage";
 import PostDetailPage from "../pages/PostDetailPage";
@@ -51,6 +52,11 @@ const router = createBrowserRouter([
 	{
 		path: "/auth/verify/:verificationId",
 		element: <VerifyEmailPage />,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/auth/google/callback",
+		element: <GoogleCallbackPage />,
 		hydrateFallbackElement: <LoadingView />,
 	},
 	{

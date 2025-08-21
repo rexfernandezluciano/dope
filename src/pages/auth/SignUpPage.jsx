@@ -11,7 +11,7 @@ import { authAPI } from "../../config/ApiConfig";
 import { userExistByEmail, getGravatar, createUsername } from "../../utils/app-utils";
 import { setAuthToken } from "../../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
-import { getGoogleClientId, handleGoogleSuccess, handleGoogleError } from "../../utils/google-auth-utils";
+import { getGoogleClientId, handleGoogleSuccess, handleGoogleError, initializeGoogleOAuth } from "../../utils/google-auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
@@ -112,6 +112,38 @@ const SignUpPage = () => {
 		const error = new Error('Google signup failed');
 		handleGoogleError(error);
 		setError('Google signup failed. Please try again.');
+	};
+
+	// Handle popup-based Google OAuth signup
+	const handlePopupGoogleSignup = async () => {
+		try {
+			setGoogleLoading(true);
+			setError("");
+
+			// Initialize popup OAuth flow for signup
+			const result = await initializeGoogleOAuth('signup');
+
+			if (result.user && !result.user.hasVerifiedEmail) {
+				setError("Please verify your account first to continue. Check your email for the verification link.");
+				setGoogleLoading(false);
+				return;
+			}
+
+			if (result.token) {
+				// Store the token with remember me option
+				const rememberMe = true;
+				setAuthToken(result.token, rememberMe);
+				setError("");
+				navigate("/home", { replace: true });
+			} else {
+				setError("Google signup failed. Please try again.");
+			}
+		} catch (err) {
+			console.error("Popup Google signup error:", err);
+			setError(err.message || "Google signup failed. Please try again.");
+		} finally {
+			setGoogleLoading(false);
+		}
 	};
 
 	const handleNextEmail = async e => {
