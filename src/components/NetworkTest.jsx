@@ -4,6 +4,7 @@ import { Button, Alert, Spinner } from 'react-bootstrap';
 import { testApiConnection } from '../config/ApiConfig';
 
 import NetworkDiagnostics from './NetworkDiagnostics';
+import QuickNetworkTest from './QuickNetworkTest';
 
 const NetworkTest = () => {
   const [testing, setTesting] = useState(false);
@@ -62,6 +63,7 @@ const NetworkTest = () => {
         </Alert>
       )}
       
+      <QuickNetworkTest />
       <NetworkDiagnostics />
     </div>
   );
