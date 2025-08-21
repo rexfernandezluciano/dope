@@ -458,6 +458,9 @@ const PostDetailPage = () => {
 			});
 
 			const newReply = {
+				id: response.reply?.id || Date.now().toString(),
+				content: replyText,
+				createdAt: response.reply?.createdAt || new Date().toISOString(),
 				...response.reply,
 				author: response.reply?.author || {
 					uid: currentUser.uid,
@@ -1150,8 +1153,8 @@ const PostDetailPage = () => {
 								{/* Replies */}
 								{replies[comment.id] && replies[comment.id].length > 0 && (
 									<div className="replies-section mt-2 ms-3 border-start border-2 ps-3">
-										{replies[comment.id].map(reply => (
-											<div key={reply.id} className="d-flex gap-2 mb-2">
+										{replies[comment.id].map((reply, replyIndex) => (
+											<div key={reply.id || `reply-${comment.id}-${replyIndex}`} className="d-flex gap-2 mb-2">
 												<Image
 													src={reply.author?.photoURL || "https://i.pravatar.cc/150?img=10"}
 													alt="avatar"
@@ -1170,15 +1173,15 @@ const PostDetailPage = () => {
 														)}
 														<span className="text-muted">·</span>
 														<span className="text-muted small">
-															{formatTimeAgo(reply.createdAt)}
+															{reply.createdAt ? formatTimeAgo(reply.createdAt) : "just now"}
 														</span>
 													</div>
 													<div className="mb-1" style={{ fontSize: "0.9rem" }}>
-														{parseTextContent(reply.content, {
+														{reply.content ? parseTextContent(reply.content, {
 															onHashtagClick: handleHashtagClick,
 															onMentionClick: handleMentionClick,
 															onLinkClick: handleLinkClick,
-														})}
+														}) : "No content"}
 													</div>
 													<Button
 														variant="link"
