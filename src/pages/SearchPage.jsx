@@ -21,7 +21,7 @@ import {
 	ChatDots,
 } from "react-bootstrap-icons";
 
-import { postAPI, userAPI, apiRequest } from "../config/ApiConfig";
+import { postAPI, apiRequest } from "../config/ApiConfig";
 import { updatePageMeta } from "../utils/meta-utils";
 import PostCard from "../components/PostCard";
 import { formatTimeAgo } from "../utils/common-utils";
@@ -61,10 +61,10 @@ const SearchPage = () => {
 		if (urlTab !== activeTab) {
 			setActiveTab(urlTab);
 		}
-	}, [searchParams]);
+	}, [searchParams, searchQuery, activeTab]);
 
 
-	const performSearch = useCallback(async (searchQueryParam = searchQuery, tab = activeTab) => {
+	const performSearch = useCallback(async (searchQueryParam, tab) => {
 		if (!searchQueryParam.trim()) return;
 
 		try {
@@ -118,7 +118,7 @@ const SearchPage = () => {
 			setUsers([]);
 			setComments([]);
 		}
-	}, [searchQuery, performSearch]);
+	}, [searchQuery]);
 
 
 	// Update meta tags when search query changes
