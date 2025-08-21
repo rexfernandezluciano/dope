@@ -278,46 +278,6 @@ const ProfilePage = () => {
 	const uploadProfileImageToCloudinary = async (file) => {
 		// Handle HEIC files
 		let finalFile = file;
-		if (
-			file.type === "image/heic" ||
-			file.name.toLowerCase().endsWith(".heic")
-		) {
-			try {
-				const heic2any = (await import("heic2any")).default;
-				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
-					type: "image/jpeg",
-				});
-			} catch (err) {
-				console.error("Error converting HEIC:", err);
-				return null;
-			}
-		}
-
-		const formData = new FormData();
-		formData.append("file", finalFile);
-		formData.append("upload_preset", "dope-network");
-		formData.append("folder", "profile_pictures");
-
-		try {
-			const response = await fetch(
-				"https://api.cloudinary.com/v1_1/zxpic/image/upload",
-				{
-					method: "POST",
-					body: formData,
-				},
-			);
-			const data = await response.json();
-			return data.secure_url;
-		} catch (error) {
-			console.error("Error uploading to Cloudinary:", error);
-			return null;
-		}
-	};
-
-	const uploadProfileImageToCloudinary = async (file) => {
-		// Handle HEIC files
-		let finalFile = file;
 		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
 			try {
 				const heic2any = (await import("heic2any")).default;
