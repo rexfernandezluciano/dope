@@ -4,17 +4,21 @@
 // Import js-cookie for secure cookie management
 import Cookies from "js-cookie";
 // Check if we're using proxy (in development)
-const isUsingProxy = process.env.NODE_ENV === 'development' && 
-	(window.location.hostname.includes('replit') || window.location.hostname.includes('repl.co'));
+const isUsingProxy =
+	process.env.NODE_ENV === "development" &&
+	(window.location.hostname.includes("replit") ||
+		window.location.hostname.includes("repl.co"));
 
 // Multiple API endpoints for failover
-const API_ENDPOINTS = isUsingProxy ? [
-	"/v1",  // Use proxy in development
-	"https://social.dopp.eu.org/v1"
-] : [
-	process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1",
-	"https://social.dopp.eu.org/v1"
-];
+const API_ENDPOINTS = isUsingProxy
+	? [
+			"/v1", // Use proxy in development
+			"https://social.dopp.eu.org/v1",
+		]
+	: [
+			process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1",
+			"https://social.dopp.eu.org/v1",
+		];
 
 // Current active API base URL
 let API_BASE_URL = API_ENDPOINTS[0];
@@ -38,9 +42,9 @@ class HttpClient {
 	async checkEndpointHealth(endpoint) {
 		try {
 			const response = await fetch(`${endpoint}/health`, {
-				method: 'GET',
+				method: "GET",
 				signal: AbortSignal.timeout(5000),
-				mode: 'cors'
+				mode: "cors",
 			});
 			return response.ok;
 		} catch (error) {
@@ -52,18 +56,20 @@ class HttpClient {
 	// Find the best available endpoint
 	async findWorkingEndpoint() {
 		const now = Date.now();
-		
+
 		// Only check health if enough time has passed
 		if (now - this.lastHealthCheck > this.healthCheckInterval) {
 			this.lastHealthCheck = now;
 			this.failedEndpoints.clear();
-			
+
 			console.log("🔍 Checking endpoint health...");
-			
+
 			for (const endpoint of API_ENDPOINTS) {
 				const isHealthy = await this.checkEndpointHealth(endpoint);
-				console.log(`🏥 Health check for ${endpoint}: ${isHealthy ? '✅ Healthy' : '❌ Failed'}`);
-				
+				console.log(
+					`🏥 Health check for ${endpoint}: ${isHealthy ? "✅ Healthy" : "❌ Failed"}`,
+				);
+
 				if (isHealthy) {
 					API_BASE_URL = endpoint;
 					this.baseURL = endpoint;
@@ -74,7 +80,7 @@ class HttpClient {
 				}
 			}
 		}
-		
+
 		// Use current endpoint if no health check needed
 		return this.baseURL;
 	}
@@ -82,67 +88,74 @@ class HttpClient {
 	// Try request with failover to other endpoints
 	async requestWithFailover(url, options = {}) {
 		let lastError = null;
-		
+
 		for (const endpoint of API_ENDPOINTS) {
 			// Skip endpoints that recently failed (unless it's our last option)
-			if (this.failedEndpoints.has(endpoint) && API_ENDPOINTS.indexOf(endpoint) < API_ENDPOINTS.length - 1) {
+			if (
+				this.failedEndpoints.has(endpoint) &&
+				API_ENDPOINTS.indexOf(endpoint) < API_ENDPOINTS.length - 1
+			) {
 				continue;
 			}
-			
+
 			try {
-				const fullUrl = url.startsWith('http') ? url : `${endpoint}${url}`;
+				const fullUrl = url.startsWith("http") ? url : `${endpoint}${url}`;
 				console.log(`🔄 Trying endpoint: ${endpoint}`);
-				
+
 				const response = await this.makeRequest(fullUrl, options);
-				
+
 				// If successful, update our primary endpoint
 				if (API_BASE_URL !== endpoint) {
 					API_BASE_URL = endpoint;
 					this.baseURL = endpoint;
 					console.log(`✅ Switched to working endpoint: ${endpoint}`);
 				}
-				
+
 				// Remove from failed endpoints
 				this.failedEndpoints.delete(endpoint);
-				
+
 				return response;
-				
 			} catch (error) {
 				console.warn(`❌ Request failed on ${endpoint}:`, error.message);
 				this.failedEndpoints.add(endpoint);
 				lastError = error;
-				
+
 				// If this is a network connectivity issue, don't try other endpoints
-				if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+				if (
+					error.message.includes("Failed to fetch") ||
+					error.message.includes("NetworkError")
+				) {
 					// Quick test if it's a general connectivity issue
 					try {
-						await fetch('https://www.google.com/favicon.ico', { 
-							method: 'HEAD', 
-							mode: 'no-cors',
-							signal: AbortSignal.timeout(3000)
+						await fetch("https://www.google.com/favicon.ico", {
+							method: "HEAD",
+							mode: "no-cors",
+							signal: AbortSignal.timeout(3000),
 						});
 						// If Google works, continue trying other endpoints
 						continue;
 					} catch (connectTest) {
 						// If Google fails, it's a general connectivity issue
-						throw new Error(`Network connectivity issue detected. Please check your internet connection and try again.`);
+						throw new Error(
+							`Network connectivity issue detected. Please check your internet connection and try again.`,
+						);
 					}
 				}
 			}
 		}
-		
+
 		// If all endpoints failed
-		throw lastError || new Error('All API endpoints are currently unavailable');
+		throw lastError || new Error("All API endpoints are currently unavailable");
 	}
 
 	// Original request method renamed
 	async makeRequest(fullUrl, options = {}) {
 		console.log("🚀 Making HTTP request:", {
 			url: fullUrl,
-			method: options.method || 'GET',
+			method: options.method || "GET",
 			headers: options.headers,
 			hasBody: !!options.body,
-			timestamp: new Date().toISOString()
+			timestamp: new Date().toISOString(),
 		});
 
 		// Create AbortController for timeout
@@ -152,16 +165,21 @@ class HttpClient {
 		try {
 			// Prepare headers
 			const headers = {
-				'Content-Type': 'application/json; charset=UTF-8',
-				'Accept': 'application/json',
-				'User-Agent': 'DOPE-Network-Client/1.0',
-				...options.headers
+				"Content-Type": "application/json; charset=UTF-8",
+				Accept: "application/json",
+				"User-Agent": "DOPE-Network-Client/1.0",
+				...options.headers,
 			};
 
 			// Add security headers
 			try {
-				const { SecurityMiddleware } = await import("../utils/security-middleware");
-				const secureOptions = await SecurityMiddleware.secureApiRequest(fullUrl, { headers });
+				const { SecurityMiddleware } = await import(
+					"../utils/security-middleware"
+				);
+				const secureOptions = await SecurityMiddleware.secureApiRequest(
+					fullUrl,
+					{ headers },
+				);
 				Object.assign(headers, secureOptions.headers);
 			} catch (securityError) {
 				console.warn("Security middleware failed:", securityError);
@@ -169,32 +187,39 @@ class HttpClient {
 
 			// Add auth token
 			const token = getAuthToken();
-			if (token && !fullUrl.includes('/auth/login') && !fullUrl.includes('/auth/register')) {
-				headers['Authorization'] = `Bearer ${token}`;
+			if (
+				token &&
+				!fullUrl.includes("/auth/login") &&
+				!fullUrl.includes("/auth/register")
+			) {
+				headers["Authorization"] = `Bearer ${token}`;
 			}
 
 			const fetchOptions = {
-				method: options.method || 'GET',
+				method: options.method || "GET",
 				headers,
 				signal: controller.signal,
-				credentials: 'omit', // Don't send cookies
-				mode: 'cors',
-				cache: 'no-cache'
+				credentials: "omit", // Don't send cookies
+				mode: "cors",
+				cache: "no-cache",
 			};
 
 			if (options.body) {
-				fetchOptions.body = typeof options.body === 'string' ? options.body : JSON.stringify(options.body);
+				fetchOptions.body =
+					typeof options.body === "string"
+						? options.body
+						: JSON.stringify(options.body);
 			}
 
 			console.log("📡 Fetch options:", {
 				url: fullUrl,
 				method: fetchOptions.method,
 				headers: Object.keys(fetchOptions.headers),
-				bodyLength: fetchOptions.body?.length || 0
+				bodyLength: fetchOptions.body?.length || 0,
 			});
 
 			const response = await fetch(fullUrl, fetchOptions);
-			
+
 			clearTimeout(timeoutId);
 
 			console.log("📥 Response received:", {
@@ -204,7 +229,7 @@ class HttpClient {
 				headers: Object.fromEntries(response.headers.entries()),
 				ok: response.ok,
 				type: response.type,
-				redirected: response.redirected
+				redirected: response.redirected,
 			});
 
 			if (!response.ok) {
@@ -213,9 +238,9 @@ class HttpClient {
 					status: response.status,
 					statusText: response.statusText,
 					body: errorText,
-					url: fullUrl
+					url: fullUrl,
 				});
-				
+
 				let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
 				try {
 					const errorData = JSON.parse(errorText);
@@ -225,14 +250,14 @@ class HttpClient {
 						errorMessage = errorText;
 					}
 				}
-				
+
 				throw new Error(errorMessage);
 			}
 
-			const contentType = response.headers.get('content-type');
+			const contentType = response.headers.get("content-type");
 			let data;
-			
-			if (contentType && contentType.includes('application/json')) {
+
+			if (contentType && contentType.includes("application/json")) {
 				data = await response.json();
 			} else {
 				data = await response.text();
@@ -242,53 +267,68 @@ class HttpClient {
 				url: fullUrl,
 				status: response.status,
 				dataType: typeof data,
-				dataPreview: typeof data === 'object' ? Object.keys(data) : data.substring?.(0, 100)
+				dataPreview:
+					typeof data === "object"
+						? Object.keys(data)
+						: data.substring?.(0, 100),
 			});
 
 			return data;
-
 		} catch (error) {
 			clearTimeout(timeoutId);
-			
+
 			console.error("💥 Request failed:", {
 				url: fullUrl,
 				error: error.name,
 				message: error.message,
 				stack: error.stack,
 				cause: error.cause,
-				isAbortError: error.name === 'AbortError',
-				isNetworkError: error.message.includes('fetch') || error.message.includes('NetworkError'),
-				isConnectivityIssue: error.message.includes('Failed to fetch'),
+				isAbortError: error.name === "AbortError",
+				isNetworkError:
+					error.message.includes("fetch") ||
+					error.message.includes("NetworkError"),
+				isConnectivityIssue: error.message.includes("Failed to fetch"),
 				timestamp: new Date().toISOString(),
 				userAgent: navigator.userAgent,
 				onlineStatus: navigator.onLine,
-				connectionType: navigator.connection?.effectiveType || 'unknown'
+				connectionType: navigator.connection?.effectiveType || "unknown",
 			});
 
 			// Enhanced error classification with network diagnostics
-			if (error.name === 'AbortError') {
-				throw new Error(`Request timeout after ${this.timeout}ms. The server took too long to respond.`);
+			if (error.name === "AbortError") {
+				throw new Error(
+					`Request timeout after ${this.timeout}ms. The server took too long to respond.`,
+				);
 			}
-			
+
 			// Check if user is offline
 			if (!navigator.onLine) {
-				throw new Error(`No internet connection detected. Please check your network connection and try again.`);
+				throw new Error(
+					`No internet connection detected. Please check your network connection and try again.`,
+				);
 			}
-			
+
 			// Check for specific network errors
-			if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+			if (
+				error.message.includes("Failed to fetch") ||
+				error.message.includes("NetworkError")
+			) {
 				// Run a quick connectivity test
 				try {
-					await fetch('https://www.google.com/favicon.ico', { 
-						method: 'HEAD', 
-						mode: 'no-cors',
-						signal: AbortSignal.timeout(3000)
+					await fetch("https://www.google.com/favicon.ico", {
+						method: "HEAD",
+						mode: "no-cors",
+						signal: AbortSignal.timeout(3000),
 					});
 					// If Google is reachable, it's likely an API server issue
-					throw new Error(`API server unreachable at ${this.baseURL}. The server appears to be down, under maintenance, or there may be a firewall blocking the connection. Please try again later or contact support if the issue persists.`);
+					throw new Error(
+						`API server unreachable at ${this.baseURL}. The server appears to be down, under maintenance, or there may be a firewall blocking the connection. Please try again later or contact support if the issue persists.`,
+					);
 				} catch (connectTest) {
 					// If Google is not reachable, it's a general connectivity issue
-					throw new Error(`Network connectivity issue detected. Please check your internet connection and try again. If you're on a restricted network, the API endpoint may be blocked.`);
+					throw new Error(
+						`Network connectivity issue detected. Please check your internet connection and try again. If you're on a restricted network, the API endpoint may be blocked.`,
+					);
 				}
 			}
 
@@ -301,19 +341,19 @@ class HttpClient {
 	}
 
 	async get(url, options = {}) {
-		return this.request(url, { ...options, method: 'GET' });
+		return this.request(url, { ...options, method: "GET" });
 	}
 
 	async post(url, data, options = {}) {
-		return this.request(url, { ...options, method: 'POST', body: data });
+		return this.request(url, { ...options, method: "POST", body: data });
 	}
 
 	async put(url, data, options = {}) {
-		return this.request(url, { ...options, method: 'PUT', body: data });
+		return this.request(url, { ...options, method: "PUT", body: data });
 	}
 
 	async delete(url, options = {}) {
-		return this.request(url, { ...options, method: 'DELETE' });
+		return this.request(url, { ...options, method: "DELETE" });
 	}
 }
 
@@ -324,10 +364,10 @@ const apiClient = new HttpClient(API_BASE_URL, 60000);
 const testApiConnection = async () => {
 	try {
 		console.log("Testing API connectivity to:", API_BASE_URL);
-		const testUrl = API_BASE_URL.startsWith('/') ? 
-			`${API_BASE_URL}/health` : 
-			`${API_BASE_URL}/health`;
-			
+		const testUrl = API_BASE_URL.startsWith("/")
+			? `${API_BASE_URL}/health`
+			: `${API_BASE_URL}/health`;
+
 		const response = await fetch(testUrl, {
 			method: "GET",
 			headers: {
@@ -367,7 +407,7 @@ const apiRequest = async (endpoint, options = {}) => {
 		console.error("🚨 API request failed:", {
 			endpoint,
 			error: error.message,
-			stack: error.stack
+			stack: error.stack,
 		});
 		throw error;
 	}
@@ -697,10 +737,10 @@ const authAPI = {
 			method: "GET",
 		}),
 
-	logout: () => {
-		removeAuthToken();
-		return Promise.resolve();
-	},
+	logout: () =>
+		apiRequest("/auth/logout", {
+			method: "POST",
+		}),
 
 	googleLogin: async (idToken) => {
 		if (!idToken || typeof idToken !== "string") {
@@ -908,8 +948,6 @@ const postAPI = {
 			method: "GET",
 		}),
 };
-
-
 
 const commentAPI = {
 	getComments: async (postId) => {

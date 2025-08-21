@@ -19,8 +19,8 @@ const SettingsPage = () => {
 	const navigate = useNavigate();
 	const [activeTab, setActiveTab] = useState("account");
 
-	const handleLogout = () => {
-		authAPI.logout();
+	const handleLogout = async () => {
+		await authAPI.logout();
 		removeAuthToken();
 		navigate("/");
 	};
