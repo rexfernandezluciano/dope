@@ -396,8 +396,6 @@ export const userAPI = {
 		return await apiRequest("/users/analytics/earnings");
 	},
 
-	
-
 	getUserStats: async (userId) => {
 		return await apiRequest(`/users/${userId}/stats`);
 	},
@@ -411,6 +409,22 @@ export const userAPI = {
 			method: "POST",
 			data: userData,
 		});
+	},
+
+	// New endpoints from API documentation
+	checkUserExists: async (uid) => {
+		return await apiRequest(`/users/exists/${uid}`);
+	},
+
+	checkEmailExists: async (email) => {
+		return await apiRequest(`/users/email-exists`, {
+			method: "POST",
+			data: { email },
+		});
+	},
+
+	isAdmin: async (uid) => {
+		return await apiRequest(`/users/${uid}/admin`);
 	},
 };
 
@@ -472,8 +486,6 @@ export const postAPI = {
 		});
 	},
 
-	
-
 	getFollowingFeed: async (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
 		return await apiRequest(
@@ -489,6 +501,27 @@ export const postAPI = {
 		return await apiRequest(
 			`/posts/search?q=${encodeURIComponent(query)}&page=${page}`,
 		);
+	},
+
+	// New endpoints from API documentation
+	getPostLikes: async (postId, params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(
+			`/posts/${postId}/likes${queryString ? `?${queryString}` : ""}`,
+		);
+	},
+
+	trackPostView: async (postId) => {
+		return await apiRequest(`/posts/${postId}/view`, {
+			method: "POST",
+		});
+	},
+
+	updatePostEngagement: async (postId, action) => {
+		return await apiRequest(`/posts/${postId}/engagement`, {
+			method: "POST",
+			data: { action },
+		});
 	},
 };
 
@@ -551,6 +584,149 @@ export const commentAPI = {
 			...params,
 		});
 		return await apiRequest(`/comments/search?${searchParams.toString()}`);
+	},
+
+	// Comment likes
+	likeComment: async (commentId) => {
+		return await apiRequest(`/comments/${commentId}/like`, {
+			method: "POST",
+		});
+	},
+
+	getCommentLikes: async (commentId, params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(
+			`/comments/${commentId}/likes${queryString ? `?${queryString}` : ""}`,
+		);
+	},
+};
+
+// Like API
+export const likeAPI = {
+	likeReply: async (replyId) => {
+		return await apiRequest(`/likes/reply/${replyId}`, {
+			method: "POST",
+		});
+	},
+};
+
+// Reply API
+export const replyAPI = {
+	createReply: async (commentId, replyData) => {
+		return await apiRequest(`/replies/comment/${commentId}`, {
+			method: "POST",
+			data: replyData,
+		});
+	},
+
+	getCommentReplies: async (commentId, params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(
+			`/replies/comment/${commentId}${queryString ? `?${queryString}` : ""}`,
+		);
+	},
+
+	updateReply: async (replyId, replyData) => {
+		return await apiRequest(`/replies/${replyId}`, {
+			method: "PUT",
+			data: replyData,
+		});
+	},
+
+	deleteReply: async (replyId) => {
+		return await apiRequest(`/replies/${replyId}`, {
+			method: "DELETE",
+		});
+	},
+};
+
+// Content Moderation API
+export const contentModerationAPI = {
+	moderateContent: async (contentData) => {
+		return await apiRequest("/content/moderate", {
+			method: "POST",
+			data: contentData,
+		});
+	},
+
+	checkImageSensitivity: async (imageUrl) => {
+		return await apiRequest("/content/check-image", {
+			method: "POST",
+			data: { imageUrl },
+		});
+	},
+};
+
+// Report API
+export const reportAPI = {
+	createReport: async (reportData) => {
+		return await apiRequest("/reports", {
+			method: "POST",
+			data: reportData,
+		});
+	},
+
+	getUserReports: async () => {
+		return await apiRequest("/reports");
+	},
+};
+
+// Block API
+export const blockAPI = {
+	blockUser: async (userId) => {
+		return await apiRequest(`/blocks/user/${userId}`, {
+			method: "POST",
+		});
+	},
+
+	unblockUser: async (userId) => {
+		return await apiRequest(`/blocks/user/${userId}`, {
+			method: "DELETE",
+		});
+	},
+
+	getBlockedUsers: async () => {
+		return await apiRequest("/blocks");
+	},
+
+	restrictUser: async (userId, reason) => {
+		return await apiRequest(`/blocks/restrict/${userId}`, {
+			method: "POST",
+			data: { reason },
+		});
+	},
+
+	removeRestriction: async (userId) => {
+		return await apiRequest(`/blocks/restrict/${userId}`, {
+			method: "DELETE",
+		});
+	},
+};
+
+// Payment API
+export const paymentAPI = {
+	addPaymentMethod: async (paymentData) => {
+		return await apiRequest("/payments/methods", {
+			method: "POST",
+			data: paymentData,
+		});
+	},
+
+	getPaymentMethods: async () => {
+		return await apiRequest("/payments/methods");
+	},
+
+	deletePaymentMethod: async (paymentMethodId) => {
+		return await apiRequest(`/payments/methods/${paymentMethodId}`, {
+			method: "DELETE",
+		});
+	},
+
+	purchaseMembership: async (purchaseData) => {
+		return await apiRequest("/payments/purchase-membership", {
+			method: "POST",
+			data: purchaseData,
+		});
 	},
 };
 
