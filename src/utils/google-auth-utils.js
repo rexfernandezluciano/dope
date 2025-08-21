@@ -2,25 +2,12 @@
  * Google Sign-In utility functions with popup OAuth flow for DOPE API
  */
 
-const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-
 // Get API base URL from your config
 const getApiBaseUrl = () => {
 	const isUsingProxy = process.env.NODE_ENV === "development" && 
 		(window.location.hostname.includes("replit") || window.location.hostname.includes("repl.co"));
-	
-	return isUsingProxy ? "/v1" : (process.env.REACT_APP_API_URL || "https://social.dopp.eu.org/v1");
-};
 
-/**
- * Get Google Client ID
- */
-export const getGoogleClientId = () => {
-	if (!GOOGLE_CLIENT_ID) {
-		console.error('REACT_APP_GOOGLE_CLIENT_ID environment variable is not set');
-		return null;
-	}
-	return GOOGLE_CLIENT_ID;
+	return isUsingProxy ? "/v1" : (process.env.REACT_APP_API_URL || "https://social.dopp.eu.org/v1");
 };
 
 /**
@@ -30,25 +17,25 @@ export const initializeGoogleOAuth = (type = 'login') => {
 	return new Promise((resolve, reject) => {
 		const apiBaseUrl = getApiBaseUrl();
 		const authUrl = `${apiBaseUrl}/auth/google?type=${type}`;
-		
+
 		// Popup window dimensions
 		const width = 500;
 		const height = 600;
 		const left = window.screenX + (window.outerWidth - width) / 2;
 		const top = window.screenY + (window.outerHeight - height) / 2;
-		
+
 		// Open popup window
 		const popup = window.open(
 			authUrl,
 			'googleAuth',
 			`width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
 		);
-		
+
 		if (!popup) {
 			reject(new Error('Popup blocked. Please allow popups for this site.'));
 			return;
 		}
-		
+
 		// Observer to watch for popup completion
 		const observer = new GoogleAuthObserver(popup, resolve, reject);
 		observer.start();
@@ -67,7 +54,7 @@ class GoogleAuthObserver {
 		this.timeout = null;
 		this.messageListener = null;
 	}
-	
+
 	start() {
 		// Set up message listener for cross-origin communication
 		this.messageListener = (event) => {
@@ -78,115 +65,64 @@ class GoogleAuthObserver {
 				'https://social.dopp.eu.org',
 				apiBaseUrl.startsWith('http') ? new URL(apiBaseUrl).origin : window.location.origin
 			];
-			
+
 			if (!allowedOrigins.includes(event.origin)) {
 				return;
 			}
-			
+
 			if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
 				this.handleSuccess(event.data.result);
 			} else if (event.data && event.data.type === 'GOOGLE_AUTH_ERROR') {
 				this.handleError(new Error(event.data.error || 'Google authentication failed'));
 			}
 		};
-		
+
 		window.addEventListener('message', this.messageListener);
-		
+
 		// Poll for popup closure (fallback)
 		this.interval = setInterval(() => {
 			if (this.popup.closed) {
 				this.handleError(new Error('Authentication cancelled'));
 			}
 		}, 1000);
-		
+
 		// Set timeout
 		this.timeout = setTimeout(() => {
 			this.handleError(new Error('Authentication timeout'));
 		}, 300000); // 5 minutes
 	}
-	
+
 	stop() {
 		if (this.interval) {
 			clearInterval(this.interval);
 			this.interval = null;
 		}
-		
+
 		if (this.timeout) {
 			clearTimeout(this.timeout);
 			this.timeout = null;
 		}
-		
+
 		if (this.messageListener) {
 			window.removeEventListener('message', this.messageListener);
 			this.messageListener = null;
 		}
-		
+
 		if (this.popup && !this.popup.closed) {
 			this.popup.close();
 		}
 	}
-	
+
 	handleSuccess(result) {
 		this.stop();
 		this.resolve(result);
 	}
-	
+
 	handleError(error) {
 		this.stop();
 		this.reject(error);
 	}
 }
-
-/**
- * Handle successful Google login response (legacy support)
- */
-export const handleGoogleSuccess = async (credentialResponse, callback) => {
-	try {
-		if (credentialResponse.credential) {
-			// Decode the JWT token to get user info
-			const userInfo = parseJwt(credentialResponse.credential);
-			
-			if (callback) {
-				await callback({ 
-					credential: credentialResponse.credential,
-					userInfo: userInfo
-				});
-			}
-			return credentialResponse.credential;
-		} else {
-			throw new Error("No credential received from Google");
-		}
-	} catch (error) {
-		console.error("Google login success handler error:", error);
-		throw error;
-	}
-};
-
-/**
- * Handle Google login error
- */
-export const handleGoogleError = (error) => {
-	console.error("Google login error:", error);
-	throw new Error("Google login failed. Please try again.");
-};
-
-/**
- * Parse JWT token to extract user information
- */
-const parseJwt = (token) => {
-	try {
-		const base64Url = token.split('.')[1];
-		const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-		const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-			return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-		}).join(''));
-		
-		return JSON.parse(jsonPayload);
-	} catch (error) {
-		console.error('Error parsing JWT token:', error);
-		throw new Error('Invalid token format');
-	}
-};
 
 /**
  * Prepare Google user data for DOPE API

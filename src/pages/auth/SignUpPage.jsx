@@ -1,9 +1,11 @@
+` tags.
+
+<replit_final_file>
 /** @format */
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import "animate.css";
 import heic2any from "heic2any";
 
@@ -11,7 +13,7 @@ import { authAPI } from "../../config/ApiConfig";
 import { userExistByEmail, getGravatar, createUsername } from "../../utils/app-utils";
 import { setAuthToken } from "../../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
-import { getGoogleClientId, handleGoogleSuccess, handleGoogleError, initializeGoogleOAuth } from "../../utils/google-auth-utils";
+import { initializeGoogleOAuth } from "../../utils/google-auth-utils";
 
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
@@ -65,54 +67,6 @@ const SignUpPage = () => {
 	useEffect(() => {
 		updatePageMeta(pageMetaData.signup);
 	}, []);
-
-	const handleGoogleCallback = async (response) => {
-		try {
-			setGoogleLoading(true);
-			setError("");
-
-			// Send Google credential to DOPE API for registration
-			const result = await authAPI.googleSignup({
-				credential: response.credential,
-				userInfo: response.userInfo
-			});
-
-			if (result.user && !result.user.hasVerifiedEmail) {
-				setError("Please verify your account first to continue. Check your email for the verification link.");
-				setGoogleLoading(false);
-				return;
-			}
-
-			if (result.token) {
-				// Store the token with remember me option
-				const rememberMe = true; // Google signup users typically want to stay logged in
-				setAuthToken(result.token, rememberMe);
-				setError("");
-				navigate("/home", { replace: true });
-			} else {
-				setError("Google signup failed. Please try again.");
-			}
-		} catch (err) {
-			setError(err.message || "Google signup failed. Please try again.");
-		} finally {
-			setGoogleLoading(false);
-		}
-	};
-
-	const onGoogleSuccess = async (credentialResponse) => {
-		try {
-			await handleGoogleSuccess(credentialResponse, handleGoogleCallback);
-		} catch (error) {
-			handleGoogleError(error);
-			setError(error.message);
-		}
-	};
-
-	const onGoogleError = () => {
-		const error = new Error('Google signup failed');
-		handleGoogleError(error);
-		setError('Google signup failed. Please try again.');
-	};
 
 	// Handle popup-based Google OAuth signup
 	const handlePopupGoogleSignup = async () => {
@@ -221,252 +175,153 @@ const SignUpPage = () => {
 		}
 	};
 
-	const googleClientId = getGoogleClientId();
-
 	return (
-		<>
-			{googleClientId ? (
-				<GoogleOAuthProvider clientId={googleClientId}>
-					<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
-				<Row className="w-100 gap-2">
-					<Col className="d-none d-md-block">
-						<IntroductionBanner />
-						<Image
-							src={socialNetIllustration}
-							alt="Social Networking Illustration"
-							fluid
-							height={100}
-							className="mt-3"
-						/>
-					</Col>
-					<Col>
-						<h3 className="text-center mb-3">Create an Account</h3>
-						<Stepper
-							currentStep={step}
-							steps={steps}
-							className="mb-3"
-						/>
+		<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
+			<Row className="w-100 gap-2">
+				<Col className="d-none d-md-block">
+					<IntroductionBanner />
+					<Image
+						src={socialNetIllustration}
+						alt="Social Networking Illustration"
+						fluid
+						height={100}
+						className="mt-3"
+					/>
+				</Col>
+				<Col>
+					<h3 className="text-center mb-3">Create an Account</h3>
+					<Stepper
+						currentStep={step}
+						steps={steps}
+						className="mb-3"
+					/>
 
-						{error && (
-							<Alert
-								variant="danger"
-								dismissible
-								onClose={() => setError("")}>
-								{error}
-							</Alert>
-						)}
+					{error && (
+						<Alert
+							variant="danger"
+							dismissible
+							onClose={() => setError("")}>
+							{error}
+						</Alert>
+					)}
 
-						{/* STEP 1 */}
-						{step === 0 && (
-							<div className={`animate__animated ${animation}`}>
-								<Form
-									onSubmit={e => {
-										e.preventDefault();
-										if (!firstName || !lastName) {
-											setError("Please enter your full name.");
-											return;
-										}
-										changeStep(2, true);
-									}}>
-									<Form.Floating className="mb-3">
-										<Form.Control
-											type="text"
-											value={firstName}
-											onChange={e => setFirstName(e.target.value)}
-											disabled={loading}
-											className="shadow-none"
-											required
-											placeholder="First Name"
-										/>
-										<label>First Name</label>
-									</Form.Floating>
-									<Form.Floating className="mb-3">
-										<Form.Control
-											type="text"
-											value={lastName}
-											onChange={e => setLastName(e.target.value)}
-											disabled={loading}
-											className="shadow-none"
-											required
-											placeholder="Last Name"
-										/>
-										<label>Last Name</label>
-									</Form.Floating>
-									<Button
-										type="submit"
-										disabled={loading}
-										className="w-100 d-flex align-items-center justify-content-center">
-										{loading ? (
-											<Spinner
-												animation="border"
-												size="sm"
-											/>
-										) : (
-											"Next"
-										)}
-									</Button>
-								</Form>
-								<hr />
-								<div className="d-grid">
-									{googleLoading ? (
-										<Button
-											variant="outline-secondary"
-											size="md"
-											disabled
-											className="shadow-none d-flex align-items-center justify-content-center w-100">
-											<Spinner
-												animation="border"
-												size="sm"
-												className="me-2"
-											/>
-											Signing up with Google...
-										</Button>
-									) : (
-										<div className="d-flex justify-content-center">
-											<GoogleLogin
-												onSuccess={onGoogleSuccess}
-												onError={onGoogleError}
-												size="large"
-												theme="outline"
-												text="signup_with"
-												shape="rectangular"
-												logo_alignment="left"
-												width="100%"
-											/>
-										</div>
-									)}
-								</div>
-								<p className="text-center mt-3 mb-0">
-									Already have an account? <Link to="/auth/login">Login</Link>
-								</p>
-							</div>
-						)}
-
-						{/* STEP 2 */}
-						{step === 1 && (
-							<div className={`animate__animated ${animation}`}>
-								<Form onSubmit={handleNextEmail}>
-									<Form.Floating className="mb-3">
-										<Form.Control
-											type="email"
-											value={email}
-											onChange={e => setEmail(e.target.value)}
-											disabled={loading}
-											className="shadow-none"
-											required
-											placeholder="Email Address"
-										/>
-										<label>Email Address</label>
-									</Form.Floating>
-									<Button
-										type="submit"
-										disabled={loading}
-										className="w-100 mb-2">
-										{loading ? (
-											<Spinner
-												animation="border"
-												size="sm"
-											/>
-										) : (
-											"Next"
-										)}
-									</Button>
-									<Button
-										variant="secondary"
-										onClick={() => {
-											prevStep();
-											changeStep(1, false);
-										}}
-										className="w-100">
-										Back
-									</Button>
-								</Form>
-							</div>
-						)}
-
-						{/* STEP 3 */}
-						{step === 2 && (
-							<div className={`animate__animated ${animation}`}>
-								<Form onSubmit={handleNextPassword}>
-									<Form.Floating className="mb-3">
-										<Form.Control
-											type="password"
-											value={password}
-											onChange={e => setPassword(e.target.value)}
-											disabled={loading}
-											className="shadow-none"
-											required
-											placeholder="Password"
-										/>
-										<label>Password</label>
-									</Form.Floating>
-									<Button
-										type="submit"
-										disabled={loading}
-										className="w-100 mb-2 d-flex align-items-center justify-content-center">
-										{loading ? (
-											<Spinner
-												animation="border"
-												size="sm"
-											/>
-										) : (
-											"Next"
-										)}
-									</Button>
-									<Button
-										variant="secondary"
-										onClick={() => {
-											prevStep();
-											changeStep(1, false);
-										}}
-										className="w-100">
-										Back
-									</Button>
-								</Form>
-							</div>
-						)}
-
-						{/* STEP 4 */}
-						{step === 3 && (
-							<div className={`animate__animated ${animation}`}>
-								<Form.Group className="mb-4 text-center">
-									<label
-										htmlFor="profileUpload"
-										style={{ cursor: "pointer" }}>
-										<Image
-											src={photoPreview || getGravatar(email)}
-											alt="Profile Preview"
-											roundedCircle
-											width={150}
-											height={150}
-											style={{ objectFit: "cover" }}
-										/>
-									</label>
+					{/* STEP 1 */}
+					{step === 0 && (
+						<div className={`animate__animated ${animation}`}>
+							<Form
+								onSubmit={e => {
+									e.preventDefault();
+									if (!firstName || !lastName) {
+										setError("Please enter your full name.");
+										return;
+									}
+									changeStep(2, true);
+								}}>
+								<Form.Floating className="mb-3">
 									<Form.Control
-										id="profileUpload"
-										type="file"
-										accept="image/*"
-										onChange={handlePhotoChange}
+										type="text"
+										value={firstName}
+										onChange={e => setFirstName(e.target.value)}
 										disabled={loading}
-										style={{ display: "none" }}
+										className="shadow-none"
+										required
+										placeholder="First Name"
 									/>
-								</Form.Group>
-
+									<label>First Name</label>
+								</Form.Floating>
+								<Form.Floating className="mb-3">
+									<Form.Control
+										type="text"
+										value={lastName}
+										onChange={e => setLastName(e.target.value)}
+										disabled={loading}
+										className="shadow-none"
+										required
+										placeholder="Last Name"
+									/>
+									<label>Last Name</label>
+								</Form.Floating>
 								<Button
-									onClick={handleSignup}
+									type="submit"
 									disabled={loading}
-									className="w-100 mb-2 d-flex align-items-center justify-content-center">
+									className="w-100 mb-3 d-flex align-items-center justify-content-center">
 									{loading ? (
+										<Spinner
+											animation="border"
+											size="sm"
+										/>
+									) : (
+										"Next"
+									)}
+								</Button>
+							</Form>
+							<div className="d-flex align-items-center justify-content-center gap-2 mb-3">
+								<hr className="border-1 p-1 w-100 rounded-3 bg-light" />
+								<div className="text-center text-muted">OR</div>
+								<hr className="border-1 p-1 w-100 rounded-3 bg-light" />
+							</div>
+							<div className="d-grid mb-3">
+								<Button
+									variant="outline-primary"
+									size="md"
+									onClick={handlePopupGoogleSignup}
+									disabled={googleLoading}
+									className="shadow-none d-flex align-items-center justify-content-center w-100">
+									{googleLoading ? (
 										<>
 											<Spinner
 												animation="border"
 												size="sm"
 												className="me-2"
 											/>
-											Creating Account...
+											Signing up with Google...
 										</>
 									) : (
-										"Finish & Sign Up"
+										<>
+											<svg className="me-2" width="18" height="18" viewBox="0 0 24 24">
+												<path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+												<path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+												<path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+												<path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+											</svg>
+											Sign up with Google
+										</>
+									)}
+								</Button>
+							</div>
+							<p className="text-center mt-3 mb-0">
+								Already have an account? <Link to="/auth/login">Login</Link>
+							</p>
+						</div>
+					)}
+
+					{/* STEP 2 */}
+					{step === 1 && (
+						<div className={`animate__animated ${animation}`}>
+							<Form onSubmit={handleNextEmail}>
+								<Form.Floating className="mb-3">
+									<Form.Control
+										type="email"
+										value={email}
+										onChange={e => setEmail(e.target.value)}
+										disabled={loading}
+										className="shadow-none"
+										required
+										placeholder="Email Address"
+									/>
+									<label>Email Address</label>
+								</Form.Floating>
+								<Button
+									type="submit"
+									disabled={loading}
+									className="w-100 mb-2">
+									{loading ? (
+										<Spinner
+											animation="border"
+											size="sm"
+										/>
+									) : (
+										"Next"
 									)}
 								</Button>
 								<Button
@@ -478,56 +333,145 @@ const SignUpPage = () => {
 									className="w-100">
 									Back
 								</Button>
+							</Form>
+						</div>
+					)}
+
+					{/* STEP 3 */}
+					{step === 2 && (
+						<div className={`animate__animated ${animation}`}>
+							<Form onSubmit={handleNextPassword}>
+								<Form.Floating className="mb-3">
+									<Form.Control
+										type="password"
+										value={password}
+										onChange={e => setPassword(e.target.value)}
+										disabled={loading}
+										className="shadow-none"
+										required
+										placeholder="Password"
+									/>
+									<label>Password</label>
+								</Form.Floating>
 								<Button
-									variant="link"
-									className="w-100 text-muted mt-2 d-flex align-items-center justify-content-center"
+									type="submit"
 									disabled={loading}
-									onClick={handleSignup}>
+									className="w-100 mb-2 d-flex align-items-center justify-content-center">
 									{loading ? (
-										<>
-											<Spinner
-												animation="border"
-												size="sm"
-												className="me-2"
-											/>
-											Creating Account...
-										</>
+										<Spinner
+											animation="border"
+											size="sm"
+										/>
 									) : (
-										"Skip & Sign Up"
+										"Next"
 									)}
 								</Button>
-							</div>
-						)}
-					</Col>
-				</Row>
+								<Button
+									variant="secondary"
+									onClick={() => {
+										prevStep();
+										changeStep(1, false);
+									}}
+									className="w-100">
+									Back
+								</Button>
+							</Form>
+						</div>
+					)}
 
-				{showDialog && (
-					<AlertDialog
-						title={dialogTitle}
-						message={dialogMessage}
-						dialogButtonMessage="Go to Login"
-						onDialogButtonClick={() => {
-							setShowDialog(false);
-							navigate("/auth/login");
-						}}
-						type="primary"
-						show={showDialog}
-						onHide={() => {
-							setShowDialog(false);
-							navigate("/auth/login");
-						}}
-					/>
-				)}
-				</div>
-			</GoogleOAuthProvider>
-			) : (
-				<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
-					<Alert variant="warning">
-						Google Login is not configured. Please set up REACT_APP_GOOGLE_CLIENT_ID environment variable.
-					</Alert>
-				</div>
+					{/* STEP 4 */}
+					{step === 3 && (
+						<div className={`animate__animated ${animation}`}>
+							<Form.Group className="mb-4 text-center">
+								<label
+									htmlFor="profileUpload"
+									style={{ cursor: "pointer" }}>
+									<Image
+										src={photoPreview || getGravatar(email)}
+										alt="Profile Preview"
+										roundedCircle
+										width={150}
+										height={150}
+										style={{ objectFit: "cover" }}
+									/>
+								</label>
+								<Form.Control
+									id="profileUpload"
+									type="file"
+									accept="image/*"
+									onChange={handlePhotoChange}
+									disabled={loading}
+									style={{ display: "none" }}
+								/>
+							</Form.Group>
+
+							<Button
+								onClick={handleSignup}
+								disabled={loading}
+								className="w-100 mb-2 d-flex align-items-center justify-content-center">
+								{loading ? (
+									<>
+										<Spinner
+											animation="border"
+											size="sm"
+											className="me-2"
+										/>
+										Creating Account...
+									</>
+								) : (
+									"Finish & Sign Up"
+								)}
+							</Button>
+							<Button
+								variant="secondary"
+								onClick={() => {
+									prevStep();
+									changeStep(1, false);
+								}}
+								className="w-100">
+								Back
+							</Button>
+							<Button
+								variant="link"
+								className="w-100 text-muted mt-2 d-flex align-items-center justify-content-center"
+								disabled={loading}
+								onClick={handleSignup}>
+								{loading ? (
+									<>
+										<Spinner
+											animation="border"
+											size="sm"
+											className="me-2"
+										/>
+										Creating Account...
+									</>
+								) : (
+									"Skip & Sign Up"
+								)}
+							</Button>
+						</div>
+					)}
+				</Col>
+			</Row>
+
+			{showDialog && (
+				<AlertDialog
+					title={dialogTitle}
+					message={dialogMessage}
+					dialogButtonMessage="Go to Login"
+					onDialogButtonClick={() => {
+						setShowDialog(false);
+						navigate("/auth/login");
+					}}
+					type="primary"
+					show={showDialog}
+					onHide={() => {
+						setShowDialog(false);
+						navigate("/auth/login");
+					}}
+				/>
 			)}
-		</>
+		</div>
 	);
 };
 
