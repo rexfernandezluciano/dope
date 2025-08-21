@@ -10,10 +10,10 @@ import { authAPI, userAPI, getAuthToken } from '../config/ApiConfig';
 export const getUser = async () => {
 	try {
 		// Import getAuthToken from ApiConfig to avoid circular dependencies
-		const token = await getAuthToken();
+		const token = getAuthToken();
 		if (!token) return null;
 
-		const response = await authAPI.getCurrentUser();
+		const response = await authAPI.me();
 
 		// Handle the auth/me API response structure: { status: "ok", user: userObject }
 		if (response.status === 'ok' && response.user) {
