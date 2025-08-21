@@ -293,6 +293,108 @@ export const api = {
 	},
 };
 
+// Token management functions
+export const setAuthToken = (token, rememberMe = false) => {
+	if (!token) {
+		console.error("Cannot set empty token");
+		return;
+	}
+
+	try {
+		// Always store in sessionStorage for current session
+		sessionStorage.setItem("authToken", token);
+		
+		// Store in localStorage only if rememberMe is true
+		if (rememberMe) {
+			localStorage.setItem("authToken", token);
+		}
+		
+		// Also store in cookie as fallback
+		Cookies.set("authToken", token, {
+			expires: rememberMe ? 30 : 1, // 30 days if remember me, 1 day otherwise
+			secure: true,
+			sameSite: "strict"
+		});
+		
+		console.log("Auth token stored successfully");
+	} catch (error) {
+		console.error("Error storing auth token:", error);
+	}
+};
+
+export const getAuthToken = () => {
+	try {
+		// Check sessionStorage first (most recent)
+		let token = sessionStorage.getItem("authToken");
+		if (token) {
+			console.log("Auth token found in sessionStorage (current session)");
+			return token;
+		}
+
+		// Check localStorage
+		token = localStorage.getItem("authToken");
+		if (token) {
+			console.log("Auth token found in localStorage (persistent)");
+			// Also store in sessionStorage for faster access
+			sessionStorage.setItem("authToken", token);
+			return token;
+		}
+
+		// Check cookies as fallback
+		token = Cookies.get("authToken");
+		if (token) {
+			console.log("Auth token found in cookies (fallback)");
+			// Store in sessionStorage for faster access
+			sessionStorage.setItem("authToken", token);
+			return token;
+		}
+
+		console.log("No auth token found in any storage");
+		return null;
+	} catch (error) {
+		console.error("Error retrieving auth token:", error);
+		return null;
+	}
+};
+
+export const removeAuthToken = () => {
+	try {
+		// Remove from all storage locations
+		sessionStorage.removeItem("authToken");
+		localStorage.removeItem("authToken");
+		Cookies.remove("authToken");
+		
+		console.log("Auth token removed from all storage locations");
+	} catch (error) {
+		console.error("Error removing auth token:", error);
+	}
+};
+
+// Utility functions
+export const validateEmail = (email) => {
+	if (!email || typeof email !== "string") return false;
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	return emailRegex.test(email.toLowerCase().trim());
+};
+
+export const sanitizeInput = (input) => {
+	if (typeof input !== "string") return "";
+	return input.trim().replace(/[<>'"]/g, "");
+};
+
+export const testApiConnection = async () => {
+	try {
+		const response = await fetch(`${API_BASE_URL}/health`, {
+			method: "GET",
+			timeout: 5000,
+		});
+		return response.ok;
+	} catch (error) {
+		console.error("API connection test failed:", error);
+		return false;
+	}
+};
+
 export {
 	setAuthToken,
 	removeAuthToken,
