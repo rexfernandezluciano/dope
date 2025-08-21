@@ -152,7 +152,7 @@ class HttpClient {
 		try {
 			// Prepare headers
 			const headers = {
-				'Content-Type': 'application/json; charset=utf8',
+				'Content-Type': 'application/json; charset=UTF-8',
 				'Accept': 'application/json',
 				'User-Agent': 'DOPE-Network-Client/1.0',
 				...options.headers
