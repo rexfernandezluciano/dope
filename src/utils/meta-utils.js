@@ -1,4 +1,3 @@
-
 /** @format */
 
 /**
@@ -27,13 +26,13 @@ export const updatePageMeta = (metaData) => {
 	// Update or create meta tags
 	updateMetaTag('name', 'description', description);
 	updateMetaTag('name', 'keywords', keywords);
-	
+
 	// Update Open Graph meta tags
 	updateMetaTag('property', 'og:title', ogTitle || title);
 	updateMetaTag('property', 'og:description', ogDescription || description);
 	updateMetaTag('property', 'og:image', ogImage);
 	updateMetaTag('property', 'og:url', window.location.href);
-	
+
 	// Update Twitter meta tags
 	updateMetaTag('name', 'twitter:title', ogTitle || title);
 	updateMetaTag('name', 'twitter:description', ogDescription || description);
@@ -48,7 +47,7 @@ export const updatePageMeta = (metaData) => {
  */
 const updateMetaTag = (attributeName, attributeValue, content) => {
 	let metaTag = document.querySelector(`meta[${attributeName}="${attributeValue}"]`);
-	
+
 	if (metaTag) {
 		metaTag.setAttribute('content', content);
 	} else {
@@ -133,5 +132,15 @@ export const pageMetaData = {
 		title: streamTitle ? `${streamTitle} - Live Stream - DOPE Network` : "Live Stream - DOPE Network",
 		description: "Watch live streams on DOPE Network and interact with creators in real-time.",
 		keywords: "live stream, streaming, video, DOPE Network"
-	})
+	}),
+	waitingList: {
+		title: "Join the Waiting List - DOPE Social Network",
+		description: "Be among the first to experience the next generation of social networking. Join our exclusive waiting list.",
+		keywords: "waiting list, early access, beta, social network, DOPE"
+	},
+	networkTest: {
+		title: "Network Diagnostics - DOPE Social Network",
+		description: "Comprehensive network connectivity testing and API diagnostics tools for troubleshooting connection issues.",
+		keywords: "network test, diagnostics, connectivity, API health, troubleshooting"
+	}
 };

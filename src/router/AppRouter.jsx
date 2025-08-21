@@ -20,6 +20,7 @@ import AnalyticsPage from "../pages/AnalyticsPage";
 import LiveStreamPage from "../pages/LiveStreamPage";
 import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
 import TermsOfServicePage from "../pages/TermsOfServicePage";
+import NetworkTestPage from "../pages/NetworkTestPage";
 
 import RequireAuth from "./security/RequireAuth";
 import { IndexPageLoader } from "./loader/IndexPageLoader";
@@ -194,6 +195,11 @@ const router = createBrowserRouter([
 	{
 		path: "/policies/terms",
 		element: <TermsOfServicePage />,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/network-test",
+		element: <NetworkTestPage />,
 		hydrateFallbackElement: <LoadingView />,
 	},
 ]);
