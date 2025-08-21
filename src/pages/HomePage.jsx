@@ -4,27 +4,13 @@ import { useState, useRef, useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
 import {
 	Container,
-	Image,
-	Modal,
-	Form,
 	Button,
-	Dropdown,
-	InputGroup,
-	Card,
 	Spinner,
 	Alert,
 } from "react-bootstrap";
 import {
-	Globe,
-	People,
-	Lock,
-	Camera,
-	EmojiSmile,
-	X,
-	Search,
 	ChevronLeft,
 	ChevronRight,
-	CheckCircleFill
 } from "react-bootstrap-icons";
 
 import { Grid } from "@giphy/react-components";
@@ -56,13 +42,7 @@ const cleanTextContent = (text) => {
 
 const HomePage = () => {
 	const navigate = useNavigate();
-	const [showComposerModal, setShowComposerModal] = useState(false);
-	const [showLiveStudioModal, setShowLiveStudioModal] = useState(false); // State for the new modal
-	const [postText, setPostText] = useState("");
-	const [privacy, setPrivacy] = useState("Public");
-	const [showStickerModal, setShowStickerModal] = useState(false);
-	const [photos, setPhotos] = useState(null);
-	const [searchTerm, setSearchTerm] = useState("");
+	const [showLiveStudioModal, setShowLiveStudioModal] = useState(false);
 	const [posts, setPosts] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
@@ -185,20 +165,6 @@ const HomePage = () => {
 		navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=posts`);
 	};
 
-	const handleInput = (e) => {
-		const textarea = textareaRef.current;
-		if (textarea) {
-			textarea.style.height = "auto";
-			textarea.style.height = textarea.scrollHeight + "px";
-		}
-		setPostText(e.target.value);
-	};
-
-	const handlePhotoClick = () => {
-		// This functionality is now handled within PostComposer
-		// fileInputRef.current.click();
-	};
-
 	// Function to get the image upload limit based on subscription plan
 	const getImageUploadLimit = (subscription) => {
 		switch (subscription) {
@@ -298,9 +264,7 @@ const HomePage = () => {
 		setPhotos((prev) => [...(prev || []), ...uploadedUrls]);
 	};
 
-	const handleRemovePhoto = (index) => {
-		setPhotos((prev) => prev.filter((_, i) => i !== index));
-	};
+	
 
 	const handleStartLiveStream = async (streamData) => {
 		try {
@@ -819,21 +783,7 @@ const HomePage = () => {
 		}
 	};
 
-	const privacyOptions = {
-		Public: <Globe size={14} className="me-1" />,
-		Followers: <People size={14} className="me-1" />,
-		"Only Me": <Lock size={14} className="me-1" />,
-	};
-
-	const gf = new GiphyFetch("BXvRq8D03IHvybiQ6Fjls2pkPJLXjx9x");
-	const fetchGifs = (offset) =>
-		searchTerm
-			? gf.search(searchTerm, { offset, limit: 12 })
-			: gf.trending({ offset, limit: 12 });
-
-	const handleSearchChange = (e) => {
-		setSearchTerm(e.target.value);
-	};
+	
 
 	const displayedPosts = posts;
 
