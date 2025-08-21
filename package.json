@@ -21,6 +21,7 @@
 		"twitter"
 	],
 	"homepage": "https://www.dopp.eu.org/",
+	"proxy": "https://api.dopp.eu.org",
 	"dependencies": {
 		"@giphy/js-fetch-api": "^5.7.0",
 		"@giphy/react-components": "^10.1.0",

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button, Alert, Card } from 'react-bootstrap';
+import axios from "axios"
 
 const QuickNetworkTest = () => {
   const [results, setResults] = useState([]);
@@ -88,6 +89,9 @@ const QuickNetworkTest = () => {
             Click "Run Test" to check network connectivity
           </div>
         )}
+        <button onClick={() => {
+      axios.get("https://api.dopp.eu.org/").then((data) => console.log("Axios get result:", data)).catch((error) => console.log("Axios get error:", error));
+        }}>Test Axios</button>
       </Card.Body>
     </Card>
   );
