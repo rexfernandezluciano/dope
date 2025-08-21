@@ -5,7 +5,7 @@
 import Cookies from "js-cookie";
 // Check if we're using proxy (in development)
 const isUsingProxy = process.env.NODE_ENV === 'development' && 
-	window.location.hostname.includes('replit');
+	(window.location.hostname.includes('replit') || window.location.hostname.includes('repl.co'));
 
 // Multiple API endpoints for failover
 const API_ENDPOINTS = isUsingProxy ? [
@@ -19,8 +19,8 @@ const API_ENDPOINTS = isUsingProxy ? [
 // Current active API base URL
 let API_BASE_URL = API_ENDPOINTS[0];
 
-// Validate API URL is HTTPS
-if (!API_BASE_URL.startsWith("https://")) {
+// Validate API URL is HTTPS (skip validation for proxy URLs)
+if (!API_BASE_URL.startsWith("https://") && !API_BASE_URL.startsWith("/")) {
 	console.error("API URL must use HTTPS");
 }
 
