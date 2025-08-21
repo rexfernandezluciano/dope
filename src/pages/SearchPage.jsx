@@ -338,7 +338,7 @@ const SearchPage = () => {
 													roundedCircle
 													width="50"
 													height="50"
-													style={{ objectFit: "cover" }}
+													style={{ objectFit: "cover", minWidth: "50px", minHeight: "50px" }}
 												/>
 												<div className="flex-grow-1">
 													<div className="d-flex align-items-center gap-2">
@@ -391,11 +391,10 @@ const SearchPage = () => {
 							<p>Try searching with different keywords</p>
 						</div>
 					) : (
-						<div className="row g-3 px-3">
+						<div className="px-3">
 							{comments.map((comment) => (
-								<div key={comment.id} className="col-12">
-									<Card className="border-0 border-bottom rounded-0">
-										<Card.Body className="px-0 py-3">
+								<div key={comment.id} className="border-bottom">
+									<div className="py-3">
 											<div className="d-flex gap-3">
 												<Image
 													src={comment.author.photoURL || "https://i.pravatar.cc/150?img=10"}
@@ -438,8 +437,7 @@ const SearchPage = () => {
 													</Button>
 												</div>
 											</div>
-										</Card.Body>
-									</Card>
+										</div>
 								</div>
 							))}
 						</div>
