@@ -59,7 +59,7 @@ apiClient.interceptors.request.use(
 	},
 	(error) => {
 		return Promise.reject(error);
-	}
+	},
 );
 
 // Response interceptor for error handling
@@ -84,7 +84,7 @@ apiClient.interceptors.response.use(
 			console.log("❌ Request Error:", error.message);
 		}
 		return Promise.reject(error);
-	}
+	},
 );
 
 // HTTP Client class using axios
@@ -139,12 +139,12 @@ class HttpClient {
 				throw new Error(
 					error.response.data?.message ||
 						error.response.statusText ||
-						"Server error"
+						"Server error",
 				);
 			} else if (error.request) {
 				// Network error
 				throw new Error(
-					"Network connectivity issue detected. Please check your internet connection and try again."
+					"Network connectivity issue detected. Please check your internet connection and try again.",
 				);
 			} else {
 				// Other error
@@ -191,7 +191,8 @@ export const apiRequest = async (endpoint, options = {}) => {
 
 		if (!response.ok) {
 			throw new Error(
-				response.data?.message || `HTTP ${response.status}: ${response.statusText}`
+				response.data?.message ||
+					`HTTP ${response.status}: ${response.statusText}`,
 			);
 		}
 
@@ -226,7 +227,7 @@ export const setAuthToken = (token, rememberMe = false) => {
 		Cookies.set("authToken", token, {
 			expires: rememberMe ? 30 : 1, // 30 days if remember me, 1 day otherwise
 			secure: true,
-			sameSite: "strict"
+			sameSite: "strict",
 		});
 
 		console.log("Auth token stored successfully");
@@ -392,7 +393,7 @@ export const userAPI = {
 	},
 
 	getUserEarnings: async () => {
-		return await apiRequest("/users/earnings");
+		return await apiRequest("/users/analytics/earnings");
 	},
 
 	getSessions: async () => {
@@ -473,20 +474,22 @@ export const userAPI = {
 export const postAPI = {
 	getPosts: async (page = 1, limit = 20, additionalParams = {}) => {
 		const params = new URLSearchParams({
-			...additionalParams
+			...additionalParams,
 		});
 
 		// Add limit to params if provided
 		if (limit) {
-			params.set('limit', limit.toString());
+			params.set("limit", limit.toString());
 		}
 
 		// Add cursor for pagination instead of page
 		if (additionalParams.cursor) {
-			params.set('cursor', additionalParams.cursor);
+			params.set("cursor", additionalParams.cursor);
 		}
 
-		return await apiRequest(`/posts${params.toString() ? `?${params.toString()}` : ""}`);
+		return await apiRequest(
+			`/posts${params.toString() ? `?${params.toString()}` : ""}`,
+		);
 	},
 
 	getPost: async (postId) => {
@@ -546,7 +549,9 @@ export const postAPI = {
 
 	getFollowingFeed: async (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/posts/feed/following${queryString ? `?${queryString}` : ""}`);
+		return await apiRequest(
+			`/posts/feed/following${queryString ? `?${queryString}` : ""}`,
+		);
 	},
 
 	getCurrentUserPosts: async () => {
@@ -554,7 +559,9 @@ export const postAPI = {
 	},
 
 	searchPosts: async (query, page = 1) => {
-		return await apiRequest(`/posts/search?q=${encodeURIComponent(query)}&page=${page}`);
+		return await apiRequest(
+			`/posts/search?q=${encodeURIComponent(query)}&page=${page}`,
+		);
 	},
 };
 
@@ -573,7 +580,9 @@ export const imageAPI = {
 export const commentAPI = {
 	getComments: async (postId, params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/comments/post/${postId}${queryString ? `?${queryString}` : ""}`);
+		return await apiRequest(
+			`/comments/post/${postId}${queryString ? `?${queryString}` : ""}`,
+		);
 	},
 
 	createComment: async (postId, commentData) => {
@@ -599,7 +608,7 @@ export const commentAPI = {
 	searchComments: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
 			query,
-			...params
+			...params,
 		});
 		return await apiRequest(`/comments/search?${searchParams.toString()}`);
 	},
