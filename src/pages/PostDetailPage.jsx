@@ -93,7 +93,7 @@ const PostDetailPage = () => {
 					const repliesData = {};
 					for (const comment of commentsResponse.comments) {
 						try {
-							const repliesResponse = await replyAPI.getReplies(comment.id);
+							const repliesResponse = await replyAPI.getCommentReplies(comment.id);
 							repliesData[comment.id] = repliesResponse.replies || [];
 						} catch (replyError) {
 							console.error(`Failed to load replies for comment ${comment.id}:`, replyError);
