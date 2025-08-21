@@ -26,6 +26,7 @@ import {
 } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
 import { handleLikeNotification } from "../utils/notification-helpers";
+import CommentItem from "./CommentItem";
 
 const PostCard = ({
 	post,
@@ -588,60 +589,44 @@ const PostCard = ({
 							{showComments && (
 								<div className="mt-3 pt-2 border-top comment-thread">
 									{comments.map((comment, index) => (
-										<div
+										<CommentItem
 											key={comment.id}
-											className={`comment-item ${index === comments.length - 1 ? "mb-0" : "mb-2"}`}
-										>
-											<Image
-												src={
-													comment.author?.photoURL ||
-													"https://i.pravatar.cc/150?img=10"
+											comment={comment}
+											currentUser={currentUser}
+											onLike={async (commentId) => {
+												try {
+													const response = await commentAPI.likeComment(commentId);
+													// Update local comment state
+													setComments(prev => prev.map(c => 
+														c.id === commentId 
+															? { ...c, likes: response.likes, isLiked: response.liked }
+															: c
+													));
+													return response;
+												} catch (error) {
+													console.error('Failed to like comment:', error);
 												}
-												alt="avatar"
-												roundedCircle
-												width="32"
-												height="32"
-												className="comment-avatar"
-												style={{
-													objectFit: "cover",
-													minWidth: "32px",
-													minHeight: "32px",
-												}}
-											/>
-											<div className="comment-content">
-												<div className="d-flex align-items-center gap-1">
-													<span
-														className="fw-bold small"
-														style={{ cursor: "pointer", color: "inherit" }}
-														onClick={(e) => {
-															e.stopPropagation();
-															if (comment.author?.username) {
-																navigate(`/${comment.author.username}`);
-															}
-														}}
-													>
-														{comment.author?.name || 'Unknown User'}
-													</span>
-													{comment.author?.hasBlueCheck && (
-														<CheckCircleFill
-															className="text-primary"
-															size={12}
-														/>
-													)}
-													<span className="text-muted small">·</span>
-													<span className="text-muted small">
-														{formatTimeAgo(comment.createdAt)}
-													</span>
-												</div>
-												<div className="mb-0 small">
-													{parseTextContent(comment.content, {
-														onHashtagClick: handleHashtagClick,
-														onMentionClick: handleMentionClick,
-														onLinkClick: handleLinkClick,
-													})}
-												</div>
-											</div>
-										</div>
+											}}
+											onReply={async (commentId, replyContent) => {
+												try {
+													const response = await replyAPI.createReply(commentId, { content: replyContent });
+													// Update local comment state with new reply
+													setComments(prev => prev.map(c => 
+														c.id === commentId 
+															? { ...c, replies: [...(c.replies || []), response.reply] }
+															: c
+													));
+													return response;
+												} catch (error) {
+													console.error('Failed to create reply:', error);
+												}
+											}}
+											onHashtagClick={handleHashtagClick}
+											onMentionClick={handleMentionClick}
+											onLinkClick={handleLinkClick}
+											navigate={navigate}
+											isLast={index === comments.length - 1}
+										/>
 									))}
 								</div>
 							)}

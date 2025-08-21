@@ -622,7 +622,8 @@ export const replyAPI = {
 	getCommentReplies: async (commentId, params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
 		return await apiRequest(
-			`/replies/comment/${commentId}${queryString ? `?${queryString}` : ""}`,
+			`/replies/comment/${commentId}${queryString ? `?${queryString}` : ""}`
+		);yString}` : ""}`,
 		);
 	},
 

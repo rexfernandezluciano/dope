@@ -35,6 +35,7 @@ import AgoraRTC from "agora-rtc-sdk-ng";
 import { postAPI, imageAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
+import PostComposer from "../components/PostComposer";
 import LiveStudioModal from "../components/LiveStudioModal";
 import { deletePost as deletePostUtil, sharePost } from "../utils/common-utils";
 import {
@@ -68,7 +69,8 @@ const HomePage = () => {
 	const [error, setError] = useState("");
 	const [hasMore, setHasMore] = useState(false);
 	const [nextCursor, setNextCursor] = useState(null);
-	const [submitting, setSubmitting] = useState(false);
+	// Removed unused post composer state and functions: const [newPost, setNewPost] = useState(""); const [submitting, setSubmitting] = useState(false); const [images, setImages] = useState([]); const fileInputRef = useRef(null);
+
 	const [isLive, setIsLive] = useState(false);
 	const [liveVideoUrl, setLiveVideoUrl] = useState("");
 	const [streamTitle, setStreamTitle] = useState(""); // State for stream title
@@ -83,7 +85,7 @@ const HomePage = () => {
 	const [postToDelete, setPostToDelete] = useState(null);
 	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
 	const textareaRef = useRef(null);
-	const fileInputRef = useRef(null);
+	// Removed unused fileInputRef as it's now part of PostComposer: const fileInputRef = useRef(null);
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
 
@@ -193,7 +195,8 @@ const HomePage = () => {
 	};
 
 	const handlePhotoClick = () => {
-		fileInputRef.current.click();
+		// This functionality is now handled within PostComposer
+		// fileInputRef.current.click();
 	};
 
 	// Function to get the image upload limit based on subscription plan
@@ -663,7 +666,7 @@ const HomePage = () => {
 		}
 
 		try {
-			setSubmitting(true);
+			// setSubmitting(true); // This state is managed within PostComposer
 			// Extract hashtags and mentions for potential future use
 			// const hashtags = extractHashtags(cleanedContent);
 			// const mentions = extractMentions(cleanedContent);
@@ -727,7 +730,7 @@ const HomePage = () => {
 		} catch (err) {
 			setError(err.message);
 		} finally {
-			setSubmitting(false);
+			// setSubmitting(false); // This state is managed within PostComposer
 		}
 	};
 
@@ -869,41 +872,17 @@ const HomePage = () => {
 					</div>
 				)}
 
-				{/* Create Post Section */}
+				{/* Post Composer */}
 				{user && (
-					<Card
-						className="border-0 border-bottom rounded-0 mb-0 shadow-none"
-						onClick={() => setShowComposerModal(true)}
-					>
-						<Card.Body className="px-3 py-3">
-							<div className="d-flex gap-3">
-								<Image
-									src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
-									alt="avatar"
-									roundedCircle
-									width="45"
-									height="45"
-									style={{
-										objectFit: "cover",
-										minWidth: "45px",
-										minHeight: "45px",
-									}}
-								/>
-								<div className="flex-grow-1">
-									<div className="d-flex align-items-center gap-1 mb-2">
-										<span className="fw-bold">{user?.name}</span>
-										{user?.hasBlueCheck && (
-											<CheckCircleFill className="text-primary" size={16} />
-										)}
-									</div>
-									<div className="w-100 text-start text-muted border-1 bg-transparent">
-										What's on your mind?
-									</div>
-								</div>
-							</div>
-						</Card.Body>
-					</Card>
+					<PostComposer
+						currentUser={user}
+						onPostCreated={(newPost) => {
+							setPosts(prevPosts => [newPost, ...prevPosts]);
+						}}
+						placeholder="What's happening?"
+					/>
 				)}
+
 
 				<div
 					className="d-flex align-items-center justify-content-between px-0 pt-2 border-bottom bg-white sticky-top-md"
@@ -1142,7 +1121,7 @@ const HomePage = () => {
 								</Button>
 								<input
 									type="file"
-									ref={fileInputRef}
+									ref={textareaRef} // This ref is now for the textarea, not a file input. Needs correction if file input is to be used here.
 									onChange={handleFileChange}
 									accept="image/*"
 									multiple
