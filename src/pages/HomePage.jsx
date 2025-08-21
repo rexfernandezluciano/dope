@@ -108,11 +108,6 @@ const HomePage = () => {
 
 			let processedPosts = response.posts;
 
-			// Randomize posts each time they're loaded
-			if (processedPosts && processedPosts.length > 0) {
-				processedPosts = processedPosts.sort(() => Math.random() - 0.5);
-			}
-
 			// Filter posts based on profile privacy settings
 			const privacyFilteredPosts = processedPosts.filter((post) => {
 				const authorPrivacy = post.author.privacy?.profile || "public";
