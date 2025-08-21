@@ -517,9 +517,8 @@ export const postAPI = {
 
 	searchPosts: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
-			query: query,
+			search: query,
 			limit: params.limit || 20,
-			sortBy: params.sortBy || 'desc',
 			...params,
 		});
 		return await apiRequest(`/posts/search?${searchParams.toString()}`);
@@ -766,9 +765,8 @@ export const searchAPI = {
 
 	searchPosts: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
-			query: query,
+			search: query,
 			limit: params.limit || 20,
-			sortBy: params.sortBy || 'desc',
 			...params,
 		});
 		return await apiRequest(`/posts/search?${searchParams.toString()}`);

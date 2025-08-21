@@ -72,7 +72,7 @@ const SearchPage = () => {
 			setError("");
 
 			if (tab === "posts") {
-				const response = await apiRequest(`/posts/search?query=${encodeURIComponent(searchQueryParam)}&limit=20&sortBy=desc`);
+				const response = await apiRequest(`/posts/search?search=${encodeURIComponent(searchQueryParam)}&limit=20`);
 				setPosts(response.posts || []);
 			} else if (tab === "users") {
 				// Use /users endpoint to get all users, then filter by search query
