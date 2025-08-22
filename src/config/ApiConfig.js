@@ -448,6 +448,12 @@ export const authAPI = {
 			data: { token, newPassword },
 		});
 	},
+
+	me: async () => {
+		return await apiRequest("/auth/me", {
+			method: "GET",
+		});
+	},
 };
 
 // User API
