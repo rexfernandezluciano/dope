@@ -44,7 +44,7 @@ const API_ENDPOINTS = (() => {
 })();
 
 // Current active API base URL
-let API_BASE_URL = API_ENDPOINTS[0];
+let API_BASE_URL = '';
 
 // Debug logging for production network issues
 console.log("🔍 API Configuration Debug:", {
