@@ -2,9 +2,6 @@
 import React from 'react';
 import { Alert, Container, Button } from 'react-bootstrap';
 
-import React from 'react';
-import { Container, Alert, Button } from 'react-bootstrap';
-
 class ErrorBoundary extends React.Component {
 	constructor(props) {
 		super(props);

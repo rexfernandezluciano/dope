@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
 
 const EndpointStatus = () => {
@@ -12,7 +12,7 @@ const EndpointStatus = () => {
 
   const checkEndpointStatus = async (endpoint) => {
     try {
-      const response = await fetch(`${endpoint}/health`, {
+      const response = await fetch(`${endpoint}/v1/health`, {
         method: 'GET',
         signal: AbortSignal.timeout(5000),
         mode: 'cors'
@@ -36,7 +36,7 @@ const EndpointStatus = () => {
     }
   };
 
-  const checkAllEndpoints = async () => {
+  const checkAllEndpoints = useCallback(async () => {
     setChecking(true);
     const results = [];
     
@@ -47,13 +47,13 @@ const EndpointStatus = () => {
     
     setEndpoints(results);
     setChecking(false);
-  };
+  }, [API_ENDPOINTS]);
 
   useEffect(() => {
     checkAllEndpoints();
     const interval = setInterval(checkAllEndpoints, 30000); // Check every 30 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [checkAllEndpoints]);
 
   const getStatusBadge = (status) => {
     switch (status) {

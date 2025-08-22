@@ -98,16 +98,6 @@ export const pageMetaData = {
 		description: "Manage your notification preferences and how you receive updates.",
 		keywords: "notification settings, alerts, updates, DOPE Network"
 	},
-	search: (query) => ({
-		title: query ? `Search: ${query} - DOPE Network` : "Search - DOPE Network",
-		description: query ? `Search results for "${query}" on DOPE Network.` : "Search for posts and people on DOPE Network.",
-		keywords: `search, ${query || "posts, people"}, DOPE Network`
-	}),
-	analytics: {
-		title: "Analytics - DOPE Network",
-		description: "View your profile analytics, engagement metrics, and growth insights.",
-		keywords: "analytics, insights, metrics, engagement, DOPE Network"
-	},
 	subscription: {
 		title: "Subscription - DOPE Network",
 		description: "Manage your DOPE Network subscription and premium features.",
