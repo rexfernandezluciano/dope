@@ -9,15 +9,6 @@ const isUsingProxy =
 	(window.location.hostname === "localhost" || 
 	 window.location.hostname === "127.0.0.1");
 
-// Debug logging for production network issues
-console.log("🔍 API Configuration Debug:", {
-	NODE_ENV: process.env.NODE_ENV,
-	hostname: window.location.hostname,
-	isUsingProxy,
-	API_ENDPOINTS,
-	currentAPIUrl: API_ENDPOINTS[0]
-});
-
 // Multiple API endpoints for failover
 const API_ENDPOINTS = isUsingProxy
 	? [
@@ -31,6 +22,15 @@ const API_ENDPOINTS = isUsingProxy
 
 // Current active API base URL
 let API_BASE_URL = API_ENDPOINTS[0];
+
+// Debug logging for production network issues
+console.log("🔍 API Configuration Debug:", {
+	NODE_ENV: process.env.NODE_ENV,
+	hostname: window.location.hostname,
+	isUsingProxy,
+	API_ENDPOINTS,
+	currentAPIUrl: API_ENDPOINTS[0]
+});
 
 // Validate API URL is HTTPS (skip validation for proxy URLs)
 if (!API_BASE_URL.startsWith("https://") && !API_BASE_URL.startsWith("/")) {
