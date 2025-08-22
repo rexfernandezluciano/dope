@@ -96,18 +96,19 @@ class HttpClient {
 
 	async makeRequest(endpoint, options = {}) {
 		const url = `${API_BASE_URL}${endpoint}`;
+		const method = (options.method || "GET").toUpperCase();
 
 		try {
 			console.log("🚀 Making axios request:", {
 				url,
-				method: options.method || "GET",
+				method,
 				hasData: !!options.data,
 				timestamp: new Date().toISOString(),
 			});
 
 			const response = await apiClient({
 				url,
-				method: options.method || "GET",
+				method,
 				data: options.data,
 				headers: options.headers,
 				...options,
@@ -117,6 +118,7 @@ class HttpClient {
 				status: response.status,
 				statusText: response.statusText,
 				url: response.config.url,
+				method: response.config.method,
 			});
 
 			return {
@@ -129,6 +131,7 @@ class HttpClient {
 		} catch (error) {
 			console.log("💥 Axios request failed:", {
 				url,
+				method,
 				error: error.name,
 				message: error.message,
 				status: error.response?.status,
@@ -145,9 +148,22 @@ class HttpClient {
 
 			if (error.response) {
 				// Server error - API responded with error status
-				const errorMsg = error.response.data?.message || 
-					error.response.statusText || 
-					`Server error (${error.response.status})`;
+				let errorMsg;
+				
+				if (error.response.status === 405) {
+					errorMsg = `Method ${method} not allowed for ${endpoint}. Check if the endpoint supports this HTTP method.`;
+					console.log("🚨 405 Method Not Allowed Details:", {
+						requestedMethod: method,
+						endpoint,
+						allowedMethods: error.response.headers?.allow || 'Not specified',
+						url: error.config?.url
+					});
+				} else {
+					errorMsg = error.response.data?.message || 
+						error.response.statusText || 
+						`Server error (${error.response.status})`;
+				}
+				
 				console.log("🚨 Server Error Details:", {
 					status: error.response.status,
 					headers: error.response.headers,
@@ -994,8 +1010,8 @@ export const api = {
 	resetPassword: authAPI.resetPassword,
 
 	// Google OAuth endpoints
-	googleLogin: (googleData) => apiRequest('POST', '/auth/google/login', googleData),
-	googleSignup: (googleData) => apiRequest('POST', '/auth/google/signup', googleData),
+	googleLogin: (googleData) => apiRequest('/auth/google/login', { method: 'POST', data: googleData }),
+	googleSignup: (googleData) => apiRequest('/auth/google/signup', { method: 'POST', data: googleData }),
 
 	// Posts
 	getPosts: postAPI.getPosts,
