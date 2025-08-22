@@ -6,11 +6,14 @@ import axios from "axios";
 // Always use proxy for both development and production
 const isUsingProxy = true;
 
-// Multiple API endpoints for failover - always use proxy first
-const API_ENDPOINTS = [
-	"/v1", // Use proxy for all environments
-	"https://api.dopp.eu.org/v1", // Fallback to direct URL
-];
+// API Configuration with failover support
+const API_ENDPOINTS = process.env.NODE_ENV === 'development' && 
+  (window.location.hostname.includes('replit.dev') || 
+   window.location.hostname.includes('replit.co') || 
+   window.location.hostname.includes('replit.app') ||
+   window.location.hostname === 'localhost')
+  ? ['', 'https://api.dopp.eu.org'] 
+  : ['https://social.dopp.eu.org', 'https://api.dopp.eu.org'];
 
 // Current active API base URL
 let API_BASE_URL = API_ENDPOINTS[0];
@@ -92,31 +95,25 @@ apiClient.interceptors.response.use(
 class HttpClient {
 	constructor() {
 		this.currentEndpointIndex = 0;
+		this.currentBaseURL = API_ENDPOINTS[this.currentEndpointIndex];
 	}
 
 	async makeRequest(endpoint, options = {}) {
-		const url = `${API_BASE_URL}${endpoint}`;
-		const method = (options.method || "GET").toUpperCase();
+		// Ensure endpoint starts with /v1 if not already present
+		const normalizedEndpoint = endpoint.startsWith('/v1') ? endpoint : `/v1${endpoint}`;
+		const url = `${this.currentBaseURL}${normalizedEndpoint}`;
 
-		// Handle CORS preflight for non-simple requests
-		if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-			const preflightHeaders = {
-				'Access-Control-Request-Method': method,
-				'Access-Control-Request-Headers': 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token'
-			};
-		}
+		console.log('🚀 Making axios request:', {
+			url,
+			method: options.method || 'GET',
+			hasData: !!options.data,
+			timestamp: new Date().toISOString()
+		});
 
 		try {
-			console.log("🚀 Making axios request:", {
-				url,
-				method,
-				hasData: !!options.data,
-				timestamp: new Date().toISOString(),
-			});
-
 			const response = await apiClient({
 				url,
-				method,
+				method: options.method || 'GET',
 				data: options.data,
 				headers: {
 					'Content-Type': 'application/json',
@@ -143,7 +140,7 @@ class HttpClient {
 		} catch (error) {
 			console.log("💥 Axios request failed:", {
 				url,
-				method,
+				method: options.method || 'GET',
 				error: error.name,
 				message: error.message,
 				status: error.response?.status,
@@ -161,11 +158,11 @@ class HttpClient {
 			if (error.response) {
 				// Server error - API responded with error status
 				let errorMsg;
-				
+
 				if (error.response.status === 405) {
-					errorMsg = `Method ${method} not allowed for ${endpoint}. Check if the endpoint supports this HTTP method.`;
+					errorMsg = `Method ${options.method || 'GET'} not allowed for ${endpoint}. Check if the endpoint supports this HTTP method.`;
 					console.log("🚨 405 Method Not Allowed Details:", {
-						requestedMethod: method,
+						requestedMethod: options.method || 'GET',
 						endpoint,
 						allowedMethods: error.response.headers?.allow || 'Not specified',
 						url: error.config?.url
@@ -175,7 +172,7 @@ class HttpClient {
 						error.response.statusText || 
 						`Server error (${error.response.status})`;
 				}
-				
+
 				console.log("🚨 Server Error Details:", {
 					status: error.response.status,
 					headers: error.response.headers,
@@ -206,7 +203,7 @@ class HttpClient {
 
 		for (let i = 0; i < API_ENDPOINTS.length; i++) {
 			const currentEndpoint = API_ENDPOINTS[i];
-			API_BASE_URL = currentEndpoint;
+			this.currentBaseURL = currentEndpoint; // Update the base URL
 
 			console.log(`🔄 Trying endpoint: ${currentEndpoint}`);
 
@@ -349,7 +346,7 @@ export const testApiConnection = async () => {
 		console.log("🔍 Testing API connection to:", API_BASE_URL);
 		const controller = new AbortController();
 		const timeoutId = setTimeout(() => controller.abort(), 10000);
-		
+
 		const response = await fetch(`${API_BASE_URL}/health`, {
 			method: "GET",
 			signal: controller.signal,
@@ -358,9 +355,9 @@ export const testApiConnection = async () => {
 				'Content-Type': 'application/json'
 			}
 		});
-		
+
 		clearTimeout(timeoutId);
-		
+
 		console.log("✅ API Health Check Response:", {
 			ok: response.ok,
 			status: response.status,
@@ -368,7 +365,7 @@ export const testApiConnection = async () => {
 			url: response.url,
 			headers: Object.fromEntries(response.headers.entries())
 		});
-		
+
 		return response.ok;
 	} catch (error) {
 		console.error("❌ API connection test failed:", {
@@ -376,7 +373,7 @@ export const testApiConnection = async () => {
 			message: error.message,
 			stack: error.stack
 		});
-		
+
 		// Test with a simple CORS preflight to diagnose CORS issues
 		try {
 			await fetch(`${API_BASE_URL}/health`, {
@@ -390,7 +387,7 @@ export const testApiConnection = async () => {
 		} catch (corsError) {
 			console.error("❌ CORS preflight failed:", corsError);
 		}
-		
+
 		return false;
 	}
 };

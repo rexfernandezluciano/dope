@@ -29,6 +29,7 @@ const SessionSettingsPage = lazy(() => import("../pages/settings/SessionSettings
 import RequireAuth from "./security/RequireAuth";
 import { IndexPageLoader } from "./loader/IndexPageLoader";
 import { SecurityProvider } from "../components/SecurityProvider";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 import NavigationView from "../components/navs/NavigationView";
 
@@ -242,11 +243,13 @@ const AppRouter = () => {
 	}, []);
 
 	return (
-		<SecurityProvider>
-			<Suspense fallback={<LoadingView />}>
-				<RouterProvider router={router} />
-			</Suspense>
-		</SecurityProvider>
+		<ErrorBoundary>
+			<SecurityProvider>
+				<Suspense fallback={<LoadingView />}>
+					<RouterProvider router={router} />
+				</Suspense>
+			</SecurityProvider>
+		</ErrorBoundary>
 	);
 };
 

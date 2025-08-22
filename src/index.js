@@ -52,7 +52,8 @@ if (typeof window !== 'undefined') {
       if (typeof message === 'string' && (
         message.includes('Warning:') ||
         message.includes('React Error Overlay') ||
-        message.includes('webpack-dev-server')
+        message.includes('webpack-dev-server') ||
+        message.includes('Download the React DevTools')
       )) {
         return;
       }
@@ -63,7 +64,8 @@ if (typeof window !== 'undefined') {
       const message = args[0];
       if (typeof message === 'string' && (
         message.includes('Warning:') ||
-        message.includes('React Error Overlay')
+        message.includes('React Error Overlay') ||
+        message.includes('validateDOMNesting')
       )) {
         return;
       }
