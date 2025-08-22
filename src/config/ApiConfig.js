@@ -98,6 +98,14 @@ class HttpClient {
 		const url = `${API_BASE_URL}${endpoint}`;
 		const method = (options.method || "GET").toUpperCase();
 
+		// Handle CORS preflight for non-simple requests
+		if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+			const preflightHeaders = {
+				'Access-Control-Request-Method': method,
+				'Access-Control-Request-Headers': 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token'
+			};
+		}
+
 		try {
 			console.log("🚀 Making axios request:", {
 				url,
@@ -110,7 +118,11 @@ class HttpClient {
 				url,
 				method,
 				data: options.data,
-				headers: options.headers,
+				headers: {
+					'Content-Type': 'application/json',
+					...options.headers,
+				},
+				withCredentials: true,
 				...options,
 			});
 

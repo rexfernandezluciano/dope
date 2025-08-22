@@ -11,3 +11,15 @@ run = ["sh", "-c", "npm run start"]
 [[ports]]
 localPort = 3000
 externalPort = 80
+
+[workflows]
+runButton = "Proxy Server"
+
+[[workflows.workflow]]
+name = "Proxy Server"
+author = 17645371
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node proxy-server.js"
