@@ -245,28 +245,60 @@ app.get("*", async (req, res) => {
   let metaData;
 
   try {
-    // For dynamic routes, fetch data from API
-    if (url.startsWith("/")) {
+    // Handle dynamic routes with proper error handling
+    if (url.startsWith("/") && url.length > 1 && !url.startsWith("/auth") && !url.startsWith("/post") && !url.startsWith("/search")) {
       const username = url.split("/")[1];
-      // Fetch user data from API for meta tags
-      const userData = await fetch(
-        `https://api.dopp.eu.org/v1/users/${username}`,
-      );
-      if (!userData?.user) {
-        metaData = getMetaData("/");
+      if (username && username.length > 0) {
+        try {
+          // Use the proxy endpoint instead of direct API call
+          const response = await fetch(`http://localhost:${PORT}/v1/users/${username}`);
+          if (response.ok) {
+            const userData = await response.json();
+            if (userData?.user) {
+              metaData = getMetaData("/", {
+                username,
+                displayName: userData.user.name,
+                avatar: userData.user.avatar,
+              });
+            } else {
+              metaData = getMetaData("/");
+            }
+          } else {
+            metaData = getMetaData("/");
+          }
+        } catch (error) {
+          console.error("Error fetching user data for SSR:", error.message);
+          metaData = getMetaData("/");
+        }
       } else {
-        metaData = getMetaData("/", {
-          username,
-          displayName: userData?.user.name,
-        });
+        metaData = getMetaData("/");
       }
     } else if (url.startsWith("/post/")) {
       const postId = url.split("/")[2];
-      // Fetch post data from API for meta tags
-      const postData = await fetch(
-        `https://api.dopp.eu.org/v1/posts/${postId}`,
-      );
-      metaData = getMetaData("/post", { content: postData?.post.content });
+      if (postId && postId.length > 0) {
+        try {
+          // Use the proxy endpoint instead of direct API call
+          const response = await fetch(`http://localhost:${PORT}/v1/posts/${postId}`);
+          if (response.ok) {
+            const postData = await response.json();
+            if (postData?.post) {
+              metaData = getMetaData("/post", { 
+                content: postData.post.content,
+                image: postData.post.image 
+              });
+            } else {
+              metaData = getMetaData("/post");
+            }
+          } else {
+            metaData = getMetaData("/post");
+          }
+        } catch (error) {
+          console.error("Error fetching post data for SSR:", error.message);
+          metaData = getMetaData("/post");
+        }
+      } else {
+        metaData = getMetaData("/post");
+      }
     } else if (url.startsWith("/search")) {
       const query = req.query.q;
       metaData = getMetaData("/search", { query });
