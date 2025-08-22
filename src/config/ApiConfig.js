@@ -11,10 +11,18 @@ const API_ENDPOINTS = (() => {
 	if (process.env.NODE_ENV === "production") {
 		// In production, use HTTPS URLs only
 		const currentDomain = window.location.origin;
-		return [
-			currentDomain + ":5000", // Use current domain with port 5000
-			"https://api.dopp.eu.org"
-		];
+		// Check if current domain already includes port 5000
+		if (currentDomain.includes(':5000')) {
+			return [
+				currentDomain, // Use current domain as-is if it already has port 5000
+				"https://api.dopp.eu.org"
+			];
+		} else {
+			return [
+				currentDomain + ":5000", // Add port 5000 if not present
+				"https://api.dopp.eu.org"
+			];
+		}
 	} else {
 		// In development, prefer local proxy, fallback to external
 		return [
