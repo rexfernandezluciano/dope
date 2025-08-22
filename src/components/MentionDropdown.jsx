@@ -91,7 +91,7 @@ const MentionDropdown = ({
       style={{
         top: position.top,
         left: position.left,
-        zIndex: 1050,
+        zIndex: 9999,
         maxWidth: '300px',
         maxHeight: '200px',
         overflowY: 'auto'
