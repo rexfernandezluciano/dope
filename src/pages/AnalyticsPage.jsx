@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import { useLoaderData } from "react-router-dom";
 import {
 	Container,
@@ -36,22 +36,27 @@ import {
 	CheckCircle,
 	X,
 } from "react-bootstrap-icons";
-import {
-	LineChart,
-	Line,
-	XAxis,
-	YAxis,
-	CartesianGrid,
-	Tooltip,
-	ResponsiveContainer,
-	BarChart,
-	Bar,
-	PieChart,
-	Pie,
-	Cell,
-	AreaChart,
-	Area,
-} from "recharts";
+// Dynamic import for charts to reduce initial bundle size
+const ChartComponents = lazy(() => 
+	import("recharts").then(module => ({
+		default: {
+			LineChart: module.LineChart,
+			Line: module.Line,
+			XAxis: module.XAxis,
+			YAxis: module.YAxis,
+			CartesianGrid: module.CartesianGrid,
+			Tooltip: module.Tooltip,
+			ResponsiveContainer: module.ResponsiveContainer,
+			BarChart: module.BarChart,
+			Bar: module.Bar,
+			PieChart: module.PieChart,
+			Pie: module.Pie,
+			Cell: module.Cell,
+			AreaChart: module.AreaChart,
+			Area: module.Area,
+		}
+	}))
+);
 
 import { postAPI, userAPI } from "../config/ApiConfig";
 import { formatTimeAgo } from "../utils/common-utils";

@@ -1,29 +1,30 @@
 /** @format */
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 
-import StartPage from "../pages/StartPage";
-import LoginPage from "../pages/auth/LoginPage";
-import SignUpPage from "../pages/auth/SignUpPage";
-import VerifyEmailPage from "../pages/auth/VerifyEmailPage";
-import GoogleCallbackPage from "../pages/auth/GoogleCallbackPage"; // Assuming this component exists
-import IndexPage from "../pages/IndexPage";
-import HomePage from "../pages/HomePage";
-import PostDetailPage from "../pages/PostDetailPage";
-import ProfilePage from "../pages/ProfilePage";
-import SettingsPage from "../pages/SettingsPage";
-import SubscriptionPage from "../pages/SubscriptionPage";
-import SearchPage from "../pages/SearchPage";
-import AnalyticsPage from "../pages/AnalyticsPage";
-import LiveStreamPage from "../pages/LiveStreamPage";
-import PrivacyPolicyPage from "../pages/PrivacyPolicyPage";
-import TermsOfServicePage from "../pages/TermsOfServicePage";
-import NetworkTestPage from "../pages/NetworkTestPage";
-import PrivacySettingsPage from "../pages/settings/PrivacySettingsPage";
-import SessionSettingsPage from "../pages/settings/SessionSettingsPage";
+// Lazy load route components for better performance
+const StartPage = lazy(() => import("../pages/StartPage"));
+const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
+const SignUpPage = lazy(() => import("../pages/auth/SignUpPage"));
+const VerifyEmailPage = lazy(() => import("../pages/auth/VerifyEmailPage"));
+const GoogleCallbackPage = lazy(() => import("../pages/auth/GoogleCallbackPage"));
+const IndexPage = lazy(() => import("../pages/IndexPage"));
+const HomePage = lazy(() => import("../pages/HomePage"));
+const PostDetailPage = lazy(() => import("../pages/PostDetailPage"));
+const ProfilePage = lazy(() => import("../pages/ProfilePage"));
+const SettingsPage = lazy(() => import("../pages/SettingsPage"));
+const SubscriptionPage = lazy(() => import("../pages/SubscriptionPage"));
+const SearchPage = lazy(() => import("../pages/SearchPage"));
+const AnalyticsPage = lazy(() => import("../pages/AnalyticsPage"));
+const LiveStreamPage = lazy(() => import("../pages/LiveStreamPage"));
+const PrivacyPolicyPage = lazy(() => import("../pages/PrivacyPolicyPage"));
+const TermsOfServicePage = lazy(() => import("../pages/TermsOfServicePage"));
+const NetworkTestPage = lazy(() => import("../pages/NetworkTestPage"));
+const PrivacySettingsPage = lazy(() => import("../pages/settings/PrivacySettingsPage"));
+const SessionSettingsPage = lazy(() => import("../pages/settings/SessionSettingsPage"));
 
 import RequireAuth from "./security/RequireAuth";
 import { IndexPageLoader } from "./loader/IndexPageLoader";
@@ -242,7 +243,9 @@ const AppRouter = () => {
 
 	return (
 		<SecurityProvider>
-			<RouterProvider router={router} />
+			<Suspense fallback={<LoadingView />}>
+				<RouterProvider router={router} />
+			</Suspense>
 		</SecurityProvider>
 	);
 };

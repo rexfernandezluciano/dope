@@ -7,8 +7,12 @@ import { SpeedInsights } from "@vercel/speed-insights/react"
 
 import AppRouter from "./router/AppRouter.jsx";
 
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
+// Import only needed Bootstrap CSS (you can further optimize by using SCSS)
 import "bootstrap/dist/css/bootstrap.min.css";
+// Only import Bootstrap JS components you actually use
+// import "bootstrap/js/dist/modal";
+// import "bootstrap/js/dist/dropdown";
+// import "bootstrap/js/dist/collapse";
 
 import "./config/FirebaseConfig";
 import "./config/OneSignalConfig";
