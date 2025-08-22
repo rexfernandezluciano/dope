@@ -127,9 +127,11 @@ const AnalyticsPage = () => {
 			// Calculate growth metrics
 			const now = new Date();
 			const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-			const recentPosts = userPosts.filter(
-				(post) => new Date(post.createdAt) >= thirtyDaysAgo,
-			);
+			const recentPosts = userPosts.filter((post) => {
+				if (!post.createdAt) return false;
+				const postDate = new Date(post.createdAt);
+				return !isNaN(postDate.getTime()) && postDate >= thirtyDaysAgo;
+			});
 			const recentLikes = recentPosts.reduce(
 				(sum, post) => sum + (post.stats?.likes || 0),
 				0,
@@ -138,12 +140,20 @@ const AnalyticsPage = () => {
 				totalLikes > 0 ? ((recentLikes / totalLikes) * 100).toFixed(1) : "0.0";
 
 			// Generate mock earnings data for monetization
-			const earningPosts = topPosts.map((post) => ({
-				...post,
-				earnings: (post.stats?.earnings).toFixed(2),
-				views: (post.stats?.views || 0) * (Math.random() * 10 + 5),
-				cpm: (post.stats?.earnings * 3 + 1).toFixed(2),
-			}));
+			const earningPosts = topPosts.map((post) => {
+				const baseEarnings = post.stats?.earnings || (Math.random() * 5 + 1);
+				return {
+					...post,
+					stats: {
+						...post.stats,
+						earnings: parseFloat(baseEarnings.toFixed(2)),
+						views: post.stats?.views || Math.floor((post.stats?.likes || 0) * (Math.random() * 10 + 5))
+					},
+					earnings: baseEarnings.toFixed(2),
+					views: (post.stats?.views || 0) * (Math.random() * 10 + 5),
+					cpm: (baseEarnings * 3 + 1).toFixed(2),
+				};
+			});
 
 			const analyticsData = {
 				totalPosts,
@@ -171,18 +181,26 @@ const AnalyticsPage = () => {
 	}, [user?.username]);
 
 	const loadUserEarnings = useCallback(async () => {
-		const earnings = await userAPI.getUserEarnings();
-		const totalEarnings = earnings.totalEarnings;
-		setUserEarnings(totalEarnings ?? 0);
+		try {
+			const earnings = await userAPI.getUserEarnings();
+			const totalEarnings = earnings?.totalEarnings ?? 0;
+			setUserEarnings(totalEarnings);
+		} catch (error) {
+			console.error("Failed to load user earnings:", error);
+			setUserEarnings(0);
+		}
 	}, []);
 
 	const checkMonetizationEligibility = useCallback(() => {
 		if (!user || !analytics) return false;
 
 		// Check if account is created more than 7 days ago
-		const accountCreatedDate = new Date(
-			user.createdAt || user.metadata?.creationTime,
-		);
+		const accountCreationTime = user.createdAt || user.metadata?.creationTime;
+		if (!accountCreationTime) return false;
+		
+		const accountCreatedDate = new Date(accountCreationTime);
+		if (isNaN(accountCreatedDate.getTime())) return false;
+		
 		const sevenDaysAgo = new Date();
 		sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 3);
 		const accountOldEnough = accountCreatedDate < sevenDaysAgo;
@@ -237,8 +255,13 @@ const AnalyticsPage = () => {
 			
 			// Filter posts for this specific day
 			const dayPosts = analytics.topPosts?.filter(post => {
-				const postDate = new Date(post.createdAt).toISOString().split('T')[0];
-				return postDate === dateStr;
+				if (!post.createdAt) return false;
+				try {
+					const postDate = new Date(post.createdAt).toISOString().split('T')[0];
+					return postDate === dateStr;
+				} catch (error) {
+					return false;
+				}
 			}) || [];
 
 			// Calculate real metrics for this day
