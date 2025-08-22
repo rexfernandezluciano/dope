@@ -24,7 +24,7 @@ import {
 	Paypal
 } from "react-bootstrap-icons";
 
-import { userAPI } from "../config/ApiConfig";
+import { userAPI, paymentAPI } from "../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 
 const SubscriptionPage = () => {
@@ -87,65 +87,86 @@ const SubscriptionPage = () => {
 
 	// Handle adding payment method
 	const handleAddPaymentMethod = async () => {
-		if (selectedPaymentType === "card") {
-			// Validate card form
-			if (!cardForm.cardNumber || !cardForm.expiryDate || !cardForm.cvc || !cardForm.cardholderName) {
-				setMessage("Please fill in all card details.");
-				setMessageType("warning");
-				return;
+		try {
+			setLoading(true);
+			
+			if (selectedPaymentType === "card") {
+				// Validate card form
+				if (!cardForm.cardNumber || !cardForm.expiryDate || !cardForm.cvc || !cardForm.cardholderName) {
+					setMessage("Please fill in all card details.");
+					setMessageType("warning");
+					return;
+				}
+
+				// Parse expiry date (MM/YY format)
+				const [month, year] = cardForm.expiryDate.split('/');
+				const fullYear = `20${year}`;
+
+				// Prepare payment data for API
+				const paymentData = {
+					type: "card",
+					cardNumber: cardForm.cardNumber.replace(/\s/g, ''),
+					expiryMonth: month,
+					expiryYear: fullYear,
+					cvv: cardForm.cvc,
+					holderName: cardForm.cardholderName
+				};
+
+				// Add payment method via API
+				await paymentAPI.addPaymentMethod(paymentData);
+				setMessage("Payment method added successfully!");
+				setMessageType("success");
+			} else if (selectedPaymentType === "paypal") {
+				// Add PayPal payment method
+				const paymentData = {
+					type: "paypal"
+				};
+
+				await paymentAPI.addPaymentMethod(paymentData);
+				setMessage("PayPal connected successfully!");
+				setMessageType("success");
 			}
 
-			// Mock adding card - in real app, you'd integrate with payment processor
-			const newCard = {
-				id: Date.now().toString(),
-				type: 'card',
-				brand: 'Visa', // In real app, detect from card number
-				last4: cardForm.cardNumber.replace(/\s/g, '').slice(-4),
-				expiry: cardForm.expiryDate,
-				cardholderName: cardForm.cardholderName,
-				isDefault: cardForm.isDefault || paymentMethods.length === 0
-			};
+			// Reload payment methods from server
+			await loadPaymentMethods();
 
-			// Set as default if it's the first payment method
-			if (paymentMethods.length === 0) {
-				newCard.isDefault = true;
-			}
-
-			setPaymentMethods(prev => [...prev, newCard]);
-			setMessage("Payment method added successfully!");
-			setMessageType("success");
-		} else if (selectedPaymentType === "paypal") {
-			// Mock adding PayPal - in real app, you'd integrate with PayPal
-			const newPayPal = {
-				id: Date.now().toString(),
-				type: 'paypal',
-				brand: 'PayPal',
-				email: 'user@example.com', // Would get from PayPal API
-				isDefault: paymentMethods.length === 0
-			};
-
-			setPaymentMethods(prev => [...prev, newPayPal]);
-			setMessage("PayPal connected successfully!");
-			setMessageType("success");
+			// Close modal and reset form
+			setShowAddPaymentModal(false);
+			setSelectedPaymentType("card");
+			setCardForm({
+				cardNumber: "",
+				expiryDate: "",
+				cvc: "",
+				cardholderName: "",
+				isDefault: false
+			});
+		} catch (error) {
+			console.error("Error adding payment method:", error);
+			setMessage(error.message || "Failed to add payment method");
+			setMessageType("danger");
+		} finally {
+			setLoading(false);
 		}
-
-		// Close modal and reset form
-		setShowAddPaymentModal(false);
-		setSelectedPaymentType("card");
-		setCardForm({
-			cardNumber: "",
-			expiryDate: "",
-			cvc: "",
-			cardholderName: "",
-			isDefault: false
-		});
 	};
 
 	// Handle removing payment method
-	const handleRemovePaymentMethod = (methodId) => {
-		setPaymentMethods(prev => prev.filter(method => method.id !== methodId));
-		setMessage("Payment method removed successfully!");
-		setMessageType("info");
+	const handleRemovePaymentMethod = async (methodId) => {
+		try {
+			setLoading(true);
+			await paymentAPI.deletePaymentMethod(methodId);
+			
+			// Reload payment methods from server
+			await loadPaymentMethods();
+			
+			setMessage("Payment method removed successfully!");
+			setMessageType("info");
+		} catch (error) {
+			console.error("Error removing payment method:", error);
+			setMessage(error.message || "Failed to remove payment method");
+			setMessageType("danger");
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	// Helper functions
@@ -162,6 +183,17 @@ const SubscriptionPage = () => {
 
 	const getBlueCheckStatus = (plan) => {
 		return plan === "premium" || plan === "pro";
+	};
+
+	// Load payment methods from server
+	const loadPaymentMethods = async () => {
+		try {
+			const response = await paymentAPI.getPaymentMethods();
+			setPaymentMethods(response.paymentMethods || []);
+		} catch (error) {
+			console.error("Failed to load payment methods:", error);
+			// Don't show error message for missing payment methods
+		}
 	};
 
 	useEffect(() => {
@@ -181,6 +213,9 @@ const SubscriptionPage = () => {
 				},
 			});
 			updatePageMeta(pageMetaData.subscription.title, pageMetaData.subscription.description);
+			
+			// Load payment methods
+			loadPaymentMethods();
 		}
 	}, [user]);
 
@@ -246,26 +281,64 @@ const SubscriptionPage = () => {
 
 		try {
 			setLoading(true);
-			await userAPI.updateUser(user.username, {
-				membership: {
+			
+			if (planId !== "free") {
+				// Find default payment method
+				const defaultPaymentMethod = paymentMethods.find(method => method.isDefault) || paymentMethods[0];
+				
+				if (!defaultPaymentMethod) {
+					setMessage("Please add a payment method before upgrading to a paid plan.");
+					setMessageType("warning");
+					setShowAddPaymentModal(true);
+					return;
+				}
+
+				// Use payment API for membership purchase
+				const purchaseResponse = await paymentAPI.purchaseMembership({
 					subscription: planId,
-					nextBillingDate: planId !== "free" ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null
-				},
-			});
-			setMessage(`Successfully upgraded to ${planId} plan!`);
-			setMessageType("success");
-			// Update local state
-			setSubscription((prev) => ({
-				...prev,
-				plan: planId,
-				nextBilling: planId !== "free" ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : null,
-				features: {
-					...prev.features,
-					blueCheck: getBlueCheckStatus(planId),
-					imageLimit: getImageLimit(planId),
-				},
-			}));
+					paymentMethodId: defaultPaymentMethod.id
+				});
+
+				setMessage(`Successfully upgraded to ${planId} plan!`);
+				setMessageType("success");
+				
+				// Update local state with response data
+				setSubscription((prev) => ({
+					...prev,
+					plan: planId,
+					nextBilling: purchaseResponse.nextBillingDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+					features: {
+						...prev.features,
+						blueCheck: getBlueCheckStatus(planId),
+						imageLimit: getImageLimit(planId),
+					},
+				}));
+			} else {
+				// Downgrade to free plan
+				await userAPI.updateUser(user.username, {
+					membership: {
+						subscription: "free",
+						nextBillingDate: null
+					},
+				});
+				
+				setMessage("Successfully downgraded to free plan!");
+				setMessageType("success");
+				
+				// Update local state
+				setSubscription((prev) => ({
+					...prev,
+					plan: "free",
+					nextBilling: null,
+					features: {
+						...prev.features,
+						blueCheck: false,
+						imageLimit: 3,
+					},
+				}));
+			}
 		} catch (err) {
+			console.error("Upgrade error:", err);
 			setMessage(err.message || "Failed to upgrade subscription");
 			setMessageType("danger");
 		} finally {
@@ -547,14 +620,14 @@ const SubscriptionPage = () => {
 													<>
 														<h6 className="mb-0">PayPal</h6>
 														<small className="text-muted">
-															{method.email}
+															Connected Account
 														</small>
 													</>
 												) : (
 													<>
 														<h6 className="mb-0">**** **** **** {method.last4}</h6>
 														<small className="text-muted">
-															{method.brand} • Expires {method.expiry}
+															{method.brand} • Expires {method.expiryMonth}/{method.expiryYear}
 														</small>
 													</>
 												)}
