@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useLoaderData } from "react-router-dom";
 import {
 	Container,
