@@ -1,7 +1,7 @@
 
 /** @format */
 
-import { authAPI, userAPI, getAuthToken } from '../config/ApiConfig';
+import { authAPI, userAPI, getAuthToken } from '../config/ApiConfig.js';
 
 /**
  * Get current authenticated user

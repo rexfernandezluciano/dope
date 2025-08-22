@@ -1,6 +1,6 @@
 /** @format */
 
-import { getUser } from "../../utils/app-utils";
+import { getUser } from "../../utils/app-utils.js";
 
 const IndexPageLoader = async () => {
 	try {
