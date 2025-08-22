@@ -41,14 +41,14 @@ app.options("*", (req, res) => {
 app.use(
   "/v1",
   createProxyMiddleware({
-    target: "https://api.dopp.eu.org",
+    target: "https://api.dopp.eu.org/v1",
     changeOrigin: true,
     secure: true,
     followRedirects: true,
     onProxyReq: (proxyReq, req, res) => {
       // Log the proxied request
       console.log(
-        `Proxying ${req.method} ${req.url} to https://api.dopp.eu.org${req.url}`,
+        `Proxying ${req.method} ${req.url} to https://api.dopp.eu.org/v1${req.url}`,
       );
     },
     onError: (err, req, res) => {
