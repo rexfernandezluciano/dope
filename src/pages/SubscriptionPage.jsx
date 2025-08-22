@@ -130,15 +130,10 @@ const SubscriptionPage = () => {
 
 				// Determine card provider from card number
 				const cardNumber = cardForm.cardNumber.replace(/\s/g, '');
-				let provider = "Unknown";
-				if (cardNumber.startsWith('4')) provider = "Visa";
-				else if (cardNumber.startsWith('5') || cardNumber.startsWith('2')) provider = "Mastercard";
-				else if (cardNumber.startsWith('3')) provider = "American Express";
-				else if (cardNumber.startsWith('6')) provider = "Discover";
-
+				
 				paymentData = {
-					type: "paypal_card", // Updated to paypal_card
-					provider: provider,
+					type: "paypal_card",
+					paypalPaymentMethodId: "",
 					last4: cardNumber.slice(-4),
 					expiryMonth: parseInt(month),
 					expiryYear: fullYear,
@@ -147,8 +142,7 @@ const SubscriptionPage = () => {
 				};
 			} else if (selectedPaymentType === "paypal") {
 				paymentData = {
-					type: "paypal_wallet", // Updated to paypal_wallet
-					provider: "PayPal",
+					type: "paypal_wallet",
 					paypalEmail: user.email, // Use user's email for PayPal
 					isDefault: paymentMethods.length === 0 // Make first payment method default
 				};
