@@ -87,47 +87,87 @@ const SubscriptionPage = () => {
 
 	// Handle adding payment method
 	const handleAddPaymentMethod = async () => {
-		try {
-			setLoading(true);
-			
-			if (selectedPaymentType === "card") {
-				// Validate card form
-				if (!cardForm.cardNumber || !cardForm.expiryDate || !cardForm.cvc || !cardForm.cardholderName) {
-					setMessage("Please fill in all card details.");
-					setMessageType("warning");
-					return;
-				}
-
-				// Parse expiry date (MM/YY format)
-				const [month, year] = cardForm.expiryDate.split('/');
-				const fullYear = `20${year}`;
-
-				// Prepare payment data for API
-				const paymentData = {
-					type: "card",
-					cardNumber: cardForm.cardNumber.replace(/\s/g, ''),
-					expiryMonth: month,
-					expiryYear: fullYear,
-					cvv: cardForm.cvc,
-					holderName: cardForm.cardholderName
-				};
-
-				// Add payment method via API
-				await paymentAPI.addPaymentMethod(paymentData);
-				setMessage("Payment method added successfully!");
-				setMessageType("success");
-			} else if (selectedPaymentType === "paypal") {
-				// Add PayPal payment method
-				const paymentData = {
-					type: "paypal"
-				};
-
-				await paymentAPI.addPaymentMethod(paymentData);
-				setMessage("PayPal connected successfully!");
-				setMessageType("success");
+		if (selectedPaymentType === "card") {
+			// Validate card form
+			if (!cardForm.cardNumber || !cardForm.expiryDate || !cardForm.cvc || !cardForm.cardholderName) {
+				setMessage("Please fill in all card details");
+				setMessageType("danger");
+				return;
 			}
 
-			// Reload payment methods from server
+			// Basic card number validation (remove spaces and check length)
+			const cleanCardNumber = cardForm.cardNumber.replace(/\s/g, '');
+			if (cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
+				setMessage("Please enter a valid card number");
+				setMessageType("danger");
+				return;
+			}
+
+			// Basic expiry validation
+			const [month, year] = cardForm.expiryDate.split('/');
+			if (!month || !year || month < 1 || month > 12 || year < new Date().getFullYear() % 100) {
+				setMessage("Please enter a valid expiry date");
+				setMessageType("danger");
+				return;
+			}
+
+			// Basic CVC validation
+			if (cardForm.cvc.length < 3 || cardForm.cvc.length > 4) {
+				setMessage("Please enter a valid CVC");
+				setMessageType("danger");
+				return;
+			}
+		}
+
+		try {
+			setLoading(true);
+
+			let paymentData;
+			if (selectedPaymentType === "card") {
+				// Parse expiry date
+				const [month, year] = cardForm.expiryDate.split('/');
+				const fullYear = parseInt(year) < 50 ? 2000 + parseInt(year) : 1900 + parseInt(year);
+
+				// Determine card provider from card number
+				const cardNumber = cardForm.cardNumber.replace(/\s/g, '');
+				let provider = "Unknown";
+				if (cardNumber.startsWith('4')) provider = "Visa";
+				else if (cardNumber.startsWith('5') || cardNumber.startsWith('2')) provider = "Mastercard";
+				else if (cardNumber.startsWith('3')) provider = "American Express";
+				else if (cardNumber.startsWith('6')) provider = "Discover";
+
+				paymentData = {
+					type: "credit_card",
+					provider: provider,
+					last4: cardNumber.slice(-4),
+					expiryMonth: parseInt(month),
+					expiryYear: fullYear,
+					holderName: cardForm.cardholderName,
+					isDefault: cardForm.isDefault || paymentMethods.length === 0 // Make first payment method default
+				};
+			} else if (selectedPaymentType === "paypal") {
+				paymentData = {
+					type: "paypal",
+					provider: "PayPal",
+					paypalEmail: user.email, // Use user's email for PayPal
+					isDefault: paymentMethods.length === 0 // Make first payment method default
+				};
+			}
+
+			if (paymentData) {
+				const response = await paymentAPI.addPaymentMethod(paymentData);
+
+				if (selectedPaymentType === "card") {
+					setMessage("Credit card added successfully!");
+				} else {
+					setMessage("PayPal connected successfully!");
+				}
+				setMessageType("success");
+
+				console.log("Payment method added:", response);
+			}
+
+			// Reload payment methods from server to ensure consistency
 			await loadPaymentMethods();
 
 			// Close modal and reset form
@@ -154,10 +194,10 @@ const SubscriptionPage = () => {
 		try {
 			setLoading(true);
 			await paymentAPI.deletePaymentMethod(methodId);
-			
+
 			// Reload payment methods from server
 			await loadPaymentMethods();
-			
+
 			setMessage("Payment method removed successfully!");
 			setMessageType("info");
 		} catch (error) {
@@ -213,7 +253,7 @@ const SubscriptionPage = () => {
 				},
 			});
 			updatePageMeta(pageMetaData.subscription.title, pageMetaData.subscription.description);
-			
+
 			// Load payment methods
 			loadPaymentMethods();
 		}
@@ -281,11 +321,11 @@ const SubscriptionPage = () => {
 
 		try {
 			setLoading(true);
-			
+
 			if (planId !== "free") {
 				// Find default payment method
 				const defaultPaymentMethod = paymentMethods.find(method => method.isDefault) || paymentMethods[0];
-				
+
 				if (!defaultPaymentMethod) {
 					setMessage("Please add a payment method before upgrading to a paid plan.");
 					setMessageType("warning");
@@ -301,7 +341,7 @@ const SubscriptionPage = () => {
 
 				setMessage(`Successfully upgraded to ${planId} plan!`);
 				setMessageType("success");
-				
+
 				// Update local state with response data
 				setSubscription((prev) => ({
 					...prev,
@@ -321,10 +361,10 @@ const SubscriptionPage = () => {
 						nextBillingDate: null
 					},
 				});
-				
+
 				setMessage("Successfully downgraded to free plan!");
 				setMessageType("success");
-				
+
 				// Update local state
 				setSubscription((prev) => ({
 					...prev,
@@ -627,7 +667,7 @@ const SubscriptionPage = () => {
 													<>
 														<h6 className="mb-0">**** **** **** {method.last4}</h6>
 														<small className="text-muted">
-															{method.brand} • Expires {method.expiryMonth}/{method.expiryYear}
+															{method.provider} • Expires {method.expiryMonth}/{method.expiryYear}
 														</small>
 													</>
 												)}
