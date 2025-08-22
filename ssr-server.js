@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
+import cors from "cors";
 
 // Get the directory name from the file URL
 const __filename = fileURLToPath(import.meta.url);
@@ -12,6 +13,31 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Configure CORS
+const corsOptions = {
+  origin: [
+    'https://dopp.eu.org',
+    'https://www.dopp.eu.org',
+    'https://api.dopp.eu.org',
+    /\.replit\.dev$/,
+    /\.replit\.app$/,
+    process.env.FRONTEND_URL
+  ].filter(Boolean),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Cache-Control',
+    'Pragma'
+  ]
+};
+
+app.use(cors(corsOptions));
 
 // Load the HTML template
 const template = fs.readFileSync(path.resolve("./build/index.html"), "utf-8");
