@@ -44,8 +44,8 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run build"
+args = "node proxy-server.js &"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node proxy-server.js"
+args = "npm start"

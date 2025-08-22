@@ -6,13 +6,23 @@ import axios from "axios";
 // Always use proxy for both development and production
 const isUsingProxy = true;
 
-// API Configuration with failover support
-const API_ENDPOINTS = (window.location.hostname.includes('replit.dev') ||
-   window.location.hostname.includes('replit.co') ||
-   window.location.hostname.includes('replit.app') ||
-   window.location.hostname === 'localhost')
-  ? [`${window.location.protocol}//${window.location.hostname}:5000`, 'https://api.dopp.eu.org']
-  : [''];
+// Determine API endpoints based on environment
+const API_ENDPOINTS = (() => {
+	if (process.env.NODE_ENV === "production") {
+		// In production, use HTTPS URLs only
+		const currentDomain = window.location.origin;
+		return [
+			currentDomain + ":5000", // Use current domain with port 5000
+			"https://api.dopp.eu.org"
+		];
+	} else {
+		// In development, prefer local proxy, fallback to external
+		return [
+			`${window.location.protocol}//${window.location.hostname}:5000`,
+			"https://api.dopp.eu.org"
+		];
+	}
+})();
 
 // Current active API base URL
 let API_BASE_URL = API_ENDPOINTS[0];
@@ -339,6 +349,37 @@ export const sanitizeInput = (input) => {
 	if (typeof input !== "string") return "";
 	return input.trim().replace(/[<>'"]/g, "");
 };
+
+function validateAPIUrl(url) {
+	if (!url || url.trim() === "") {
+		console.log("API URL cannot be empty");
+		return false;
+	}
+
+	try {
+		const urlObj = new URL(url);
+
+		// Allow HTTPS or HTTP for localhost/development
+		const isSecure = urlObj.protocol === "https:" ||
+			(urlObj.protocol === "http:" &&
+			 (urlObj.hostname === "localhost" ||
+			  urlObj.hostname.includes("replit.dev") ||
+			  urlObj.hostname.includes("127.0.0.1")));
+
+		const isValidDomain = urlObj.hostname && urlObj.hostname.length > 0;
+
+		if (!isSecure || !isValidDomain) {
+			console.log("API URL must use HTTPS (or HTTP for localhost/dev)");
+			return false;
+		}
+
+		return true;
+	} catch (error) {
+		console.log("Invalid API URL format:", error.message);
+		return false;
+	}
+}
+
 
 export const testApiConnection = async () => {
 	try {
