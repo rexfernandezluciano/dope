@@ -233,7 +233,7 @@ class HttpClient {
 const httpClient = new HttpClient();
 
 // Main API request function
-export const apiRequest = async (endpoint, options = {}) => {
+export constapiRequest = async (endpoint, options = {}) => {
 	try {
 		const response = await httpClient.requestWithFailover(endpoint, options);
 
@@ -498,23 +498,15 @@ export const userAPI = {
 		});
 	},
 
-	updateProfile: async (userData) => {
-		return await apiRequest("/users/profile", {
+	updateProfile: async (profileData) => {
+		return await apiRequest("/user/profile", {
 			method: "PUT",
-			data: userData,
+			data: profileData,
 		});
 	},
 
-	getUser: async () => {
-		return await apiRequest("/auth/me", {
-			method: "GET",
-		});
-	},
-
-	getUserById: async (userId) => {
-		return await apiRequest(`/users/${userId}`, {
-			method: "GET",
-		});
+	getUserById: async (uid) => {
+		return await apiRequest(`/users/${uid}`);
 	},
 
 	followUser: async (username) => {
@@ -1178,6 +1170,7 @@ export const api = {
 	// Users
 	getUser: userAPI.getUser,
 	updateProfile: userAPI.updateProfile,
+	getUserById: userAPI.getUserById,
 	getWaitingList: userAPI.getWaitingList,
 	joinWaitingList: userAPI.joinWaitingList,
 

@@ -1,7 +1,47 @@
 
 /** @format */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { userAPI } from '../config/ApiConfig';
+
+// Component to resolve mention UIDs to display names
+const MentionComponent = ({ uid, onMentionClick }) => {
+	const [displayName, setDisplayName] = useState(`@${uid}`);
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		const fetchUserData = async () => {
+			try {
+				const userData = await userAPI.getUserById(uid);
+				setDisplayName(`@${userData.name || userData.displayName || uid}`);
+			} catch (error) {
+				console.error('Failed to resolve mention:', error);
+				// Keep the uid as fallback
+				setDisplayName(`@${uid}`);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		if (uid) {
+			fetchUserData();
+		}
+	}, [uid]);
+
+	return (
+		<span
+			className="text-info fw-bold"
+			style={{ cursor: 'pointer' }}
+			onClick={(e) => {
+				e.stopPropagation();
+				onMentionClick(uid);
+			}}
+			title={`User ID: ${uid}`}
+		>
+			{loading ? `@${uid}` : displayName}
+		</span>
+	);
+};
 
 /**
  * Parse text content to handle line breaks, hashtags, mentions, and links
@@ -90,19 +130,14 @@ const parseLineContent = (line, handlers) => {
 				</span>
 			);
 		} else if (matchedText.startsWith('@')) {
-			// Mention
+			// Mention - resolve uid to display name
+			const uid = matchedText.substring(1);
 			elements.push(
-				<span
+				<MentionComponent
 					key={`mention-${match.index}`}
-					className="text-info fw-bold"
-					style={{ cursor: 'pointer' }}
-					onClick={(e) => {
-						e.stopPropagation();
-						handlers.onMentionClick(matchedText.substring(1));
-					}}
-				>
-					{matchedText}
-				</span>
+					uid={uid}
+					onMentionClick={handlers.onMentionClick}
+				/>
 			);
 		} else if (matchedText.startsWith('http')) {
 			// URL
