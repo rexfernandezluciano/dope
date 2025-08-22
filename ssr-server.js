@@ -310,7 +310,7 @@ app.get("*", async (req, res) => {
     }
 
     const htmlWithMeta = injectMetaTags(template, metaData, url);
-    res.sendFile(__dirname + "/build/index.html");
+    res.send(htmlWithMeta);
   } catch (error) {
     console.error("SSR Error:", error);
     res.send(template);
