@@ -14,12 +14,21 @@ const API_ENDPOINTS = (() => {
 		const hostname = window.location.hostname;
 		const port = window.location.port;
 		
-		// For Replit environments, always use the current domain as-is
+		// For Replit environments, construct URL carefully to avoid double ports
 		if (hostname.includes('replit.dev') || hostname.includes('replit.app') || hostname.includes('replit.co')) {
-			return [
-				currentDomain, // Use current domain exactly as-is for Replit
-				"https://api.dopp.eu.org"
-			];
+			// If we're already on port 5000, use current domain as-is
+			if (port === '5000') {
+				return [
+					currentDomain,
+					"https://api.dopp.eu.org"
+				];
+			} else {
+				// If not on port 5000, construct URL with port 5000
+				return [
+					`${window.location.protocol}//${hostname}:5000`,
+					"https://api.dopp.eu.org"
+				];
+			}
 		}
 		
 		// For other production environments, check if we need to add port 5000
