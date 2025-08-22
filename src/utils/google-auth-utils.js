@@ -16,7 +16,8 @@ const getApiBaseUrl = () => {
 export const initializeGoogleOAuth = (type = 'login') => {
 	return new Promise((resolve, reject) => {
 		const apiBaseUrl = getApiBaseUrl();
-		const authUrl = `${apiBaseUrl}/auth/google?type=${type}`;
+		const frontendCallbackUrl = `${window.location.origin}/auth/google/callback`;
+		const authUrl = `${apiBaseUrl}/auth/google?type=${type}&redirect_uri=${encodeURIComponent(frontendCallbackUrl)}`;
 
 		// Popup window dimensions
 		const width = 500;
