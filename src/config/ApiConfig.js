@@ -7,8 +7,7 @@ import axios from "axios";
 const isUsingProxy = true;
 
 // API Configuration with failover support
-const API_ENDPOINTS = process.env.NODE_ENV === 'development' &&
-  (window.location.hostname.includes('replit.dev') ||
+const API_ENDPOINTS = (window.location.hostname.includes('replit.dev') ||
    window.location.hostname.includes('replit.co') ||
    window.location.hostname.includes('replit.app') ||
    window.location.hostname === 'localhost')
