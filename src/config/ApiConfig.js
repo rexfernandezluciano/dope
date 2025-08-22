@@ -13,11 +13,11 @@ const isUsingProxy =
 const API_ENDPOINTS = isUsingProxy
 	? [
 			"/v1", // Use proxy in development
-			"https://social.dopp.eu.org/v1",
+			"https://api.dopp.eu.org/v1",
 		]
 	: [
-			process.env.REACT_APP_API_URL || "https://social.dopp.eu.org/v1",
-			"https://social.dopp.eu.org/v1",
+			process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1",
+			"https://api.dopp.eu.org/v1",
 		];
 
 // Current active API base URL

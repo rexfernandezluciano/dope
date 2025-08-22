@@ -7,8 +7,7 @@ const EndpointStatus = () => {
   const [checking, setChecking] = useState(false);
 
   const API_ENDPOINTS = [
-    'https://api.dopp.eu.org/v1',
-    'https://social.dopp.eu.org/v1'
+    'https://api.dopp.eu.org/v1'
   ];
 
   const checkEndpointStatus = async (endpoint) => {

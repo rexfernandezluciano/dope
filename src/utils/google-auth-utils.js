@@ -64,6 +64,7 @@ class GoogleAuthObserver {
 			const allowedOrigins = [
 				window.location.origin,
 				'https://api.dopp.eu.org',
+				'https://accounts.google.com',
 				apiBaseUrl.startsWith('http') ? new URL(apiBaseUrl).origin : window.location.origin
 			];
 
