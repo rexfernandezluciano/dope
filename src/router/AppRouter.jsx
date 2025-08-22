@@ -5,12 +5,23 @@ import { useEffect, lazy, Suspense } from "react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 
+import RequireAuth from "./security/RequireAuth";
+import { IndexPageLoader } from "./loader/IndexPageLoader";
+import { SecurityProvider } from "../components/SecurityProvider";
+import ErrorBoundary from "../components/ErrorBoundary";
+
+import NavigationView from "../components/navs/NavigationView";
+
+import LoadingView from "../components/LoadingView";
+
 // Lazy load route components for better performance
 const StartPage = lazy(() => import("../pages/StartPage"));
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
 const SignUpPage = lazy(() => import("../pages/auth/SignUpPage"));
 const VerifyEmailPage = lazy(() => import("../pages/auth/VerifyEmailPage"));
-const GoogleCallbackPage = lazy(() => import("../pages/auth/GoogleCallbackPage"));
+const GoogleCallbackPage = lazy(
+	() => import("../pages/auth/GoogleCallbackPage"),
+);
 const IndexPage = lazy(() => import("../pages/IndexPage"));
 const HomePage = lazy(() => import("../pages/HomePage"));
 const PostDetailPage = lazy(() => import("../pages/PostDetailPage"));
@@ -23,17 +34,6 @@ const LiveStreamPage = lazy(() => import("../pages/LiveStreamPage"));
 const PrivacyPolicyPage = lazy(() => import("../pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("../pages/TermsOfServicePage"));
 const NetworkTestPage = lazy(() => import("../pages/NetworkTestPage"));
-const PrivacySettingsPage = lazy(() => import("../pages/settings/PrivacySettingsPage"));
-const SessionSettingsPage = lazy(() => import("../pages/settings/SessionSettingsPage"));
-
-import RequireAuth from "./security/RequireAuth";
-import { IndexPageLoader } from "./loader/IndexPageLoader";
-import { SecurityProvider } from "../components/SecurityProvider";
-import ErrorBoundary from "../components/ErrorBoundary";
-
-import NavigationView from "../components/navs/NavigationView";
-
-import LoadingView from "../components/LoadingView";
 
 const router = createBrowserRouter([
 	{
@@ -226,7 +226,7 @@ const AppRouter = () => {
 		NProgress.configure({
 			showSpinner: false,
 			speed: 500,
-			minimum: 0.3
+			minimum: 0.3,
 		});
 
 		// Handle browser navigation (back/forward buttons)
@@ -235,10 +235,10 @@ const AppRouter = () => {
 		};
 
 		// Add event listener for browser navigation
-		window.addEventListener('popstate', handlePopState);
+		window.addEventListener("popstate", handlePopState);
 
 		return () => {
-			window.removeEventListener('popstate', handlePopState);
+			window.removeEventListener("popstate", handlePopState);
 		};
 	}, []);
 

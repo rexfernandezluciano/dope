@@ -13,7 +13,7 @@ const API_ENDPOINTS = process.env.NODE_ENV === 'development' &&
    window.location.hostname.includes('replit.app') ||
    window.location.hostname === 'localhost')
   ? ['', 'https://api.dopp.eu.org']
-  : ['https://social.dopp.eu.org', 'https://api.dopp.eu.org'];
+  : ['https://api.dopp.eu.org'];
 
 // Current active API base URL
 let API_BASE_URL = API_ENDPOINTS[0];
