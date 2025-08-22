@@ -110,9 +110,9 @@ const MentionDropdown = ({
               active={index === selectedIndex}
               onClick={() => onSelect({
                 ...user,
-                uid: user.uid || user.id, // Ensure uid is available
-                username: user.username || user.uid, // Keep username for display
-                name: user.name || user.displayName || 'Unknown User'
+                uid: user.uid,
+                username: user.username,
+                name: user.name || 'Unknown User'
               })}
               className="d-flex align-items-center gap-2 py-2"
               style={{ cursor: 'pointer' }}

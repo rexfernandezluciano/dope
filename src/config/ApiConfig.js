@@ -493,7 +493,7 @@ export const authAPI = {
 // User API
 export const userAPI = {
 	getProfile: async (username) => {
-		return await apiRequest(`/users/profile/${username}`, {
+		return await apiRequest(`/auth/me`, {
 			method: "GET",
 		});
 	},
@@ -724,7 +724,7 @@ export const postAPI = {
 	},
 
 	trackView: async (postId) => {
-		return await apiRequest(`/posts/${postId}/views`, {
+		return await apiRequest(`/posts/${postId}/view`, {
 			method: "POST",
 		});
 	},
