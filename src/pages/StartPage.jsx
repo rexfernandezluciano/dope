@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Container, Row, Col, Button, Card, Image, Spinner } from "react-bootstrap";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
-import { getUser } from "../utils/auth-utils";
+import { getUser } from "../utils/app-utils";
 import socialNetIllustration from "../assets/images/undraw_social-networking_v4z1.svg";
 
 const StartPage = () => {

@@ -1,12 +1,6 @@
 /** @format */
 
-import { getUser as currentUser } from './app-utils.js';
-
-/**
- * Get current authenticated user (alias for app-utils getUser)
- * @returns {Promise<Object|null>} User object or null
- */
-export const getUser = currentUser;
+import { getUser } from './app-utils.js';
 
 /**
  * Check if user is authenticated

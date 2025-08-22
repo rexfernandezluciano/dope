@@ -16,66 +16,6 @@ import { setupCSP } from "./utils/security-utils.js";
 import "animate.css";
 import "./assets/css/app.css";
 
-// Disable React error overlay completely
-if (typeof window !== 'undefined') {
-  // Override error overlay hooks
-  window.__REACT_ERROR_OVERLAY_GLOBAL_HOOK__ = {
-    isFiberMounted: () => false,
-    onCommitFiberRoot: () => {},
-    onCommitFiberUnmount: () => {},
-  };
-
-  // Handle errors more gracefully instead of suppressing
-  window.addEventListener('error', (e) => {
-    // Only suppress development overlay errors, log actual errors
-    if (e.message && (
-      e.message.includes('React Error Overlay') ||
-      e.message.includes('webpack-dev-server')
-    )) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      return false;
-    }
-    console.error('Application error:', e.error);
-  }, true);
-  
-  window.addEventListener('unhandledrejection', (e) => {
-    console.error('Unhandled promise rejection:', e.reason);
-    // Don't prevent default for actual promise rejections
-  }, true);
-
-  // Override console methods to hide warnings in development
-  if (process.env.NODE_ENV === 'development') {
-    const originalError = console.error;
-    const originalWarn = console.warn;
-    
-    console.error = (...args) => {
-      const message = args[0];
-      if (typeof message === 'string' && (
-        message.includes('Warning:') ||
-        message.includes('React Error Overlay') ||
-        message.includes('webpack-dev-server') ||
-        message.includes('Download the React DevTools')
-      )) {
-        return;
-      }
-      originalError(...args);
-    };
-    
-    console.warn = (...args) => {
-      const message = args[0];
-      if (typeof message === 'string' && (
-        message.includes('Warning:') ||
-        message.includes('React Error Overlay') ||
-        message.includes('validateDOMNesting')
-      )) {
-        return;
-      }
-      originalWarn(...args);
-    };
-  }
-}
-
 // Setup Content Security Policy
 setupCSP();
 

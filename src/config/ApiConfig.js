@@ -6,49 +6,17 @@ import axios from "axios";
 // Always use proxy for both development and production
 const isUsingProxy = true;
 
-// Cache API endpoints to prevent recalculation on multiple imports
-const getAPIEndpoints = (() => {
-	let cached = null;
-	
-	return () => {
-		if (cached) return cached;
-		
-		if (process.env.NODE_ENV === "production") {
-			// In production, use HTTPS URLs only
-			const currentDomain = window.location.origin;
-			const hostname = window.location.hostname;
-			const port = window.location.port;
-			
-			// For Replit environments, always use current domain with port 5000 if needed
-			if (hostname.includes('replit.dev') || hostname.includes('replit.app') || hostname.includes('replit.co')) {
-				// For Replit, always use the SSR server on port 5000
-				cached = [
-					`${window.location.protocol}//${hostname}:5000`,
-					"https://api.dopp.eu.org"
-				];
-			} else {
-				// For other production environments
-				cached = [
-					port === '5000' || currentDomain.includes(':5000') ? currentDomain : currentDomain + ":5000",
-					"https://api.dopp.eu.org"
-				];
-			}
-		} else {
-			// In development, prefer local proxy, fallback to external
-			cached = [
-				`${window.location.protocol}//${window.location.hostname}:5000`,
-				"https://api.dopp.eu.org"
-			];
-		}
-		
-		return cached;
-	};
-})();
-
-const API_ENDPOINTS = getAPIEndpoints();
+// API Configuration with failover support
+const API_ENDPOINTS =
+	window.location.hostname.includes("replit.dev") ||
+	window.location.hostname.includes("replit.co") ||
+	window.location.hostname.includes("replit.app") ||
+	window.location.hostname === "localhost"
+		? ["", "https://api.dopp.eu.org"]
+		: [""];
 
 // Current active API base URL
-let API_BASE_URL = '';
+let API_BASE_URL = API_ENDPOINTS[0];
 
 // Debug logging for production network issues
 console.log("🔍 API Configuration Debug:", {
@@ -56,11 +24,11 @@ console.log("🔍 API Configuration Debug:", {
 	hostname: window.location.hostname,
 	isUsingProxy,
 	API_ENDPOINTS,
-	currentAPIUrl: API_ENDPOINTS[0]
+	currentAPIUrl: API_ENDPOINTS[0],
 });
 
 // Validate API URL is HTTPS (skip validation for proxy URLs and empty strings)
-if (API_BASE_URL && API_BASE_URL !== "" && !API_BASE_URL.startsWith("https://") && !API_BASE_URL.startsWith("/")) {
+if (API_BASE_URL && API_BASE_URL !== "" && validateAPIUrl(API_BASE_URL)) {
 	console.warn("⚠️ API URL should use HTTPS for security");
 }
 
@@ -132,23 +100,25 @@ class HttpClient {
 
 	async makeRequest(endpoint, options = {}) {
 		// Add /v1 prefix if not already present
-		const normalizedEndpoint = endpoint.startsWith('/v1') ? endpoint : `/v1${endpoint}`;
+		const normalizedEndpoint = endpoint.startsWith("/v1")
+			? endpoint
+			: `/v1${endpoint}`;
 		const url = `${this.currentBaseURL}${normalizedEndpoint}`;
 
-		console.log('🚀 Making axios request:', {
+		console.log("🚀 Making axios request:", {
 			url,
-			method: options.method || 'GET',
+			method: options.method || "GET",
 			hasData: !!options.data,
-			timestamp: new Date().toISOString()
+			timestamp: new Date().toISOString(),
 		});
 
 		try {
 			const response = await apiClient({
 				url,
-				method: options.method || 'GET',
+				method: options.method || "GET",
 				data: options.data,
 				headers: {
-					'Content-Type': 'application/json',
+					"Content-Type": "application/json",
 					...options.headers,
 				},
 				withCredentials: true,
@@ -172,7 +142,7 @@ class HttpClient {
 		} catch (error) {
 			console.log("💥 Axios request failed:", {
 				url,
-				method: options.method || 'GET',
+				method: options.method || "GET",
 				error: error.name,
 				message: error.message,
 				status: error.response?.status,
@@ -183,8 +153,8 @@ class HttpClient {
 					baseURL: error.config?.baseURL,
 					url: error.config?.url,
 					method: error.config?.method,
-					headers: error.config?.headers
-				}
+					headers: error.config?.headers,
+				},
 			});
 
 			if (error.response) {
@@ -192,15 +162,16 @@ class HttpClient {
 				let errorMsg;
 
 				if (error.response.status === 405) {
-					errorMsg = `Method ${options.method || 'GET'} not allowed for ${endpoint}. Check if the endpoint supports this HTTP method.`;
+					errorMsg = `Method ${options.method || "GET"} not allowed for ${endpoint}. Check if the endpoint supports this HTTP method.`;
 					console.log("🚨 405 Method Not Allowed Details:", {
-						requestedMethod: options.method || 'GET',
+						requestedMethod: options.method || "GET",
 						endpoint,
-						allowedMethods: error.response.headers?.allow || 'Not specified',
-						url: error.config?.url
+						allowedMethods: error.response.headers?.allow || "Not specified",
+						url: error.config?.url,
 					});
 				} else {
-					errorMsg = error.response.data?.message ||
+					errorMsg =
+						error.response.data?.message ||
 						error.response.statusText ||
 						`Server error (${error.response.status})`;
 				}
@@ -208,7 +179,7 @@ class HttpClient {
 				console.log("🚨 Server Error Details:", {
 					status: error.response.status,
 					headers: error.response.headers,
-					data: error.response.data
+					data: error.response.data,
 				});
 				throw new Error(errorMsg);
 			} else if (error.request) {
@@ -217,7 +188,7 @@ class HttpClient {
 					request: error.request,
 					readyState: error.request.readyState,
 					status: error.request.status,
-					responseURL: error.request.responseURL
+					responseURL: error.request.responseURL,
 				});
 				throw new Error(
 					`Network connectivity issue: Unable to reach ${url}. Please check your internet connection and try again.`,
@@ -383,11 +354,12 @@ function validateAPIUrl(url) {
 		const urlObj = new URL(url);
 
 		// Allow HTTPS or HTTP for localhost/development
-		const isSecure = urlObj.protocol === "https:" ||
+		const isSecure =
+			urlObj.protocol === "https:" ||
 			(urlObj.protocol === "http:" &&
-			 (urlObj.hostname === "localhost" ||
-			  urlObj.hostname.includes("replit.dev") ||
-			  urlObj.hostname.includes("127.0.0.1")));
+				(urlObj.hostname === "localhost" ||
+					urlObj.hostname.includes("replit.dev") ||
+					urlObj.hostname.includes("127.0.0.1")));
 
 		const isValidDomain = urlObj.hostname && urlObj.hostname.length > 0;
 
@@ -403,7 +375,6 @@ function validateAPIUrl(url) {
 	}
 }
 
-
 export const testApiConnection = async () => {
 	try {
 		console.log("🔍 Testing API connection to:", API_BASE_URL);
@@ -414,9 +385,9 @@ export const testApiConnection = async () => {
 			method: "GET",
 			signal: controller.signal,
 			headers: {
-				'Accept': 'application/json',
-				'Content-Type': 'application/json'
-			}
+				Accept: "application/json",
+				"Content-Type": "application/json",
+			},
 		});
 
 		clearTimeout(timeoutId);
@@ -426,7 +397,7 @@ export const testApiConnection = async () => {
 			status: response.status,
 			statusText: response.statusText,
 			url: response.url,
-			headers: Object.fromEntries(response.headers.entries())
+			headers: Object.fromEntries(response.headers.entries()),
 		});
 
 		return response.ok;
@@ -434,17 +405,17 @@ export const testApiConnection = async () => {
 		console.error("❌ API connection test failed:", {
 			name: error.name,
 			message: error.message,
-			stack: error.stack
+			stack: error.stack,
 		});
 
 		// Test with a simple CORS preflight to diagnose CORS issues
 		try {
 			await fetch(`${API_BASE_URL}/health`, {
-				method: 'OPTIONS',
+				method: "OPTIONS",
 				headers: {
-					'Access-Control-Request-Method': 'GET',
-					'Access-Control-Request-Headers': 'Content-Type'
-				}
+					"Access-Control-Request-Method": "GET",
+					"Access-Control-Request-Headers": "Content-Type",
+				},
 			});
 			console.log("✅ CORS preflight check passed");
 		} catch (corsError) {
@@ -535,7 +506,7 @@ export const userAPI = {
 	},
 
 	getUser: async () => {
-		return await apiRequest("/users/me", {
+		return await apiRequest("/auth/me", {
 			method: "GET",
 		});
 	},
@@ -725,16 +696,22 @@ export const postAPI = {
 
 	getFollowingFeed: async (params = {}) => {
 		const queryParams = new URLSearchParams(params).toString();
-		return await apiRequest(`/posts/feed/following${queryParams ? `?${queryParams}` : ""}`, {
-			method: "GET",
-		});
+		return await apiRequest(
+			`/posts/feed/following${queryParams ? `?${queryParams}` : ""}`,
+			{
+				method: "GET",
+			},
+		);
 	},
 
 	getCurrentUserPosts: async (params = {}) => {
 		const queryParams = new URLSearchParams(params).toString();
-		return await apiRequest(`/posts/user/me${queryParams ? `?${queryParams}` : ""}`, {
-			method: "GET",
-		});
+		return await apiRequest(
+			`/posts/user/me${queryParams ? `?${queryParams}` : ""}`,
+			{
+				method: "GET",
+			},
+		);
 	},
 
 	// New endpoints from API documentation
@@ -1177,8 +1154,10 @@ export const api = {
 	resetPassword: authAPI.resetPassword,
 
 	// Google OAuth endpoints
-	googleLogin: (googleData) => apiRequest('/auth/google', { method: 'POST', data: googleData }),
-	googleSignup: (googleData) => apiRequest('/auth/google', { method: 'POST', data: googleData }),
+	googleLogin: (googleData) =>
+		apiRequest("/auth/google", { method: "POST", data: googleData }),
+	googleSignup: (googleData) =>
+		apiRequest("/auth/google", { method: "POST", data: googleData }),
 
 	// Posts
 	getPosts: postAPI.getPosts,

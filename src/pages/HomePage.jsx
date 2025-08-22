@@ -30,7 +30,7 @@ import {
 	setupMessageListener,
 } from "../utils/messaging-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
-import { getUser } from "../utils/auth-utils";
+import { getUser } from "../utils/app-utils";
 import { extractHashtags, extractMentions } from "../utils/dope-api-utils";
 import { useNavigate } from "react-router-dom";
 

@@ -38,7 +38,7 @@ import {
 	setupNotificationListener,
 	getUnreadNotificationCount,
 } from "../../utils/messaging-utils";
-import { getUser } from "../../utils/auth-utils";
+import { getUser } from "../../utils/app-utils";
 
 import logo from "../../assets/images/dope.png";
 import AlertDialog from "../dialogs/AlertDialog";

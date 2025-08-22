@@ -12,21 +12,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Force production mode for SSR
-process.env.NODE_ENV = 'production';
+process.env.NODE_ENV = "production";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Configure CORS
 const corsOptions = {
-  origin: [
-    "https://dopp.eu.org",
-    "https://www.dopp.eu.org",
-    "https://api.dopp.eu.org",
-    /\.replit\.dev$/,
-    /\.replit\.app$/,
-    process.env.FRONTEND_URL,
-  ].filter(Boolean),
+  origin: true,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [
@@ -38,9 +31,26 @@ const corsOptions = {
     "Cache-Control",
     "Pragma",
   ],
+  headers: ["Server: DOPE Network SSR"],
 };
 
 app.use(cors(corsOptions));
+
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, X-Requested-With, X-CSRF-Token",
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Max-Age", "86400");
+  res.header("Server", "DOPE Network SSR");
+  res.sendStatus(200);
+});
 
 // Load the HTML template
 const template = fs.readFileSync(path.resolve("./build/index.html"), "utf-8");
@@ -159,7 +169,7 @@ const getMetaData = (url, params = {}) => {
       keywords: "verify, email verification, account setup, DOPE Network",
       ogImage: "/logo512.png",
     },
-    "/auth/callback": {
+    "/auth/google/callback": {
       title: "Authentication - DOPE Network",
       description: "Completing authentication process for DOPE Network.",
       keywords: "authentication, oauth, callback, DOPE Network",
@@ -212,7 +222,7 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     service: "dope-network-ssr",
     version: "1.0.0",
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 
@@ -220,12 +230,12 @@ app.get("/health", (req, res) => {
 app.use(
   "/v1",
   createProxyMiddleware({
-    target: "https://api.dopp.eu.org",
+    target: "https://api.dopp.eu.org/v1",
     changeOrigin: true,
     secure: true,
     followRedirects: true,
     pathRewrite: {
-      '^/v1': '/v1', // Keep the /v1 prefix
+      "^/v1": "/v1", // Keep the /v1 prefix
     },
     onProxyReq: (proxyReq, req, res) => {
       console.log(
@@ -249,12 +259,20 @@ app.get("*", async (req, res) => {
 
   try {
     // Handle dynamic routes with proper error handling
-    if (url.startsWith("/") && url.length > 1 && !url.startsWith("/auth") && !url.startsWith("/post") && !url.startsWith("/search")) {
+    if (
+      url.startsWith("/") &&
+      url.length > 1 &&
+      !url.startsWith("/auth") &&
+      !url.startsWith("/post") &&
+      !url.startsWith("/search")
+    ) {
       const username = url.split("/")[1];
       if (username && username.length > 0) {
         try {
           // Use the proxy endpoint instead of direct API call
-          const response = await fetch(`http://localhost:${PORT}/v1/users/${username}`);
+          const response = await fetch(
+            `http://localhost:${PORT}/v1/users/${username}`,
+          );
           if (response.ok) {
             const userData = await response.json();
             if (userData?.user) {
@@ -281,13 +299,15 @@ app.get("*", async (req, res) => {
       if (postId && postId.length > 0) {
         try {
           // Use the proxy endpoint instead of direct API call
-          const response = await fetch(`http://localhost:${PORT}/v1/posts/${postId}`);
+          const response = await fetch(
+            `http://localhost:${PORT}/v1/posts/${postId}`,
+          );
           if (response.ok) {
             const postData = await response.json();
             if (postData?.post) {
-              metaData = getMetaData("/post", { 
+              metaData = getMetaData("/post", {
                 content: postData.post.content,
-                image: postData.post.image 
+                image: postData.post.image,
               });
             } else {
               metaData = getMetaData("/post");

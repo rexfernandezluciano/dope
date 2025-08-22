@@ -8,7 +8,6 @@ import "nprogress/nprogress.css";
 import RequireAuth from "./security/RequireAuth.jsx";
 import { IndexPageLoader } from "./loader/IndexPageLoader.js";
 import { SecurityProvider } from "../components/SecurityProvider.jsx";
-import ErrorBoundary from "../components/ErrorBoundary.jsx";
 
 import NavigationView from "../components/navs/NavigationView";
 
@@ -243,13 +242,11 @@ const AppRouter = () => {
 	}, []);
 
 	return (
-		<ErrorBoundary>
-			<SecurityProvider>
-				<Suspense fallback={<LoadingView />}>
-					<RouterProvider router={router} />
-				</Suspense>
-			</SecurityProvider>
-		</ErrorBoundary>
+		<SecurityProvider>
+			<Suspense fallback={<LoadingView />}>
+				<RouterProvider router={router} />
+			</Suspense>
+		</SecurityProvider>
 	);
 };
 
