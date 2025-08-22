@@ -59,11 +59,12 @@
 		"@testing-library/user-event": "^13.5.0"
 	},
 	"scripts": {
-		"start": "react-scripts start",
+		"start": "node proxy-server.js",
 		"build": "react-scripts build",
 		"test": "react-scripts test",
 		"eject": "react-scripts eject"
 	},
+	"postinstall": "react-scripts build",
 	"eslintConfig": {
 		"extends": [
 			"react-app",
@@ -82,5 +83,5 @@
 			"last 1 safari version"
 		]
 	},
-	"proxy": "https://api.dopp.eu.org"
+	"proxy": "https://api.dopp.eu.org/v1"
 }
