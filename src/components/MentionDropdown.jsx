@@ -25,7 +25,7 @@ const MentionDropdown = ({
     try {
       setLoading(true);
       const response = await searchAPI.searchUsers(searchQuery, { limit: 5 });
-      setUsers(response.users || []);
+      setUsers(response?.users || []);
       setSelectedIndex(0);
     } catch (error) {
       console.error('Failed to search users:', error);

@@ -518,10 +518,12 @@ export const userAPI = {
 		});
 	},
 
-	searchUsers: async (query) => {
-		return await apiRequest(`/users/search?q=${encodeURIComponent(query)}`, {
-			method: "GET",
+	searchUsers: async (query, params = {}) => {
+		const searchParams = new URLSearchParams({
+			q: query, // Use 'q' parameter instead of 'query'
+			...params,
 		});
+		return await apiRequest(`/search/users?${searchParams.toString()}`);
 	},
 
 	updateSettings: async (settings) => {
@@ -929,7 +931,7 @@ export const searchAPI = {
 
 	searchUsers: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
-			query,
+			q: query, // Use 'q' parameter instead of 'query'
 			...params,
 		});
 		return await apiRequest(`/search/users?${searchParams.toString()}`);
@@ -1111,8 +1113,8 @@ export const api = {
 	resetPassword: authAPI.resetPassword,
 
 	// Google OAuth endpoints
-	googleLogin: (googleData) => apiRequest('/auth/google/login', { method: 'POST', data: googleData }),
-	googleSignup: (googleData) => apiRequest('/auth/google/signup', { method: 'POST', data: googleData }),
+	googleLogin: (googleData) => apiRequest('/auth/google', { method: 'POST', data: googleData }),
+	googleSignup: (googleData) => apiRequest('/auth/google', { method: 'POST', data: googleData }),
 
 	// Posts
 	getPosts: postAPI.getPosts,
