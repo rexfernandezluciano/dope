@@ -1,6 +1,5 @@
 
-const { execSync } = require('child_process');
-const fs = require('fs');
+const { execSync } = import('child_process');
 
 // Install webpack-bundle-analyzer if not present
 try {

@@ -4,7 +4,7 @@
 // PayPal Configuration
 export const paypalConfig = {
   // Replace with your actual PayPal Client ID
-  clientId: process.env.REACT_APP_PAYPAL_CLIENT_ID || "YOUR_PAYPAL_CLIENT_ID",
+  clientId: process.env.REACT_APP_PAYPAL_CLIENT_ID || "AYv5Ao5cq7A49Hd19TSrw59YEiPboazIE7WXrmLkpklVCmsgQmartssMsFap9XI7lM6LOnjMHgux2nJR",
   
   // PayPal environment (sandbox for testing, production for live)
   environment: process.env.REACT_APP_PAYPAL_ENVIRONMENT || "sandbox",
