@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ListGroup, Image, Spinner } from 'react-bootstrap';
 import { CheckCircleFill } from 'react-bootstrap-icons';
-import { searchAPI } from '../config/ApiConfig';
+import { searchAPI } from '../config/ApiConfig.js';
 
 const MentionDropdown = ({ 
   show, 

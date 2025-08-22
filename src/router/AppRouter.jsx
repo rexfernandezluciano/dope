@@ -6,7 +6,7 @@ import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 
 import RequireAuth from "./security/RequireAuth";
-import { IndexPageLoader } from "./loader/IndexPageLoader";
+import { IndexPageLoader } from "./loader/IndexPageLoader.js";
 import { SecurityProvider } from "../components/SecurityProvider";
 import ErrorBoundary from "../components/ErrorBoundary";
 

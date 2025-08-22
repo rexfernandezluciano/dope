@@ -6,7 +6,7 @@ import { useLoaderData } from "react-router-dom";
 import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import { Bell } from "react-bootstrap-icons";
 
-import { userAPI } from "../../config/ApiConfig";
+import { userAPI } from "../../config/ApiConfig.js";
 
 const NotificationSettingsPage = () => {
 	const loaderData = useLoaderData() || {};

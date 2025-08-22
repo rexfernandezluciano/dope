@@ -20,7 +20,7 @@ import {
   likeAPI,
   replyAPI,
   imageAPI
-} from '../config/ApiConfig';
+} from '../config/ApiConfig.js';
 
 // Custom hook for authentication
 export const useAuth = () => {
