@@ -1,11 +1,11 @@
-const express = require("express");
-const React = require("react");
-const { renderToString } = require("react-dom/server");
-const fs = require("fs");
-const path = require("path");
-const { fileURLToPath } = require("url");
-const { createProxyMiddleware } = require("http-proxy-middleware");
-const cors = require("cors");
+const express = await import("express");
+const React = await import("react");
+const { renderToString } = await import("react-dom/server");
+const fs = await import("fs");
+const path = await import("path");
+const { fileURLToPath } = await import("url");
+const { createProxyMiddleware } = await import("http-proxy-middleware");
+const cors = await import("cors");
 
 // Get the directory name from the file URL
 const __filename = fileURLToPath(import.meta.url);
