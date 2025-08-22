@@ -185,7 +185,7 @@ const SessionSettingsPage = () => {
 										<tr key={session.id}>
 											<td>
 												<div className="d-flex align-items-center gap-2">
-													{getDeviceIcon(session.deviceType)}
+													{getDeviceIcon(session.device)}
 													<div>
 														<div className="fw-medium">
 															{session.deviceName ||
@@ -193,7 +193,7 @@ const SessionSettingsPage = () => {
 																"Unknown Device"}
 														</div>
 														<small className="text-muted">
-															{session.browser} on {session.os}
+															{session.browser}
 														</small>
 													</div>
 												</div>
@@ -220,14 +220,14 @@ const SessionSettingsPage = () => {
 												</small>
 											</td>
 											<td>
-												{session.isCurrent ? (
+												{session.isActive ? (
 													<Badge bg="success">Current Session</Badge>
 												) : (
 													<Badge bg="secondary">Active</Badge>
 												)}
 											</td>
 											<td>
-												{!session.isCurrent && (
+												{!session.isActive && (
 													<Button
 														variant="outline-danger"
 														size="sm"
