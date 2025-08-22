@@ -80,6 +80,34 @@ const StartPage = () => {
 									Sign In
 								</Button>
 							</div>
+							
+							{/* Privacy Policy and Terms of Service Links */}
+							<div className="text-center mt-4 pt-3 border-top">
+								<small className="text-muted">
+									By continuing, you agree to our{' '}
+									<a 
+										href="/policies/terms" 
+										className="text-primary text-decoration-none"
+										onClick={(e) => {
+											e.preventDefault();
+											navigate('/policies/terms');
+										}}
+									>
+										Terms of Service
+									</a>
+									{' '}and{' '}
+									<a 
+										href="/policies/privacy" 
+										className="text-primary text-decoration-none"
+										onClick={(e) => {
+											e.preventDefault();
+											navigate('/policies/privacy');
+										}}
+									>
+										Privacy Policy
+									</a>
+								</small>
+							</div>
 						</Card.Body>
 					</Card>
 				</Col>
