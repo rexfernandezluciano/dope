@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { authAPI, userAPI, getAuthToken } from '../config/ApiConfig.js';
@@ -26,7 +25,7 @@ export const getUser = async () => {
 		console.error('Error getting user:', error);
 		// Only remove token if it's an auth error (401/403)
 		if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
-			const { removeAuthToken } = await import('../config/ApiConfig');
+			const { removeAuthToken } = await import('../config/ApiConfig.js');
 			removeAuthToken();
 		}
 		return null;

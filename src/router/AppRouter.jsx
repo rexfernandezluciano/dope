@@ -5,10 +5,10 @@ import { useEffect, lazy, Suspense } from "react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 
-import RequireAuth from "./security/RequireAuth";
+import RequireAuth from "./security/RequireAuth.jsx";
 import { IndexPageLoader } from "./loader/IndexPageLoader.js";
-import { SecurityProvider } from "../components/SecurityProvider";
-import ErrorBoundary from "../components/ErrorBoundary";
+import { SecurityProvider } from "../components/SecurityProvider.jsx";
+import ErrorBoundary from "../components/ErrorBoundary.jsx";
 
 import NavigationView from "../components/navs/NavigationView";
 

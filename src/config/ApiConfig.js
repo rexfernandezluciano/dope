@@ -27,8 +27,8 @@ console.log("🔍 API Configuration Debug:", {
 });
 
 // Validate API URL is HTTPS (skip validation for proxy URLs)
-if (!API_BASE_URL.startsWith("https://") && !API_BASE_URL.startsWith("/")) {
-	console.error("API URL must use HTTPS");
+if (API_BASE_URL && !API_BASE_URL.startsWith("https://") && !API_BASE_URL.startsWith("/") && API_BASE_URL !== "") {
+	console.warn("⚠️ API URL should use HTTPS for security");
 }
 
 // Create axios instance with default config
