@@ -197,20 +197,6 @@ const PostCard = ({
 		setShowComments(prev => !prev);
 	}, []);
 
-
-	const handleComment = useCallback((e) => {
-		e.stopPropagation();
-		if (canComment) {
-			// If comments are already visible, do nothing. Otherwise, navigate.
-			if (!showComments) {
-				navigate(`/post/${post.id}`);
-			} else {
-				// Optionally, scroll to the comment section if already expanded
-				// This would require a ref to the comment section
-			}
-		}
-	}, [canComment, navigate, post.id, showComments]);
-
 	const handleDeletePost = async (postId) => {
 		await deletePostUtil(postId, postAPI.deletePost); // Use the utility function
 		onDeletePost?.(postId);
