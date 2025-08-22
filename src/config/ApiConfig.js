@@ -233,7 +233,7 @@ class HttpClient {
 const httpClient = new HttpClient();
 
 // Main API request function
-export constapiRequest = async (endpoint, options = {}) => {
+export const apiRequest = async (endpoint, options = {}) => {
 	try {
 		const response = await httpClient.requestWithFailover(endpoint, options);
 
