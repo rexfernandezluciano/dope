@@ -3,22 +3,14 @@
 import Cookies from "js-cookie";
 import axios from "axios";
 
-// Check if we're using proxy (only in development on localhost)
-const isUsingProxy =
-	process.env.NODE_ENV === "development" &&
-	(window.location.hostname === "localhost" || 
-	 window.location.hostname === "127.0.0.1");
+// Always use proxy for both development and production
+const isUsingProxy = true;
 
-// Multiple API endpoints for failover
-const API_ENDPOINTS = isUsingProxy
-	? [
-			"/v1", // Use proxy in development
-			"https://api.dopp.eu.org/v1",
-		]
-	: [
-			process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1",
-			"https://api.dopp.eu.org/v1",
-		];
+// Multiple API endpoints for failover - always use proxy first
+const API_ENDPOINTS = [
+	"/v1", // Use proxy for all environments
+	"https://api.dopp.eu.org/v1", // Fallback to direct URL
+];
 
 // Current active API base URL
 let API_BASE_URL = API_ENDPOINTS[0];
