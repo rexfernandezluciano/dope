@@ -657,6 +657,20 @@ export const postAPI = {
 		});
 	},
 
+	getFollowingFeed: async (params = {}) => {
+		const queryParams = new URLSearchParams(params).toString();
+		return await apiRequest(`/posts/following${queryParams ? `?${queryParams}` : ""}`, {
+			method: "GET",
+		});
+	},
+
+	getCurrentUserPosts: async (params = {}) => {
+		const queryParams = new URLSearchParams(params).toString();
+		return await apiRequest(`/posts/me${queryParams ? `?${queryParams}` : ""}`, {
+			method: "GET",
+		});
+	},
+
 	// New endpoints from API documentation
 	getPostLikes: async (postId, params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
