@@ -555,10 +555,10 @@ export const userAPI = {
 
 	searchUsers: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
-			q: query, // Use 'q' parameter instead of 'query'
+			query: query,
 			...params,
 		});
-		return await apiRequest(`/search/users?${searchParams.toString()}`);
+		return await apiRequest(`/users/search?${searchParams.toString()}`);
 	},
 
 	updateSettings: async (settings) => {
@@ -980,10 +980,10 @@ export const searchAPI = {
 
 	searchUsers: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
-			q: query, // Use 'q' parameter instead of 'query'
+			query: query,
 			...params,
 		});
-		return await apiRequest(`/search/users?${searchParams.toString()}`);
+		return await apiRequest(`/users/search?${searchParams.toString()}`);
 	},
 
 	searchPosts: async (query, params = {}) => {

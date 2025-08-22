@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ListGroup, Image, Spinner } from 'react-bootstrap';
 import { CheckCircleFill } from 'react-bootstrap-icons';
-import { searchAPI } from '../config/ApiConfig.js';
+import { apiRequest } from '../config/ApiConfig.js';
 
 const MentionDropdown = ({ 
   show, 
@@ -24,7 +24,7 @@ const MentionDropdown = ({
 
     try {
       setLoading(true);
-      const response = await searchAPI.searchUsers(searchQuery, { limit: 5 });
+      const response = await apiRequest(`/users/search?query=${encodeURIComponent(searchQuery)}&limit=5`);
       setUsers(response?.users || []);
       setSelectedIndex(0);
     } catch (error) {
