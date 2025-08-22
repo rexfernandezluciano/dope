@@ -91,15 +91,13 @@ const getMetaData = (url, params = {}) => {
     },
     "/policies/privacy": {
       title: "Privacy Policy - DOPE Network",
-      description:
-        "Read our privacy policy to understand how we protect and handle your data.",
+      description: "Read our privacy policy to understand how we protect and handle your data.",
       keywords: "privacy policy, data protection, privacy, DOPE Network",
       ogImage: "/logo512.png",
     },
     "/policies/terms": {
       title: "Terms of Service - DOPE Network",
-      description:
-        "Read our terms of service to understand the rules and guidelines for using DOPE Network.",
+      description: "Read our terms of service to understand the rules and guidelines for using DOPE Network.",
       keywords: "terms of service, terms, conditions, guidelines, DOPE Network",
       ogImage: "/logo512.png",
     },
@@ -107,6 +105,30 @@ const getMetaData = (url, params = {}) => {
       title: "Settings - DOPE Network",
       description: "Manage your account settings on DOPE Network",
       keywords: "settings, account, DOPE Network, social media",
+      ogImage: "/logo512.png",
+    },
+    "/auth/login": {
+      title: "Sign In - DOPE Network",
+      description: "Sign in to your DOPE Network account to connect with your community.",
+      keywords: "login, sign in, authentication, DOPE Network",
+      ogImage: "/logo512.png",
+    },
+    "/auth/signup": {
+      title: "Sign Up - DOPE Network",
+      description: "Create a new DOPE Network account to join the community.",
+      keywords: "signup, register, create account, join, DOPE Network",
+      ogImage: "/logo512.png",
+    },
+    "/auth/verify": {
+      title: "Verify Email - DOPE Network",
+      description: "Verify your email address to complete your DOPE Network account setup.",
+      keywords: "verify, email verification, account setup, DOPE Network",
+      ogImage: "/logo512.png",
+    },
+    "/auth/callback": {
+      title: "Authentication - DOPE Network",
+      description: "Completing authentication process for DOPE Network.",
+      keywords: "authentication, oauth, callback, DOPE Network",
       ogImage: "/logo512.png",
     },
   };
@@ -203,7 +225,11 @@ app.get("*", async (req, res) => {
     } else if (url.startsWith("/search")) {
       const query = req.query.q;
       metaData = getMetaData("/search", { query });
-    } else {
+    } else if (url.startsWith("/auth")) {
+      // Handle authentication routes specifically
+      metaData = getMetaData(url);
+    }
+     else {
       metaData = getMetaData(url);
     }
 
