@@ -27,6 +27,12 @@ const getMetaData = (url, params = {}) => {
         "DOPE Network, social media, community, social networking, microblogging, posts, friends",
       ogImage: "/logo512.png",
     },
+    "/home": {
+      title: "Home - DOPE Network",
+      description: "Stay connected with your community on DOPE Network. See the latest posts and updates from people you follow.",
+      keywords: "DOPE Network, home, feed, social media, posts",
+      ogImage: "/logo512.png",
+    },
     "/profile": {
       title: `${params.displayName || params.username} (@${params.username}) - DOPE Network`,
       description: `View ${params.displayName || params.username}'s profile on DOPE Network. See their posts, followers, and more.`,
@@ -49,17 +55,55 @@ const getMetaData = (url, params = {}) => {
         ? `Search results for "${params.query}" on DOPE Network.`
         : "Search for posts and people on DOPE Network.",
       keywords: `search, ${params.query || "posts, people"}, DOPE Network`,
+      ogImage: "/logo512.png",
+    },
+    "/analytics": {
+      title: "Analytics - DOPE Network",
+      description: "View your profile analytics, engagement metrics, and growth insights.",
+      keywords: "analytics, insights, metrics, engagement, DOPE Network",
+      ogImage: "/logo512.png",
     },
     "/subscription": {
-      title: "Subscription & Billing - DOPE Network",
-      description:
-        "Manage your subscription and billing on DOPE Network and upgrade to premium features",
-      keywords: "subscription, billing, premium, DOPE Network, social media",
+      title: "Subscription - DOPE Network",
+      description: "Manage your DOPE Network subscription and premium features.",
+      keywords: "subscription, premium, features, billing, DOPE Network",
+      ogImage: "/logo512.png",
+    },
+    "/livestream": {
+      title: "Live Stream - DOPE Network",
+      description: "Join live streams and connect with your community in real-time.",
+      keywords: "livestream, live, streaming, community, DOPE Network",
+      ogImage: "/logo512.png",
+    },
+    "/waitinglist": {
+      title: "Join Waiting List - DOPE Network",
+      description: "Join the waiting list to get early access to DOPE Network features.",
+      keywords: "waiting list, early access, beta, DOPE Network",
+      ogImage: "/logo512.png",
+    },
+    "/network-test": {
+      title: "Network Diagnostics - DOPE Network",
+      description: "Test your network connectivity and API endpoints for optimal performance.",
+      keywords: "network test, diagnostics, connectivity, API, DOPE Network",
+      ogImage: "/logo512.png",
+    },
+    "/privacy-policy": {
+      title: "Privacy Policy - DOPE Network",
+      description: "Read our privacy policy to understand how we protect and handle your data.",
+      keywords: "privacy policy, data protection, privacy, DOPE Network",
+      ogImage: "/logo512.png",
+    },
+    "/terms-of-service": {
+      title: "Terms of Service - DOPE Network",
+      description: "Read our terms of service to understand the rules and guidelines for using DOPE Network.",
+      keywords: "terms of service, terms, conditions, guidelines, DOPE Network",
+      ogImage: "/logo512.png",
     },
     "/settings": {
       title: "Settings - DOPE Network",
       description: "Manage your account settings on DOPE Network",
       keywords: "settings, account, DOPE Network, social media",
+      ogImage: "/logo512.png",
     },
   };
 
