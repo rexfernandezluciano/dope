@@ -71,6 +71,19 @@ if (typeof window !== 'undefined') {
 // Setup Content Security Policy
 setupCSP();
 
+// Test API connectivity on startup (only in production)
+if (process.env.NODE_ENV === 'production') {
+  import('./config/ApiConfig').then(({ testApiConnection }) => {
+    testApiConnection().then(isConnected => {
+      if (!isConnected) {
+        console.warn('⚠️ API connectivity test failed. Network requests may fail.');
+      } else {
+        console.log('✅ API connectivity verified');
+      }
+    });
+  });
+}
+
 // Disable console in production based on hostname
 const isProduction = window.location.hostname !== 'localhost' && 
                      window.location.hostname !== '127.0.0.1' &&

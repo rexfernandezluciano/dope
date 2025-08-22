@@ -9,6 +9,15 @@ const isUsingProxy =
 	(window.location.hostname === "localhost" || 
 	 window.location.hostname === "127.0.0.1");
 
+// Debug logging for production network issues
+console.log("🔍 API Configuration Debug:", {
+	NODE_ENV: process.env.NODE_ENV,
+	hostname: window.location.hostname,
+	isUsingProxy,
+	API_ENDPOINTS,
+	currentAPIUrl: API_ENDPOINTS[0]
+});
+
 // Multiple API endpoints for failover
 const API_ENDPOINTS = isUsingProxy
 	? [
@@ -131,23 +140,42 @@ class HttpClient {
 				error: error.name,
 				message: error.message,
 				status: error.response?.status,
+				statusText: error.response?.statusText,
 				data: error.response?.data,
+				code: error.code,
+				config: {
+					baseURL: error.config?.baseURL,
+					url: error.config?.url,
+					method: error.config?.method,
+					headers: error.config?.headers
+				}
 			});
 
 			if (error.response) {
-				// Server error
-				throw new Error(
-					error.response.data?.message ||
-						error.response.statusText ||
-						"Server error",
-				);
+				// Server error - API responded with error status
+				const errorMsg = error.response.data?.message || 
+					error.response.statusText || 
+					`Server error (${error.response.status})`;
+				console.log("🚨 Server Error Details:", {
+					status: error.response.status,
+					headers: error.response.headers,
+					data: error.response.data
+				});
+				throw new Error(errorMsg);
 			} else if (error.request) {
-				// Network error
+				// Network error - request was made but no response
+				console.log("🌐 Network Error Details:", {
+					request: error.request,
+					readyState: error.request.readyState,
+					status: error.request.status,
+					responseURL: error.request.responseURL
+				});
 				throw new Error(
-					"Network connectivity issue detected. Please check your internet connection and try again.",
+					`Network connectivity issue: Unable to reach ${url}. Please check your internet connection and try again.`,
 				);
 			} else {
 				// Other error
+				console.log("❌ Request Setup Error:", error);
 				throw new Error(error.message || "Request failed");
 			}
 		}
@@ -298,13 +326,51 @@ export const sanitizeInput = (input) => {
 
 export const testApiConnection = async () => {
 	try {
+		console.log("🔍 Testing API connection to:", API_BASE_URL);
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000);
+		
 		const response = await fetch(`${API_BASE_URL}/health`, {
 			method: "GET",
-			timeout: 5000,
+			signal: controller.signal,
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			}
 		});
+		
+		clearTimeout(timeoutId);
+		
+		console.log("✅ API Health Check Response:", {
+			ok: response.ok,
+			status: response.status,
+			statusText: response.statusText,
+			url: response.url,
+			headers: Object.fromEntries(response.headers.entries())
+		});
+		
 		return response.ok;
 	} catch (error) {
-		console.error("API connection test failed:", error);
+		console.error("❌ API connection test failed:", {
+			name: error.name,
+			message: error.message,
+			stack: error.stack
+		});
+		
+		// Test with a simple CORS preflight to diagnose CORS issues
+		try {
+			await fetch(`${API_BASE_URL}/health`, {
+				method: 'OPTIONS',
+				headers: {
+					'Access-Control-Request-Method': 'GET',
+					'Access-Control-Request-Headers': 'Content-Type'
+				}
+			});
+			console.log("✅ CORS preflight check passed");
+		} catch (corsError) {
+			console.error("❌ CORS preflight failed:", corsError);
+		}
+		
 		return false;
 	}
 };
