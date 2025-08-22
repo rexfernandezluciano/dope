@@ -6,51 +6,46 @@ import axios from "axios";
 // Always use proxy for both development and production
 const isUsingProxy = true;
 
-// Determine API endpoints based on environment
-const API_ENDPOINTS = (() => {
-	if (process.env.NODE_ENV === "production") {
-		// In production, use HTTPS URLs only
-		const currentDomain = window.location.origin;
-		const hostname = window.location.hostname;
-		const port = window.location.port;
+// Cache API endpoints to prevent recalculation on multiple imports
+const getAPIEndpoints = (() => {
+	let cached = null;
+	
+	return () => {
+		if (cached) return cached;
 		
-		// For Replit environments, construct URL carefully to avoid double ports
-		if (hostname.includes('replit.dev') || hostname.includes('replit.app') || hostname.includes('replit.co')) {
-			// If we're already on port 5000, use current domain as-is
-			if (port === '5000') {
-				return [
-					currentDomain,
-					"https://api.dopp.eu.org"
-				];
-			} else {
-				// If not on port 5000, construct URL with port 5000
-				return [
+		if (process.env.NODE_ENV === "production") {
+			// In production, use HTTPS URLs only
+			const currentDomain = window.location.origin;
+			const hostname = window.location.hostname;
+			const port = window.location.port;
+			
+			// For Replit environments, always use current domain with port 5000 if needed
+			if (hostname.includes('replit.dev') || hostname.includes('replit.app') || hostname.includes('replit.co')) {
+				// For Replit, always use the SSR server on port 5000
+				cached = [
 					`${window.location.protocol}//${hostname}:5000`,
 					"https://api.dopp.eu.org"
 				];
+			} else {
+				// For other production environments
+				cached = [
+					port === '5000' || currentDomain.includes(':5000') ? currentDomain : currentDomain + ":5000",
+					"https://api.dopp.eu.org"
+				];
 			}
+		} else {
+			// In development, prefer local proxy, fallback to external
+			cached = [
+				`${window.location.protocol}//${window.location.hostname}:5000`,
+				"https://api.dopp.eu.org"
+			];
 		}
 		
-		// For other production environments, check if we need to add port 5000
-		if (port === '5000' || currentDomain.includes(':5000')) {
-			return [
-				currentDomain, // Use current domain as-is if it already has port 5000
-				"https://api.dopp.eu.org"
-			];
-		} else {
-			return [
-				currentDomain + ":5000", // Add port 5000 if not present
-				"https://api.dopp.eu.org"
-			];
-		}
-	} else {
-		// In development, prefer local proxy, fallback to external
-		return [
-			`${window.location.protocol}//${window.location.hostname}:5000`,
-			"https://api.dopp.eu.org"
-		];
-	}
+		return cached;
+	};
 })();
+
+const API_ENDPOINTS = getAPIEndpoints();
 
 // Current active API base URL
 let API_BASE_URL = '';

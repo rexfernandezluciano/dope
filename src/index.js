@@ -79,8 +79,9 @@ if (typeof window !== 'undefined') {
 // Setup Content Security Policy
 setupCSP();
 
-// Test API connectivity on startup (only in production)
-if (process.env.NODE_ENV === 'production') {
+// Test API connectivity on startup (only in production and only once)
+if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined' && !window.__API_TESTED__) {
+  window.__API_TESTED__ = true;
   import('./config/ApiConfig.js').then(({ testApiConnection }) => {
     testApiConnection().then(isConnected => {
       if (!isConnected) {
