@@ -12,10 +12,10 @@ const API_ENDPOINTS = (window.location.hostname.includes('replit.dev') ||
    window.location.hostname.includes('replit.app') ||
    window.location.hostname === 'localhost')
   ? ['', 'https://api.dopp.eu.org']
-  : ['https://api.dopp.eu.org'];
+  : [''];
 
 // Current active API base URL
-let API_BASE_URL = API_ENDPOINTS[1];
+let API_BASE_URL = API_ENDPOINTS[0];
 
 // Debug logging for production network issues
 console.log("🔍 API Configuration Debug:", {
