@@ -11,6 +11,9 @@ import cors from "cors";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Force production mode for SSR
+process.env.NODE_ENV = 'production';
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
