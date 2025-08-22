@@ -659,14 +659,14 @@ export const postAPI = {
 
 	getFollowingFeed: async (params = {}) => {
 		const queryParams = new URLSearchParams(params).toString();
-		return await apiRequest(`/posts/following${queryParams ? `?${queryParams}` : ""}`, {
+		return await apiRequest(`/posts/feed/following${queryParams ? `?${queryParams}` : ""}`, {
 			method: "GET",
 		});
 	},
 
 	getCurrentUserPosts: async (params = {}) => {
 		const queryParams = new URLSearchParams(params).toString();
-		return await apiRequest(`/posts/me${queryParams ? `?${queryParams}` : ""}`, {
+		return await apiRequest(`/posts/user/me${queryParams ? `?${queryParams}` : ""}`, {
 			method: "GET",
 		});
 	},
