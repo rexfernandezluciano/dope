@@ -18,27 +18,24 @@ const template = fs.readFileSync(path.resolve("./build/index.html"), "utf-8");
 
 // Meta data for different routes
 const getMetaData = (url, params = {}) => {
+  const isProfilePage =
+    params.username && params.displayName
+      ? {
+          title: `${params.displayName || params.username} (@${params.username}) - DOPE Network`,
+          description: `View ${params.displayName || params.username}'s profile on DOPE Network. See their posts, followers, and more.`,
+          keywords: `${params.username}, ${params.displayName}, profile, DOPE Network, social media`,
+          ogImage: params.avatar || "/logo512.png",
+        }
+      : {
+          title: "DOPE Network - Social Media Platform",
+          description:
+            "DOPE Network - A modern social media platform connecting communities worldwide. Share, discover, and engage with friends and communities.",
+          keywords:
+            "DOPE Network, social media, community, social networking, microblogging, posts, friends",
+          ogImage: "/logo512.png",
+        };
   const routes = {
-    "/": {
-      title: "DOPE Network - Social Media Platform",
-      description:
-        "DOPE Network - A modern social media platform connecting communities worldwide. Share, discover, and engage with friends and communities.",
-      keywords:
-        "DOPE Network, social media, community, social networking, microblogging, posts, friends",
-      ogImage: "/logo512.png",
-    },
-    "/home": {
-      title: "Home - DOPE Network",
-      description: "Stay connected with your community on DOPE Network. See the latest posts and updates from people you follow.",
-      keywords: "DOPE Network, home, feed, social media, posts",
-      ogImage: "/logo512.png",
-    },
-    "/profile": {
-      title: `${params.displayName || params.username} (@${params.username}) - DOPE Network`,
-      description: `View ${params.displayName || params.username}'s profile on DOPE Network. See their posts, followers, and more.`,
-      keywords: `${params.username}, ${params.displayName}, profile, DOPE Network, social media`,
-      ogImage: params.avatar || "/logo512.png",
-    },
+    "/": isProfilePage,
     "/post": {
       title: `Post - DOPE Network`,
       description: params.content
@@ -59,43 +56,50 @@ const getMetaData = (url, params = {}) => {
     },
     "/analytics": {
       title: "Analytics - DOPE Network",
-      description: "View your profile analytics, engagement metrics, and growth insights.",
+      description:
+        "View your profile analytics, engagement metrics, and growth insights.",
       keywords: "analytics, insights, metrics, engagement, DOPE Network",
       ogImage: "/logo512.png",
     },
     "/subscription": {
       title: "Subscription - DOPE Network",
-      description: "Manage your DOPE Network subscription and premium features.",
+      description:
+        "Manage your DOPE Network subscription and premium features.",
       keywords: "subscription, premium, features, billing, DOPE Network",
       ogImage: "/logo512.png",
     },
     "/livestream": {
       title: "Live Stream - DOPE Network",
-      description: "Join live streams and connect with your community in real-time.",
+      description:
+        "Join live streams and connect with your community in real-time.",
       keywords: "livestream, live, streaming, community, DOPE Network",
       ogImage: "/logo512.png",
     },
     "/waitinglist": {
       title: "Join Waiting List - DOPE Network",
-      description: "Join the waiting list to get early access to DOPE Network features.",
+      description:
+        "Join the waiting list to get early access to DOPE Network features.",
       keywords: "waiting list, early access, beta, DOPE Network",
       ogImage: "/logo512.png",
     },
     "/network-test": {
       title: "Network Diagnostics - DOPE Network",
-      description: "Test your network connectivity and API endpoints for optimal performance.",
+      description:
+        "Test your network connectivity and API endpoints for optimal performance.",
       keywords: "network test, diagnostics, connectivity, API, DOPE Network",
       ogImage: "/logo512.png",
     },
-    "/privacy-policy": {
+    "/policies/privacy": {
       title: "Privacy Policy - DOPE Network",
-      description: "Read our privacy policy to understand how we protect and handle your data.",
+      description:
+        "Read our privacy policy to understand how we protect and handle your data.",
       keywords: "privacy policy, data protection, privacy, DOPE Network",
       ogImage: "/logo512.png",
     },
-    "/terms-of-service": {
+    "/policies/terms": {
       title: "Terms of Service - DOPE Network",
-      description: "Read our terms of service to understand the rules and guidelines for using DOPE Network.",
+      description:
+        "Read our terms of service to understand the rules and guidelines for using DOPE Network.",
       keywords: "terms of service, terms, conditions, guidelines, DOPE Network",
       ogImage: "/logo512.png",
     },
@@ -175,16 +179,20 @@ app.get("*", async (req, res) => {
 
   try {
     // For dynamic routes, fetch data from API
-    if (url.startsWith("/profile/")) {
+    if (url.startsWith("/")) {
       const username = url.split("/")[2];
       // Fetch user data from API for meta tags
       const userData = await fetch(
         `https://api.dopp.eu.org/v1/users/${username}`,
       );
-      metaData = getMetaData("/profile", {
-        username,
-        displayName: userData?.user.name,
-      });
+      if (!userData?.user) {
+        metaData = getMetaData("/");
+      } else {
+        metaData = getMetaData("/", {
+          username,
+          displayName: userData?.user.name,
+        });
+      }
     } else if (url.startsWith("/post/")) {
       const postId = url.split("/")[2];
       // Fetch post data from API for meta tags
