@@ -7,7 +7,7 @@ const getApiBaseUrl = () => {
 	const isUsingProxy = process.env.NODE_ENV === "development" && 
 		(window.location.hostname.includes("replit") || window.location.hostname.includes("repl.co"));
 
-	return isUsingProxy ? "/v1" : (process.env.REACT_APP_API_URL || "https://social.dopp.eu.org/v1");
+	return isUsingProxy ? "/v1" : (process.env.REACT_APP_API_URL || "https://api.dopp.eu.org/v1");
 };
 
 /**
