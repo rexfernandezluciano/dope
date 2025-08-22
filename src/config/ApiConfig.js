@@ -651,12 +651,14 @@ export const postAPI = {
 	likePost: async (postId) => {
 		return await apiRequest(`/posts/${postId}/like`, {
 			method: "POST",
+			data: { postId },
 		});
 	},
 
 	unlikePost: async (postId) => {
 		return await apiRequest(`/posts/${postId}/unlike`, {
 			method: "DELETE",
+			data: { postId },
 		});
 	},
 
