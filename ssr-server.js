@@ -17,24 +17,24 @@ const PORT = process.env.PORT || 5000;
 // Configure CORS
 const corsOptions = {
   origin: [
-    'https://dopp.eu.org',
-    'https://www.dopp.eu.org',
-    'https://api.dopp.eu.org',
+    "https://dopp.eu.org",
+    "https://www.dopp.eu.org",
+    "https://api.dopp.eu.org",
     /\.replit\.dev$/,
     /\.replit\.app$/,
-    process.env.FRONTEND_URL
+    process.env.FRONTEND_URL,
   ].filter(Boolean),
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Accept',
-    'Origin',
-    'Cache-Control',
-    'Pragma'
-  ]
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+    "Cache-Control",
+    "Pragma",
+  ],
 };
 
 app.use(cors(corsOptions));
@@ -60,6 +60,7 @@ const getMetaData = (url, params = {}) => {
             "DOPE Network, social media, community, social networking, microblogging, posts, friends",
           ogImage: "/logo512.png",
         };
+
   const routes = {
     "/": isProfilePage,
     "/post": {
@@ -117,13 +118,15 @@ const getMetaData = (url, params = {}) => {
     },
     "/policies/privacy": {
       title: "Privacy Policy - DOPE Network",
-      description: "Read our privacy policy to understand how we protect and handle your data.",
+      description:
+        "Read our privacy policy to understand how we protect and handle your data.",
       keywords: "privacy policy, data protection, privacy, DOPE Network",
       ogImage: "/logo512.png",
     },
     "/policies/terms": {
       title: "Terms of Service - DOPE Network",
-      description: "Read our terms of service to understand the rules and guidelines for using DOPE Network.",
+      description:
+        "Read our terms of service to understand the rules and guidelines for using DOPE Network.",
       keywords: "terms of service, terms, conditions, guidelines, DOPE Network",
       ogImage: "/logo512.png",
     },
@@ -135,7 +138,8 @@ const getMetaData = (url, params = {}) => {
     },
     "/auth/login": {
       title: "Sign In - DOPE Network",
-      description: "Sign in to your DOPE Network account to connect with your community.",
+      description:
+        "Sign in to your DOPE Network account to connect with your community.",
       keywords: "login, sign in, authentication, DOPE Network",
       ogImage: "/logo512.png",
     },
@@ -147,7 +151,8 @@ const getMetaData = (url, params = {}) => {
     },
     "/auth/verify": {
       title: "Verify Email - DOPE Network",
-      description: "Verify your email address to complete your DOPE Network account setup.",
+      description:
+        "Verify your email address to complete your DOPE Network account setup.",
       keywords: "verify, email verification, account setup, DOPE Network",
       ogImage: "/logo512.png",
     },
@@ -228,7 +233,7 @@ app.get("*", async (req, res) => {
   try {
     // For dynamic routes, fetch data from API
     if (url.startsWith("/")) {
-      const username = url.split("/")[2];
+      const username = url.split("/")[1];
       // Fetch user data from API for meta tags
       const userData = await fetch(
         `https://api.dopp.eu.org/v1/users/${username}`,
@@ -254,8 +259,7 @@ app.get("*", async (req, res) => {
     } else if (url.startsWith("/auth")) {
       // Handle authentication routes specifically
       metaData = getMetaData(url);
-    }
-     else {
+    } else {
       metaData = getMetaData(url);
     }
 
