@@ -12,8 +12,8 @@ const API_ENDPOINTS = process.env.NODE_ENV === 'development' &&
    window.location.hostname.includes('replit.co') ||
    window.location.hostname.includes('replit.app') ||
    window.location.hostname === 'localhost')
-  ? ['', 'https://api.dopp.eu.org/v1']
-  : ['https://api.dopp.eu.org/v1'];
+  ? ['', 'https://api.dopp.eu.org']
+  : ['https://api.dopp.eu.org'];
 
 // Current active API base URL
 let API_BASE_URL = API_ENDPOINTS[0];
@@ -99,8 +99,9 @@ class HttpClient {
 	}
 
 	async makeRequest(endpoint, options = {}) {
-		// Use endpoint as-is since base URLs already include /v1
-		const url = `${this.currentBaseURL}${endpoint}`;
+		// Add /v1 prefix if not already present
+		const normalizedEndpoint = endpoint.startsWith('/v1') ? endpoint : `/v1${endpoint}`;
+		const url = `${this.currentBaseURL}${normalizedEndpoint}`;
 
 		console.log('🚀 Making axios request:', {
 			url,
