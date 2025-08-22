@@ -137,7 +137,7 @@ const SubscriptionPage = () => {
 				else if (cardNumber.startsWith('6')) provider = "Discover";
 
 				paymentData = {
-					type: "credit_card",
+					type: "paypal_card", // Updated to paypal_card
 					provider: provider,
 					last4: cardNumber.slice(-4),
 					expiryMonth: parseInt(month),
@@ -147,7 +147,7 @@ const SubscriptionPage = () => {
 				};
 			} else if (selectedPaymentType === "paypal") {
 				paymentData = {
-					type: "paypal",
+					type: "paypal_wallet", // Updated to paypal_wallet
 					provider: "PayPal",
 					paypalEmail: user.email, // Use user's email for PayPal
 					isDefault: paymentMethods.length === 0 // Make first payment method default
@@ -283,7 +283,8 @@ const SubscriptionPage = () => {
 		{
 			id: "premium",
 			name: "Premium",
-			price: "$4.99",
+			// Updated price to reflect the new API documentation (PHP 560)
+			price: "₱560",
 			period: "month",
 			features: [
 				"10 images per post",
@@ -296,7 +297,8 @@ const SubscriptionPage = () => {
 		{
 			id: "pro",
 			name: "Pro",
-			price: "$9.99",
+			// Updated price to reflect the new API documentation (PHP 1120)
+			price: "₱1,120",
 			period: "month",
 			features: [
 				"Unlimited images per post",
@@ -346,7 +348,8 @@ const SubscriptionPage = () => {
 				setSubscription((prev) => ({
 					...prev,
 					plan: planId,
-					nextBilling: purchaseResponse.nextBillingDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+					// The API response does not directly provide nextBillingDate, so we estimate it
+					nextBilling: purchaseResponse.nextBilling || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
 					features: {
 						...prev.features,
 						blueCheck: getBlueCheckStatus(planId),
@@ -650,17 +653,24 @@ const SubscriptionPage = () => {
 										className="d-flex justify-content-between align-items-center"
 									>
 										<div className="d-flex align-items-center gap-3">
-											{method.type === 'paypal' ? (
+											{method.type === 'paypal_wallet' ? (
 												<Paypal size={24} className="text-primary" />
 											) : (
 												<CreditCard size={24} />
 											)}
 											<div>
-												{method.type === 'paypal' ? (
+												{method.type === 'paypal_wallet' ? (
 													<>
-														<h6 className="mb-0">PayPal</h6>
+														<h6 className="mb-0">PayPal Wallet</h6>
 														<small className="text-muted">
-															Connected Account
+															{method.paypalEmail || 'Connected Account'}
+														</small>
+													</>
+												) : method.type === 'paypal_card' ? (
+													<>
+														<h6 className="mb-0">**** **** **** {method.last4}</h6>
+														<small className="text-muted">
+															PayPal Card • Expires {method.expiryMonth}/{method.expiryYear}
 														</small>
 													</>
 												) : (
@@ -771,7 +781,7 @@ const SubscriptionPage = () => {
 								label={
 									<div className="d-flex align-items-center gap-2">
 										<CreditCard size={20} />
-										<span>Credit/Debit Card</span>
+										<span>Credit/Debit Card (PayPal)</span>
 									</div>
 								}
 								checked={selectedPaymentType === "card"}
@@ -784,7 +794,7 @@ const SubscriptionPage = () => {
 								label={
 									<div className="d-flex align-items-center gap-2">
 										<Paypal size={20} />
-										<span>PayPal</span>
+										<span>PayPal Wallet</span>
 									</div>
 								}
 								checked={selectedPaymentType === "paypal"}

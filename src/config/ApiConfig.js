@@ -876,6 +876,12 @@ export const blockAPI = {
 
 // Payment API
 export const paymentAPI = {
+	getProviders: async () => {
+		return await apiRequest("/payments/providers", {
+			method: "GET",
+		});
+	},
+
 	addPaymentMethod: async (paymentData) => {
 		return await apiRequest("/payments/methods", {
 			method: "POST",
