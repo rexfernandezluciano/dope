@@ -11,7 +11,7 @@ const API_ENDPOINTS = (window.location.hostname.includes('replit.dev') ||
    window.location.hostname.includes('replit.co') ||
    window.location.hostname.includes('replit.app') ||
    window.location.hostname === 'localhost')
-  ? ['', 'https://api.dopp.eu.org']
+  ? [`${window.location.protocol}//${window.location.hostname}:5000`, 'https://api.dopp.eu.org']
   : [''];
 
 // Current active API base URL

@@ -101,12 +101,19 @@ app.get('/health', (req, res) => {
 const apiProxy = createProxyMiddleware({
   target: 'https://api.dopp.eu.org',
   changeOrigin: true,
+  secure: true,
   pathRewrite: {
     '^/v1': '/v1', // Keep the /v1 prefix
   },
   onError: (err, req, res) => {
     console.error('Proxy error:', err);
-    res.status(500).json({ error: 'Proxy error occurred' });
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Proxy error occurred',
+        message: err.message,
+        details: 'Unable to connect to API server'
+      });
+    }
   },
   onProxyReq: (proxyReq, req, res) => {
     console.log(`Proxying ${req.method} ${req.url} to target`);
