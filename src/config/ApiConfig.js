@@ -728,6 +728,12 @@ export const postAPI = {
 			data: { action },
 		});
 	},
+
+	trackView: async (postId) => {
+		return await apiRequest(`/posts/${postId}/views`, {
+			method: "POST",
+		});
+	},
 };
 
 export const imageAPI = {
