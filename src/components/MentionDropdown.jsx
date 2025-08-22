@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ListGroup, Image, Spinner } from 'react-bootstrap';
 import { CheckCircleFill } from 'react-bootstrap-icons';
@@ -59,7 +58,12 @@ const MentionDropdown = ({
         case 'Enter':
           e.preventDefault();
           if (users[selectedIndex]) {
-            onSelect(users[selectedIndex]);
+            onSelect({
+                ...users[selectedIndex],
+                uid: users[selectedIndex].uid || users[selectedIndex].id, // Ensure uid is available
+                username: users[selectedIndex].username || users[selectedIndex].uid, // Keep username for display
+                name: users[selectedIndex].name || users[selectedIndex].displayName || 'Unknown User'
+              });
           }
           break;
         case 'Escape':
@@ -104,7 +108,12 @@ const MentionDropdown = ({
               key={user.uid}
               action
               active={index === selectedIndex}
-              onClick={() => onSelect(user)}
+              onClick={() => onSelect({
+                ...user,
+                uid: user.uid || user.id, // Ensure uid is available
+                username: user.username || user.uid, // Keep username for display
+                name: user.name || user.displayName || 'Unknown User'
+              })}
               className="d-flex align-items-center gap-2 py-2"
               style={{ cursor: 'pointer' }}
             >

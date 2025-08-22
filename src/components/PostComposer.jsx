@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { Card, Form, Button, Image, Alert, Spinner, Modal, InputGroup } from 'react-bootstrap';
 import { Camera, Globe, Lock, PersonFill, EmojiSmile, X, Search, CameraVideo } from 'react-bootstrap-icons';
@@ -27,7 +26,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
   const [searchTerm, setSearchTerm] = useState("");
   const [showLiveStudioModal, setShowLiveStudioModal] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  
+
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -51,7 +50,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
   const handleContentChange = useCallback((e) => {
     const value = e.target.value;
     const position = e.target.selectionStart;
-    
+
     setContent(value);
     setCursorPosition(position);
 
@@ -65,11 +64,11 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
     // Check for mention trigger
     const textBeforeCursor = value.substring(0, position);
     const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
-    
+
     if (mentionMatch) {
       const query = mentionMatch[1];
       setMentionQuery(query);
-      
+
       // Calculate position for dropdown
       const textarea = textareaRef.current;
       if (textarea) {
@@ -77,13 +76,13 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
         const lines = textBeforeCursor.split('\n');
         const currentLine = lines.length - 1;
         const lineHeight = 20;
-        
+
         setMentionPosition({
           top: rect.top + (currentLine * lineHeight) + 25,
           left: rect.left + (mentionMatch[0].length * 8)
         });
       }
-      
+
       setShowMentions(true);
     } else {
       setShowMentions(false);
@@ -95,12 +94,14 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
     const textBeforeCursor = content.substring(0, cursorPosition);
     const textAfterCursor = content.substring(cursorPosition);
     const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
-    
+
     if (mentionMatch) {
-      const newText = textBeforeCursor.replace(mentionMatch[0], `@${user.username} `) + textAfterCursor;
+      // Use uid for mentions since server will convert @uid to display name
+      const uid = user.uid || user.username;
+      const newText = textBeforeCursor.replace(mentionMatch[0], `@${uid} `) + textAfterCursor;
       setContent(newText);
-      
-      const newCursorPos = textBeforeCursor.replace(mentionMatch[0], `@${user.username} `).length;
+
+      const newCursorPos = textBeforeCursor.replace(mentionMatch[0], `@${uid} `).length;
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
@@ -108,7 +109,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
         }
       }, 0);
     }
-    
+
     setShowMentions(false);
     setMentionQuery('');
   }, [content, cursorPosition]);
@@ -202,10 +203,10 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
     try {
       setIsStreaming(true);
       // Keep the LiveStudioModal open - don't close it
-      
+
       // Don't create post here - let HomePage handle the actual stream creation
       // Just update local state to show live indicator
-      
+
     } catch (error) {
       console.error('Error starting live stream:', error);
       setError('Failed to start live stream');
@@ -220,9 +221,9 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    
+
     const cleanContent = content.replace(/(\r\n|\n|\r){2,}/g, "$1$2").trim();
-    
+
     if (!cleanContent.trim() && images.length === 0) {
       setError('Post must contain text or images');
       return;
@@ -260,7 +261,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
       }
 
       const response = await postAPI.createPost(postData);
-      
+
       // Reset form
       setContent('');
       setImages([]);
@@ -268,7 +269,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
       setPrivacy('public');
       setPostType('text');
       setShowComposerModal(false);
-      
+
       onPostCreated?.(response.post);
     } catch (err) {
       setError(err.message || 'Failed to create post');
@@ -347,7 +348,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 
         <Modal.Body className="overflow-x-hidden">
           {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
-          
+
           <Form onSubmit={handleSubmit}>
             <div className="d-flex gap-3 mb-3">
               <Image
