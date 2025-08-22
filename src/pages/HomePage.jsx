@@ -152,7 +152,7 @@ const HomePage = () => {
 
 	// Removed unused utility functions (now handled by PostComposer)
 
-	
+
 
 
 
@@ -379,7 +379,7 @@ const HomePage = () => {
 			try {
 				const response = await postAPI.createPost(postPayload);
 				console.log("Live stream post created successfully:", response);
-				
+
 				// Add the new post to the feed if we have an onPostCreated callback
 				if (response.post) {
 					const postWithDefaults = {
@@ -491,7 +491,7 @@ const HomePage = () => {
 
 	// Removed unused toggleLiveMode function
 
-	
+
 
 	const handleDeletePost = (postId) => {
 		setPostToDelete(postId);
@@ -715,9 +715,9 @@ const HomePage = () => {
 				)}
 			</Container>
 
-			
 
-			
+
+
 
 			{/* Image Viewer Modal */}
 			{showImageViewer && (

@@ -142,5 +142,15 @@ export const pageMetaData = {
 		title: "Network Diagnostics - DOPE Social Network",
 		description: "Comprehensive network connectivity testing and API diagnostics tools for troubleshooting connection issues.",
 		keywords: "network test, diagnostics, connectivity, API health, troubleshooting"
+	},
+	analytics: {
+		title: "Analytics - DOPE Network",
+		description: "View comprehensive analytics and insights for your DOPE Network account and content performance.",
+		keywords: "analytics, insights, statistics, performance, DOPE Network"
+	},
+	search: {
+		title: "Search - DOPE Network",
+		description: "Search for posts, users, and content on DOPE Network.",
+		keywords: "search, find, posts, users, content, DOPE Network"
 	}
 };

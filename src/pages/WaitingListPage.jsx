@@ -1,15 +1,19 @@
-
 /** @format */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Form, Button, Alert, Card, Image } from "react-bootstrap";
 import { CheckCircleFill, People, Globe, Clock } from "react-bootstrap-icons";
 
 import IntroductionBanner from "../components/banners/IntroductionBanner";
 import socialNetIllustration from "../assets/images/undraw_social-networking_v4z1.svg";
 import { addToWaitingList, isEmailInWaitingList } from "../utils/firestore-utils";
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 
 const WaitingListPage = () => {
+	useEffect(() => {
+		updatePageMeta(pageMetaData.waitingList);
+	}, []);
+
 	const [email, setEmail] = useState("");
 	const [name, setName] = useState("");
 	const [submitted, setSubmitted] = useState(false);
@@ -18,7 +22,7 @@ const WaitingListPage = () => {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		
+
 		if (!email || !name) {
 			setError("Please fill in all fields");
 			return;
@@ -34,17 +38,17 @@ const WaitingListPage = () => {
 		try {
 			setLoading(true);
 			setError("");
-			
+
 			// Check if email already exists
 			const emailExists = await isEmailInWaitingList(email);
 			if (emailExists) {
 				setError("This email is already on our waiting list. We'll notify you when we launch!");
 				return;
 			}
-			
+
 			// Add to waiting list
 			await addToWaitingList({ name, email });
-			
+
 			setSubmitted(true);
 		} catch (err) {
 			console.error('Waiting list submission error:', err);
@@ -115,7 +119,7 @@ const WaitingListPage = () => {
 						</div>
 					</div>
 				</Col>
-				
+
 				<Col md={6}>
 					<Card className="shadow-sm border-0">
 						<Card.Body className="p-4">

@@ -91,7 +91,7 @@ const SubscriptionPage = () => {
 		try {
 			// Ensure PayPal SDK is loaded
 			await loadPayPalSDK();
-			
+
 			// Create PayPal payment method
 			const paymentMethodId = await createPayPalPaymentMethod('#paypal-card-container');
 			return paymentMethodId;
@@ -110,7 +110,7 @@ const SubscriptionPage = () => {
 				// For card payments, redirect to PayPal to get paymentMethodId
 				try {
 					const paypalPaymentMethodId = await handlePayPalCardSetup();
-					
+
 					paymentData = {
 						type: "paypal_card",
 						paypalPaymentMethodId: paypalPaymentMethodId,
@@ -214,6 +214,7 @@ const SubscriptionPage = () => {
 	};
 
 	useEffect(() => {
+		updatePageMeta(pageMetaData.subscription);
 		if (user && typeof user === "object") {
 			// Handle both old and new API structures
 			const userSubscription = user.membership?.subscription || user.subscription || "free";
@@ -229,7 +230,7 @@ const SubscriptionPage = () => {
 					lastNameChange: null,
 				},
 			});
-			updatePageMeta(pageMetaData.subscription.title, pageMetaData.subscription.description);
+			
 
 			// Load payment methods
 			loadPaymentMethods();
@@ -789,10 +790,10 @@ const SubscriptionPage = () => {
 									You'll be redirected to PayPal to securely link your card
 								</p>
 							</div>
-							
+
 							{/* PayPal Card Container */}
 							<div id="paypal-card-container" className="mb-4"></div>
-							
+
 							<Form.Check
 								type="checkbox"
 								label="Set as default payment method"
@@ -800,7 +801,7 @@ const SubscriptionPage = () => {
 								onChange={(e) => setCardForm(prev => ({ ...prev, isDefault: e.target.checked }))}
 								className="mb-3"
 							/>
-							
+
 							<div className="bg-light p-3 rounded">
 								<small className="text-muted">
 									<strong>Secure:</strong> Your card details are processed directly by PayPal. 

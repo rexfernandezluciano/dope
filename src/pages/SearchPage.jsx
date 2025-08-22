@@ -22,7 +22,7 @@ import {
 } from "react-bootstrap-icons";
 
 import { postAPI, apiRequest } from "../config/ApiConfig";
-import { updatePageMeta } from "../utils/meta-utils";
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import PostCard from "../components/PostCard";
 import { formatTimeAgo } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
@@ -108,20 +108,21 @@ const SearchPage = () => {
 
 
 	useEffect(() => {
-		if (searchQuery.trim()) {
-			// Search all tabs when query changes
-			performSearch(searchQuery, "posts");
-			performSearch(searchQuery, "users"); 
-			performSearch(searchQuery, "comments");
+		const query = searchParams.get('q');
+		if (query) {
+			setSearchQuery(query);
+			performSearch(query);
+			updatePageMeta({
+				title: `Search: ${query} - DOPE Network`,
+				description: `Search results for "${query}" on DOPE Network.`,
+				keywords: `search, ${query}, posts, people, DOPE Network`
+			});
 		} else {
-			setPosts([]);
-			setUsers([]);
-			setComments([]);
+			updatePageMeta(pageMetaData.search);
 		}
-	}, [searchQuery]);
+	}, [searchParams]);
 
 
-	// Update meta tags when search query changes
 	useEffect(() => {
 		updatePageMeta({
 			title: searchQuery ? `Search results for "${searchQuery}"` : "Search DOPE Network",

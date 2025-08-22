@@ -137,7 +137,11 @@ const PostDetailPage = () => {
 	// Update page meta data when post loads
 	useEffect(() => {
 		if (post) {
-			updatePageMeta(pageMetaData.postDetail(post.content));
+			updatePageMeta({
+				title: `Post by ${post.author.name} - DOPE Network`,
+				description: post.content ? `${post.content.substring(0, 160)}...` : "View post on DOPE Network",
+				keywords: `post, content, ${post.author.name}, DOPE Network, social media`
+			});
 		}
 	}, [post]);
 

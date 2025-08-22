@@ -211,9 +211,11 @@ const ProfilePage = () => {
 	// Update page meta data when profile user changes
 	useEffect(() => {
 		if (profileUser) {
-			updatePageMeta(
-				pageMetaData.profile(profileUser.username, profileUser.name),
-			);
+			updatePageMeta({
+				title: `${profileUser.name} (@${profileUser.username}) - DOPE Network`,
+				description: `View ${profileUser.name}'s profile on DOPE Network. ${profileUser.bio || 'See their posts, followers, and more.'}`,
+				keywords: `${profileUser.username}, ${profileUser.name}, profile, DOPE Network, social media`
+			});
 		}
 	}, [profileUser]);
 
@@ -308,18 +310,18 @@ const ProfilePage = () => {
 					body: formData,
 				},
 			);
-			
+
 			if (!response.ok) {
 				throw new Error(`Cloudinary upload failed: ${response.status} ${response.statusText}`);
 			}
-			
+
 			const data = await response.json();
 			console.log("Cloudinary upload successful:", data.secure_url);
-			
+
 			if (!data.secure_url) {
 				throw new Error("No secure URL returned from Cloudinary");
 			}
-			
+
 			return data.secure_url;
 		} catch (error) {
 			console.error("Error uploading to Cloudinary:", error);

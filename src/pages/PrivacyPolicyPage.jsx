@@ -1,4 +1,3 @@
-
 /** @format */
 
 import React, { useEffect } from "react";
@@ -9,8 +8,8 @@ const PrivacyPolicyPage = () => {
 	useEffect(() => {
 		updatePageMeta({
 			title: "Privacy Policy - DOPE Network",
-			description: "Privacy Policy for DOPE Network",
-			keywords: "privacy, policy, data protection, DOPE Network"
+			description: "Read DOPE Network's privacy policy to understand how we protect and handle your personal data.",
+			keywords: "privacy policy, data protection, DOPE Network, terms"
 		});
 	}, []);
 

@@ -21,7 +21,7 @@ const LiveStreamPage = () => {
 	const [localAudioTrack, setLocalAudioTrack] = useState(null);
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isJoined, setIsJoined] = useState(false);
-	
+
 
 	const videoRef = useRef(null);
 	const socketRef = useRef(null);
@@ -74,7 +74,7 @@ const LiveStreamPage = () => {
 				if (videoRef.current) {
 					remoteVideoTrack.play(videoRef.current);
 				}
-				
+
 			}
 
 			if (mediaType === 'audio') {

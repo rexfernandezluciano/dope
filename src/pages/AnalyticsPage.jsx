@@ -55,7 +55,7 @@ import {
 
 import { postAPI, userAPI } from "../config/ApiConfig";
 import { formatTimeAgo } from "../utils/common-utils";
-import { updatePageMeta } from "../utils/meta-utils";
+import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 
 const AnalyticsPage = () => {
 	const { user } = useLoaderData() || {};
@@ -197,10 +197,10 @@ const AnalyticsPage = () => {
 		// Check if account is created more than 7 days ago
 		const accountCreationTime = user.createdAt || user.metadata?.creationTime;
 		if (!accountCreationTime) return false;
-		
+
 		const accountCreatedDate = new Date(accountCreationTime);
 		if (isNaN(accountCreatedDate.getTime())) return false;
-		
+
 		const sevenDaysAgo = new Date();
 		sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 3);
 		const accountOldEnough = accountCreatedDate < sevenDaysAgo;
@@ -228,13 +228,10 @@ const AnalyticsPage = () => {
 	}, [user, analytics]);
 
 	useEffect(() => {
+		updatePageMeta(pageMetaData.analytics);
 		if (user?.uid && user?.username) {
 			loadAnalytics();
 			loadUserEarnings();
-			updatePageMeta(
-				"Analytics",
-				`View your content performance and growth metrics on DOPE. Your username is ${user?.username}.`,
-			);
 		}
 	}, [loadAnalytics, loadUserEarnings, user?.uid, user?.username]);
 
@@ -252,7 +249,7 @@ const AnalyticsPage = () => {
 			const date = new Date();
 			date.setDate(date.getDate() - (6 - i));
 			const dateStr = date.toISOString().split('T')[0];
-			
+
 			// Filter posts for this specific day
 			const dayPosts = analytics.topPosts?.filter(post => {
 				if (!post.createdAt) return false;
