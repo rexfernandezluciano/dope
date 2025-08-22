@@ -394,6 +394,13 @@ export const testApiConnection = async () => {
 
 // Authentication API
 export const authAPI = {
+	register: async (userData) => {
+		return await apiRequest("/auth/register", {
+			method: "POST",
+			data: userData,
+		});
+	},
+
 	login: async (credentials) => {
 		return await apiRequest("/auth/login", {
 			method: "POST",
@@ -401,10 +408,10 @@ export const authAPI = {
 		});
 	},
 
-	register: async (userData) => {
-		return await apiRequest("/auth/register", {
+	loginWithGoogle: async (idToken) => {
+		return await apiRequest("/auth/google", {
 			method: "POST",
-			data: userData,
+			data: { idToken },
 		});
 	},
 
@@ -414,62 +421,119 @@ export const authAPI = {
 		});
 	},
 
-	me: async () => {
-		return await apiRequest("/auth/me");
-	},
-
 	verifyEmail: async (verificationData) => {
-		return await apiRequest("/auth/verify-email", {
+		return await apiRequest("/auth/verify", {
 			method: "POST",
 			data: verificationData,
 		});
 	},
 
 	resendVerification: async (email) => {
-		return await apiRequest("/auth/resend-code", {
+		return await apiRequest("/auth/resend-verification", {
 			method: "POST",
 			data: { email },
 		});
 	},
 
-	// Google OAuth endpoints
-	googleLogin: (googleData) => apiRequest("/auth/google/login", { method: "POST", data: googleData }),
-	googleSignup: (googleData) => apiRequest("/auth/google/signup", { method: "POST", data: googleData }),
+	forgotPassword: async (email) => {
+		return await apiRequest("/auth/forgot-password", {
+			method: "POST",
+			data: { email },
+		});
+	},
 
-	validateVerificationId: async (verificationId) => {
-		return await apiRequest(`/auth/validate-verification-id/${verificationId}`);
+	resetPassword: async (token, newPassword) => {
+		return await apiRequest("/auth/reset-password", {
+			method: "POST",
+			data: { token, newPassword },
+		});
 	},
 };
 
 // User API
 export const userAPI = {
-	getAllUsers: async () => {
-		return await apiRequest("/users");
+	getProfile: async (username) => {
+		return await apiRequest(`/users/profile/${username}`, {
+			method: "GET",
+		});
 	},
 
-	getUser: async (username) => {
-		return await apiRequest(`/users/${username}`);
-	},
-
-	updateProfile: async (username, userData) => {
-		return await apiRequest(`/users/${username}`, {
+	updateProfile: async (userData) => {
+		return await apiRequest("/users/profile", {
 			method: "PUT",
 			data: userData,
 		});
 	},
 
+	getUser: async () => {
+		return await apiRequest("/users/me", {
+			method: "GET",
+		});
+	},
+
+	getUserById: async (userId) => {
+		return await apiRequest(`/users/${userId}`, {
+			method: "GET",
+		});
+	},
+
 	followUser: async (username) => {
-		return await apiRequest(`/users/${username}/follow`, {
+		return await apiRequest(`/users/follow/${username}`, {
+			method: "POST",
+		});
+	},
+
+	unfollowUser: async (username) => {
+		return await apiRequest(`/users/unfollow/${username}`, {
 			method: "POST",
 		});
 	},
 
 	getFollowers: async (username) => {
-		return await apiRequest(`/users/${username}/followers`);
+		return await apiRequest(`/users/${username}/followers`, {
+			method: "GET",
+		});
 	},
 
 	getFollowing: async (username) => {
-		return await apiRequest(`/users/${username}/following`);
+		return await apiRequest(`/users/${username}/following`, {
+			method: "GET",
+		});
+	},
+
+	blockUser: async (username) => {
+		return await apiRequest(`/users/block/${username}`, {
+			method: "POST",
+		});
+	},
+
+	unblockUser: async (username) => {
+		return await apiRequest(`/users/unblock/${username}`, {
+			method: "DELETE",
+		});
+	},
+
+	searchUsers: async (query) => {
+		return await apiRequest(`/users/search?q=${encodeURIComponent(query)}`, {
+			method: "GET",
+		});
+	},
+
+	updateSettings: async (settings) => {
+		return await apiRequest("/users/settings", {
+			method: "PUT",
+			data: settings,
+		});
+	},
+
+	getSettings: async () => {
+		return await apiRequest("/users/settings", {
+			method: "GET",
+		});
+	},
+
+	getAllUsers: async () => {
+		return await apiRequest("/users");
 	},
 
 	getUserEarnings: async () => {
@@ -491,14 +555,6 @@ export const userAPI = {
 		});
 	},
 
-	searchUsers: async (query, params = {}) => {
-		const searchParams = new URLSearchParams({
-			query,
-			...params,
-		});
-		return await apiRequest(`/search/users?${searchParams.toString()}`);
-	},
-
 	// New endpoints from API documentation
 	checkUserExists: async (uid) => {
 		return await apiRequest(`/users/exists/${uid}`);
@@ -518,38 +574,22 @@ export const userAPI = {
 
 // Post API
 export const postAPI = {
-	getPosts: async (page = 1, limit = 20, additionalParams = {}) => {
-		const params = new URLSearchParams({
-			...additionalParams,
-		});
-
-		// Add limit to params if provided
-		if (limit) {
-			params.set("limit", limit.toString());
-		}
-
-		if (page) {
-			params.set("page", page.toString());
-		}
-
-		// Add cursor for pagination instead of page
-		if (additionalParams.cursor) {
-			params.set("cursor", additionalParams.cursor);
-		}
-
-		return await apiRequest(
-			`/posts${params.toString() ? `?${params.toString()}` : ""}`,
-		);
-	},
-
-	getPost: async (postId) => {
-		return await apiRequest(`/posts/${postId}`);
-	},
-
 	createPost: async (postData) => {
 		return await apiRequest("/posts", {
 			method: "POST",
 			data: postData,
+		});
+	},
+
+	getPosts: async (page = 1, limit = 10) => {
+		return await apiRequest(`/posts?page=${page}&limit=${limit}`, {
+			method: "GET",
+		});
+	},
+
+	getPost: async (postId) => {
+		return await apiRequest(`/posts/${postId}`, {
+			method: "GET",
 		});
 	},
 
@@ -566,42 +606,56 @@ export const postAPI = {
 		});
 	},
 
-	trackView: async (postId) => {
-		return await apiRequest(`/posts/${postId}/view`, {
-			method: "POST",
-		});
-	},
-
 	likePost: async (postId) => {
 		return await apiRequest(`/posts/${postId}/like`, {
 			method: "POST",
 		});
 	},
 
+	unlikePost: async (postId) => {
+		return await apiRequest(`/posts/${postId}/unlike`, {
+			method: "DELETE",
+		});
+	},
+
+	getUserPosts: async (username, page = 1, limit = 10) => {
+		return await apiRequest(
+			`/posts/user/${username}?page=${page}&limit=${limit}`,
+			{
+				method: "GET",
+			},
+		);
+	},
+
+	searchPosts: async (query) => {
+		return await apiRequest(`/posts/search?q=${encodeURIComponent(query)}`, {
+			method: "GET",
+		});
+	},
+
+	getHomeFeed: async (page = 1, limit = 10) => {
+		return await apiRequest(`/posts/feed?page=${page}&limit=${limit}`, {
+			method: "GET",
+		});
+	},
+
 	sharePost: async (postId) => {
-		return await apiRequest(`/posts/share/${postId}`, {
+		return await apiRequest(`/posts/${postId}/share`, {
 			method: "POST",
 		});
 	},
 
-	getFollowingFeed: async (params = {}) => {
-		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(
-			`/posts/feed/following${queryString ? `?${queryString}` : ""}`,
-		);
-	},
-
-	getCurrentUserPosts: async () => {
-		return await apiRequest("/posts/user/me");
-	},
-
-	searchPosts: async (query, params = {}) => {
-		const searchParams = new URLSearchParams({
-			search: query,
-			limit: params.limit || 20,
-			...params,
+	reportPost: async (postId, reason) => {
+		return await apiRequest(`/posts/${postId}/report`, {
+			method: "POST",
+			data: { reason },
 		});
-		return await apiRequest(`/posts?${searchParams.toString()}`);
+	},
+
+	getTrendingPosts: async (timeframe = "24h") => {
+		return await apiRequest(`/posts/trending?timeframe=${timeframe}`, {
+			method: "GET",
+		});
 	},
 
 	// New endpoints from API documentation
@@ -621,7 +675,10 @@ export const postAPI = {
 };
 
 export const imageAPI = {
-	uploadImages: async (formData) => {
+	uploadImage: async (imageFile) => {
+		const formData = new FormData();
+		formData.append("image", imageFile);
+
 		return await apiRequest("/images/upload", {
 			method: "POST",
 			data: formData,
@@ -630,12 +687,20 @@ export const imageAPI = {
 			},
 		});
 	},
+
+	deleteImage: async (imageId) => {
+		return await apiRequest(`/images/${imageId}`, {
+			method: "DELETE",
+		});
+	},
 };
 
 // Sessions API
 export const sessionAPI = {
 	getSessions: async () => {
-		return await apiRequest("/sessions");
+		return await apiRequest("/sessions", {
+			method: "GET",
+		});
 	},
 
 	revokeSession: async (sessionId) => {
@@ -814,7 +879,9 @@ export const paymentAPI = {
 	},
 
 	getPaymentMethods: async () => {
-		return await apiRequest("/payments/methods");
+		return await apiRequest("/payments/methods", {
+			method: "GET",
+		});
 	},
 
 	deletePaymentMethod: async (paymentMethodId) => {

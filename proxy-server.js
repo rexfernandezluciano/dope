@@ -41,7 +41,7 @@ app.options("*", (req, res) => {
 app.use(
   "/v1",
   createProxyMiddleware({
-    target: "https://api.dopp.eu.org/v1",
+    target: "https://api.dopp.eu.org",
     changeOrigin: true,
     secure: true,
     followRedirects: true,
