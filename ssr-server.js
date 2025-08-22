@@ -3,7 +3,12 @@ import React from "react";
 import { renderToString } from "react-dom/server";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { createProxyMiddleware } from "http-proxy-middleware";
+
+// Get the directory name from the file URL
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
