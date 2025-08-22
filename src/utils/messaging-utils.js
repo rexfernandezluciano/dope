@@ -1,6 +1,7 @@
 import { initializeOneSignal, getOneSignalPlayerId, setOneSignalExternalUserId, requestNotificationPermission as requestOneSignalPermission } from "../config/OneSignalConfig";
 import { db } from "../config/FirebaseConfig";
 import { collection, addDoc, doc, setDoc, query, where, onSnapshot, orderBy, limit, getDocs, updateDoc, serverTimestamp } from "firebase/firestore";
+import { getUser } from './app-utils.js';
 
 /**
  * Initialize OneSignal and set user ID
@@ -75,7 +76,7 @@ const savePlayerIdToFirestore = async (playerId, uid) => {
 export const sendLikeNotification = async (postId, post, currentUser) => {
 	try {
 		if (!post?.author?.uid || post.author.uid === currentUser.uid) return;
-		
+
 		const notification = {
 			userId: post.author.uid,
 			type: 'like',
@@ -105,7 +106,7 @@ export const sendLikeNotification = async (postId, post, currentUser) => {
 export const sendFollowNotification = async (followedUserId, currentUser) => {
 	try {
 		if (followedUserId === currentUser.uid) return;
-		
+
 		const notification = {
 			userId: followedUserId,
 			type: 'follow',
@@ -136,7 +137,7 @@ export const sendFollowNotification = async (followedUserId, currentUser) => {
 export const sendCommentNotification = async (postId, post, currentUser, commentText) => {
 	try {
 		if (!post?.author?.uid || post.author.uid === currentUser.uid) return;
-		
+
 		const notification = {
 			userId: post.author.uid,
 			type: 'comment',
@@ -188,7 +189,7 @@ export const getUserNotifications = async (userId, limitCount = 20) => {
 			orderBy("createdAt", "desc"),
 			limit(limitCount)
 		);
-		
+
 		const querySnapshot = await getDocs(q);
 		return querySnapshot.docs.map(doc => ({
 			id: doc.id,
@@ -227,7 +228,7 @@ export const getUnreadNotificationCount = async (userId) => {
 			where("userId", "==", userId),
 			where("read", "==", false)
 		);
-		
+
 		const querySnapshot = await getDocs(q);
 		return querySnapshot.size;
 	} catch (error) {
@@ -250,7 +251,7 @@ export const setupNotificationListener = (userId, callback) => {
 			where("read", "==", false),
 			orderBy("createdAt", "desc")
 		);
-		
+
 		return onSnapshot(q, (querySnapshot) => {
 			const notifications = querySnapshot.docs.map(doc => ({
 				id: doc.id,

@@ -1,4 +1,3 @@
-
 import { 
 	sendLikeNotification, 
 	sendFollowNotification, 
@@ -18,10 +17,10 @@ export const handleLikeNotification = async (postId, post, currentUser) => {
 			console.warn('Missing required data for like notification');
 			return;
 		}
-		
+
 		// Don't notify if user likes their own post
 		if (post.author?.uid === currentUser.uid) return;
-		
+
 		// Send notification in background without blocking main operation
 		setTimeout(async () => {
 			try {
@@ -43,7 +42,7 @@ export const handleLikeNotification = async (postId, post, currentUser) => {
 export const handleFollowNotification = async (followedUserId, currentUser) => {
 	try {
 		if (!followedUserId || !currentUser) return;
-		
+
 		await sendFollowNotification(followedUserId, currentUser);
 	} catch (error) {
 		console.error('Error sending follow notification:', error);
@@ -63,10 +62,10 @@ export const handleCommentNotification = async (postId, post, currentUser, comme
 			console.warn('Missing required data for comment notification');
 			return;
 		}
-		
+
 		// Don't notify if user comments on their own post
 		if (post.author?.uid === currentUser.uid) return;
-		
+
 		// Send notification in background without blocking main operation
 		setTimeout(async () => {
 			try {
@@ -88,7 +87,7 @@ export const handleCommentNotification = async (postId, post, currentUser, comme
 export const handleNewPostNotification = async (postId, postData) => {
 	try {
 		if (!postId || !postData) return;
-		
+
 		await notifyFollowersOfNewPost(postId, postData);
 	} catch (error) {
 		console.error('Error sending new post notification:', error);
@@ -123,7 +122,7 @@ export const formatNotificationData = (title, message, url = null, data = {}) =>
  */
 export const shouldSendNotification = (userSettings, notificationType) => {
 	if (!userSettings || !userSettings.notifications) return true;
-	
+
 	switch (notificationType) {
 		case 'like':
 			return userSettings.notifications.likes !== false;

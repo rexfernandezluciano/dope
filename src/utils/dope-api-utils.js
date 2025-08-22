@@ -1,7 +1,6 @@
-
-import { 
-  searchAPI, 
-  analyticsAPI, 
+import {
+  searchAPI,
+  analyticsAPI,
   subscriptionAPI,
   contentModerationAPI,
   blockAPI,
@@ -50,17 +49,17 @@ export const extractMentions = (text) => {
 
 export const formatTextWithLinks = (text) => {
   if (!text) return '';
-  
+
   // Replace hashtags with links
   text = text.replace(/#([a-zA-Z0-9_]+)/g, '<a href="/hashtag/$1" class="hashtag-link">#$1</a>');
-  
+
   // Replace mentions with links
   text = text.replace(/@([a-zA-Z0-9_]+)/g, '<a href="/profile/$1" class="mention-link">@$1</a>');
-  
+
   // Replace URLs with links
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   text = text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-  
+
   return text;
 };
 
@@ -73,11 +72,11 @@ export const performAdvancedSearch = async (query, filters = {}) => {
       includeMentions: true,
       sortBy: filters.sortBy || 'relevance'
     });
-    
+
     return {
       ...results,
-      totalResults: (results.posts?.length || 0) + 
-                   (results.users?.length || 0) + 
+      totalResults: (results.posts?.length || 0) +
+                   (results.users?.length || 0) +
                    (results.comments?.length || 0)
     };
   } catch (error) {
@@ -110,10 +109,10 @@ export const searchWithAutocomplete = async (query, type = 'all') => {
 // Analytics utilities
 export const formatAnalyticsData = (data) => {
   if (!data) return null;
-  
+
   return {
     ...data,
-    engagementRate: data.totalEngagements && data.totalViews 
+    engagementRate: data.totalEngagements && data.totalViews
       ? ((data.totalEngagements / data.totalViews) * 100).toFixed(2)
       : '0.00',
     averageLikesPerPost: data.totalLikes && data.totalPosts
@@ -150,7 +149,7 @@ export const getSubscriptionStatus = async () => {
       isActive: subscription.status === 'active',
       isPremium: subscription.tier === 'premium' || subscription.tier === 'pro',
       isPro: subscription.tier === 'pro',
-      daysUntilRenewal: subscription.nextBillingDate 
+      daysUntilRenewal: subscription.nextBillingDate
         ? Math.ceil((new Date(subscription.nextBillingDate) - new Date()) / (1000 * 60 * 60 * 24))
         : null,
       formattedNextBilling: subscription.nextBillingDate
@@ -174,18 +173,18 @@ export const formatSubscriptionTier = (tier) => {
     premium: { name: 'Premium', color: 'primary', features: ['HD uploads', 'Priority support', 'Advanced analytics'] },
     pro: { name: 'Pro', color: 'warning', features: ['4K uploads', 'Live streaming', 'Pro analytics', 'Blue checkmark'] }
   };
-  
+
   return tiers[tier] || tiers.free;
 };
 
 // Payment utilities
 export const formatPaymentMethod = (paymentMethod) => {
   if (!paymentMethod) return null;
-  
+
   return {
     ...paymentMethod,
     maskedNumber: paymentMethod.last4 ? `****-****-****-${paymentMethod.last4}` : null,
-    isExpired: paymentMethod.expiryDate 
+    isExpired: paymentMethod.expiryDate
       ? new Date(paymentMethod.expiryDate) < new Date()
       : false,
     formattedExpiry: paymentMethod.expiryDate
@@ -197,7 +196,7 @@ export const formatPaymentMethod = (paymentMethod) => {
 // Session management utilities
 export const formatSessionInfo = (session) => {
   if (!session) return null;
-  
+
   return {
     ...session,
     isCurrentSession: session.isCurrent,
@@ -216,11 +215,11 @@ export const revokeAllOtherSessions = async () => {
   try {
     const sessions = await sessionAPI.getSessions();
     const otherSessions = sessions.filter(session => !session.isCurrent);
-    
-    const revokePromises = otherSessions.map(session => 
+
+    const revokePromises = otherSessions.map(session =>
       sessionAPI.revokeSession(session._id)
     );
-    
+
     await Promise.all(revokePromises);
     return { success: true, revokedCount: otherSessions.length };
   } catch (error) {
@@ -261,19 +260,19 @@ export const reportContent = async (contentType, contentId, reason, description 
 // Validation utilities
 export const validatePostContent = (content, images = []) => {
   const errors = [];
-  
+
   if (!content?.trim() && images.length === 0) {
     errors.push('Post must contain text or images');
   }
-  
+
   if (content && content.length > 2000) {
     errors.push('Post content cannot exceed 2000 characters');
   }
-  
+
   if (images.length > 10) {
     errors.push('Cannot upload more than 10 images per post');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors
@@ -282,15 +281,15 @@ export const validatePostContent = (content, images = []) => {
 
 export const validateCommentContent = (content) => {
   const errors = [];
-  
+
   if (!content?.trim()) {
     errors.push('Comment cannot be empty');
   }
-  
+
   if (content && content.length > 1000) {
     errors.push('Comment cannot exceed 1000 characters');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors
@@ -300,7 +299,7 @@ export const validateCommentContent = (content) => {
 // Utility for handling API errors
 export const handleAPIError = (error) => {
   console.error('API Error:', error);
-  
+
   if (error.response?.status === 401) {
     return 'Your session has expired. Please log in again.';
   } else if (error.response?.status === 403) {
@@ -321,20 +320,20 @@ export const handleAPIError = (error) => {
 // Rate limiting utilities
 export const createRateLimiter = (maxRequests, windowMs) => {
   const requests = [];
-  
+
   return () => {
     const now = Date.now();
     const windowStart = now - windowMs;
-    
+
     // Remove old requests
     while (requests.length > 0 && requests[0] < windowStart) {
       requests.shift();
     }
-    
+
     if (requests.length >= maxRequests) {
       throw new Error('Rate limit exceeded. Please try again later.');
     }
-    
+
     requests.push(now);
   };
 };

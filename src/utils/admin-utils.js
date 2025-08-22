@@ -1,8 +1,7 @@
-
 /** @format */
 
-import { getAllWaitingListEntries, getWaitingListStats } from './firestore-utils';
-import { isAdmin } from './app-utils';
+import { getAllWaitingListEntries, getWaitingListStats } from './firestore-utils.js';
+import { isAdmin } from './app-utils.js';
 
 /**
  * Export waiting list to CSV format (admin only)
@@ -16,10 +15,10 @@ export const exportWaitingListCSV = async () => {
 		}
 
 		const entries = await getAllWaitingListEntries();
-		
+
 		// CSV headers
 		const headers = ['Name', 'Email', 'Created At', 'Status', 'Source'];
-		
+
 		// Convert entries to CSV rows
 		const rows = entries.map(entry => [
 			entry.name || '',
@@ -47,11 +46,11 @@ export const exportWaitingListCSV = async () => {
 export const downloadWaitingListCSV = async () => {
 	try {
 		const csvContent = await exportWaitingListCSV();
-		
+
 		// Create blob and download
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 		const link = document.createElement('a');
-		
+
 		if (link.download !== undefined) {
 			const url = URL.createObjectURL(blob);
 			link.setAttribute('href', url);
@@ -93,10 +92,10 @@ export const getWaitingListDashboard = async () => {
 			const date = new Date(now);
 			date.setDate(date.getDate() - i);
 			date.setHours(0, 0, 0, 0);
-			
+
 			const nextDate = new Date(date);
 			nextDate.setDate(nextDate.getDate() + 1);
-			
+
 			const dayEntries = entries.filter(entry => {
 				if (!entry.createdAt) return false;
 				const entryDate = entry.createdAt.toDate();

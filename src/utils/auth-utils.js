@@ -1,13 +1,12 @@
-
 /** @format */
 
-import { getUser as getAppUser } from './app-utils';
+import { getUser } from './app-utils.js';
 
 /**
  * Get current authenticated user (alias for app-utils getUser)
  * @returns {Promise<Object|null>} User object or null
  */
-export const getUser = getAppUser;
+export const getUser = getUser;
 
 /**
  * Check if user is authenticated
