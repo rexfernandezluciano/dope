@@ -11,7 +11,17 @@ const API_ENDPOINTS = (() => {
 	if (process.env.NODE_ENV === "production") {
 		// In production, use HTTPS URLs only
 		const currentDomain = window.location.origin;
-		// Check if current domain already includes port 5000
+		const hostname = window.location.hostname;
+		
+		// For Replit environments, use the current domain as-is since SSR handles routing
+		if (hostname.includes('replit.dev') || hostname.includes('replit.app')) {
+			return [
+				currentDomain, // Use current domain as-is for Replit
+				"https://api.dopp.eu.org"
+			];
+		}
+		
+		// For other production environments, check if port 5000 is needed
 		if (currentDomain.includes(':5000')) {
 			return [
 				currentDomain, // Use current domain as-is if it already has port 5000

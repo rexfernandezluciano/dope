@@ -202,17 +202,31 @@ const injectMetaTags = (html, metaData, url) => {
   return updatedHtml;
 };
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    service: "dope-network-ssr",
+    version: "1.0.0",
+    uptime: process.uptime()
+  });
+});
+
 // API proxy middleware
 app.use(
   "/v1",
   createProxyMiddleware({
-    target: "https://api.dopp.eu.org/v1",
+    target: "https://api.dopp.eu.org",
     changeOrigin: true,
     secure: true,
     followRedirects: true,
+    pathRewrite: {
+      '^/v1': '/v1', // Keep the /v1 prefix
+    },
     onProxyReq: (proxyReq, req, res) => {
       console.log(
-        `Proxying ${req.method} ${req.url} to https://api.dopp.eu.org/v1${req.url}`,
+        `Proxying ${req.method} ${req.url} to https://api.dopp.eu.org${req.url}`,
       );
     },
     onError: (err, req, res) => {
