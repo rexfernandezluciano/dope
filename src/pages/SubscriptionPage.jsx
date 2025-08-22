@@ -26,6 +26,7 @@ import {
 
 import { userAPI, paymentAPI } from "../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
+import { loadPayPalSDK, createPayPalPaymentMethod } from "../config/PayPalConfig";
 
 const SubscriptionPage = () => {
 	const { user } = useLoaderData();
@@ -85,66 +86,48 @@ const SubscriptionPage = () => {
 		}
 	};
 
+	// Handle PayPal card integration
+	const handlePayPalCardSetup = async () => {
+		try {
+			// Ensure PayPal SDK is loaded
+			await loadPayPalSDK();
+			
+			// Create PayPal payment method
+			const paymentMethodId = await createPayPalPaymentMethod('#paypal-card-container');
+			return paymentMethodId;
+		} catch (error) {
+			throw new Error(`PayPal setup failed: ${error.message}`);
+		}
+	};
+
 	// Handle adding payment method
 	const handleAddPaymentMethod = async () => {
-		if (selectedPaymentType === "card") {
-			// Validate card form
-			if (!cardForm.cardNumber || !cardForm.expiryDate || !cardForm.cvc || !cardForm.cardholderName) {
-				setMessage("Please fill in all card details");
-				setMessageType("danger");
-				return;
-			}
-
-			// Basic card number validation (remove spaces and check length)
-			const cleanCardNumber = cardForm.cardNumber.replace(/\s/g, '');
-			if (cleanCardNumber.length < 13 || cleanCardNumber.length > 19) {
-				setMessage("Please enter a valid card number");
-				setMessageType("danger");
-				return;
-			}
-
-			// Basic expiry validation
-			const [month, year] = cardForm.expiryDate.split('/');
-			if (!month || !year || month < 1 || month > 12 || year < new Date().getFullYear() % 100) {
-				setMessage("Please enter a valid expiry date");
-				setMessageType("danger");
-				return;
-			}
-
-			// Basic CVC validation
-			if (cardForm.cvc.length < 3 || cardForm.cvc.length > 4) {
-				setMessage("Please enter a valid CVC");
-				setMessageType("danger");
-				return;
-			}
-		}
-
 		try {
 			setLoading(true);
 
 			let paymentData;
 			if (selectedPaymentType === "card") {
-				// Parse expiry date
-				const [month, year] = cardForm.expiryDate.split('/');
-				const fullYear = parseInt(year) < 50 ? 2000 + parseInt(year) : 1900 + parseInt(year);
-
-				// Determine card provider from card number
-				const cardNumber = cardForm.cardNumber.replace(/\s/g, '');
-				
-				paymentData = {
-					type: "paypal_card",
-					paypalPaymentMethodId: "",
-					last4: cardNumber.slice(-4),
-					expiryMonth: parseInt(month),
-					expiryYear: fullYear,
-					holderName: cardForm.cardholderName,
-					isDefault: cardForm.isDefault || paymentMethods.length === 0 // Make first payment method default
-				};
+				// For card payments, redirect to PayPal to get paymentMethodId
+				try {
+					const paypalPaymentMethodId = await handlePayPalCardSetup();
+					
+					paymentData = {
+						type: "paypal_card",
+						paypalPaymentMethodId: paypalPaymentMethodId,
+						isDefault: cardForm.isDefault || paymentMethods.length === 0
+					};
+				} catch (paypalError) {
+					setMessage(paypalError.message || "Failed to set up PayPal payment method");
+					setMessageType("danger");
+					setLoading(false);
+					return;
+				}
 			} else if (selectedPaymentType === "paypal") {
+				// For PayPal wallet, use different flow
 				paymentData = {
 					type: "paypal_wallet",
-					paypalEmail: user.email, // Use user's email for PayPal
-					isDefault: paymentMethods.length === 0 // Make first payment method default
+					paypalEmail: user.email,
+					isDefault: paymentMethods.length === 0
 				};
 			}
 
@@ -152,7 +135,7 @@ const SubscriptionPage = () => {
 				const response = await paymentAPI.addPaymentMethod(paymentData);
 
 				if (selectedPaymentType === "card") {
-					setMessage("Credit card added successfully!");
+					setMessage("Credit card linked through PayPal successfully!");
 				} else {
 					setMessage("PayPal connected successfully!");
 				}
@@ -798,61 +781,18 @@ const SubscriptionPage = () => {
 					</Form.Group>
 
 					{selectedPaymentType === "card" ? (
-						<Form>
-							<Form.Group className="mb-3">
-								<Form.Label>Card Number</Form.Label>
-								<Form.Control
-									type="text"
-									placeholder="1234 5678 9012 3456"
-									value={cardForm.cardNumber}
-									onChange={(e) => {
-										const formatted = formatCardNumber(e.target.value);
-										setCardForm(prev => ({ ...prev, cardNumber: formatted }));
-									}}
-									maxLength="19"
-								/>
-							</Form.Group>
-							<Row>
-								<Col>
-									<Form.Group className="mb-3">
-										<Form.Label>Expiry Date</Form.Label>
-										<Form.Control 
-											type="text" 
-											placeholder="MM/YY" 
-											value={cardForm.expiryDate}
-											onChange={(e) => {
-												const formatted = formatExpiryDate(e.target.value);
-												setCardForm(prev => ({ ...prev, expiryDate: formatted }));
-											}}
-											maxLength="5" 
-										/>
-									</Form.Group>
-								</Col>
-								<Col>
-									<Form.Group className="mb-3">
-										<Form.Label>CVC</Form.Label>
-										<Form.Control 
-											type="text" 
-											placeholder="123" 
-											value={cardForm.cvc}
-											onChange={(e) => {
-												const value = e.target.value.replace(/[^0-9]/g, '');
-												setCardForm(prev => ({ ...prev, cvc: value }));
-											}}
-											maxLength="4" 
-										/>
-									</Form.Group>
-								</Col>
-							</Row>
-							<Form.Group className="mb-3">
-								<Form.Label>Cardholder Name</Form.Label>
-								<Form.Control 
-									type="text" 
-									placeholder="John Doe" 
-									value={cardForm.cardholderName}
-									onChange={(e) => setCardForm(prev => ({ ...prev, cardholderName: e.target.value }))}
-								/>
-							</Form.Group>
+						<div>
+							<div className="text-center py-3 mb-4">
+								<CreditCard size={48} className="text-primary mb-3" />
+								<h6>Add Credit/Debit Card via PayPal</h6>
+								<p className="text-muted mb-3">
+									You'll be redirected to PayPal to securely link your card
+								</p>
+							</div>
+							
+							{/* PayPal Card Container */}
+							<div id="paypal-card-container" className="mb-4"></div>
+							
 							<Form.Check
 								type="checkbox"
 								label="Set as default payment method"
@@ -860,7 +800,14 @@ const SubscriptionPage = () => {
 								onChange={(e) => setCardForm(prev => ({ ...prev, isDefault: e.target.checked }))}
 								className="mb-3"
 							/>
-						</Form>
+							
+							<div className="bg-light p-3 rounded">
+								<small className="text-muted">
+									<strong>Secure:</strong> Your card details are processed directly by PayPal. 
+									We never store your card information on our servers.
+								</small>
+							</div>
+						</div>
 					) : (
 						<div className="text-center py-4">
 							<Paypal size={48} className="text-primary mb-3" />
@@ -892,8 +839,9 @@ const SubscriptionPage = () => {
 					>
 						Cancel
 					</Button>
-					<Button variant="primary" onClick={handleAddPaymentMethod}>
-						{selectedPaymentType === "card" ? "Add Card" : "Connect PayPal"}
+					<Button variant="primary" onClick={handleAddPaymentMethod} disabled={loading}>
+						{loading ? "Processing..." : 
+						 selectedPaymentType === "card" ? "Link Card via PayPal" : "Connect PayPal"}
 					</Button>
 				</Modal.Footer>
 			</Modal>
