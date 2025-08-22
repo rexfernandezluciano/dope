@@ -638,12 +638,6 @@ export const postAPI = {
 		});
 	},
 
-	getHomeFeed: async (page = 1, limit = 10) => {
-		return await apiRequest(`/posts/feed?page=${page}&limit=${limit}`, {
-			method: "GET",
-		});
-	},
-
 	sharePost: async (postId) => {
 		return await apiRequest(`/posts/${postId}/share`, {
 			method: "POST",
@@ -715,8 +709,8 @@ export const sessionAPI = {
 	},
 
 	revokeAllSessions: async () => {
-		return await apiRequest("/sessions/revoke-all", {
-			method: "POST",
+		return await apiRequest("/sessions", {
+			method: "DELETE",
 		});
 	},
 };
