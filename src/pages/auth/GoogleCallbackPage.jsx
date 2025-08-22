@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Spinner, Alert } from 'react-bootstrap';
-import * as authAPI from '../api/authAPI'; // Assuming authAPI is defined elsewhere
+import { authAPI } from '../../config/ApiConfig'; // Assuming authAPI is defined elsewhere
 
 const GoogleCallbackPage = () => {
 	const [searchParams] = useSearchParams();

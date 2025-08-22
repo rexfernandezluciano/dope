@@ -3,11 +3,11 @@
 import Cookies from "js-cookie";
 import axios from "axios";
 
-// Check if we're using proxy (in development)
+// Check if we're using proxy (only in development on localhost)
 const isUsingProxy =
 	process.env.NODE_ENV === "development" &&
-	(window.location.hostname.includes("replit") ||
-		window.location.hostname.includes("repl.co"));
+	(window.location.hostname === "localhost" || 
+	 window.location.hostname === "127.0.0.1");
 
 // Multiple API endpoints for failover
 const API_ENDPOINTS = isUsingProxy
