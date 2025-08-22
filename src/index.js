@@ -25,17 +25,23 @@ if (typeof window !== 'undefined') {
     onCommitFiberUnmount: () => {},
   };
 
-  // Suppress all error overlays and popups
+  // Handle errors more gracefully instead of suppressing
   window.addEventListener('error', (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    return false;
+    // Only suppress development overlay errors, log actual errors
+    if (e.message && (
+      e.message.includes('React Error Overlay') ||
+      e.message.includes('webpack-dev-server')
+    )) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return false;
+    }
+    console.error('Application error:', e.error);
   }, true);
   
   window.addEventListener('unhandledrejection', (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    return false;
+    console.error('Unhandled promise rejection:', e.reason);
+    // Don't prevent default for actual promise rejections
   }, true);
 
   // Override console methods to hide warnings in development

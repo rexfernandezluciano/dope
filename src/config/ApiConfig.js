@@ -26,8 +26,8 @@ console.log("🔍 API Configuration Debug:", {
 	currentAPIUrl: API_ENDPOINTS[0]
 });
 
-// Validate API URL is HTTPS (skip validation for proxy URLs)
-if (API_BASE_URL && !API_BASE_URL.startsWith("https://") && !API_BASE_URL.startsWith("/") && API_BASE_URL !== "") {
+// Validate API URL is HTTPS (skip validation for proxy URLs and empty strings)
+if (API_BASE_URL && API_BASE_URL !== "" && !API_BASE_URL.startsWith("https://") && !API_BASE_URL.startsWith("/")) {
 	console.warn("⚠️ API URL should use HTTPS for security");
 }
 

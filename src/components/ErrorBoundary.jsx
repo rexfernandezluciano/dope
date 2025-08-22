@@ -16,6 +16,34 @@ class ErrorBoundary extends React.Component {
 		console.error('Error caught by boundary:', error, errorInfo);
 	}
 
+	componentDidMount() {
+		// Handle uncaught syntax errors and other window errors
+		window.addEventListener('error', this.handleWindowError);
+		window.addEventListener('unhandledrejection', this.handleUnhandledRejection);
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener('error', this.handleWindowError);
+		window.removeEventListener('unhandledrejection', this.handleUnhandledRejection);
+	}
+
+	handleWindowError = (event) => {
+		if (event.message.includes('Unexpected token')) {
+			this.setState({ 
+				hasError: true, 
+				error: new Error('Application failed to load properly. Please refresh the page.') 
+			});
+		}
+	}
+
+	handleUnhandledRejection = (event) => {
+		console.error('Unhandled promise rejection:', event.reason);
+		this.setState({ 
+			hasError: true, 
+			error: new Error('An unexpected error occurred. Please refresh the page.') 
+		});
+	}
+
 	render() {
 		if (this.state.hasError) {
 			return (

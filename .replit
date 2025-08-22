@@ -17,7 +17,7 @@ localPort = 5000
 externalPort = 5000
 
 [workflows]
-runButton = "SSR Server"
+runButton = "Development Server"
 
 [[workflows.workflow]]
 name = "Proxy Server"
@@ -36,3 +36,16 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node ssr-server.js"
+
+[[workflows.workflow]]
+name = "Development Server"
+author = 17645371
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run build"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node proxy-server.js"
