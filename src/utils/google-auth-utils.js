@@ -59,6 +59,10 @@ class GoogleAuthObserver {
 	start() {
 		// Set up message listener for cross-origin communication
 		this.messageListener = (event) => {
+			console.log('GoogleAuthObserver: Received message:', event);
+			console.log('Event origin:', event.origin);
+			console.log('Event data:', event.data);
+			
 			// Verify origin for security
 			const apiBaseUrl = getApiBaseUrl();
 			const allowedOrigins = [
@@ -68,7 +72,10 @@ class GoogleAuthObserver {
 				apiBaseUrl.startsWith('http') ? new URL(apiBaseUrl).origin : window.location.origin
 			];
 
+			console.log('Allowed origins:', allowedOrigins);
+
 			if (!allowedOrigins.includes(event.origin)) {
+				console.warn('Message from unauthorized origin:', event.origin);
 				return;
 			}
 
@@ -81,10 +88,24 @@ class GoogleAuthObserver {
 
 		window.addEventListener('message', this.messageListener);
 
-		// Poll for popup closure (fallback)
+		// Poll for popup closure (fallback) and check URL changes
 		this.interval = setInterval(() => {
 			if (this.popup.closed) {
 				this.handleError(new Error('Authentication cancelled'));
+				return;
+			}
+			
+			// Try to check popup URL (will fail due to CORS for external domains, but we can try)
+			try {
+				const popupUrl = this.popup.location.href;
+				console.log('Popup URL:', popupUrl);
+				
+				// If popup has navigated back to our domain, handle the callback
+				if (popupUrl && popupUrl.includes(window.location.origin) && popupUrl.includes('/auth/google/callback')) {
+					console.log('Popup returned to our callback URL');
+				}
+			} catch (e) {
+				// Expected for cross-origin URLs, ignore
 			}
 		}, 1000);
 

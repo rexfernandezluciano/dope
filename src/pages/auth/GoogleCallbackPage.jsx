@@ -1,95 +1,130 @@
-
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Spinner, Alert } from 'react-bootstrap';
+import * as authAPI from '../api/authAPI'; // Assuming authAPI is defined elsewhere
 
 const GoogleCallbackPage = () => {
 	const [searchParams] = useSearchParams();
 	const [status, setStatus] = useState('processing');
 	const [message, setMessage] = useState('Processing authentication...');
+	const navigate = useNavigate();
+
+	// Helper function to set authentication token and redirect
+	const setAuthToken = (token, persist) => {
+		if (persist) {
+			localStorage.setItem('authToken', token);
+		}
+		// Potentially update global state or context here
+	};
 
 	useEffect(() => {
-		const handleCallback = () => {
-			const success = searchParams.get('success');
-			const error = searchParams.get('error');
-			const token = searchParams.get('token');
-			const user = searchParams.get('user');
+		console.log('GoogleCallbackPage: Component mounted');
+		console.log('Current URL:', window.location.href);
+		console.log('URL params:', Object.fromEntries(searchParams.entries()));
+		console.log('URL search params:', window.location.search);
+		console.log('URL hash:', window.location.hash);
 
+		const handleCallback = async () => {
 			try {
-				if (success === 'true' && token) {
-					// Parse user data if provided
-					let userData = null;
-					if (user) {
+				// Get parameters from URL (check both search params and hash)
+				const token = searchParams.get('token') || new URLSearchParams(window.location.hash.substring(1)).get('token');
+				const error = searchParams.get('error') || new URLSearchParams(window.location.hash.substring(1)).get('error');
+				const code = searchParams.get('code');
+				const state = searchParams.get('state');
+				const access_token = searchParams.get('access_token') || new URLSearchParams(window.location.hash.substring(1)).get('access_token');
+
+				console.log('Callback params:', { token, error, code, state, access_token });
+
+				if (error) {
+					throw new Error(decodeURIComponent(error));
+				}
+
+				// Check for token in multiple formats (token, access_token, etc.)
+				const authToken = token || access_token;
+
+				if (authToken) {
+					// Store the token and user data
+					setAuthToken(authToken, true);
+
+					// Get user data from token or make API call
+					const userData = searchParams.get('user');
+					let user = null;
+
+					if (userData) {
 						try {
-							userData = JSON.parse(decodeURIComponent(user));
+							user = JSON.parse(decodeURIComponent(userData));
 						} catch (e) {
-							console.error('Error parsing user data:', e);
+							console.warn('Could not parse user data:', e);
+							// Fallback: fetch user data from API
+							try {
+								const response = await authAPI.me();
+								user = response.user || response;
+							} catch (apiError) {
+								console.warn('Could not fetch user data from API:', apiError);
+								user = { token: authToken }; // Minimal user object
+							}
+						}
+					} else {
+						// Fetch user data from API
+						try {
+							const response = await authAPI.me();
+							user = response.user || response;
+						} catch (apiError) {
+							console.warn('Could not fetch user data from API:', apiError);
+							user = { token: authToken }; // Minimal user object
 						}
 					}
 
+					// Send success message to parent window
 					const result = {
-						token,
-						user: userData,
-						success: true
+						success: true,
+						token: authToken,
+						user: user
 					};
 
-					// Send success message to parent window
+					console.log('Sending success result to parent:', result);
+
 					if (window.opener) {
 						window.opener.postMessage({
 							type: 'GOOGLE_AUTH_SUCCESS',
 							result
 						}, window.location.origin);
-						
-						setStatus('success');
-						setMessage('Authentication successful! Closing window...');
-						
-						// Close popup after a short delay
-						setTimeout(() => {
-							window.close();
-						}, 1500);
+						window.close();
 					} else {
-						setStatus('error');
-						setMessage('Unable to communicate with parent window.');
+						// Fallback: redirect to home page
+						navigate('/', { replace: true });
 					}
+				} else if (code) {
+					// If we have an authorization code but no token, the API didn't complete the OAuth flow
+					throw new Error('OAuth flow incomplete - received authorization code but no access token. Check your API backend OAuth implementation.');
 				} else {
-					const errorMessage = error || 'Authentication failed';
-					
-					// Send error message to parent window
-					if (window.opener) {
-						window.opener.postMessage({
-							type: 'GOOGLE_AUTH_ERROR',
-							error: errorMessage
-						}, window.location.origin);
-						
-						setStatus('error');
-						setMessage(`Authentication failed: ${errorMessage}`);
-						
-						// Close popup after a short delay
-						setTimeout(() => {
-							window.close();
-						}, 3000);
-					} else {
-						setStatus('error');
-						setMessage(`Authentication failed: ${errorMessage}`);
-					}
+					throw new Error('No token or authorization data received from server');
 				}
 			} catch (err) {
 				console.error('Callback processing error:', err);
-				
+
+				const errorMessage = err.message || 'An unknown error occurred';
+
+				// Send error message to parent window
 				if (window.opener) {
 					window.opener.postMessage({
 						type: 'GOOGLE_AUTH_ERROR',
-						error: 'Callback processing error'
+						error: errorMessage
 					}, window.location.origin);
 				}
-				
+
 				setStatus('error');
-				setMessage('Error processing authentication response.');
+				setMessage(`Authentication failed: ${errorMessage}`);
+
+				// Close popup after a short delay for errors
+				setTimeout(() => {
+					window.close();
+				}, 3000);
 			}
 		};
 
 		handleCallback();
-	}, [searchParams]);
+	}, [searchParams, navigate]);
 
 	return (
 		<div className="d-flex align-items-center justify-content-center min-vh-100">
@@ -100,19 +135,19 @@ const GoogleCallbackPage = () => {
 						<p>{message}</p>
 					</>
 				)}
-				
+
 				{status === 'success' && (
 					<>
 						<Alert variant="success">{message}</Alert>
 						<p className="text-muted">This window will close automatically.</p>
 					</>
 				)}
-				
+
 				{status === 'error' && (
 					<>
 						<Alert variant="danger">{message}</Alert>
 						<p className="text-muted">This window will close automatically.</p>
-						<button 
+						<button
 							className="btn btn-secondary mt-2"
 							onClick={() => window.close()}
 						>
