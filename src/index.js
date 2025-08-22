@@ -14,9 +14,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 // import "bootstrap/js/dist/dropdown";
 // import "bootstrap/js/dist/collapse";
 
-import "./config/FirebaseConfig";
-import "./config/OneSignalConfig";
-import { setupCSP } from "./utils/security-utils";
+import "./config/FirebaseConfig.js";
+import "./config/OneSignalConfig.js";
+import { setupCSP } from "./utils/security-utils.js";
 import "animate.css";
 import "./assets/css/app.css";
 
@@ -79,7 +79,7 @@ setupCSP();
 
 // Test API connectivity on startup (only in production)
 if (process.env.NODE_ENV === 'production') {
-  import('./config/ApiConfig').then(({ testApiConnection }) => {
+  import('./config/ApiConfig.js').then(({ testApiConnection }) => {
     testApiConnection().then(isConnected => {
       if (!isConnected) {
         console.warn('⚠️ API connectivity test failed. Network requests may fail.');
