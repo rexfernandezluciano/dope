@@ -646,6 +646,12 @@ export const sessionAPI = {
 			method: "DELETE",
 		});
 	},
+
+	revokeAllSessions: async () => {
+		return await apiRequest("/sessions/revoke-all", {
+			method: "POST",
+		});
+	},
 };
 
 export const commentAPI = {
