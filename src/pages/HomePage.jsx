@@ -1,6 +1,6 @@
 /** @format */
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
 import {
 	Container,
@@ -23,6 +23,8 @@ import AlertDialog from "../components/dialogs/AlertDialog";
 import PostCard from "../components/PostCard";
 import PostComposer from "../components/PostComposer";
 import LiveStudioModal from "../components/LiveStudioModal";
+import UserRecommendation from "../components/UserRecommendation";
+import Advertisement from "../components/Advertisement";
 import { deletePost as deletePostUtil, sharePost } from "../utils/common-utils";
 import {
 	initializeNotifications,
@@ -58,6 +60,8 @@ const HomePage = () => {
 	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
+	const [showAds, setShowAds] = useState(true);
+	const [adInterval, setAdInterval] = useState(5); // Show ad every 5 posts
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -680,19 +684,33 @@ const HomePage = () => {
 								<p>Be the first to share something!</p>
 							</div>
 						) : (
-							displayedPosts.map((post) => (
-								<PostCard
-									key={post.id}
-									post={post}
-									currentUser={user}
-									onLike={handleLikePost}
-									onShare={() => handleSharePost(post.id)}
-									onDeletePost={handleDeletePost}
-									onPostClick={(e) => handleImageClick(post.images, post.id, e)}
-									onHashtagClick={handleHashtagClick}
-									showComments={true}
-									comments={post.comments || []}
-								/>
+							displayedPosts.map((post, index) => (
+								<React.Fragment key={post.id}>
+									{/* Show user recommendations at the top for logged-in users */}
+									{index === 0 && user && (
+										<UserRecommendation currentUser={user} />
+									)}
+									
+									{/* Show advertisement every few posts */}
+									{showAds && index > 0 && index % adInterval === 0 && (
+										<Advertisement 
+											onClose={() => setShowAds(false)}
+										/>
+									)}
+									
+									<PostCard
+										key={post.id}
+										post={post}
+										currentUser={user}
+										onLike={handleLikePost}
+										onShare={() => handleSharePost(post.id)}
+										onDeletePost={handleDeletePost}
+										onPostClick={(e) => handleImageClick(post.images, post.id, e)}
+										onHashtagClick={handleHashtagClick}
+										showComments={true}
+										comments={post.comments || []}
+									/>
+								</React.Fragment>
 							))
 						)}
 

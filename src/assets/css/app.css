@@ -369,7 +369,7 @@ button, [role="button"] {
     z-index: 1050;
     transition: left 0.3s ease;
   }
-  
+
   .settings-sidebar.show {
     left: 0;
   }
@@ -704,4 +704,34 @@ button, [role="button"] {
 /* Post content specific styles */
 .post-content .parsed-text-content {
 	font-size: 1rem;
+}
+
+/* User Recommendations */
+.user-recommendation {
+	transition: background-color 0.2s ease;
+}
+
+.user-recommendation:hover {
+	background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Advertisement styles */
+.advertisement-card {
+	border-left: 3px solid #007bff;
+}
+
+.advertisement-card .card-body {
+	position: relative;
+}
+
+.cursor-pointer {
+	cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.user-recommendation .btn {
+		font-size: 0.8rem;
+		padding: 0.25rem 0.5rem;
+	}
 }

@@ -594,16 +594,13 @@ export const userAPI = {
 		return await apiRequest(`/users/exists/${uid}`);
 	},
 
-	checkEmailExists: async (email) => {
-		return await apiRequest(`/users/email-exists`, {
-			method: "POST",
-			data: { email },
-		});
+	checkEmailExists: (email) =>
+		apiRequest(`/auth/check-email?email=${encodeURIComponent(email)}`),
+	getRecommendedUsers: (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return apiRequest(`/users/recommended${queryString ? `?${queryString}` : ""}`);
 	},
-
-	isAdmin: async (uid) => {
-		return await apiRequest(`/users/${uid}/admin`);
-	},
+	followUser: (userId) => apiRequest(`/users/${userId}/follow`, { method: "POST" }),
 };
 
 // Post API
