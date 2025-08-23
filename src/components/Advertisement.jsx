@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Image, Badge } from 'react-bootstrap';
-import { X, ExternalLink } from 'react-bootstrap-icons';
+import { X, BoxArrowUpRight } from 'react-bootstrap-icons';
 import { businessAPI } from '../config/ApiConfig';
 
 const Advertisement = ({ onClose, currentUser }) => {
@@ -147,7 +147,7 @@ const Advertisement = ({ onClose, currentUser }) => {
           <div className="flex-grow-1">
             <h6 className="mb-1 fw-bold text-primary">
               {ad.title}
-              <ExternalLink size={14} className="ms-1" />
+              <BoxArrowUpRight size={14} className="ms-1" />
             </h6>
             <p className="mb-1 small text-muted">
               {ad.description}
