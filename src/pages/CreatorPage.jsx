@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Alert, Badge, Tab, Tabs, Form, Modal, Table, ProgressBar } from "react-bootstrap";
-import { CurrencyDollar, TrendingUp, Calendar, Eye, Heart, Share, Plus, Gear } from "react-bootstrap-icons";
+import { CurrencyDollar, GraphUpArrow, Calendar, Eye, Heart, Share, Plus, Gear } from "react-bootstrap-icons";
 import { analyticsAPI, businessAPI } from "../config/ApiConfig";
 import { formatTimeAgo, formatCurrency } from "../utils/common-utils";
 import { updatePageMeta } from "../utils/meta-utils";
@@ -161,7 +161,7 @@ const CreatorPage = () => {
 						<Col xs={6} lg={3}>
 							<Card className="h-100 border-0 shadow-sm">
 								<Card.Body className="text-center p-3">
-									<TrendingUp size={24} className="text-primary mb-2" />
+									<GraphUpArrow size={24} className="text-primary mb-2" />
 									<h4 className="mb-1">${availableBalance.toFixed(2)}</h4>
 									<small className="text-muted">Available</small>
 								</Card.Body>
@@ -379,7 +379,7 @@ const CreatorPage = () => {
 
 				<Tab eventKey="analytics" title={
 					<span className="d-flex align-items-center">
-						<TrendingUp className="me-2" size={16} />
+						<GraphUpArrow className="me-2" size={16} />
 						<span className="d-none d-sm-inline">Analytics</span>
 					</span>
 				}>
