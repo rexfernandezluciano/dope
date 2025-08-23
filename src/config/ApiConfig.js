@@ -16,7 +16,7 @@ const API_ENDPOINTS =
 		: [""];
 
 // Current active API base URL
-let API_BASE_URL = API_ENDPOINTS[0] || API_ENDPOINTS[1] || "";
+let API_BASE_URL = "";
 
 // Validate API URL is HTTPS (skip validation for proxy URLs and empty strings)
 if (API_BASE_URL && API_BASE_URL !== "" && validateAPIUrl(API_BASE_URL)) {

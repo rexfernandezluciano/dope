@@ -48,7 +48,7 @@ app.options("*", (req, res) => {
   );
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Max-Age", "86400");
-  res.header("Server", "DOPE Network SSR");
+  res.header("Server", "DOPE Network");
   res.sendStatus(200);
 });
 
