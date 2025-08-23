@@ -7,6 +7,7 @@ import "animate.css";
 import heic2any from "heic2any";
 
 import { authAPI, imageAPI } from "../../config/ApiConfig";
+import DopeAPI from "../../utils/dope-api-utils";
 import { getGravatar, createUsername } from "../../utils/app-utils";
 import { setAuthToken } from "../../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
@@ -184,11 +185,25 @@ const SignUpPage = () => {
 
 	const handleNextEmail = async (e) => {
 		e.preventDefault();
+		if (!email) {
+			setError("Please enter your email address.");
+			return;
+		}
+		
 		try {
 			setLoading(true);
+			setError("");
+			
+			// Check if email already exists
+			const emailCheck = await DopeAPI.checkEmail(email);
+			if (emailCheck.exists) {
+				setError("This email is already registered. Please use a different email or try logging in.");
+				return;
+			}
+			
 			changeStep(2, true);
 		} catch (err) {
-			setError(err.message);
+			setError(err.message || "Failed to validate email. Please try again.");
 		} finally {
 			setLoading(false);
 		}
@@ -204,12 +219,21 @@ const SignUpPage = () => {
 			setError("Username can only contain letters, numbers, and underscores.");
 			return;
 		}
+		
 		try {
 			setLoading(true);
-			// Here you could add username availability check if needed
+			setError("");
+			
+			// Check if username already exists
+			const usernameCheck = await DopeAPI.checkUsername(username);
+			if (usernameCheck.exists) {
+				setError("This username is already taken. Please choose a different username.");
+				return;
+			}
+			
 			changeStep(3, true);
 		} catch (err) {
-			setError(err.message);
+			setError(err.message || "Failed to validate username. Please try again.");
 		} finally {
 			setLoading(false);
 		}

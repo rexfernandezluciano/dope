@@ -373,3 +373,55 @@ export const createRateLimiter = (maxRequests, windowMs) => {
 export const searchRateLimiter = createRateLimiter(10, 60000); // 10 requests per minute
 export const postRateLimiter = createRateLimiter(5, 60000); // 5 posts per minute
 export const commentRateLimiter = createRateLimiter(20, 60000); // 20 comments per minute
+
+// Assume DopeAPI is defined elsewhere and these functions are added to it.
+// For demonstration, let's assume DopeAPI is an object that will be populated.
+const DopeAPI = {
+  // Existing methods would be here...
+
+  /**
+	 * Check if email is already registered
+	 * @param {string} email Email to check
+	 * @returns {Promise<{exists: boolean}>} Email availability status
+	 */
+	checkEmail: async (email) => {
+		try {
+			const response = await makeRequest('/v1/auth/check-email', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ email }),
+			});
+			return response;
+		} catch (error) {
+			console.error('Check email error:', error);
+			throw new Error(error.message || 'Failed to check email availability');
+		}
+	},
+
+	/**
+	 * Check if username is already taken
+	 * @param {string} username Username to check
+	 * @returns {Promise<{exists: boolean}>} Username availability status
+	 */
+	checkUsername: async (username) => {
+		try {
+			const response = await makeRequest('/v1/auth/check-username', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ username }),
+			});
+			return response;
+		} catch (error) {
+			console.error('Check username error:', error);
+			throw new Error(error.message || 'Failed to check username availability');
+		}
+	},
+
+	// ---------- END AUTH OPERATIONS ----------
+};
+
+export default DopeAPI;
