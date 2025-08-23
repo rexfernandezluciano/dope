@@ -189,18 +189,18 @@ const SignUpPage = () => {
 			setError("Please enter your email address.");
 			return;
 		}
-		
+
 		try {
 			setLoading(true);
 			setError("");
-			
+
 			// Check if email already exists
 			const emailCheck = await DopeAPI.checkEmail(email);
 			if (emailCheck.exists) {
 				setError("This email is already registered. Please use a different email or try logging in.");
 				return;
 			}
-			
+
 			changeStep(2, true);
 		} catch (err) {
 			setError(err.message || "Failed to validate email. Please try again.");
@@ -219,18 +219,18 @@ const SignUpPage = () => {
 			setError("Username can only contain letters, numbers, and underscores.");
 			return;
 		}
-		
+
 		try {
 			setLoading(true);
 			setError("");
-			
+
 			// Check if username already exists
 			const usernameCheck = await DopeAPI.checkUsername(username);
 			if (usernameCheck.exists) {
 				setError("This username is already taken. Please choose a different username.");
 				return;
 			}
-			
+
 			changeStep(3, true);
 		} catch (err) {
 			setError(err.message || "Failed to validate username. Please try again.");
@@ -751,8 +751,8 @@ const SignUpPage = () => {
 								</Button>
 								<div className="text-center mt-3">
 									<small className="text-muted">
-										{selectedSubscription !== "free" 
-											? "You can change your plan anytime after signup" 
+										{selectedSubscription !== "free"
+											? "You can change your plan anytime after signup"
 											: "You can upgrade anytime from your settings"}
 									</small>
 								</div>

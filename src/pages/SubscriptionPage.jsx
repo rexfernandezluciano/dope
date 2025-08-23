@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState, useEffect } from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
 import {
 	Container,
 	Card,
@@ -30,6 +30,8 @@ import { loadPayPalSDK, createPayPalPaymentMethod } from "../config/PayPalConfig
 
 const SubscriptionPage = () => {
 	const { user } = useLoaderData();
+	const navigate = useNavigate();
+	const [searchParams] = useSearchParams();
 
 	const [subscription, setSubscription] = useState({
 		plan: "free",
@@ -50,6 +52,8 @@ const SubscriptionPage = () => {
 	const [showCancelModal, setShowCancelModal] = useState(false);
 	const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
 	const [selectedPaymentType, setSelectedPaymentType] = useState("card");
+	const [isSignupFlow, setIsSignupFlow] = useState(false);
+	const [pendingSignupData, setPendingSignupData] = useState(null);
 	const [cardForm, setCardForm] = useState({
 		cardNumber: "",
 		expiryDate: "",
@@ -215,6 +219,29 @@ const SubscriptionPage = () => {
 
 	useEffect(() => {
 		updatePageMeta(pageMetaData.subscription);
+		
+		// Check if this is part of signup flow
+		const isPayment = searchParams.get('payment') === 'true';
+		const isSignup = searchParams.get('signup') === 'true';
+		const planParam = searchParams.get('plan');
+		
+		if (isPayment && isSignup) {
+			setIsSignupFlow(true);
+			const storedData = sessionStorage.getItem('pendingSignupData');
+			if (storedData) {
+				try {
+					const data = JSON.parse(storedData);
+					setPendingSignupData(data);
+					if (planParam) {
+						setSelectedSubscription(planParam);
+					}
+				} catch (error) {
+					console.error('Failed to parse signup data:', error);
+				}
+			}
+			setShowAddPaymentModal(true);
+		}
+		
 		if (user && typeof user === "object") {
 			// Handle both old and new API structures
 			const userSubscription = user.membership?.subscription || user.subscription || "free";
@@ -319,8 +346,25 @@ const SubscriptionPage = () => {
 					paymentMethodId: defaultPaymentMethod.id
 				});
 
-				setMessage(`Successfully upgraded to ${planId} plan!`);
-				setMessageType("success");
+				if (isSignupFlow) {
+					setMessage(`Account created successfully with ${planId} plan! Redirecting to email verification...`);
+					setMessageType("success");
+					
+					// Clear pending signup data
+					sessionStorage.removeItem('pendingSignupData');
+					
+					// Redirect to verification after payment success
+					setTimeout(() => {
+						if (pendingSignupData) {
+							navigate(
+								`/auth/verify/${pendingSignupData.verificationId}?email=${encodeURIComponent(pendingSignupData.email)}`,
+							);
+						}
+					}, 2000);
+				} else {
+					setMessage(`Successfully upgraded to ${planId} plan!`);
+					setMessageType("success");
+				}
 
 				// Update local state with response data
 				setSubscription((prev) => ({

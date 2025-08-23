@@ -8,6 +8,34 @@ import {
   sessionAPI
 } from '../config/ApiConfig';
 
+// Make authenticated API request
+const makeRequest = async (url, options = {}) => {
+  const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+  
+  const defaultOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...options.headers
+    }
+  };
+
+  const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.dopenetwork.com'}${url}`, {
+    ...options,
+    headers: defaultOptions.headers
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const error = new Error(errorData.message || `HTTP ${response.status}`);
+    error.status = response.status;
+    error.data = errorData;
+    throw error;
+  }
+
+  return response.json();
+};
+
 // Content moderation utilities
 export const moderateText = async (text, contentType = 'post') => {
   try {
