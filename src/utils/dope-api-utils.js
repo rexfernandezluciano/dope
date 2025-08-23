@@ -432,7 +432,11 @@ const DopeAPI = {
 				},
 				body: JSON.stringify({ email }),
 			});
-			return response;
+			// Convert API response format to expected format
+			return {
+				exists: !response.available, // If available is true, exists is false
+				message: response.message
+			};
 		} catch (error) {
 			console.error('Check email error:', error);
 			throw new Error(error.message || 'Failed to check email availability');
@@ -453,7 +457,11 @@ const DopeAPI = {
 				},
 				body: JSON.stringify({ username }),
 			});
-			return response;
+			// Convert API response format to expected format
+			return {
+				exists: !response.available, // If available is true, exists is false
+				message: response.message
+			};
 		} catch (error) {
 			console.error('Check username error:', error);
 			throw new Error(error.message || 'Failed to check username availability');
