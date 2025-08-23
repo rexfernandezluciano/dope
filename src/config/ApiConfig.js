@@ -511,6 +511,32 @@ export const userAPI = {
 		});
 	},
 
+	updateUser: async (username, userData) => {
+		return await apiRequest(`/users/${username}`, {
+			method: "PUT",
+			body: JSON.stringify(userData),
+		});
+	},
+
+	followUser: async (username) => {
+		return await apiRequest(`/users/${username}/follow`, {
+			method: "POST",
+		});
+	},
+
+	updateProfile: async (userData) => {
+		return await apiRequest(`/users/profile`, {
+			method: "PUT",
+			body: JSON.stringify(userData),
+		});
+	},
+
+	getUserById: async (userId) => {
+		return await apiRequest(`/users/id/${userId}`, {
+			method: "GET",
+		});
+	},
+
 	updateProfile: async (profileData) => {
 		return await apiRequest("/user/profile", {
 			method: "PUT",
@@ -1179,8 +1205,10 @@ export const api = {
 
 	// Users
 	getUser: userAPI.getUser,
+	updateUser: userAPI.updateUser,
 	updateProfile: userAPI.updateProfile,
 	getUserById: userAPI.getUserById,
+	followUser: userAPI.followUser,
 	getWaitingList: userAPI.getWaitingList,
 	joinWaitingList: userAPI.joinWaitingList,
 
