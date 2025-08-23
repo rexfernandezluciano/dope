@@ -44,42 +44,49 @@ const SettingsPage = () => {
 				label: "Account",
 				icon: <Person size={20} />,
 				component: <AccountSettingsPage />,
+				category: "Personal",
 			},
 			{
 				key: "profile",
 				label: "Profile",
 				icon: <Person size={20} />,
 				component: <ProfileSettingsPage />,
+				category: "Personal",
 			},
 			{
 				key: "privacy",
 				label: "Privacy and safety",
 				icon: <Eye size={20} />,
 				component: <PrivacySettingsPage />,
+				category: "Privacy & Security",
 			},
 			{
 				key: "notifications",
 				label: "Notifications",
 				icon: <Bell size={20} />,
 				component: <NotificationSettingsPage />,
+				category: "Preferences",
 			},
 			{
 				key: "sessions",
 				label: "Sessions",
 				icon: <Shield size={20} />,
 				component: <SessionSettingsPage />,
+				category: "Privacy & Security",
 			},
 			{
 				key: "oauth-apps",
 				label: "OAuth Apps",
 				icon: <Shield size={20} />,
 				component: <OAuthAppsPage />,
+				category: "Developer",
 			},
 			{
 				key: "oauth-consent",
 				label: "Authorizations",
 				icon: <Shield size={20} />,
 				component: <OAuthConsentPage />,
+				category: "Developer",
 			},
 		],
 		[],
@@ -134,36 +141,54 @@ const SettingsPage = () => {
 
 			<div className="row g-0">
 				{/* Sidebar Navigation */}
-				<div className="col-md-4 col-lg-3 border-end bg-light">
-					<Nav className="flex-column">
-						{settingsTabs.map((tab) => (
-							<Nav.Link
-								key={tab.key}
-								as={Link}
-								to={`/settings/${tab.key}`}
-								className={`d-flex align-items-center gap-3 px-4 py-3 text-dark border-0 ${
-									activeTab === tab.key
-										? "bg-primary bg-opacity-10 border-end border-primary border-3"
-										: ""
-								}`}
-								style={{ cursor: "pointer" }}
-							>
-								{tab.icon}
-								<span className="fw-medium">{tab.label}</span>
-							</Nav.Link>
-						))}
+				<div className="bg-white border-end d-none d-md-block" style={{ width: "280px", minHeight: "100vh" }}>
+					<Nav variant="pills" className="flex-column p-3">
+						{/* Group settings by category */}
+						{["Personal", "Privacy & Security", "Preferences", "Developer"].map((category) => {
+							const categoryTabs = settingsTabs.filter(tab => tab.category === category);
+							if (categoryTabs.length === 0) return null;
 
-						<hr className="mx-3" />
-
-						<Nav.Link
-							className="d-flex align-items-center gap-3 px-4 py-3 text-danger border-0"
-							onClick={handleLogout}
-							style={{ cursor: "pointer" }}
-						>
-							<X size={20} />
-							<span className="fw-medium">Logout</span>
-						</Nav.Link>
+							return (
+								<div key={category} className="mb-4">
+									<h6 className="text-muted mb-2 px-2 fw-bold" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+										{category}
+									</h6>
+									{categoryTabs.map((tab) => (
+										<Nav.Item key={tab.key} className="mb-1">
+											<Nav.Link
+												href={`/settings/${tab.key}`}
+												active={activeTab === tab.key}
+												className={`d-flex align-items-center gap-2 text-dark ${
+													activeTab === tab.key ? "active" : ""
+												}`}
+												style={{
+													borderRadius: "8px",
+													backgroundColor: activeTab === tab.key ? "#0d6efd" : "transparent",
+													color: activeTab === tab.key ? "white" : "#333",
+													fontSize: "0.9rem",
+													padding: "0.5rem 0.75rem",
+												}}
+											>
+												{tab.icon}
+												{tab.label}
+											</Nav.Link>
+										</Nav.Item>
+									))}
+								</div>
+							);
+						})}
 					</Nav>
+
+					{/* Logout Button */}
+					<div className="p-3 border-top mt-auto">
+						<Button
+							variant="outline-danger"
+							className="w-100"
+							onClick={handleLogout}
+						>
+							Logout
+						</Button>
+					</div>
 				</div>
 
 				{/* Main Content */}
