@@ -44,6 +44,8 @@ const BusinessPage = () => {
 	const [selectedPackage, setSelectedPackage] = useState(null);
 	const [creditsPackages, setCreditsPackages] = useState([]);
 	const [paymentMethods, setPaymentMethods] = useState([]);
+	const [modalError, setModalError] = useState("");
+	const [modalSuccess, setModalSuccess] = useState("");
 	const [campaignForm, setCampaignForm] = useState({
 		title: "",
 		description: "",
@@ -124,22 +126,29 @@ const BusinessPage = () => {
 		}
 	};
 
+	const [modalError, setModalError] = useState("");
+	const [modalSuccess, setModalSuccess] = useState("");
+
 	const handlePurchaseCredits = async (e) => {
 		e.preventDefault();
 		try {
-			setError("");
-			setSuccess("");
+			setModalError("");
+			setModalSuccess("");
 			await businessAPI.purchaseCredits({
-				amount: selectedPackage.amount,
+				credits: selectedPackage.credits,
 				paymentMethodId: paymentMethodId,
 			});
-			setSuccess(`Credits purchased successfully! You received ${selectedPackage.totalCredits} credits (${selectedPackage.credits} base + ${selectedPackage.bonus} bonus).`);
-			setShowCreditsModal(false);
-			setPaymentMethodId("");
-			setSelectedPackage(null);
-			loadCredits(); // Reload credits after purchase
+			setModalSuccess(`Credits purchased successfully! You received ${selectedPackage.totalCredits} credits (${selectedPackage.credits} base + ${selectedPackage.bonus} bonus).`);
+			setTimeout(() => {
+				setShowCreditsModal(false);
+				setPaymentMethodId("");
+				setSelectedPackage(null);
+				setModalError("");
+				setModalSuccess("");
+				loadCredits(); // Reload credits after purchase
+			}, 2000); // Show success message for 2 seconds before closing
 		} catch (error) {
-			setError(error.message || "Failed to purchase credits");
+			setModalError(error.message || "Failed to purchase credits");
 		}
 	};
 
@@ -689,7 +698,12 @@ const BusinessPage = () => {
 			{/* Credits Modal */}
 			<Modal
 				show={showCreditsModal}
-				onHide={() => setShowCreditsModal(false)}
+				onHide={() => {
+					setShowCreditsModal(false);
+					setModalError("");
+					setModalSuccess("");
+					setSelectedPackage(null);
+				}}
 				size="lg"
 			>
 				<Modal.Header closeButton>
@@ -697,6 +711,9 @@ const BusinessPage = () => {
 				</Modal.Header>
 				<Form onSubmit={handlePurchaseCredits}>
 					<Modal.Body>
+						{modalError && <Alert variant="danger" className="mb-3">{modalError}</Alert>}
+						{modalSuccess && <Alert variant="success" className="mb-3">{modalSuccess}</Alert>}
+						
 						<div className="mb-4">
 							<p className="mb-2">
 								Your current credits:{" "}
@@ -816,7 +833,12 @@ const BusinessPage = () => {
 						</Alert>
 					</Modal.Body>
 					<Modal.Footer>
-						<Button variant="secondary" onClick={() => setShowCreditsModal(false)}>
+						<Button variant="secondary" onClick={() => {
+							setShowCreditsModal(false);
+							setModalError("");
+							setModalSuccess("");
+							setSelectedPackage(null);
+						}}>
 							Close
 						</Button>
 						<Button 
