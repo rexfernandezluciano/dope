@@ -31,6 +31,9 @@ const SignUpPage = () => {
 
 	const [photo, setPhoto] = useState(null);
 	const [photoPreview, setPhotoPreview] = useState(null);
+	const [gravatarUrl, setGravatarUrl] = useState(
+		"https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&s=200",
+	);
 
 	const [error, setError] = useState("");
 	const [dialogMessage] = useState("");
@@ -70,6 +73,33 @@ const SignUpPage = () => {
 	useEffect(() => {
 		updatePageMeta(pageMetaData.signup);
 	}, []);
+
+	// Fetch Gravatar URL when email changes
+	useEffect(() => {
+		const fetchGravatar = async () => {
+			if (email) {
+				try {
+					const url = await getGravatar(email);
+					if (url && typeof url === 'string' && url.startsWith('http')) {
+						setGravatarUrl(url);
+					} else {
+						console.warn("Invalid Gravatar URL received:", url);
+						// Fallback to default if URL is invalid
+						setGravatarUrl(
+							"https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&s=200",
+						);
+					}
+				} catch (err) {
+					console.error("Error fetching Gravatar:", err);
+					// Fallback to default on error
+					setGravatarUrl(
+						"https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&s=200",
+					);
+				}
+			}
+		};
+		fetchGravatar();
+	}, [email]); // Re-fetch Gravatar when email changes
 
 	// Handle popup-based Google OAuth signup
 	const handlePopupGoogleSignup = async () => {
@@ -211,7 +241,7 @@ const SignUpPage = () => {
 		try {
 			setLoading(true);
 			const displayName = `${firstName} ${lastName}`.trim();
-			let photoURL = getGravatar(email); // Default to Gravatar
+			let photoURL = gravatarUrl; // Use the fetched Gravatar URL
 			const username = await createUsername(displayName);
 
 			// If user selected a custom photo, upload it using the API
@@ -455,7 +485,7 @@ const SignUpPage = () => {
 							<Form.Group className="mb-4 text-center">
 								<label htmlFor="profileUpload" style={{ cursor: "pointer" }}>
 									<Image
-										src={photoPreview || getGravatar(email)}
+										src={photoPreview || gravatarUrl}
 										alt="Profile Preview"
 										roundedCircle
 										width={150}
