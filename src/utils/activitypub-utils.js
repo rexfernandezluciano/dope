@@ -40,9 +40,6 @@ export const discoverActor = async (handle) => {
   } catch (error) {
     console.error('Failed to discover ActivityPub actor:', error);
     throw error;
-  } catch (error) {
-    console.error('Failed to discover ActivityPub actor:', error);
-    throw error;
   }
 };
 
