@@ -191,3 +191,63 @@ export const getPrivacyIcon = (privacy) => {
 	// Return null here as the icon selection should be done in the component
 	return null;
 };
+
+/**
+ * Format currency values
+ * @param {number} amount - Amount in dollars
+ * @param {string} currency - Currency code (default: USD)
+ * @returns {string} Formatted currency string
+ */
+export const formatCurrency = (amount, currency = 'USD') => {
+	return new Intl.NumberFormat('en-US', {
+		style: 'currency',
+		currency: currency
+	}).format(amount || 0);
+};
+
+/**
+ * Format large numbers with K, M, B suffixes
+ * @param {number} num - Number to format
+ * @returns {string} Formatted number string
+ */
+export const formatLargeNumber = (num) => {
+	if (num >= 1000000000) {
+		return (num / 1000000000).toFixed(1) + 'B';
+	}
+	if (num >= 1000000) {
+		return (num / 1000000).toFixed(1) + 'M';
+	}
+	if (num >= 1000) {
+		return (num / 1000).toFixed(1) + 'K';
+	}
+	return num?.toString() || '0';
+};
+
+/**
+ * Calculate engagement rate
+ * @param {Object} stats - Post stats object
+ * @returns {number} Engagement rate percentage
+ */
+export const calculateEngagementRate = (stats) => {
+	if (!stats || !stats.views || stats.views === 0) return 0;
+	
+	const totalEngagements = (stats.likes || 0) + (stats.comments || 0) + (stats.shares || 0);
+	return ((totalEngagements / stats.views) * 100).toFixed(2);
+};
+
+/**
+ * Track business metric (wrapper for business API)
+ * @param {string} metric - Metric name
+ * @param {Object} data - Metric data
+ */
+export const trackBusinessMetric = async (metric, data) => {
+	try {
+		// This would integrate with your analytics service
+		console.log('Business metric tracked:', metric, data);
+		
+		// If you have a business API endpoint for custom tracking
+		// await businessAPI.trackCustomMetric(metric, data);
+	} catch (error) {
+		console.error('Failed to track business metric:', error);
+	}
+};

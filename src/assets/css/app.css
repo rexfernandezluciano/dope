@@ -735,3 +735,117 @@ button, [role="button"] {
 		padding: 0.25rem 0.5rem;
 	}
 }
+
+/* Custom scrollbar for better UX */
+::-webkit-scrollbar {
+	width: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #c1c1c1;
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #a8a8a8;
+}
+
+/* Advertisement styles */
+.ad-card {
+	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+	border-left: 4px solid #6366f1;
+}
+
+.ad-card:hover {
+	background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+	transition: background 0.2s ease;
+}
+
+/* User recommendation styles */
+.user-recommendation-card {
+	background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.recommendation-user-card {
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recommendation-user-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Analytics charts */
+.analytics-card {
+	background: white;
+	border-radius: 12px;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.analytics-metric {
+	padding: 1.5rem;
+	text-align: center;
+	background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+	border-radius: 8px;
+	border: 1px solid #e9ecef;
+}
+
+.analytics-metric h3 {
+	font-size: 2rem;
+	font-weight: 700;
+	margin-bottom: 0.5rem;
+}
+
+/* Engagement indicators */
+.engagement-indicator {
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	border-radius: 2px;
+	margin-right: 8px;
+}
+
+/* ActivityPub federation badges */
+.federation-badge {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	font-size: 0.75rem;
+	padding: 2px 6px;
+	border-radius: 10px;
+	display: inline-block;
+}
+
+/* Business dashboard styles */
+.business-metric-card {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	border-radius: 12px;
+	padding: 1.5rem;
+	text-align: center;
+}
+
+.business-metric-card h4 {
+	font-size: 2rem;
+	font-weight: 700;
+	margin-bottom: 0.5rem;
+}
+
+/* Trending content */
+.trending-badge {
+	background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+	color: white;
+	font-size: 0.75rem;
+	padding: 2px 8px;
+	border-radius: 12px;
+	animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+	0% { opacity: 1; }
+	50% { opacity: 0.7; }
+	100% { opacity: 1; }
+}

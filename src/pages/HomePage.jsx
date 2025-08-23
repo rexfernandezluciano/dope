@@ -685,15 +685,23 @@ const HomePage = () => {
 							</div>
 						) : (
 							displayedPosts.map((post, index) => (
-								<React.Fragment key={post.id}>
+								<React.Fragment key={`post-${post.id}-${index}`}>
 									{/* Show user recommendations at the top for logged-in users */}
 									{index === 0 && user && (
-										<UserRecommendation currentUser={user} />
+										<UserRecommendation 
+											key="user-recommendations" 
+											currentUser={user} 
+											onClose={() => {
+												// Could hide recommendations if user dismisses
+											}}
+										/>
 									)}
 									
 									{/* Show advertisement every few posts */}
 									{showAds && index > 0 && index % adInterval === 0 && (
 										<Advertisement 
+											key={`ad-${index}`}
+											currentUser={user}
 											onClose={() => setShowAds(false)}
 										/>
 									)}

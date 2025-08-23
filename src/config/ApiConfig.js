@@ -1234,6 +1234,93 @@ function createRateLimiter(limit, interval) {
 	};
 }
 
+// Recommendation API
+export const recommendationAPI = {
+	getUserRecommendations: async (params = {}) => {
+		const queryString = new URLSearchParams({ type: 'users', limit: 10, ...params }).toString();
+		return await apiRequest(`/recommendations${queryString ? `?${queryString}` : ""}`);
+	},
+
+	getPostRecommendations: async (params = {}) => {
+		const queryString = new URLSearchParams({ type: 'posts', limit: 10, ...params }).toString();
+		return await apiRequest(`/recommendations${queryString ? `?${queryString}` : ""}`);
+	},
+
+	getTrendingHashtags: async (params = {}) => {
+		const queryString = new URLSearchParams({ limit: 10, ...params }).toString();
+		return await apiRequest(`/recommendations/trending${queryString ? `?${queryString}` : ""}`);
+	}
+};
+
+// Business/Ads API
+export const businessAPI = {
+	createCampaign: async (campaignData) => {
+		return await apiRequest("/business/campaigns", {
+			method: "POST",
+			data: campaignData,
+		});
+	},
+
+	getCampaigns: async (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/business/campaigns${queryString ? `?${queryString}` : ""}`);
+	},
+
+	getCampaignAnalytics: async (campaignId) => {
+		return await apiRequest(`/business/campaigns/${campaignId}/analytics`);
+	},
+
+	trackAdInteraction: async (interactionData) => {
+		return await apiRequest("/business/track", {
+			method: "POST",
+			data: interactionData,
+		});
+	},
+
+	getDashboard: async () => {
+		return await apiRequest("/business/dashboard");
+	}
+};
+
+// Enhanced Analytics API
+export const enhancedAnalyticsAPI = {
+	getUserAnalytics: async (period = "30d") => {
+		return await apiRequest(`/analytics/user?period=${period}`);
+	},
+
+	getPostAnalytics: async (postId) => {
+		return await apiRequest(`/analytics/post/${postId}`);
+	},
+
+	getPlatformAnalytics: async () => {
+		return await apiRequest("/analytics/platform");
+	}
+};
+
+// ActivityPub API
+export const activityPubAPI = {
+	getWebfinger: async (resource) => {
+		return await apiRequest(`/.well-known/webfinger?resource=${encodeURIComponent(resource)}`);
+	},
+
+	getUserActor: async (username) => {
+		return await apiRequest(`/activitypub/users/${username}`, {
+			headers: {
+				'Accept': 'application/activity+json'
+			}
+		});
+	},
+
+	getUserOutbox: async (username, page = null) => {
+		const url = `/activitypub/users/${username}/outbox${page ? `?page=${page}` : ''}`;
+		return await apiRequest(url, {
+			headers: {
+				'Accept': 'application/activity+json'
+			}
+		});
+	}
+};
+
 // Export commonly used rate limiters
 export const searchRateLimiter = createRateLimiter(10, 60000); // 10 requests per minute
 export const postRateLimiter = createRateLimiter(5, 60000); // 5 posts per minute
