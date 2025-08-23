@@ -819,6 +819,35 @@ button, [role="button"] {
 	display: inline-block;
 }
 
+/* Federated profile styles */
+.federated-profile .badge {
+	animation: federatedPulse 2s infinite;
+}
+
+@keyframes federatedPulse {
+	0% { opacity: 1; }
+	50% { opacity: 0.8; }
+	100% { opacity: 1; }
+}
+
+.federated-post {
+	border-left: 3px solid #667eea;
+	background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, transparent 100%);
+}
+
+.federated-post .card-body {
+	position: relative;
+}
+
+.federated-post::before {
+	content: "🌐";
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	opacity: 0.5;
+	font-size: 12px;
+}
+
 /* Business dashboard styles */
 .business-metric-card {
 	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

@@ -130,6 +130,24 @@ const router = createBrowserRouter([
 		],
 	},
 	{
+		path: "/@:handle",
+		element: (
+			<RequireAuth>
+				<IndexPage />
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
+		children: [
+			{
+				index: true,
+				element: <ProfilePage />,
+				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
+			},
+		],
+	},
+	{
 		path: "/settings",
 		element: (
 			<RequireAuth>

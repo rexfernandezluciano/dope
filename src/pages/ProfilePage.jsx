@@ -32,11 +32,21 @@ import {
 	formatJoinDate,
 } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
+import { 
+	discoverActor, 
+	getUserActor, 
+	getUserOutbox, 
+	isFederatedHandle,
+	formatActivityPubHandle,
+	parseActivityPubNote 
+} from "../utils/activitypub-utils";
 import PostCard from "../components/PostCard";
 import AlertDialog from "../components/dialogs/AlertDialog";
 
 const ProfilePage = () => {
-	const { username } = useParams();
+	const { username: rawUsername, handle } = useParams();
+	// Handle both /:username and /@:handle routes
+	const username = handle || rawUsername;
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData;
 	const [profileUser, setProfileUser] = useState(null);
@@ -63,6 +73,8 @@ const ProfilePage = () => {
 	const [selectedPostForOptions, setSelectedPostForOptions] = useState(null);
 	const [profileImagePreview, setProfileImagePreview] = useState("");
 	const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
+	const [isFederatedProfile, setIsFederatedProfile] = useState(false);
+	const [federatedActor, setFederatedActor] = useState(null);
 
 	const navigate = useNavigate();
 
@@ -72,11 +84,168 @@ const ProfilePage = () => {
 				setLoading(true);
 				setError("");
 
-				// Load user profile first
-				const userResponse = await userAPI.getUser(username);
-				if (!userResponse) {
-					throw new Error("User not found");
+				// Check if this is a federated profile (contains @)
+				const isFederated = username.includes('@');
+				setIsFederatedProfile(isFederated);
+
+				if (isFederated) {
+					// Handle federated profile
+					await loadFederatedProfile(username);
+				} else {
+					// Load local user profile
+					const userResponse = await userAPI.getUser(username);
+					if (!userResponse) {
+						throw new Error("User not found");
+					}
+					await loadLocalProfile(userResponse);
 				}
+			} catch (err) {
+				console.error("Error loading profile:", err);
+				setError(err.message || "Failed to load profile");
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		const loadFederatedProfile = async (handle) => {
+			try {
+				// Discover the ActivityPub actor
+				const webfingerResult = await discoverActor(handle);
+				
+				// Find the ActivityPub actor link
+				const actorLink = webfingerResult.links?.find(
+					link => link.rel === 'self' && link.type === 'application/activity+json'
+				);
+				
+				if (!actorLink) {
+					throw new Error("ActivityPub profile not found");
+				}
+
+				// Get the actor profile
+				const actorUrl = actorLink.href;
+				const actorResponse = await fetch(actorUrl, {
+					headers: {
+						'Accept': 'application/activity+json'
+					}
+				});
+
+				if (!actorResponse.ok) {
+					throw new Error("Failed to fetch ActivityPub profile");
+				}
+
+				const actor = await actorResponse.json();
+				setFederatedActor(actor);
+
+				// Convert ActivityPub actor to local profile format
+				const federatedProfile = {
+					uid: actor.id,
+					username: actor.preferredUsername,
+					name: actor.name || actor.preferredUsername,
+					bio: actor.summary || '',
+					photoURL: actor.icon?.url || actor.image?.url,
+					createdAt: actor.published || new Date().toISOString(),
+					privacy: { profile: 'public' }, // Federated profiles are public
+					isFollowedByCurrentUser: false, // TODO: Check if following
+					hasBlueCheck: false, // Federated users don't have blue checks
+					membership: { subscription: 'free' }
+				};
+
+				setProfileUser(federatedProfile);
+
+				// Load federated posts if outbox is available
+				if (actor.outbox) {
+					await loadFederatedPosts(actor.outbox);
+				}
+
+				// Federated profiles can't be edited and don't have local followers/following
+				setFollowers([]);
+				setFollowing([]);
+				setIsFollowing(false);
+
+			} catch (err) {
+				console.error("Error loading federated profile:", err);
+				throw new Error(`Failed to load federated profile: ${err.message}`);
+			}
+		};
+
+		const loadFederatedPosts = async (outboxUrl) => {
+			try {
+				const outboxResponse = await fetch(outboxUrl, {
+					headers: {
+						'Accept': 'application/activity+json'
+					}
+				});
+
+				if (!outboxResponse.ok) {
+					console.warn("Failed to fetch outbox");
+					setPosts([]);
+					return;
+				}
+
+				const outbox = await outboxResponse.json();
+				
+				// If it's a collection, get the first page
+				let items = [];
+				if (outbox.type === 'OrderedCollection' && outbox.first) {
+					const firstPageResponse = await fetch(outbox.first, {
+						headers: {
+							'Accept': 'application/activity+json'
+						}
+					});
+					
+					if (firstPageResponse.ok) {
+						const firstPage = await firstPageResponse.json();
+						items = firstPage.orderedItems || [];
+					}
+				} else if (outbox.orderedItems) {
+					items = outbox.orderedItems;
+				}
+
+				// Convert ActivityPub activities to local post format
+				const federatedPosts = items
+					.filter(item => item.type === 'Create' && item.object?.type === 'Note')
+					.map(activity => {
+						const note = activity.object;
+						const parsedNote = parseActivityPubNote(note);
+						
+						return {
+							id: note.id,
+							content: parsedNote.content,
+							createdAt: parsedNote.published,
+							author: federatedActor ? {
+								uid: federatedActor.id,
+								username: federatedActor.preferredUsername,
+								name: federatedActor.name || federatedActor.preferredUsername,
+								photoURL: federatedActor.icon?.url || federatedActor.image?.url
+							} : null,
+							imageUrls: parsedNote.attachments
+								.filter(att => att.type === 'Document' && att.mediaType?.startsWith('image/'))
+								.map(att => att.url),
+							likes: [],
+							comments: [],
+							shares: [],
+							stats: {
+								likes: 0,
+								comments: 0,
+								shares: 0
+							},
+							privacy: 'public',
+							tags: parsedNote.hashtags,
+							mentions: parsedNote.mentions,
+							isFederated: true,
+							originalUrl: note.id
+						};
+					});
+
+				setPosts(federatedPosts);
+			} catch (err) {
+				console.error("Error loading federated posts:", err);
+				setPosts([]);
+			}
+		};
+
+		const loadLocalProfile = async (userResponse) => {
+			try {
 
 				// Handle response structure - the API returns user data directly
 				const profileUserData = userResponse.user;
@@ -196,10 +365,8 @@ const ProfilePage = () => {
 					setFollowing([]);
 				}
 			} catch (err) {
-				console.error("Error loading profile:", err);
-				setError(err.message || "Failed to load profile");
-			} finally {
-				setLoading(false);
+				console.error("Error loading local profile:", err);
+				throw err;
 			}
 		};
 
@@ -246,6 +413,12 @@ const ProfilePage = () => {
 	};
 
 	const handleLikePost = async (postId) => {
+		// Don't allow liking federated posts
+		if (isFederatedProfile) {
+			console.warn("Cannot like federated posts");
+			return;
+		}
+
 		try {
 			await postAPI.likePost(postId);
 			setPosts((prev) =>
@@ -446,7 +619,7 @@ const ProfilePage = () => {
 		);
 	}
 
-	const isOwnProfile = currentUser.username === username;
+	const isOwnProfile = !isFederatedProfile && currentUser.username === username;
 
 	return (
 		<Container className="py-0 px-0">
@@ -512,7 +685,9 @@ const ProfilePage = () => {
 									</span>
 								)}
 						</div>
-						<p className="text-muted mb-0">@{profileUser.username}</p>
+						<p className="text-muted mb-0">
+							{isFederatedProfile ? formatActivityPubHandle(username) : `@${profileUser.username}`}
+						</p>
 					</div>
 
 					{isOwnProfile ? (
@@ -523,6 +698,19 @@ const ProfilePage = () => {
 						>
 							Edit Profile
 						</Button>
+					) : isFederatedProfile ? (
+						<div className="d-flex gap-2">
+							<span className="badge bg-info">Federated User</span>
+							{federatedActor?.url && (
+								<Button
+									variant="outline-primary"
+									size="sm"
+									onClick={() => window.open(federatedActor.url, '_blank')}
+								>
+									View Original
+								</Button>
+							)}
+						</div>
 					) : (
 						<Button
 							variant={isFollowing ? "outline-primary" : "primary"}
@@ -590,11 +778,12 @@ const ProfilePage = () => {
 									key={post.id}
 									post={post}
 									currentUser={currentUser}
-									onLike={handleLikePost}
-									onShare={() => handleShare(post.id)} // Use utility
-									onDeletePost={() => handleDeletePost(post.id)} // Use utility
-									onPostClick={(e) => handlePostClick(post.id, e)} // Use utility
-									onOpenOptions={handleOptionsClick}
+									onLike={post.isFederated ? null : handleLikePost}
+									onShare={post.isFederated ? null : () => handleShare(post.id)}
+									onDeletePost={post.isFederated ? null : () => handleDeletePost(post.id)}
+									onPostClick={post.isFederated ? null : (e) => handlePostClick(post.id, e)}
+									onOpenOptions={post.isFederated ? null : handleOptionsClick}
+									disabled={post.isFederated}
 								/>
 							))
 						)}
