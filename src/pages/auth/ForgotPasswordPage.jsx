@@ -2,12 +2,14 @@
 /** @format */
 
 import { useState } from "react";
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from "react-bootstrap";
+import { Row, Col, Form, Button, Alert, Spinner, Image } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { ArrowLeft, EnvelopeFill } from "react-bootstrap-icons";
 import { authAPI } from "../../config/ApiConfig";
 import { validateEmail } from "../../config/ApiConfig";
 import { updatePageMeta } from "../../utils/meta-utils";
+import IntroductionBanner from "../../components/banners/IntroductionBanner";
+import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
 
 const ForgotPasswordPage = () => {
 	const [email, setEmail] = useState("");
@@ -81,141 +83,155 @@ const ForgotPasswordPage = () => {
 
 	if (success) {
 		return (
-			<Container fluid className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-				<Row className="w-100 justify-content-center">
-					<Col xs={12} sm={8} md={6} lg={4}>
-						<Card className="shadow-sm border-0">
-							<Card.Header className="bg-success text-white text-center py-3">
-								<EnvelopeFill size={32} className="mb-2" />
-								<h4 className="mb-0">Check Your Email</h4>
-							</Card.Header>
-							<Card.Body className="p-4">
-								<div className="text-center">
-									<Alert variant="success" className="mb-3">
-										<strong>Password reset email sent!</strong>
-									</Alert>
-									<p className="text-muted mb-4">
-										We've sent password reset instructions to <strong>{email}</strong>. 
-										Please check your email and follow the link to reset your password.
-									</p>
-									<p className="text-muted small mb-4">
-										Don't see the email? Check your spam folder or try again with a different email address.
-									</p>
-									<div className="d-grid gap-2">
-										<Link to="/auth/login" className="btn btn-primary">
-											<ArrowLeft className="me-2" />
-											Back to Login
-										</Link>
-										<Button 
-											variant="outline-secondary" 
-											onClick={() => {
-												setSuccess(false);
-												setEmail("");
-												setError("");
-											}}
-										>
-											Send Another Email
-										</Button>
-									</div>
-								</div>
-							</Card.Body>
-						</Card>
+			<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
+				<Row className="w-100 gap-2">
+					<Col className="d-none d-md-block">
+						<IntroductionBanner />
+						<Image
+							src={socialNetIllustration}
+							alt="Social Networking Illustration"
+							fluid
+							height={100}
+							className="mt-3"
+						/>
+					</Col>
+					<Col>
+						<div className="text-center">
+							<EnvelopeFill size={48} className="text-success mb-3" />
+							<h3 className="mb-3">Check Your Email</h3>
+							
+							<Alert variant="success" className="mb-3">
+								<strong>Password reset email sent!</strong>
+							</Alert>
+							
+							<p className="text-muted mb-4">
+								We've sent password reset instructions to <strong>{email}</strong>. 
+								Please check your email and follow the link to reset your password.
+							</p>
+							
+							<p className="text-muted small mb-4">
+								Don't see the email? Check your spam folder or try again with a different email address.
+							</p>
+							
+							<div className="d-grid gap-2">
+								<Link to="/auth/login" className="btn btn-primary">
+									<ArrowLeft className="me-2" />
+									Back to Login
+								</Link>
+								<Button 
+									variant="outline-secondary" 
+									onClick={() => {
+										setSuccess(false);
+										setEmail("");
+										setError("");
+									}}
+								>
+									Send Another Email
+								</Button>
+							</div>
+						</div>
 					</Col>
 				</Row>
-			</Container>
+			</div>
 		);
 	}
 
 	return (
-		<Container fluid className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-			<Row className="w-100 justify-content-center">
-				<Col xs={12} sm={8} md={6} lg={4}>
-					<Card className="shadow-sm border-0">
-						<Card.Header className="bg-primary text-white text-center py-3">
-							<EnvelopeFill size={32} className="mb-2" />
-							<h4 className="mb-0">Forgot Password</h4>
-							<p className="mb-0 small opacity-75">
-								Enter your email to reset your password
-							</p>
-						</Card.Header>
-						<Card.Body className="p-4">
-							{error && (
-								<Alert variant="danger" className="mb-3">
-									{error}
-								</Alert>
-							)}
+		<div className="d-flex align-items-center justify-content-center py-4 px-md-4 min-vh-100">
+			<Row className="w-100 gap-2">
+				<Col className="d-none d-md-block">
+					<IntroductionBanner />
+					<Image
+						src={socialNetIllustration}
+						alt="Social Networking Illustration"
+						fluid
+						height={100}
+						className="mt-3"
+					/>
+				</Col>
+				<Col>
+					<div>
+						<h3 className="text-center mb-3">Forgot Password</h3>
+						<p className="text-center text-muted">Enter your email to reset your password</p>
 
-							<Form onSubmit={handleSubmit}>
-								<Form.Group className="mb-3">
-									<Form.Label>Email Address</Form.Label>
-									<Form.Control
-										type="email"
-										placeholder="Enter your email address"
-										value={email}
-										onChange={handleEmailChange}
-										isInvalid={!!validationErrors.email}
-										disabled={loading}
-										autoFocus
-									/>
-									<Form.Control.Feedback type="invalid">
-										{validationErrors.email}
-									</Form.Control.Feedback>
-									<Form.Text className="text-muted">
-										We'll send password reset instructions to this email address.
-									</Form.Text>
-								</Form.Group>
+						{error && (
+							<Alert variant="danger" dismissible onClose={() => setError("")}>
+								{error}
+							</Alert>
+						)}
 
-								<div className="d-grid gap-2">
-									<Button 
-										type="submit" 
-										variant="primary" 
-										disabled={loading || !email.trim()}
-									>
-										{loading ? (
-											<>
-												<Spinner
-													as="span"
-													animation="border"
-													size="sm"
-													role="status"
-													aria-hidden="true"
-													className="me-2"
-												/>
-												Sending Reset Email...
-											</>
-										) : (
-											<>
-												<EnvelopeFill className="me-2" />
-												Send Reset Email
-											</>
-										)}
-									</Button>
-								</div>
-							</Form>
+						<Form onSubmit={handleSubmit}>
+							<Form.Floating className="mb-3">
+								<Form.Control
+									id="floatingInputEmail"
+									type="email"
+									placeholder="Enter your email address"
+									value={email}
+									onChange={handleEmailChange}
+									isInvalid={!!validationErrors.email}
+									disabled={loading}
+									className="shadow-none"
+									autoFocus
+									required
+								/>
+								<label htmlFor="floatingInputEmail">Email address</label>
+								<Form.Control.Feedback type="invalid">
+									{validationErrors.email}
+								</Form.Control.Feedback>
+							</Form.Floating>
 
-							<hr className="my-4" />
+							<Form.Text className="text-muted d-block mb-3">
+								We'll send password reset instructions to this email address.
+							</Form.Text>
 
-							<div className="text-center">
-								<p className="text-muted mb-2">Remember your password?</p>
-								<Link to="/auth/login" className="btn btn-outline-secondary">
-									<ArrowLeft className="me-2" />
+							<div className="d-grid mb-3">
+								<Button 
+									type="submit" 
+									variant="primary" 
+									size="md"
+									disabled={loading || !email.trim()}
+									className="shadow-none d-flex align-items-center justify-content-center"
+								>
+									{loading ? (
+										<>
+											<Spinner
+												as="span"
+												animation="border"
+												size="sm"
+												role="status"
+												aria-hidden="true"
+												className="me-2"
+											/>
+											Sending Reset Email...
+										</>
+									) : (
+										<>
+											<EnvelopeFill className="me-2" />
+											Send Reset Email
+										</>
+									)}
+								</Button>
+							</div>
+						</Form>
+
+						<div className="text-center">
+							<p className="text-muted mb-2">
+								Remember your password?{" "}
+								<Link to="/auth/login" className="text-decoration-none">
 									Back to Login
 								</Link>
-							</div>
-
-							<div className="text-center mt-3">
-								<p className="text-muted small mb-0">
-									Don't have an account?{" "}
-									<Link to="/auth/signup" className="text-decoration-none">
-										Sign up here
-									</Link>
-								</p>
-							</div>
-						</Card.Body>
-					</Card>
+							</p>
+							<p className="text-muted mb-0">
+								Don't have an account?{" "}
+								<Link to="/auth/signup" className="text-decoration-none">
+									Sign up here
+								</Link>
+							</p>
+						</div>
+					</div>
 				</Col>
 			</Row>
-		</Container>
+		</div>
 	);
 };
 
