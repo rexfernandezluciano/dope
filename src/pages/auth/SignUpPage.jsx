@@ -128,7 +128,15 @@ const SignUpPage = () => {
 
 	const handlePhotoChange = async (e) => {
 		const file = e.target.files[0];
-		if (!file) return;
+		if (!file) {
+			// If no file selected, clear the preview and photo
+			setPhoto(null);
+			if (photoPreview && !photoPreview.includes("gravatar") && !photoPreview.includes("pravatar")) {
+				URL.revokeObjectURL(photoPreview);
+			}
+			setPhotoPreview(null);
+			return;
+		}
 
 		try {
 			setError(""); // Clear any previous errors
@@ -161,17 +169,22 @@ const SignUpPage = () => {
 			}
 
 			// Clean up previous preview URL to prevent memory leaks
-			if (photoPreview && !photoPreview.includes("gravatar")) {
+			if (photoPreview && !photoPreview.includes("gravatar") && !photoPreview.includes("pravatar")) {
 				URL.revokeObjectURL(photoPreview);
 			}
 
+			// Set the photo and create preview
 			setPhoto(finalFile);
-			setPhotoPreview(URL.createObjectURL(finalFile));
+			const previewUrl = URL.createObjectURL(finalFile);
+			setPhotoPreview(previewUrl);
 		} catch (err) {
 			console.error("Image processing failed:", err);
 			setError(
 				"Could not process selected image. Please try a different image.",
 			);
+			// Reset to default on error
+			setPhoto(null);
+			setPhotoPreview(null);
 		}
 	};
 
