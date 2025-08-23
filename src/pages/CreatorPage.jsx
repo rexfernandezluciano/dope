@@ -118,7 +118,7 @@ const CreatorPage = () => {
 
 	return (
 		<Container className="py-3 py-md-4">
-			<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+			<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center px-4 mb-4">
 				<div className="mb-3 mb-md-0">
 					<h2 className="mb-1">Creator Dashboard</h2>
 					<p className="text-muted mb-0">Manage your earnings and monetization</p>

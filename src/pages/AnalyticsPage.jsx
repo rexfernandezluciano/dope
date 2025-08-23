@@ -604,7 +604,7 @@ const AnalyticsPage = () => {
 
 	return (
 		<Container className="py-3 py-md-4">
-			<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+			<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center px-4 mb-4">
 				<div className="mb-3 mb-md-0">
 					<h2 className="mb-1">Analytics Dashboard</h2>
 					<p className="text-muted mb-0 small">Track your performance and insights</p>
@@ -633,12 +633,12 @@ const AnalyticsPage = () => {
 						{renderOverviewTab()}
 					</Tab>
 					<Tab eventKey="growth" title={
-						<span className="d-none d-sm-inline">Growth</span>
+						<span className="d-inline">Growth</span>
 					}>
 						{renderGrowthTab()}
 					</Tab>
 					<Tab eventKey="monetization" title={
-						<span className="d-none d-sm-inline">Monetization</span>
+						<span className="d-inline">Monetization</span>
 					}>
 						{renderMonetizationTab()}
 					</Tab>

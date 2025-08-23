@@ -126,7 +126,7 @@ const BusinessPage = () => {
 		<Container fluid className="py-4">
 			<Row>
 				<Col>
-					<div className="d-flex align-items-center mb-4">
+					<div className="d-flex align-items-center px-4 mb-4">
 						<Bullseye size={32} className="me-3 text-primary" />
 						<div>
 							<h2>Business Dashboard</h2>
