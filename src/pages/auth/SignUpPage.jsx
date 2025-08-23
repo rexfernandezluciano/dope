@@ -27,7 +27,9 @@ const SignUpPage = () => {
 	const [lastName, setLastName] = useState("");
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
-	const steps = ["Name", "Email", "Password", "Profile Picture"];
+	const [gender, setGender] = useState("");
+	const [birthday, setBirthday] = useState("");
+	const steps = ["Name", "Email", "Password", "Personal Info", "Profile Picture"];
 
 	const [photo, setPhoto] = useState(null);
 	const [photoPreview, setPhotoPreview] = useState(null);
@@ -156,6 +158,22 @@ const SignUpPage = () => {
 		changeStep(3, true);
 	};
 
+	const handleNextPersonalInfo = (e) => {
+		e.preventDefault();
+		if (!gender || !birthday) {
+			setError("Please fill in all personal information fields.");
+			return;
+		}
+		const birthDate = new Date(birthday);
+		const today = new Date();
+		const age = today.getFullYear() - birthDate.getFullYear();
+		if (age < 13) {
+			setError("You must be at least 13 years old to create an account.");
+			return;
+		}
+		changeStep(4, true);
+	};
+
 	const handlePhotoChange = async (e) => {
 		const file = e.target.files[0];
 		if (!file) {
@@ -271,6 +289,8 @@ const SignUpPage = () => {
 				username,
 				password,
 				photoURL,
+				gender,
+				birthday,
 				subscription: "free",
 			};
 
@@ -479,8 +499,62 @@ const SignUpPage = () => {
 						</div>
 					)}
 
-					{/* STEP 4 */}
+					{/* STEP 4 - Personal Info */}
 					{step === 3 && (
+						<div className={`animate__animated ${animation}`}>
+							<Form onSubmit={handleNextPersonalInfo}>
+								<Form.Group className="mb-3">
+									<Form.Label>Gender</Form.Label>
+									<Form.Select
+										value={gender}
+										onChange={(e) => setGender(e.target.value)}
+										disabled={loading}
+										className="shadow-none"
+										required
+									>
+										<option value="">Select Gender</option>
+										<option value="male">Male</option>
+										<option value="female">Female</option>
+										<option value="non-binary">Non-binary</option>
+										<option value="prefer-not-to-say">Prefer not to say</option>
+										<option value="other">Other</option>
+									</Form.Select>
+								</Form.Group>
+								<Form.Group className="mb-3">
+									<Form.Label>Birthday</Form.Label>
+									<Form.Control
+										type="date"
+										value={birthday}
+										onChange={(e) => setBirthday(e.target.value)}
+										disabled={loading}
+										className="shadow-none"
+										required
+										max={new Date().toISOString().split('T')[0]}
+									/>
+									<Form.Text className="text-muted">
+										You must be at least 13 years old to create an account.
+									</Form.Text>
+								</Form.Group>
+								<Button
+									type="submit"
+									disabled={loading}
+									className="w-100 mb-2 d-flex align-items-center justify-content-center"
+								>
+									{loading ? <Spinner animation="border" size="sm" /> : "Next"}
+								</Button>
+								<Button
+									variant="secondary"
+									onClick={() => changeStep(2, false)}
+									className="w-100"
+								>
+									Back
+								</Button>
+							</Form>
+						</div>
+					)}
+
+					{/* STEP 5 - Profile Picture */}
+					{step === 4 && (
 						<div className={`animate__animated ${animation}`}>
 							<Form.Group className="mb-4 text-center">
 								<label htmlFor="profileUpload" style={{ cursor: "pointer" }}>
@@ -519,7 +593,7 @@ const SignUpPage = () => {
 							</Button>
 							<Button
 								variant="secondary"
-								onClick={() => changeStep(2, false)}
+								onClick={() => changeStep(3, false)}
 								className="w-100"
 							>
 								Back
