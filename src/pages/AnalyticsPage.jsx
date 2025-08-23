@@ -1,3 +1,4 @@
+
 /** @format */
 
 import React, { useState, useEffect } from "react";
@@ -13,9 +14,9 @@ const AnalyticsPage = () => {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [selectedPeriod, setSelectedPeriod] = useState("30d");
-	const [activeTab, setActiveTab] = useState("home");
-	const [growthData, setGrowthData] = useState([]); // State for growth data
-	const [monetizationData, setMonetizationData] = useState([]); // State for monetization data
+	const [activeTab, setActiveTab] = useState("overview");
+	const [growthData, setGrowthData] = useState({});
+	const [monetizationData, setMonetizationData] = useState({});
 
 	useEffect(() => {
 		updatePageMeta(pageMetaData.analytics);
@@ -23,7 +24,6 @@ const AnalyticsPage = () => {
 	}, [selectedPeriod]);
 
 	useEffect(() => {
-		// Fetch growth and monetization data when analytics data is available
 		if (analytics) {
 			fetchGrowthData();
 			fetchMonetizationData();
@@ -35,7 +35,7 @@ const AnalyticsPage = () => {
 			setLoading(true);
 			const [userAnalytics, businessData] = await Promise.all([
 				analyticsAPI.getUserAnalytics(selectedPeriod),
-				businessAPI.getDashboard().catch(() => null) // Optional business data
+				businessAPI.getDashboard().catch(() => null)
 			]);
 
 			setAnalytics(userAnalytics);
@@ -48,20 +48,15 @@ const AnalyticsPage = () => {
 	};
 
 	const formatNumber = (num) => {
-		if (num >= 1000000) {
-			return (num / 1000000).toFixed(1) + 'M';
-		}
-		if (num >= 1000) {
-			return (num / 1000).toFixed(1) + 'K';
-		}
+		if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+		if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
 		return num?.toString() || '0';
 	};
 
 	const fetchGrowthData = async () => {
 		try {
-			const response = await analyticsAPI.getUserAnalytics(selectedPeriod); // Use analyticsAPI
+			const response = await analyticsAPI.getUserAnalytics(selectedPeriod);
 
-			// Transform API response to chart data format
 			const growthData = {
 				followers: [
 					{ date: '2024-01-01', value: response.overview?.currentFollowers || 0 },
@@ -81,8 +76,7 @@ const AnalyticsPage = () => {
 			setGrowthData(growthData);
 		} catch (error) {
 			console.error('Error fetching growth data:', error);
-			// Fallback to mock data if API fails
-			const growthData = {
+			const fallbackGrowthData = {
 				followers: [
 					{ date: '2024-01-01', value: 1000 },
 					{ date: '2024-01-02', value: 1050 },
@@ -98,15 +92,14 @@ const AnalyticsPage = () => {
 					{ date: '2024-01-05', value: 9.5 },
 				]
 			};
-			setGrowthData(growthData);
+			setGrowthData(fallbackGrowthData);
 		}
 	};
 
 	const fetchMonetizationData = async () => {
 		try {
-			const response = await analyticsAPI.getUserAnalytics(selectedPeriod); // Use analyticsAPI
+			const response = await analyticsAPI.getUserAnalytics(selectedPeriod);
 
-			// Transform API response to chart data format
 			const monetizationData = {
 				revenue: [
 					{ month: 'Jan', earnings: (response.overview?.totalEarnings || 0) * 0.6, views: (response.overview?.totalViews || 0) * 0.6 },
@@ -116,16 +109,15 @@ const AnalyticsPage = () => {
 					{ month: 'May', earnings: response.overview?.totalEarnings || 0, views: response.overview?.totalViews || 0 },
 				],
 				sources: [
-					{ name: 'Ad Revenue', value: 60 },
-					{ name: 'Subscriptions', value: 25 },
-					{ name: 'Tips', value: 15 }
+					{ name: 'Ad Revenue', value: 60, color: '#17a2b8' },
+					{ name: 'Subscriptions', value: 25, color: '#28a745' },
+					{ name: 'Tips', value: 15, color: '#ffc107' }
 				]
 			};
 			setMonetizationData(monetizationData);
 		} catch (error) {
 			console.error('Error fetching monetization data:', error);
-			// Fallback to mock data if API fails
-			const monetizationData = {
+			const fallbackMonetizationData = {
 				revenue: [
 					{ month: 'Jan', earnings: 150, views: 12000 },
 					{ month: 'Feb', earnings: 180, views: 15000 },
@@ -134,15 +126,14 @@ const AnalyticsPage = () => {
 					{ month: 'May', earnings: 350, views: 28000 },
 				],
 				sources: [
-					{ name: 'Ad Revenue', value: 60 },
-					{ name: 'Subscriptions', value: 25 },
-					{ name: 'Tips', value: 15 }
+					{ name: 'Ad Revenue', value: 60, color: '#17a2b8' },
+					{ name: 'Subscriptions', value: 25, color: '#28a745' },
+					{ name: 'Tips', value: 15, color: '#ffc107' }
 				]
 			};
-			setMonetizationData(monetizationData);
+			setMonetizationData(fallbackMonetizationData);
 		}
 	};
-
 
 	if (loading) {
 		return (
@@ -161,7 +152,7 @@ const AnalyticsPage = () => {
 	}
 
 	const chartData = analytics?.topPosts?.slice(0, 5).map(post => ({
-		name: post.content?.substring(0, 20) + '...' || 'Post',
+		name: post.content?.substring(0, 15) + '...' || 'Post',
 		views: post.views,
 		likes: post.likes,
 		earnings: post.earnings
@@ -174,87 +165,76 @@ const AnalyticsPage = () => {
 		{ name: 'Shares', value: analytics?.overview?.totalShares || 0, color: '#ff7300' }
 	];
 
-	// Real growth data from API
-	// const growthData = analytics?.growthData || []; // This line is replaced by state
+	const StatCard = ({ icon, value, label, subtitle, variant = "primary" }) => (
+		<Card className="h-100 border-0 shadow-sm">
+			<Card.Body className="text-center p-3">
+				{icon && <div className={`text-${variant} mb-2`}>{icon}</div>}
+				<h4 className="mb-1">{value}</h4>
+				<p className="text-muted mb-0 small">{label}</p>
+				{subtitle && <small className={`text-${variant === 'success' ? 'success' : 'muted'}`}>{subtitle}</small>}
+			</Card.Body>
+		</Card>
+	);
 
-	// Real monetization data from API
-	// const monetizationData = analytics?.monetizationData || []; // This line is replaced by state
-
-	const renderHomeTab = () => (
+	const renderOverviewTab = () => (
 		<>
-			{/* Overview Cards */}
-			<Row className="mb-4">
-				<Col md={6} lg={3} className="mb-3">
-					<Card className="h-100 border-0 shadow-sm">
-						<Card.Body className="text-center">
-							<h3 className="text-primary mb-1">
-								{formatNumber(analytics?.overview?.totalViews || 0)}
-							</h3>
-							<p className="text-muted mb-0">Total Views</p>
-							<small className="text-success">
-								+{analytics?.overview?.viewsGained || 0} this period
-							</small>
-						</Card.Body>
-					</Card>
+			{/* Overview Cards - Mobile Responsive Grid */}
+			<Row className="g-3 mb-4">
+				<Col xs={6} lg={3}>
+					<StatCard
+						value={formatNumber(analytics?.overview?.totalViews || 0)}
+						label="Total Views"
+						subtitle={`+${analytics?.overview?.viewsGained || 0} this period`}
+						variant="primary"
+					/>
 				</Col>
-
-				<Col md={6} lg={3} className="mb-3">
-					<Card className="h-100 border-0 shadow-sm">
-						<Card.Body className="text-center">
-							<h3 className="text-success mb-1">
-								${analytics?.overview?.totalEarnings?.toFixed(2) || "0.00"}
-							</h3>
-							<p className="text-muted mb-0">Total Earnings</p>
-							<small className="text-muted">
-								{analytics?.period || '30 days'}
-							</small>
-						</Card.Body>
-					</Card>
+				<Col xs={6} lg={3}>
+					<StatCard
+						value={`$${analytics?.overview?.totalEarnings?.toFixed(2) || "0.00"}`}
+						label="Total Earnings"
+						subtitle={analytics?.period || '30 days'}
+						variant="success"
+					/>
 				</Col>
-
-				<Col md={6} lg={3} className="mb-3">
-					<Card className="h-100 border-0 shadow-sm">
-						<Card.Body className="text-center">
-							<h3 className="text-info mb-1">
-								{formatNumber(analytics?.overview?.currentFollowers || 0)}
-							</h3>
-							<p className="text-muted mb-0">Followers</p>
-							<small className="text-success">
-								+{analytics?.overview?.followersGained || 0} gained
-							</small>
-						</Card.Body>
-					</Card>
+				<Col xs={6} lg={3}>
+					<StatCard
+						value={formatNumber(analytics?.overview?.currentFollowers || 0)}
+						label="Followers"
+						subtitle={`+${analytics?.overview?.followersGained || 0} gained`}
+						variant="info"
+					/>
 				</Col>
-
-				<Col md={6} lg={3} className="mb-3">
-					<Card className="h-100 border-0 shadow-sm">
-						<Card.Body className="text-center">
-							<h3 className="text-warning mb-1">
-								{analytics?.overview?.engagementRate || 0}%
-							</h3>
-							<p className="text-muted mb-0">Engagement Rate</p>
-							<small className="text-muted">
-								{formatNumber((analytics?.overview?.totalLikes || 0) + (analytics?.overview?.totalComments || 0) + (analytics?.overview?.totalShares || 0))} engagements
-							</small>
-						</Card.Body>
-					</Card>
+				<Col xs={6} lg={3}>
+					<StatCard
+						value={`${analytics?.overview?.engagementRate || 0}%`}
+						label="Engagement Rate"
+						subtitle={`${formatNumber((analytics?.overview?.totalLikes || 0) + (analytics?.overview?.totalComments || 0) + (analytics?.overview?.totalShares || 0))} engagements`}
+						variant="warning"
+					/>
 				</Col>
 			</Row>
 
-			{/* Charts Row */}
-			<Row className="mb-4">
-				<Col lg={8} className="mb-3">
+			{/* Charts Row - Stack on mobile */}
+			<Row className="g-3 mb-4">
+				<Col lg={8} className="order-1 order-lg-0">
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Header>
-							<h5 className="mb-0">Top Posts Performance</h5>
+							<h6 className="mb-0">Top Posts Performance</h6>
 						</Card.Header>
 						<Card.Body>
 							{chartData.length > 0 ? (
-								<ResponsiveContainer width="100%" height={300}>
-									<BarChart data={chartData}>
+								<ResponsiveContainer width="100%" height={250}>
+									<BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
 										<CartesianGrid strokeDasharray="3 3" />
-										<XAxis dataKey="name" />
-										<YAxis />
+										<XAxis 
+											dataKey="name" 
+											fontSize={12}
+											interval={0}
+											angle={-45}
+											textAnchor="end"
+											height={60}
+										/>
+										<YAxis fontSize={12} />
 										<Tooltip />
 										<Bar dataKey="views" fill="#8884d8" name="Views" />
 										<Bar dataKey="likes" fill="#82ca9d" name="Likes" />
@@ -270,20 +250,20 @@ const AnalyticsPage = () => {
 					</Card>
 				</Col>
 
-				<Col lg={4} className="mb-3">
+				<Col lg={4} className="order-0 order-lg-1">
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Header>
-							<h5 className="mb-0">Engagement Breakdown</h5>
+							<h6 className="mb-0">Engagement Breakdown</h6>
 						</Card.Header>
 						<Card.Body>
-							<ResponsiveContainer width="100%" height={300}>
+							<ResponsiveContainer width="100%" height={200}>
 								<PieChart>
 									<Pie
 										data={engagementData.filter(item => item.value > 0)}
 										cx="50%"
 										cy="50%"
-										innerRadius={40}
-										outerRadius={80}
+										innerRadius={30}
+										outerRadius={70}
 										paddingAngle={5}
 										dataKey="value"
 									>
@@ -297,17 +277,17 @@ const AnalyticsPage = () => {
 							<div className="mt-2">
 								{engagementData.map((item, index) => (
 									<div key={index} className="d-flex justify-content-between align-items-center small mb-1">
-										<span>
+										<span className="d-flex align-items-center">
 											<span
 												className="d-inline-block me-2"
 												style={{
-													width: 12,
-													height: 12,
+													width: 10,
+													height: 10,
 													backgroundColor: item.color,
 													borderRadius: 2
 												}}
 											></span>
-											{item.name}
+											<span className="text-truncate">{item.name}</span>
 										</span>
 										<span className="fw-bold">{formatNumber(item.value)}</span>
 									</div>
@@ -318,25 +298,25 @@ const AnalyticsPage = () => {
 				</Col>
 			</Row>
 
-			{/* Top Posts */}
+			{/* Top Posts - Mobile optimized */}
 			<Card className="mb-4 border-0 shadow-sm">
 				<Card.Header>
-					<h5 className="mb-0">Top Performing Posts</h5>
+					<h6 className="mb-0">Top Performing Posts</h6>
 				</Card.Header>
 				<Card.Body>
 					{analytics?.topPosts?.length > 0 ? (
 						<div className="row g-3">
 							{analytics.topPosts.slice(0, 3).map((post, index) => (
-								<div key={post.id} className="col-md-4">
-									<div className="border rounded p-3">
+								<div key={post.id} className="col-lg-4">
+									<div className="border rounded p-3 h-100">
 										<div className="d-flex justify-content-between align-items-start mb-2">
 											<Badge bg="primary">#{index + 1}</Badge>
 											<small className="text-muted">
 												{formatTimeAgo(post.createdAt)}
 											</small>
 										</div>
-										<p className="mb-2" style={{ fontSize: '0.9rem' }}>
-											{post.content?.substring(0, 100) + (post.content?.length > 100 ? '...' : '') || 'No content'}
+										<p className="mb-2 small">
+											{post.content?.substring(0, 80) + (post.content?.length > 80 ? '...' : '') || 'No content'}
 										</p>
 										<div className="row g-2 small text-muted">
 											<div className="col-6">
@@ -369,107 +349,119 @@ const AnalyticsPage = () => {
 
 	const renderGrowthTab = () => (
 		<>
-			<Row className="mb-4">
-				<Col lg={8} className="mb-3">
+			<Row className="g-3 mb-4">
+				<Col lg={8}>
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Header>
-							<h5 className="mb-0">Growth Trends</h5>
+							<h6 className="mb-0">Growth Trends</h6>
 						</Card.Header>
 						<Card.Body>
-							<ResponsiveContainer width="100%" height={350}>
-								<AreaChart data={growthData.followers}> {/* Use growthData.followers */}
+							<ResponsiveContainer width="100%" height={300}>
+								<AreaChart data={growthData.followers || []}>
 									<defs>
 										<linearGradient id="colorFollowers" x1="0" y1="0" x2="0" y2="1">
 											<stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
 											<stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
 										</linearGradient>
-										<linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-											<stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
-											<stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
-										</linearGradient>
 									</defs>
-									<XAxis dataKey="date" />
-									<YAxis />
+									<XAxis dataKey="date" fontSize={12} />
+									<YAxis fontSize={12} />
 									<CartesianGrid strokeDasharray="3 3" />
 									<Tooltip />
-									<Area type="monotone" dataKey="value" stroke="#8884d8" fillOpacity={1} fill="url(#colorFollowers)" name="Followers" />
-									{/* Removed the second Area for views as it was duplicated logic */}
+									<Area 
+										type="monotone" 
+										dataKey="value" 
+										stroke="#8884d8" 
+										fillOpacity={1} 
+										fill="url(#colorFollowers)" 
+										name="Followers" 
+									/>
 								</AreaChart>
 							</ResponsiveContainer>
 						</Card.Body>
 					</Card>
 				</Col>
-				<Col lg={4} className="mb-3">
+				<Col lg={4}>
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Header>
-							<h5 className="mb-0">Growth Metrics</h5>
+							<h6 className="mb-0">Growth Metrics</h6>
 						</Card.Header>
 						<Card.Body>
-							<div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded">
-								<div>
-									<h6 className="mb-0">Follower Growth</h6>
-									<small className="text-muted">Last 30 days</small>
+							<div className="d-grid gap-3">
+								<div className="p-3 bg-light rounded">
+									<div className="d-flex justify-content-between align-items-center">
+										<div>
+											<h6 className="mb-0 small">Follower Growth</h6>
+											<small className="text-muted">Last 30 days</small>
+										</div>
+										<div className="text-end">
+											<h6 className="mb-0 text-success">
+												{analytics?.overview?.followerGrowthRate >= 0 ? '+' : ''}{analytics?.overview?.followerGrowthRate?.toFixed(1) || '0.0'}%
+											</h6>
+											<small className="text-muted">+{analytics?.overview?.followersGained || 0}</small>
+										</div>
+									</div>
 								</div>
-								<div className="text-end">
-									<h5 className="mb-0 text-success">
-										{analytics?.overview?.followerGrowthRate >= 0 ? '+' : ''}{analytics?.overview?.followerGrowthRate?.toFixed(1) || '0.0'}%
-									</h5>
-									<small className="text-muted">+{analytics?.overview?.followersGained || 0}</small>
+								<div className="p-3 bg-light rounded">
+									<div className="d-flex justify-content-between align-items-center">
+										<div>
+											<h6 className="mb-0 small">Content Views</h6>
+											<small className="text-muted">Growth rate</small>
+										</div>
+										<div className="text-end">
+											<h6 className="mb-0 text-info">
+												{analytics?.overview?.viewsGrowthRate >= 0 ? '+' : ''}{analytics?.overview?.viewsGrowthRate?.toFixed(1) || '0.0'}%
+											</h6>
+											<small className="text-muted">
+												{analytics?.overview?.viewsGrowthRate >= 0 ? 'Trending up' : 'Declining'}
+											</small>
+										</div>
+									</div>
 								</div>
-							</div>
-							<div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded">
-								<div>
-									<h6 className="mb-0">Content Views</h6>
-									<small className="text-muted">Growth rate</small>
+								<div className="p-3 bg-light rounded">
+									<div className="d-flex justify-content-between align-items-center">
+										<div>
+											<h6 className="mb-0 small">Engagement Rate</h6>
+											<small className="text-muted">Average</small>
+										</div>
+										<div className="text-end">
+											<h6 className="mb-0 text-warning">{analytics?.overview?.engagementRate || 0}%</h6>
+											<small className="text-muted">Above average</small>
+										</div>
+									</div>
 								</div>
-								<div className="text-end">
-									<h5 className="mb-0 text-info">
-										{analytics?.overview?.viewsGrowthRate >= 0 ? '+' : ''}{analytics?.overview?.viewsGrowthRate?.toFixed(1) || '0.0'}%
-									</h5>
-									<small className="text-muted">
-										{analytics?.overview?.viewsGrowthRate >= 0 ? 'Trending up' : 'Declining'}
-									</small>
-								</div>
-							</div>
-							<div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded">
-								<div>
-									<h6 className="mb-0">Engagement Rate</h6>
-									<small className="text-muted">Average</small>
-								</div>
-								<div className="text-end">
-									<h5 className="mb-0 text-warning">{analytics?.overview?.engagementRate || 0}%</h5>
-									<small className="text-muted">Above average</small>
-								</div>
-							</div>
-							<div className="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-								<div>
-									<h6 className="mb-0">Content Output</h6>
-									<small className="text-muted">Posts this period</small>
-								</div>
-								<div className="text-end">
-									<h5 className="mb-0 text-primary">{analytics?.overview?.totalPosts || 0}</h5>
-									<small className="text-muted">Consistent</small>
+								<div className="p-3 bg-light rounded">
+									<div className="d-flex justify-content-between align-items-center">
+										<div>
+											<h6 className="mb-0 small">Content Output</h6>
+											<small className="text-muted">Posts this period</small>
+										</div>
+										<div className="text-end">
+											<h6 className="mb-0 text-primary">{analytics?.overview?.totalPosts || 0}</h6>
+											<small className="text-muted">Consistent</small>
+										</div>
+									</div>
 								</div>
 							</div>
 						</Card.Body>
 					</Card>
 				</Col>
 			</Row>
-			{/* Add a section for engagement trend if needed */}
-			<Row className="mb-4">
-				<Col lg={12}>
-					<Card className="h-100 border-0 shadow-sm">
+
+			<Row className="g-3">
+				<Col>
+					<Card className="border-0 shadow-sm">
 						<Card.Header>
-							<h5 className="mb-0">Engagement Trends</h5>
+							<h6 className="mb-0">Engagement Trends</h6>
 						</Card.Header>
 						<Card.Body>
-							<ResponsiveContainer width="100%" height={350}>
-								<LineChart data={growthData.engagement}> {/* Use growthData.engagement */}
-									<XAxis dataKey="date" />
-									<YAxis />
+							<ResponsiveContainer width="100%" height={300}>
+								<LineChart data={growthData.engagement || []}>
+									<XAxis dataKey="date" fontSize={12} />
+									<YAxis fontSize={12} />
 									<CartesianGrid strokeDasharray="3 3" />
 									<Tooltip formatter={(value) => [value.toFixed(2), '']} />
-									<Line type="monotone" dataKey="value" stroke="#82ca9d" name="Engagement Rate" />
+									<Line type="monotone" dataKey="value" stroke="#82ca9d" name="Engagement Rate" strokeWidth={2} />
 								</LineChart>
 							</ResponsiveContainer>
 						</Card.Body>
@@ -482,191 +474,142 @@ const AnalyticsPage = () => {
 	const renderMonetizationTab = () => {
 		const totalRevenue = analytics?.overview?.totalEarnings || 0;
 		const totalSubscriptions = analytics?.overview?.totalSubscriptions || 0;
-		const followers = analytics?.overview?.currentFollowers || 0;
 		const revenueGrowth = analytics?.overview?.revenueGrowth || 0;
-		const growthRate = revenueGrowth;
 
 		return (
-		<>
-			<Row className="mb-4">
-				<Col md={3} className="mb-3">
-					<Card className="h-100 border-0 shadow-sm">
-						<Card.Body className="text-center">
-							<h3 className="text-success mb-1">
-								${totalRevenue.toFixed(2)}
-							</h3>
-							<p className="text-muted mb-0">Total Revenue</p>
-							<small className="text-success">{revenueGrowth >= 0 ? '+' : ''}{revenueGrowth.toFixed(1)}% vs last month</small>
-						</Card.Body>
-					</Card>
-				</Col>
-				<Col md={3} className="mb-3">
-					<Card className="h-100 border-0 shadow-sm">
-						<Card.Body className="text-center">
-							<h3 className="text-info mb-1">
-								${analytics?.overview?.adRevenue?.toFixed(2) || "0.00"}
-							</h3>
-							<p className="text-muted mb-0">Ad Revenue</p>
-							<small className="text-muted">{analytics?.overview?.adRevenuePercentage || 0}% of total</small>
-						</Card.Body>
-					</Card>
-				</Col>
-				<Col md={3} className="mb-3">
-					<Card className="h-100 border-0 shadow-sm">
-						<Card.Body className="text-center">
-							<h3 className="text-warning mb-1">
-								${analytics?.overview?.subscriptionRevenue?.toFixed(2) || "0.00"}
-							</h3>
-							<p className="text-muted mb-0">Subscriptions</p>
-							<small className="text-muted">{analytics?.overview?.subscriptionRevenuePercentage || 0}% of total</small>
-						</Card.Body>
-					</Card>
-				</Col>
-				<Col md={3} className="mb-3">
-					<Card className="h-100 border-0 shadow-sm">
-						<Card.Body className="text-center">
-							<h3 className="text-purple mb-1">
-								${analytics?.overview?.tipsRevenue?.toFixed(2) || "0.00"}
-							</h3>
-							<p className="text-muted mb-0">Tips & Donations</p>
-							<small className="text-muted">{analytics?.overview?.tipsRevenuePercentage || 0}% of total</small>
-						</Card.Body>
-					</Card>
-				</Col>
-			</Row>
+			<>
+				<Row className="g-3 mb-4">
+					<Col xs={6} lg={3}>
+						<StatCard
+							value={`$${totalRevenue.toFixed(2)}`}
+							label="Total Revenue"
+							subtitle={`${revenueGrowth >= 0 ? '+' : ''}${revenueGrowth.toFixed(1)}% vs last month`}
+							variant="success"
+						/>
+					</Col>
+					<Col xs={6} lg={3}>
+						<StatCard
+							value={`$${analytics?.overview?.adRevenue?.toFixed(2) || "0.00"}`}
+							label="Ad Revenue"
+							subtitle={`${analytics?.overview?.adRevenuePercentage || 0}% of total`}
+							variant="info"
+						/>
+					</Col>
+					<Col xs={6} lg={3}>
+						<StatCard
+							value={`$${analytics?.overview?.subscriptionRevenue?.toFixed(2) || "0.00"}`}
+							label="Subscriptions"
+							subtitle={`${analytics?.overview?.subscriptionRevenuePercentage || 0}% of total`}
+							variant="warning"
+						/>
+					</Col>
+					<Col xs={6} lg={3}>
+						<StatCard
+							value={`$${analytics?.overview?.tipsRevenue?.toFixed(2) || "0.00"}`}
+							label="Tips & Donations"
+							subtitle={`${analytics?.overview?.tipsRevenuePercentage || 0}% of total`}
+							variant="danger"
+						/>
+					</Col>
+				</Row>
 
-			<Row className="mb-4">
-				<Col lg={12}>
-					<Card className="border-0 shadow-sm">
-						<Card.Header>
-							<h5 className="mb-0">Revenue Performance Metrics</h5>
-						</Card.Header>
-						<Card.Body>
-							<Row>
-								<Col md={3} className="mb-3">
-									<div className="text-center p-3 bg-light rounded">
-										<h6 className="text-muted mb-1">RPM (Revenue per Mille)</h6>
-										<h4 className="text-primary mb-0">
-											${analytics?.overview?.totalViews > 0 ? ((totalRevenue / analytics.overview.totalViews) * 1000).toFixed(2) : '0.00'}
-										</h4>
-										<small className="text-muted">Per 1000 views</small>
+				<Row className="g-3 mb-4">
+					<Col lg={8}>
+						<Card className="border-0 shadow-sm">
+							<Card.Header>
+								<h6 className="mb-0">Revenue Trends</h6>
+							</Card.Header>
+							<Card.Body>
+								<ResponsiveContainer width="100%" height={300}>
+									<AreaChart data={monetizationData.revenue || []}>
+										<defs>
+											<linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+												<stop offset="5%" stopColor="#28a745" stopOpacity={0.8}/>
+												<stop offset="95%" stopColor="#28a745" stopOpacity={0}/>
+											</linearGradient>
+										</defs>
+										<XAxis dataKey="month" fontSize={12} />
+										<YAxis fontSize={12} />
+										<CartesianGrid strokeDasharray="3 3" />
+										<Tooltip formatter={(value) => [`$${value}`, '']} />
+										<Area 
+											type="monotone" 
+											dataKey="earnings" 
+											stroke="#28a745" 
+											fillOpacity={1} 
+											fill="url(#colorRevenue)" 
+											name="Total Revenue" 
+										/>
+									</AreaChart>
+								</ResponsiveContainer>
+							</Card.Body>
+						</Card>
+					</Col>
+					<Col lg={4}>
+						<Card className="border-0 shadow-sm">
+							<Card.Header>
+								<h6 className="mb-0">Revenue Breakdown</h6>
+							</Card.Header>
+							<Card.Body>
+								<div className="d-grid gap-3">
+									<div>
+										<div className="d-flex justify-content-between mb-1">
+											<small>Ad Revenue</small>
+											<small className="fw-bold">{analytics?.overview?.adRevenuePercentage || 0}%</small>
+										</div>
+										<div className="progress" style={{ height: '6px' }}>
+											<div 
+												className="progress-bar bg-info" 
+												style={{ width: `${analytics?.overview?.adRevenuePercentage || 0}%` }}
+											></div>
+										</div>
 									</div>
-								</Col>
-								<Col md={3} className="mb-3">
-									<div className="text-center p-3 bg-light rounded">
-										<h6 className="text-muted mb-1">ARPU</h6>
-										<h4 className="text-success mb-0">
-											${analytics?.overview?.currentFollowers > 0 ? (totalRevenue / analytics.overview.currentFollowers).toFixed(2) : '0.00'}
-										</h4>
-										<small className="text-muted">Average Revenue Per User</small>
+									<div>
+										<div className="d-flex justify-content-between mb-1">
+											<small>Subscriptions</small>
+											<small className="fw-bold">{analytics?.overview?.subscriptionRevenuePercentage || 0}%</small>
+										</div>
+										<div className="progress" style={{ height: '6px' }}>
+											<div 
+												className="progress-bar bg-warning" 
+												style={{ width: `${analytics?.overview?.subscriptionRevenuePercentage || 0}%` }}
+											></div>
+										</div>
 									</div>
-								</Col>
-								<Col md={3} className="mb-3">
-									<div className="text-center p-3 bg-light rounded">
-										<h6 className="text-muted mb-1">Conversion Rate</h6>
-										<h4 className="text-warning mb-0">
-											{analytics?.overview?.currentFollowers > 0 && totalSubscriptions > 0 ?
-												((totalSubscriptions / analytics.overview.currentFollowers) * 100).toFixed(2) : '0.00'}%
-										</h4>
-										<small className="text-muted">Followers to subscribers</small>
+									<div>
+										<div className="d-flex justify-content-between mb-1">
+											<small>Tips & Donations</small>
+											<small className="fw-bold">{analytics?.overview?.tipsRevenuePercentage || 0}%</small>
+										</div>
+										<div className="progress" style={{ height: '6px' }}>
+											<div 
+												className="progress-bar bg-success" 
+												style={{ width: `${analytics?.overview?.tipsRevenuePercentage || 0}%` }}
+											></div>
+										</div>
 									</div>
-								</Col>
-								<Col md={3} className="mb-3">
-									<div className="text-center p-3 bg-light rounded">
-										<h6 className="text-muted mb-1">Monthly Growth</h6>
-										<h4 className={`mb-0 ${growthRate >= 0 ? 'text-success' : 'text-danger'}`}>
-											{growthRate >= 0 ? '+' : ''}{growthRate.toFixed(1)}%
-										</h4>
-										<small className="text-muted">Revenue trend</small>
+									<hr />
+									<div className="text-center">
+										<h6 className="text-success mb-1">${totalRevenue.toFixed(2)}</h6>
+										<small className="text-muted">Total this period</small>
 									</div>
-								</Col>
-							</Row>
-						</Card.Body>
-					</Card>
-				</Col>
-			</Row>
-
-			<Row className="mb-4">
-				<Col lg={8} className="mb-3">
-					<Card className="h-100 border-0 shadow-sm">
-						<Card.Header>
-							<h5 className="mb-0">Revenue Trends</h5>
-						</Card.Header>
-						<Card.Body>
-							<ResponsiveContainer width="100%" height={350}>
-								<AreaChart data={monetizationData.revenue}> {/* Use monetizationData.revenue */}
-									<defs>
-										<linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-											<stop offset="5%" stopColor="#28a745" stopOpacity={0.8}/>
-											<stop offset="95%" stopColor="#28a745" stopOpacity={0}/>
-										</linearGradient>
-									</defs>
-									<XAxis dataKey="month" />
-									<YAxis />
-									<CartesianGrid strokeDasharray="3 3" />
-									<Tooltip formatter={(value) => [`$${value}`, '']} />
-									<Area type="monotone" dataKey="earnings" stroke="#28a745" fillOpacity={1} fill="url(#colorRevenue)" name="Total Revenue" />
-									{/* Assuming you want to show Ad Revenue and Subscriptions as separate bars */}
-									<Bar dataKey="adRevenue" fill="#17a2b8" name="Ad Revenue" />
-									<Bar dataKey="subscriptions" fill="#ffc107" name="Subscriptions" />
-								</AreaChart>
-							</ResponsiveContainer>
-						</Card.Body>
-					</Card>
-				</Col>
-				<Col lg={4} className="mb-3">
-					<Card className="h-100 border-0 shadow-sm">
-						<Card.Header>
-							<h5 className="mb-0">Revenue Breakdown</h5>
-						</Card.Header>
-						<Card.Body>
-							<div className="mb-3">
-								<div className="d-flex justify-content-between mb-1">
-									<span>Ad Revenue</span>
-									<span className="fw-bold">{analytics?.overview?.adRevenuePercentage || 0}%</span>
 								</div>
-								<div className="progress" style={{ height: '8px' }}>
-									<div className="progress-bar bg-info" style={{ width: `${analytics?.overview?.adRevenuePercentage || 0}%` }}></div>
-								</div>
-							</div>
-							<div className="mb-3">
-								<div className="d-flex justify-content-between mb-1">
-									<span>Subscriptions</span>
-									<span className="fw-bold">{analytics?.overview?.subscriptionRevenuePercentage || 0}%</span>
-								</div>
-								<div className="progress" style={{ height: '8px' }}>
-									<div className="progress-bar bg-warning" style={{ width: `${analytics?.overview?.subscriptionRevenuePercentage || 0}%` }}></div>
-								</div>
-							</div>
-							<div className="mb-3">
-								<div className="d-flex justify-content-between mb-1">
-									<span>Tips & Donations</span>
-									<span className="fw-bold">{analytics?.overview?.tipsRevenuePercentage || 0}%</span>
-								</div>
-								<div className="progress" style={{ height: '8px' }}>
-									<div className="progress-bar bg-success" style={{ width: `${analytics?.overview?.tipsRevenuePercentage || 0}%` }}></div>
-								</div>
-							</div>
-							<hr />
-							<div className="text-center">
-								<h5 className="text-success mb-1">
-									${totalRevenue.toFixed(2)}
-								</h5>
-								<small className="text-muted">Total this period</small>
-							</div>
-						</Card.Body>
-					</Card>
-				</Col>
-			</Row>
-		</>
-	);
-	}
+							</Card.Body>
+						</Card>
+					</Col>
+				</Row>
+			</>
+		);
+	};
 
 	return (
-		<Container className="py-4">
-			<div className="d-flex justify-content-between align-items-center px-3 mb-4">
-				<h2 className="mb-0">Analytics Dashboard</h2>
-				<div className="d-flex gap-2">
+		<Container className="py-3 py-md-4">
+			<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+				<div className="mb-3 mb-md-0">
+					<h2 className="mb-1">Analytics Dashboard</h2>
+					<p className="text-muted mb-0 small">Track your performance and insights</p>
+				</div>
+				<div className="d-flex flex-wrap gap-2">
 					{['7d', '30d', '90d'].map(period => (
 						<Button
 							key={period}
@@ -685,15 +628,18 @@ const AnalyticsPage = () => {
 					activeKey={activeTab}
 					onSelect={(tab) => setActiveTab(tab)}
 					className="mb-4"
-					fill
 				>
-					<Tab eventKey="home" title="Home">
-						{renderHomeTab()}
+					<Tab eventKey="overview" title="Overview">
+						{renderOverviewTab()}
 					</Tab>
-					<Tab eventKey="growth" title="Growth">
+					<Tab eventKey="growth" title={
+						<span className="d-none d-sm-inline">Growth</span>
+					}>
 						{renderGrowthTab()}
 					</Tab>
-					<Tab eventKey="monetization" title="Monetization">
+					<Tab eventKey="monetization" title={
+						<span className="d-none d-sm-inline">Monetization</span>
+					}>
 						{renderMonetizationTab()}
 					</Tab>
 				</Tabs>
@@ -715,25 +661,25 @@ const AnalyticsPage = () => {
 			{businessDashboard && (
 				<Card className="border-0 shadow-sm mt-4">
 					<Card.Header>
-						<h5 className="mb-0">Business Analytics</h5>
+						<h6 className="mb-0">Business Analytics</h6>
 					</Card.Header>
 					<Card.Body>
-						<Row>
-							<Col md={3} className="text-center">
-								<h4 className="text-primary">{businessDashboard.overview?.totalCampaigns || 0}</h4>
-								<p className="text-muted">Total Campaigns</p>
+						<Row className="g-3">
+							<Col xs={6} md={3} className="text-center">
+								<h5 className="text-primary">{businessDashboard.overview?.totalCampaigns || 0}</h5>
+								<small className="text-muted">Total Campaigns</small>
 							</Col>
-							<Col md={3} className="text-center">
-								<h4 className="text-success">${businessDashboard.overview?.totalSpent?.toFixed(2) || '0.00'}</h4>
-								<p className="text-muted">Total Spent</p>
+							<Col xs={6} md={3} className="text-center">
+								<h5 className="text-success">${businessDashboard.overview?.totalSpent?.toFixed(2) || '0.00'}</h5>
+								<small className="text-muted">Total Spent</small>
 							</Col>
-							<Col md={3} className="text-center">
-								<h4 className="text-info">{formatNumber(businessDashboard.analytics?.totalImpressions || 0)}</h4>
-								<p className="text-muted">Impressions</p>
+							<Col xs={6} md={3} className="text-center">
+								<h5 className="text-info">{formatNumber(businessDashboard.analytics?.totalImpressions || 0)}</h5>
+								<small className="text-muted">Impressions</small>
 							</Col>
-							<Col md={3} className="text-center">
-								<h4 className="text-warning">{businessDashboard.analytics?.averageCTR?.toFixed(2) || 0}%</h4>
-								<p className="text-muted">Average CTR</p>
+							<Col xs={6} md={3} className="text-center">
+								<h5 className="text-warning">{businessDashboard.analytics?.averageCTR?.toFixed(2) || 0}%</h5>
+								<small className="text-muted">Average CTR</small>
 							</Col>
 						</Row>
 					</Card.Body>
