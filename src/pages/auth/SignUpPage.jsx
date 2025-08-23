@@ -7,7 +7,7 @@ import "animate.css";
 import heic2any from "heic2any";
 
 import { authAPI } from "../../config/ApiConfig";
-import { userExistByEmail, getGravatar, createUsername } from "../../utils/app-utils";
+import { getGravatar, createUsername } from "../../utils/app-utils";
 import { setAuthToken } from "../../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
 import { initializeGoogleOAuth } from "../../utils/google-auth-utils";
@@ -101,11 +101,6 @@ const SignUpPage = () => {
 		e.preventDefault();
 		try {
 			setLoading(true);
-			const exists = await userExistByEmail(email);
-			if (exists) {
-				setError("Email address already exists. Please try again.");
-				return;
-			}
 			changeStep(2, true);
 		} catch (err) {
 			setError(err.message);
