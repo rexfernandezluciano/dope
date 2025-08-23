@@ -1281,6 +1281,10 @@ export const businessAPI = {
 		return await apiRequest("/credits", { method: "GET" });
 	},
 
+	getCreditsPackages: async () => {
+		return await apiRequest("/credits/packages", { method: "GET" });
+	},
+
 	purchaseCredits: async (data) => {
 		return await apiRequest("/credits/purchase", {
 			method: "POST",

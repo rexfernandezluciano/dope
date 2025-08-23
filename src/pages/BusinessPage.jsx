@@ -41,7 +41,8 @@ const BusinessPage = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false);
 	const [showCreditsModal, setShowCreditsModal] = useState(false);
 	const [paymentMethodId, setPaymentMethodId] = useState("");
-	const [purchaseAmount, setPurchaseAmount] = useState(100);
+	const [selectedPackage, setSelectedPackage] = useState(null);
+	const [creditsPackages, setCreditsPackages] = useState([]);
 	const [paymentMethods, setPaymentMethods] = useState([]);
 	const [campaignForm, setCampaignForm] = useState({
 		title: "",
@@ -65,6 +66,7 @@ const BusinessPage = () => {
 		loadBusinessData();
 		loadCredits();
 		loadPaymentMethods();
+		loadCreditsPackages();
 	}, []);
 
 	const loadBusinessData = async () => {
@@ -113,19 +115,28 @@ const BusinessPage = () => {
 		}
 	};
 
+	const loadCreditsPackages = async () => {
+		try {
+			const response = await businessAPI.getCreditsPackages();
+			setCreditsPackages(response.packages || []);
+		} catch (error) {
+			console.error("Failed to load credits packages:", error);
+		}
+	};
+
 	const handlePurchaseCredits = async (e) => {
 		e.preventDefault();
 		try {
 			setError("");
 			setSuccess("");
 			await businessAPI.purchaseCredits({
-				credits: parseInt(purchaseAmount),
+				credits: selectedPackage.amount,
 				paymentMethodId: paymentMethodId,
 			});
-			setSuccess("Credits purchased successfully!");
+			setSuccess(`Credits purchased successfully! You received ${selectedPackage.totalCredits} credits (${selectedPackage.credits} base + ${selectedPackage.bonus} bonus).`);
 			setShowCreditsModal(false);
 			setPaymentMethodId("");
-			setPurchaseAmount(100);
+			setSelectedPackage(null);
 			loadCredits(); // Reload credits after purchase
 		} catch (error) {
 			setError(error.message || "Failed to purchase credits");
@@ -679,10 +690,10 @@ const BusinessPage = () => {
 			<Modal
 				show={showCreditsModal}
 				onHide={() => setShowCreditsModal(false)}
-				size="md"
+				size="lg"
 			>
 				<Modal.Header closeButton>
-					<Modal.Title>Add Credits</Modal.Title>
+					<Modal.Title>Purchase Credits</Modal.Title>
 				</Modal.Header>
 				<Form onSubmit={handlePurchaseCredits}>
 					<Modal.Body>
@@ -696,23 +707,72 @@ const BusinessPage = () => {
 							</small>
 						</div>
 
-						<Form.Group className="mb-3">
-							<Form.Label>Amount of Credits to Purchase</Form.Label>
-							<Form.Control
-								type="number"
-								min="10"
-								max="10000"
-								step="10"
-								value={purchaseAmount}
-								onChange={(e) => setPurchaseAmount(e.target.value)}
-								required
-							/>
-							<Form.Text className="text-muted">
-								Minimum purchase: 10 credits
-							</Form.Text>
-						</Form.Group>
+						<h6 className="mb-3">Choose a Credits Package</h6>
+						<Row className="g-3 mb-4">
+							{creditsPackages.map((pkg) => (
+								<Col key={pkg.amount} md={6}>
+									<Card 
+										className={`h-100 cursor-pointer ${selectedPackage?.amount === pkg.amount ? 'border-primary bg-light' : ''} ${pkg.popular ? 'border-warning' : ''}`}
+										onClick={() => setSelectedPackage(pkg)}
+										style={{ cursor: 'pointer', position: 'relative' }}
+									>
+										{pkg.popular && (
+											<Badge 
+												bg="warning" 
+												className="position-absolute top-0 start-50 translate-middle px-3 py-2"
+												style={{ fontSize: '0.75rem' }}
+											>
+												Most Popular
+											</Badge>
+										)}
+										<Card.Body className="text-center p-3">
+											<h5 className="mb-2">{pkg.priceDisplay}</h5>
+											<div className="mb-2">
+												<strong className="text-primary">{pkg.totalCredits.toLocaleString()}</strong>
+												<small className="text-muted d-block">
+													{pkg.credits.toLocaleString()} base
+													{pkg.bonus > 0 && (
+														<span className="text-success">
+															 + {pkg.bonus.toLocaleString()} bonus
+														</span>
+													)}
+												</small>
+											</div>
+											<small className="text-muted">{pkg.description}</small>
+											{pkg.bonus > 0 && (
+												<div className="mt-2">
+													<Badge bg="success" className="small">
+														+{((pkg.bonus / pkg.credits) * 100).toFixed(0)}% Bonus
+													</Badge>
+												</div>
+											)}
+										</Card.Body>
+									</Card>
+								</Col>
+							))}
+						</Row>
 
-						{paymentMethods.length > 0 ? (
+						{selectedPackage && (
+							<Alert variant="info" className="mb-3">
+								<div className="d-flex justify-content-between align-items-center">
+									<div>
+										<strong>Selected: {selectedPackage.priceDisplay}</strong>
+										<div className="small text-muted">
+											{selectedPackage.totalCredits.toLocaleString()} credits total
+										</div>
+									</div>
+									<Button 
+										variant="outline-secondary" 
+										size="sm"
+										onClick={() => setSelectedPackage(null)}
+									>
+										Change
+									</Button>
+								</div>
+							</Alert>
+						)}
+
+						{selectedPackage && paymentMethods.length > 0 ? (
 							<Form.Group className="mb-3">
 								<Form.Label>Select Payment Method</Form.Label>
 								<Form.Select
@@ -735,7 +795,7 @@ const BusinessPage = () => {
 									))}
 								</Form.Select>
 							</Form.Group>
-						) : (
+						) : selectedPackage && paymentMethods.length === 0 ? (
 							<Alert variant="warning">
 								<div className="d-flex align-items-center">
 									<Wallet className="me-2" size={20} />
@@ -747,7 +807,7 @@ const BusinessPage = () => {
 									</div>
 								</div>
 							</Alert>
-						)}
+						) : null}
 
 						<Alert variant="info">
 							<small>
@@ -762,9 +822,9 @@ const BusinessPage = () => {
 						<Button 
 							type="submit" 
 							variant="primary" 
-							disabled={!paymentMethodId || paymentMethods.length === 0}
+							disabled={!selectedPackage || !paymentMethodId || paymentMethods.length === 0}
 						>
-							Purchase {purchaseAmount} Credits
+							Purchase {selectedPackage ? selectedPackage.priceDisplay : 'Package'}
 						</Button>
 					</Modal.Footer>
 				</Form>
