@@ -83,7 +83,39 @@ app.use(
   }),
 );
 
-// Proxy WebFinger requests
+// Proxy federated ActivityPub requests
+app.use(
+  "/federated",
+  createProxyMiddleware({
+    target: "https://example.com", // This will be dynamically replaced
+    changeOrigin: true,
+    secure: true,
+    followRedirects: true,
+    router: (req) => {
+      // Extract domain from query parameter: /federated?domain=mastodon.social&path=/.well-known/webfinger
+      const domain = req.query.domain;
+      if (domain) {
+        return `https://${domain}`;
+      }
+      return "https://api.dopp.eu.org"; // fallback
+    },
+    pathRewrite: (path, req) => {
+      // Remove /federated and use the path parameter
+      return req.query.path || path.replace('/federated', '');
+    },
+    onProxyReq: (proxyReq, req, res) => {
+      console.log(
+        `Proxying federated request ${req.method} ${req.url} to https://${req.query.domain}${req.query.path}`,
+      );
+    },
+    onError: (err, req, res) => {
+      console.error("Federated proxy error:", err.message);
+      res.status(500).json({ error: "Federated proxy error", message: err.message });
+    },
+  }),
+);
+
+// Proxy WebFinger requests (local only)
 app.use(
   "/.well-known",
   createProxyMiddleware({
