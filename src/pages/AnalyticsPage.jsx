@@ -77,23 +77,11 @@ const AnalyticsPage = () => {
 		{ name: 'Shares', value: analytics?.overview?.totalShares || 0, color: '#ff7300' }
 	];
 
-	// Mock growth data (replace with real API data)
-	const growthData = [
-		{ date: '2024-01-01', followers: 1200, views: 5000, posts: 10 },
-		{ date: '2024-01-15', followers: 1350, views: 6500, posts: 15 },
-		{ date: '2024-02-01', followers: 1500, views: 8000, posts: 20 },
-		{ date: '2024-02-15', followers: 1680, views: 9200, posts: 25 },
-		{ date: '2024-03-01', followers: 1820, views: 11000, posts: 30 }
-	];
+	// Real growth data from API
+	const growthData = analytics?.growthData || [];
 
-	// Mock monetization data (replace with real API data)
-	const monetizationData = [
-		{ month: 'Jan', revenue: 120, adRevenue: 80, subscriptions: 40 },
-		{ month: 'Feb', revenue: 180, adRevenue: 120, subscriptions: 60 },
-		{ month: 'Mar', revenue: 250, adRevenue: 170, subscriptions: 80 },
-		{ month: 'Apr', revenue: 320, adRevenue: 200, subscriptions: 120 },
-		{ month: 'May', revenue: 420, adRevenue: 280, subscriptions: 140 }
-	];
+	// Real monetization data from API
+	const monetizationData = analytics?.monetizationData || [];
 
 	const renderHomeTab = () => (
 		<>
@@ -326,7 +314,9 @@ const AnalyticsPage = () => {
 									<small className="text-muted">Last 30 days</small>
 								</div>
 								<div className="text-end">
-									<h5 className="mb-0 text-success">+15.2%</h5>
+									<h5 className="mb-0 text-success">
+										{analytics?.overview?.followerGrowthRate >= 0 ? '+' : ''}{analytics?.overview?.followerGrowthRate?.toFixed(1) || '0.0'}%
+									</h5>
 									<small className="text-muted">+{analytics?.overview?.followersGained || 0}</small>
 								</div>
 							</div>
@@ -336,8 +326,12 @@ const AnalyticsPage = () => {
 									<small className="text-muted">Growth rate</small>
 								</div>
 								<div className="text-end">
-									<h5 className="mb-0 text-info">+22.8%</h5>
-									<small className="text-muted">Trending up</small>
+									<h5 className="mb-0 text-info">
+										{analytics?.overview?.viewsGrowthRate >= 0 ? '+' : ''}{analytics?.overview?.viewsGrowthRate?.toFixed(1) || '0.0'}%
+									</h5>
+									<small className="text-muted">
+										{analytics?.overview?.viewsGrowthRate >= 0 ? 'Trending up' : 'Declining'}
+									</small>
 								</div>
 							</div>
 							<div className="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded">
@@ -369,10 +363,10 @@ const AnalyticsPage = () => {
 
 	const renderMonetizationTab = () => {
 		const totalRevenue = analytics?.overview?.totalEarnings || 0;
-		const totalSubscriptions = analytics?.overview?.totalSubscriptions || 0; // Assuming this data exists
+		const totalSubscriptions = analytics?.overview?.totalSubscriptions || 0;
 		const followers = analytics?.overview?.currentFollowers || 0;
-		const revenueGrowth = 15.2; // Placeholder, replace with actual calculation
-		const growthRate = revenueGrowth; // Using revenueGrowth as a placeholder for simplicity
+		const revenueGrowth = analytics?.overview?.revenueGrowth || 0;
+		const growthRate = revenueGrowth;
 
 		return (
 		<>
@@ -392,10 +386,10 @@ const AnalyticsPage = () => {
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Body className="text-center">
 							<h3 className="text-info mb-1">
-								${(totalRevenue * 0.6).toFixed(2)}
+								${analytics?.overview?.adRevenue?.toFixed(2) || "0.00"}
 							</h3>
 							<p className="text-muted mb-0">Ad Revenue</p>
-							<small className="text-muted">60% of total</small>
+							<small className="text-muted">{analytics?.overview?.adRevenuePercentage || 0}% of total</small>
 						</Card.Body>
 					</Card>
 				</Col>
@@ -403,10 +397,10 @@ const AnalyticsPage = () => {
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Body className="text-center">
 							<h3 className="text-warning mb-1">
-								${(totalRevenue * 0.3).toFixed(2)}
+								${analytics?.overview?.subscriptionRevenue?.toFixed(2) || "0.00"}
 							</h3>
 							<p className="text-muted mb-0">Subscriptions</p>
-							<small className="text-muted">30% of total</small>
+							<small className="text-muted">{analytics?.overview?.subscriptionRevenuePercentage || 0}% of total</small>
 						</Card.Body>
 					</Card>
 				</Col>
@@ -414,10 +408,10 @@ const AnalyticsPage = () => {
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Body className="text-center">
 							<h3 className="text-purple mb-1">
-								${(totalRevenue * 0.1).toFixed(2)}
+								${analytics?.overview?.tipsRevenue?.toFixed(2) || "0.00"}
 							</h3>
 							<p className="text-muted mb-0">Tips & Donations</p>
-							<small className="text-muted">10% of total</small>
+							<small className="text-muted">{analytics?.overview?.tipsRevenuePercentage || 0}% of total</small>
 						</Card.Body>
 					</Card>
 				</Col>
@@ -510,28 +504,28 @@ const AnalyticsPage = () => {
 							<div className="mb-3">
 								<div className="d-flex justify-content-between mb-1">
 									<span>Ad Revenue</span>
-									<span className="fw-bold">60%</span>
+									<span className="fw-bold">{analytics?.overview?.adRevenuePercentage || 0}%</span>
 								</div>
 								<div className="progress" style={{ height: '8px' }}>
-									<div className="progress-bar bg-info" style={{ width: '60%' }}></div>
+									<div className="progress-bar bg-info" style={{ width: `${analytics?.overview?.adRevenuePercentage || 0}%` }}></div>
 								</div>
 							</div>
 							<div className="mb-3">
 								<div className="d-flex justify-content-between mb-1">
 									<span>Subscriptions</span>
-									<span className="fw-bold">30%</span>
+									<span className="fw-bold">{analytics?.overview?.subscriptionRevenuePercentage || 0}%</span>
 								</div>
 								<div className="progress" style={{ height: '8px' }}>
-									<div className="progress-bar bg-warning" style={{ width: '30%' }}></div>
+									<div className="progress-bar bg-warning" style={{ width: `${analytics?.overview?.subscriptionRevenuePercentage || 0}%` }}></div>
 								</div>
 							</div>
 							<div className="mb-3">
 								<div className="d-flex justify-content-between mb-1">
 									<span>Tips & Donations</span>
-									<span className="fw-bold">10%</span>
+									<span className="fw-bold">{analytics?.overview?.tipsRevenuePercentage || 0}%</span>
 								</div>
 								<div className="progress" style={{ height: '8px' }}>
-									<div className="progress-bar bg-success" style={{ width: '10%' }}></div>
+									<div className="progress-bar bg-success" style={{ width: `${analytics?.overview?.tipsRevenuePercentage || 0}%` }}></div>
 								</div>
 							</div>
 							<hr />

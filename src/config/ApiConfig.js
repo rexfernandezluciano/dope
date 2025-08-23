@@ -1326,7 +1326,7 @@ export const businessAPI = {
 // Enhanced Analytics API
 export const enhancedAnalyticsAPI = {
 	getUserAnalytics: async (period = "30d") => {
-		return await apiRequest(`/analytics/user?period=${period}`);
+		return await apiRequest(`/analytics/user?period=${period}&includeGrowth=true&includeMonetization=true`);
 	},
 
 	getPostAnalytics: async (postId) => {
@@ -1335,6 +1335,14 @@ export const enhancedAnalyticsAPI = {
 
 	getPlatformAnalytics: async () => {
 		return await apiRequest("/analytics/platform");
+	},
+
+	getGrowthAnalytics: async (period = "30d") => {
+		return await apiRequest(`/analytics/growth?period=${period}`);
+	},
+
+	getMonetizationAnalytics: async (period = "30d") => {
+		return await apiRequest(`/analytics/monetization?period=${period}`);
 	}
 };
 
