@@ -492,6 +492,19 @@ export const authAPI = {
 
 // User API
 export const userAPI = {
+	getUser: async (username) => {
+		if (username) {
+			return await apiRequest(`/users/${username}`, {
+				method: "GET",
+			});
+		} else {
+			// If no username provided, get current user
+			return await apiRequest(`/auth/me`, {
+				method: "GET",
+			});
+		}
+	},
+
 	getProfile: async (username) => {
 		return await apiRequest(`/auth/me`, {
 			method: "GET",
