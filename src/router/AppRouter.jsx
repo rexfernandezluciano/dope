@@ -181,12 +181,12 @@ const router = createBrowserRouter([
 			{
 				path: "/settings/oauth/consent",
 				element: <OAuthConsentPage />,
-				loader: indexPageLoader,
+				loader: IndexPageLoader,
 			},
 			{
 				path: "/settings/blocked-users",
 				element: <BlockedUsersPage />,
-				loader: indexPageLoader,
+				loader: IndexPageLoader,
 			},
 		],
 	},
