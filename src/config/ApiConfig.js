@@ -183,6 +183,23 @@ class HttpClient {
 						details: data?.details,
 						url: error.config?.url,
 					});
+				} else if (status === 429) {
+					// Handle rate limiting
+					const retryAfter = error.response.headers['retry-after'] || data?.retryAfter;
+					errorMsg = data?.message || "Rate limit exceeded";
+					
+					console.log("🚨 429 Rate Limit Details:", {
+						endpoint,
+						message: data?.message,
+						retryAfter: retryAfter,
+						headers: error.response.headers,
+						url: error.config?.url,
+					});
+					
+					// Add retry information to error data for better handling
+					if (retryAfter) {
+						errorMsg += `. Please wait ${retryAfter} seconds before trying again.`;
+					}
 				} else if (status >= 500) {
 					errorMsg = data?.message || error.response.statusText || `Server error (${status})`;
 					console.log("🚨 Server Error Details:", {
@@ -206,6 +223,12 @@ class HttpClient {
 				const apiError = new Error(errorMsg);
 				apiError.status = status;
 				apiError.data = data;
+				
+				// Add retry-after header for rate limiting
+				if (status === 429) {
+					apiError.retryAfter = error.response.headers['retry-after'] || data?.retryAfter;
+				}
+				
 				throw apiError;
 			} else if (error.request) {
 				// Network error - request was made but no response

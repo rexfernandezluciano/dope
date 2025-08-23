@@ -400,11 +400,34 @@ export const handleAPIError = (error) => {
 			}
 			return error.data?.message || error.message || 'Validation failed. Please check your input.';
 		case 429:
-			// Handle rate limiting for password reset specifically
+			// Handle rate limiting with more specific messages based on endpoint
 			if (error.message?.includes('password') || error.message?.includes('reset')) {
-				return 'Too many password reset requests. Please wait before trying again.';
+				return 'Too many password reset requests. Please wait 15 minutes before trying again.';
 			}
-			return 'Too many requests. Please wait a moment before trying again.';
+			if (error.message?.includes('login') || error.message?.includes('auth')) {
+				return 'Too many login attempts. Please wait 5 minutes before trying again for security reasons.';
+			}
+			if (error.message?.includes('register') || error.message?.includes('signup')) {
+				return 'Too many registration attempts. Please wait a few minutes before trying again.';
+			}
+			if (error.message?.includes('email') || error.message?.includes('verification')) {
+				return 'Too many email requests. Please wait before requesting another verification email.';
+			}
+			if (error.message?.includes('post') || error.message?.includes('comment')) {
+				return 'You are posting too frequently. Please wait a moment before posting again.';
+			}
+			if (error.message?.includes('search')) {
+				return 'Too many search requests. Please wait before searching again.';
+			}
+			
+			// Check if the API response includes specific retry information
+			const retryAfter = error.data?.retryAfter;
+			if (retryAfter) {
+				const minutes = Math.ceil(retryAfter / 60);
+				return `Rate limit exceeded. Please wait ${minutes} minute${minutes > 1 ? 's' : ''} before trying again.`;
+			}
+			
+			return 'Rate limit exceeded. You are making requests too quickly. Please wait a moment before trying again.';
 		case 500:
 		case 502:
 		case 503:
