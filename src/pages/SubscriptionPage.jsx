@@ -54,6 +54,7 @@ const SubscriptionPage = () => {
 	const [selectedPaymentType, setSelectedPaymentType] = useState("card");
 	const [isSignupFlow, setIsSignupFlow] = useState(false);
 	const [pendingSignupData, setPendingSignupData] = useState(null);
+	const [selectedSubscription, setSelectedSubscription] = useState("free");
 	const [cardForm, setCardForm] = useState({
 		cardNumber: "",
 		expiryDate: "",
