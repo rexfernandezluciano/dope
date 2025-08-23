@@ -126,9 +126,6 @@ const BusinessPage = () => {
 		}
 	};
 
-	const [modalError, setModalError] = useState("");
-	const [modalSuccess, setModalSuccess] = useState("");
-
 	const handlePurchaseCredits = async (e) => {
 		e.preventDefault();
 		try {
