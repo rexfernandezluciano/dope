@@ -90,8 +90,11 @@ class HttpClient {
 	}
 
 	async makeRequest(endpoint, options = {}) {
-		// Add /v1 prefix if not already present
-		const normalizedEndpoint = endpoint.startsWith("/v1")
+		// Add /v1 prefix if not already present, except for WebFinger and ActivityPub endpoints
+		const isWebFingerOrActivityPub = endpoint.startsWith("/.well-known") || 
+			endpoint.startsWith("/activitypub");
+		
+		const normalizedEndpoint = endpoint.startsWith("/v1") || isWebFingerOrActivityPub
 			? endpoint
 			: `/v1${endpoint}`;
 		const url = `${this.currentBaseURL}${normalizedEndpoint}`;
