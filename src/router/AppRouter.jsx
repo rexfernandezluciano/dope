@@ -1,6 +1,6 @@
 /** @format */
 
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Route } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
@@ -38,6 +38,13 @@ const DeveloperPage = lazy(() => import("../pages/DeveloperPage"));
 const BusinessPage = lazy(() => import("../pages/BusinessPage"));
 const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
+// Lazy load settings route components
+const SessionSettingsPage = lazy(() =>
+	import("../pages/settings/SessionSettingsPage"),
+);
+const OAuthAppsPage = lazy(() => import("../pages/settings/OAuthAppsPage"));
+const OAuthConsentPage = lazy(() => import("../pages/settings/OAuthConsentPage"));
+const BlockedUsersPage = lazy(() => import("../pages/settings/BlockedUsersPage"));
 
 const router = createBrowserRouter([
 	{
@@ -158,6 +165,30 @@ const router = createBrowserRouter([
 		),
 		loader: IndexPageLoader,
 		hydrateFallbackElement: <LoadingView />,
+		children: [
+			{
+				index: true,
+				element: <SessionSettingsPage />,
+				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
+			},
+			{
+				path: "oauth/apps",
+				element: <OAuthAppsPage />,
+				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
+			},
+			{
+				path: "/settings/oauth/consent",
+				element: <OAuthConsentPage />,
+				loader: indexPageLoader,
+			},
+			{
+				path: "/settings/blocked-users",
+				element: <BlockedUsersPage />,
+				loader: indexPageLoader,
+			},
+		],
 	},
 	{
 		path: "/settings/:tab",

@@ -20,7 +20,7 @@ import {
 	Camera,
 } from "react-bootstrap-icons";
 
-import { userAPI, postAPI } from "../config/ApiConfig";
+import { userAPI, postAPI, blockAPI } from "../config/ApiConfig";
 import {
 	deletePost as deletePostUtil,
 	sharePost,
@@ -36,6 +36,7 @@ import {
 } from "../utils/activitypub-utils";
 import PostCard from "../components/PostCard";
 import AlertDialog from "../components/dialogs/AlertDialog";
+import UserBlockModal from "../components/UserBlockModal";
 
 const ProfilePage = () => {
 	const { username: rawUsername, handle } = useParams();
@@ -66,6 +67,8 @@ const ProfilePage = () => {
 	const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
 	const [isFederatedProfile, setIsFederatedProfile] = useState(false);
 	const [federatedActor, setFederatedActor] = useState(null);
+	const [showBlockModal, setShowBlockModal] = useState(false);
+	const [isBlocked, setIsBlocked] = useState(false);
 
 	const navigate = useNavigate();
 
@@ -266,6 +269,9 @@ const ProfilePage = () => {
 				}
 
 				setProfileUser(profileUserData);
+
+				// Check if user is blocked
+				setIsBlocked(profileUserData.isBlocked || false);
 
 				// Set edit form data
 				setEditForm({
@@ -578,6 +584,34 @@ const ProfilePage = () => {
 		setSelectedPostForOptions(null);
 	};
 
+	const handleBlockUser = async (userId, action) => {
+		try {
+			if (action === 'blocked') {
+				setIsBlocked(true);
+				// Optionally clear posts from blocked user
+				setPosts([]);
+			} else if (action === 'restricted') {
+				// Handle restriction if needed
+				console.log('User restricted');
+			}
+		} catch (err) {
+			console.error('Error handling block action:', err);
+			setError('Failed to block user');
+		}
+	};
+
+	const handleUnblockUser = async () => {
+		try {
+			await blockAPI.unblockUser(profileUser.uid);
+			setIsBlocked(false);
+			// Reload profile data
+			window.location.reload();
+		} catch (err) {
+			console.error('Error unblocking user:', err);
+			setError('Failed to unblock user');
+		}
+	};
+
 	const handleOptionAction = (action, postId) => {
 		handlePostOption(action, postId, {
 			copyLink: () =>
@@ -699,13 +733,34 @@ const ProfilePage = () => {
 							)}
 						</div>
 					) : (
-						<Button
-							variant={isFollowing ? "outline-primary" : "primary"}
-							size="sm"
-							onClick={handleFollow}
-						>
-							{isFollowing ? "Following" : "Follow"}
-						</Button>
+						<div className="d-flex gap-2">
+							{isBlocked ? (
+								<Button
+									variant="outline-success"
+									size="sm"
+									onClick={handleUnblockUser}
+								>
+									Unblock
+								</Button>
+							) : (
+								<>
+									<Button
+										variant={isFollowing ? "outline-primary" : "primary"}
+										size="sm"
+										onClick={handleFollow}
+									>
+										{isFollowing ? "Following" : "Follow"}
+									</Button>
+									<Button
+										variant="outline-danger"
+										size="sm"
+										onClick={() => setShowBlockModal(true)}
+									>
+										Block
+									</Button>
+								</>
+							)}
+						</div>
 					)}
 				</div>
 
@@ -755,7 +810,18 @@ const ProfilePage = () => {
 
 				<Tab.Content>
 					<Tab.Pane eventKey="posts" className="px-0">
-						{posts.length === 0 ? (
+						{isBlocked ? (
+							<div className="text-center py-5 text-muted">
+								<p>You have blocked this user</p>
+								<Button 
+									variant="outline-success" 
+									size="sm" 
+									onClick={handleUnblockUser}
+								>
+									Unblock to see posts
+								</Button>
+							</div>
+						) : posts.length === 0 ? (
 							<div className="text-center py-5 text-muted">
 								<p>No posts yet</p>
 							</div>
@@ -1070,6 +1136,14 @@ const ProfilePage = () => {
 				onDialogButtonClick={confirmDeletePost}
 				type="danger"
 				disabled={deletingPost} // Disable dialog button when deleting
+			/>
+
+			{/* User Block Modal */}
+			<UserBlockModal
+				show={showBlockModal}
+				onHide={() => setShowBlockModal(false)}
+				user={profileUser}
+				onBlockUser={handleBlockUser}
 			/>
 		</Container>
 	);

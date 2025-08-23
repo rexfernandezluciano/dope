@@ -10,6 +10,8 @@ import {
 	Bell,
 	X,
 	Shield,
+	CodeSlash,
+	PersonSlash,
 } from "react-bootstrap-icons";
 import { Link } from "react-router-dom";
 
