@@ -21,6 +21,7 @@ const VerifyEmailPage = lazy(() => import("../pages/auth/VerifyEmailPage"));
 const GoogleCallbackPage = lazy(
 	() => import("../pages/auth/GoogleCallbackPage"),
 );
+const OAuthAuthorizePage = lazy(() => import("../pages/auth/OAuthAuthorizePage"));
 const IndexPage = lazy(() => import("../pages/IndexPage"));
 const HomePage = lazy(() => import("../pages/HomePage"));
 const PostDetailPage = lazy(() => import("../pages/PostDetailPage"));
@@ -253,6 +254,15 @@ const router = createBrowserRouter([
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/oauth/authorize",
+		element: (
+			<RequireAuth>
+				<OAuthAuthorizePage />
+			</RequireAuth>
+		),
 		hydrateFallbackElement: <LoadingView />,
 	},
 ]);

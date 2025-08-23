@@ -655,6 +655,18 @@ export const oauthAPI = {
 		});
 	},
 
+	// OAuth Authorization Flow
+	getAppInfo: async (clientId) => {
+		return await apiRequest(`/oauth/apps/info/${clientId}`, { method: "GET" });
+	},
+
+	authorize: async (authorizationData) => {
+		return await apiRequest("/oauth/authorize", {
+			method: "POST",
+			data: authorizationData,
+		});
+	},
+
 	// Helper function to get authorization URL
 	getAuthorizationUrl: (clientId, redirectUri, scope = "read write", state = null) => {
 		const params = new URLSearchParams({
