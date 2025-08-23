@@ -15,7 +15,7 @@ import { initializeGoogleOAuth } from "../../utils/google-auth-utils";
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
 import Stepper from "../../components/stepper/Stepper";
-import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
+import socialNetIllustration from "../../assets/images/undraw_social_networking_v4z1.svg";
 
 const SignUpPage = () => {
 	const [step, setStep] = useState(0);
@@ -106,7 +106,7 @@ const SignUpPage = () => {
 				setError("Email address already exists. Please try again.");
 				return;
 			}
-			changeStep(3, true);
+			changeStep(2, true);
 		} catch (err) {
 			setError(err.message);
 		} finally {
@@ -120,7 +120,7 @@ const SignUpPage = () => {
 			setError("Password must be at least 6 characters.");
 			return;
 		}
-		changeStep(4, true);
+		changeStep(3, true);
 	};
 
 	const handlePhotoChange = async e => {
@@ -212,7 +212,7 @@ const SignUpPage = () => {
 										setError("Please enter your full name.");
 										return;
 									}
-									changeStep(2, true);
+									changeStep(1, true);
 								}}>
 								<Form.Floating className="mb-3">
 									<Form.Control
@@ -323,10 +323,7 @@ const SignUpPage = () => {
 								</Button>
 								<Button
 									variant="secondary"
-									onClick={() => {
-										prevStep();
-										changeStep(1, false);
-									}}
+									onClick={() => changeStep(0, false)}
 									className="w-100">
 									Back
 								</Button>
@@ -365,10 +362,7 @@ const SignUpPage = () => {
 								</Button>
 								<Button
 									variant="secondary"
-									onClick={() => {
-										prevStep();
-										changeStep(1, false);
-									}}
+									onClick={() => changeStep(1, false)}
 									className="w-100">
 									Back
 								</Button>
@@ -421,10 +415,7 @@ const SignUpPage = () => {
 							</Button>
 							<Button
 								variant="secondary"
-								onClick={() => {
-									prevStep();
-									changeStep(1, false);
-								}}
+								onClick={() => changeStep(2, false)}
 								className="w-100">
 								Back
 							</Button>
