@@ -14,7 +14,9 @@ const ProfileSettingsPage = () => {
 	const [settings, setSettings] = useState({
 		name: "",
 		bio: "",
-		photoURL: ""
+		photoURL: "",
+		birthday: "",
+		gender: ""
 	});
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
@@ -27,7 +29,9 @@ const ProfileSettingsPage = () => {
 			setSettings({
 				name: user.name || "",
 				bio: user.bio || "",
-				photoURL: user.photoURL || ""
+				photoURL: user.photoURL || "",
+				birthday: user.birthday || "",
+				gender: user.gender || ""
 			});
 		}
 	}, [user]);
@@ -257,6 +261,41 @@ const ProfileSettingsPage = () => {
 								{settings.bio.length}/160 characters
 							</Form.Text>
 						</Form.Group>
+
+						<Row>
+							<Col md={6}>
+								<Form.Group className="mb-3">
+									<Form.Label>Birthday</Form.Label>
+									<Form.Control
+										type="date"
+										value={settings.birthday}
+										onChange={(e) => setSettings(prev => ({ ...prev, birthday: e.target.value }))}
+										max={new Date().toISOString().split('T')[0]}
+									/>
+									<Form.Text className="text-muted">
+										Your birthday information
+									</Form.Text>
+								</Form.Group>
+							</Col>
+							<Col md={6}>
+								<Form.Group className="mb-3">
+									<Form.Label>Gender</Form.Label>
+									<Form.Select
+										value={settings.gender}
+										onChange={(e) => setSettings(prev => ({ ...prev, gender: e.target.value }))}
+									>
+										<option value="">Select Gender</option>
+										<option value="male">Male</option>
+										<option value="female">Female</option>
+										<option value="non_binary">Non-binary</option>
+										<option value="prefer_not_to_say">Prefer not to say</option>
+									</Form.Select>
+									<Form.Text className="text-muted">
+										Your gender identity
+									</Form.Text>
+								</Form.Group>
+							</Col>
+						</Row>
 					</Form>
 				</Card.Body>
 			</Card>
