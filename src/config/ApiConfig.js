@@ -1287,6 +1287,11 @@ export const businessAPI = {
 			data: data,
 		});
 	},
+
+	// Payment Methods for Business
+	getPaymentMethods: async () => {
+		return await apiRequest("/payments/methods", { method: "GET" });
+	},
 };
 
 // Payment API

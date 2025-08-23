@@ -42,6 +42,7 @@ const BusinessPage = () => {
 	const [showCreditsModal, setShowCreditsModal] = useState(false);
 	const [paymentMethodId, setPaymentMethodId] = useState("");
 	const [purchaseAmount, setPurchaseAmount] = useState(100);
+	const [paymentMethods, setPaymentMethods] = useState([]);
 	const [campaignForm, setCampaignForm] = useState({
 		title: "",
 		description: "",
@@ -63,6 +64,7 @@ const BusinessPage = () => {
 		});
 		loadBusinessData();
 		loadCredits();
+		loadPaymentMethods();
 	}, []);
 
 	const loadBusinessData = async () => {
@@ -89,6 +91,25 @@ const BusinessPage = () => {
 		} catch (error) {
 			setError("Failed to load credits");
 			console.error(error);
+		}
+	};
+
+	const loadPaymentMethods = async () => {
+		try {
+			const response = await businessAPI.getPaymentMethods();
+			setPaymentMethods(response.paymentMethods || []);
+			// Set default payment method if available
+			if (response.paymentMethods && response.paymentMethods.length > 0) {
+				const defaultMethod = response.paymentMethods.find(method => method.isDefault);
+				if (defaultMethod) {
+					setPaymentMethodId(defaultMethod.id);
+				} else {
+					setPaymentMethodId(response.paymentMethods[0].id);
+				}
+			}
+		} catch (error) {
+			console.error("Failed to load payment methods:", error);
+			// Don't show error for missing payment methods as user might not have any yet
 		}
 	};
 
@@ -665,33 +686,72 @@ const BusinessPage = () => {
 				</Modal.Header>
 				<Form onSubmit={handlePurchaseCredits}>
 					<Modal.Body>
-						<p>
-							Your current credits:{" "}
-							<strong>{credits.credits?.toFixed(1)}</strong>
-						</p>
+						<div className="mb-4">
+							<p className="mb-2">
+								Your current credits:{" "}
+								<strong className="text-primary">{credits.creditsDisplay || 0}</strong>
+							</p>
+							<small className="text-muted">
+								Raw credits: {credits.credits || 0}
+							</small>
+						</div>
+
 						<Form.Group className="mb-3">
 							<Form.Label>Amount of Credits to Purchase</Form.Label>
 							<Form.Control
 								type="number"
+								min="10"
+								max="10000"
+								step="10"
 								value={purchaseAmount}
 								onChange={(e) => setPurchaseAmount(e.target.value)}
 								required
 							/>
+							<Form.Text className="text-muted">
+								Minimum purchase: 10 credits
+							</Form.Text>
 						</Form.Group>
-						<Form.Group className="mb-3">
-							<Form.Label>Payment Method ID</Form.Label>
-							<Form.Control
-								type="text"
-								value={paymentMethodId}
-								onChange={(e) => setPaymentMethodId(e.target.value)}
-								placeholder="e.g., pm_jsjs"
-								required
-							/>
-						</Form.Group>
+
+						{paymentMethods.length > 0 ? (
+							<Form.Group className="mb-3">
+								<Form.Label>Select Payment Method</Form.Label>
+								<Form.Select
+									value={paymentMethodId}
+									onChange={(e) => setPaymentMethodId(e.target.value)}
+									required
+								>
+									<option value="">Choose a payment method...</option>
+									{paymentMethods.map((method) => (
+										<option key={method.id} value={method.id}>
+											{method.type === 'paypal_wallet' ? (
+												`PayPal Wallet - ${method.paypalEmail || 'Connected Account'}`
+											) : method.type === 'paypal_card' ? (
+												`**** **** **** ${method.last4} (${method.provider || 'PayPal'})`
+											) : (
+												`**** **** **** ${method.last4} (${method.provider || 'Unknown'})`
+											)}
+											{method.isDefault ? ' (Default)' : ''}
+										</option>
+									))}
+								</Form.Select>
+							</Form.Group>
+						) : (
+							<Alert variant="warning">
+								<div className="d-flex align-items-center">
+									<Wallet className="me-2" size={20} />
+									<div>
+										<strong>No Payment Methods</strong>
+										<p className="mb-0 small">
+											You need to add a payment method first. Go to Settings → Subscription to add one.
+										</p>
+									</div>
+								</div>
+							</Alert>
+						)}
+
 						<Alert variant="info">
 							<small>
-								Please ensure you have a valid payment method ID. Credits are
-								added instantly upon successful purchase.
+								<strong>Secure Payment:</strong> Credits are purchased securely through PayPal and added instantly to your account.
 							</small>
 						</Alert>
 					</Modal.Body>
@@ -699,8 +759,12 @@ const BusinessPage = () => {
 						<Button variant="secondary" onClick={() => setShowCreditsModal(false)}>
 							Close
 						</Button>
-						<Button type="submit" variant="primary">
-							Purchase Credits
+						<Button 
+							type="submit" 
+							variant="primary" 
+							disabled={!paymentMethodId || paymentMethods.length === 0}
+						>
+							Purchase {purchaseAmount} Credits
 						</Button>
 					</Modal.Footer>
 				</Form>
