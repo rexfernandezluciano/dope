@@ -20,7 +20,18 @@ const makeRequest = async (url, options = {}) => {
     }
   };
 
-  const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.dopenetwork.com'}${url}`, {
+  // Use the same API endpoints as the main config
+  const API_ENDPOINTS = 
+    window.location.hostname.includes("replit.dev") ||
+    window.location.hostname.includes("replit.co") ||
+    window.location.hostname.includes("replit.app") ||
+    window.location.hostname === "localhost"
+      ? ["", "https://api.dopp.eu.org"]
+      : [""];
+
+  const baseUrl = API_ENDPOINTS[0] || API_ENDPOINTS[1];
+  
+  const response = await fetch(`${baseUrl}${url}`, {
     ...options,
     headers: defaultOptions.headers
   });
