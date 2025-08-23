@@ -183,8 +183,19 @@ const SignUpPage = () => {
 
 			// Set the photo and create preview
 			setPhoto(finalFile);
-			const previewUrl = URL.createObjectURL(finalFile);
-			setPhotoPreview(previewUrl);
+			try {
+				const previewUrl = URL.createObjectURL(finalFile);
+				if (previewUrl && typeof previewUrl === 'string' && previewUrl.startsWith('blob:')) {
+					setPhotoPreview(previewUrl);
+				} else {
+					throw new Error('Invalid blob URL generated');
+				}
+			} catch (urlError) {
+				console.error('Failed to create preview URL:', urlError);
+				setError('Failed to preview image. Please try again.');
+				setPhoto(null);
+				setPhotoPreview(null);
+			}
 		} catch (err) {
 			console.error("Image processing failed:", err);
 			setError(
@@ -225,7 +236,7 @@ const SignUpPage = () => {
 				email,
 				username,
 				password,
-				photoURL: "https://i.pravatar.cc/300",
+				photoURL,
 				subscription: "free",
 			};
 
