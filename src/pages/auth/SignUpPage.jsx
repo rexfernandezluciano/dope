@@ -128,7 +128,20 @@ const SignUpPage = () => {
 		if (!file) return;
 
 		try {
+			setError(""); // Clear any previous errors
 			let finalFile = file;
+
+			// Validate file type
+			if (!file.type.startsWith('image/') && !file.name.toLowerCase().endsWith('.heic')) {
+				setError("Please select a valid image file.");
+				return;
+			}
+
+			// Validate file size (5MB limit)
+			if (file.size > 5 * 1024 * 1024) {
+				setError("Image size must be less than 5MB.");
+				return;
+			}
 
 			// Handle HEIC files
 			if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
@@ -136,11 +149,16 @@ const SignUpPage = () => {
 				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
 			}
 
+			// Clean up previous preview URL to prevent memory leaks
+			if (photoPreview && !photoPreview.includes('gravatar')) {
+				URL.revokeObjectURL(photoPreview);
+			}
+
 			setPhoto(finalFile);
 			setPhotoPreview(URL.createObjectURL(finalFile));
 		} catch (err) {
-			console.error("HEIC conversion failed:", err);
-			setError("Could not load selected image.");
+			console.error("Image processing failed:", err);
+			setError("Could not process selected image. Please try a different image.");
 		}
 	};
 
@@ -148,8 +166,36 @@ const SignUpPage = () => {
 		try {
 			setLoading(true);
 			const displayName = `${firstName} ${lastName}`.trim();
-			const photoURL = photo ? photoPreview : getGravatar(email);
+			let photoURL = getGravatar(email); // Default to Gravatar
 			const username = await createUsername(displayName);
+
+			// If user selected a custom photo, upload it to Cloudinary
+			if (photo) {
+				try {
+					const formData = new FormData();
+					formData.append("file", photo);
+					formData.append("upload_preset", "dope-network");
+					formData.append("folder", "profile_pictures");
+
+					const response = await fetch(
+						"https://api.cloudinary.com/v1_1/zxpic/image/upload",
+						{
+							method: "POST",
+							body: formData,
+						}
+					);
+
+					if (response.ok) {
+						const data = await response.json();
+						if (data.secure_url) {
+							photoURL = data.secure_url;
+						}
+					}
+				} catch (uploadErr) {
+					console.error("Photo upload failed:", uploadErr);
+					// Continue with Gravatar if upload fails
+				}
+			}
 
 			const userData = {
 				name: displayName,
@@ -161,6 +207,11 @@ const SignUpPage = () => {
 			};
 
 			const result = await authAPI.register(userData);
+
+			// Clean up preview URL
+			if (photoPreview && !photoPreview.includes('gravatar')) {
+				URL.revokeObjectURL(photoPreview);
+			}
 
 			// Redirect to verification page with verification ID and email
 			const verificationId = result.verificationId || 'verify';
@@ -389,7 +440,7 @@ const SignUpPage = () => {
 								<Form.Control
 									id="profileUpload"
 									type="file"
-									accept="image/*"
+									accept="image/*,.heic"
 									onChange={handlePhotoChange}
 									disabled={loading}
 									style={{ display: "none" }}
