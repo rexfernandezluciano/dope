@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Container, Nav, Button, Tab } from "react-bootstrap";
+import { Container, Nav, Button, Tab, Dropdown } from "react-bootstrap";
 import {
 	ChevronLeft,
 	Person,
@@ -12,6 +12,7 @@ import {
 	Shield,
 	CodeSlash,
 	PersonSlash,
+	List,
 } from "react-bootstrap-icons";
 import { Link } from "react-router-dom";
 
@@ -130,13 +131,49 @@ const SettingsPage = () => {
 					</Button>
 					<h4 className="mb-0">Settings</h4>
 				</div>
-				<Button
-					variant="link"
-					className="p-0 text-dark d-md-none"
-					onClick={() => navigate(-1)}
-				>
-					<X size={20} />
-				</Button>
+				<div className="d-flex align-items-center gap-2">
+					{/* Mobile Settings Dropdown */}
+					<Dropdown className="d-md-none">
+						<Dropdown.Toggle variant="outline-secondary" size="sm">
+							<List size={16} className="me-1" />
+							{currentTab?.label || "Menu"}
+						</Dropdown.Toggle>
+						<Dropdown.Menu>
+							{["Personal", "Privacy & Security", "Preferences", "Developer"].map((category) => {
+								const categoryTabs = settingsTabs.filter(tab => tab.category === category);
+								if (categoryTabs.length === 0) return null;
+
+								return (
+									<div key={category}>
+										<Dropdown.Header>{category}</Dropdown.Header>
+										{categoryTabs.map((tab) => (
+											<Dropdown.Item
+												key={tab.key}
+												as={Link}
+												to={`/settings/${tab.key}`}
+												active={activeTab === tab.key}
+											>
+												{tab.icon} {tab.label}
+											</Dropdown.Item>
+										))}
+										<Dropdown.Divider />
+									</div>
+								);
+							})}
+							<Dropdown.Item onClick={handleLogout} className="text-danger">
+								<X size={16} className="me-2" />
+								Logout
+							</Dropdown.Item>
+						</Dropdown.Menu>
+					</Dropdown>
+					<Button
+						variant="link"
+						className="p-0 text-dark d-md-none"
+						onClick={() => navigate(-1)}
+					>
+						<X size={20} />
+					</Button>
+				</div>
 			</div>
 
 			<div className="row g-0">
@@ -156,7 +193,8 @@ const SettingsPage = () => {
 									{categoryTabs.map((tab) => (
 										<Nav.Item key={tab.key} className="mb-1">
 											<Nav.Link
-												href={`/settings/${tab.key}`}
+												as={Link}
+												to={`/settings/${tab.key}`}
 												active={activeTab === tab.key}
 												className={`d-flex align-items-center gap-2 text-dark ${
 													activeTab === tab.key ? "active" : ""
@@ -167,6 +205,7 @@ const SettingsPage = () => {
 													color: activeTab === tab.key ? "white" : "#333",
 													fontSize: "0.9rem",
 													padding: "0.5rem 0.75rem",
+													textDecoration: "none",
 												}}
 											>
 												{tab.icon}
