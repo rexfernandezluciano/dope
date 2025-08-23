@@ -192,18 +192,7 @@ export const getPrivacyIcon = (privacy) => {
 	return null;
 };
 
-/**
- * Format currency values
- * @param {number} amount - Amount in dollars
- * @param {string} currency - Currency code (default: USD)
- * @returns {string} Formatted currency string
- */
-export const formatCurrency = (amount, currency = 'USD') => {
-	return new Intl.NumberFormat('en-US', {
-		style: 'currency',
-		currency: currency
-	}).format(amount || 0);
-};
+
 
 /**
  * Format large numbers with K, M, B suffixes
@@ -221,18 +210,6 @@ export const formatLargeNumber = (num) => {
 		return (num / 1000).toFixed(1) + 'K';
 	}
 	return num?.toString() || '0';
-};
-
-/**
- * Calculate engagement rate
- * @param {Object} stats - Post stats object
- * @returns {number} Engagement rate percentage
- */
-export const calculateEngagementRate = (stats) => {
-	if (!stats || !stats.views || stats.views === 0) return 0;
-	
-	const totalEngagements = (stats.likes || 0) + (stats.comments || 0) + (stats.shares || 0);
-	return ((totalEngagements / stats.views) * 100).toFixed(2);
 };
 
 /**
