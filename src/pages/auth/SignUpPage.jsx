@@ -15,7 +15,7 @@ import { initializeGoogleOAuth } from "../../utils/google-auth-utils";
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
 import Stepper from "../../components/stepper/Stepper";
-import socialNetIllustration from "../../assets/images/undraw_social_networking_v4z1.svg";
+import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
 
 const SignUpPage = () => {
 	const [step, setStep] = useState(0);
