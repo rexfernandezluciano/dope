@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Tab, Tabs } from "react-bootstrap";
-import { enhancedAnalyticsAPI, businessAPI } from "../config/ApiConfig";
+import { analyticsAPI, businessAPI } from "../config/ApiConfig";
 import { formatTimeAgo, formatCurrency } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
@@ -34,7 +34,7 @@ const AnalyticsPage = () => {
 		try {
 			setLoading(true);
 			const [userAnalytics, businessData] = await Promise.all([
-				enhancedAnalyticsAPI.getUserAnalytics(selectedPeriod),
+				analyticsAPI.getUserAnalytics(selectedPeriod),
 				businessAPI.getDashboard().catch(() => null) // Optional business data
 			]);
 
@@ -59,7 +59,7 @@ const AnalyticsPage = () => {
 
 	const fetchGrowthData = async () => {
 		try {
-			const response = await enhancedAnalyticsAPI.getUserAnalytics(selectedPeriod); // Use enhancedAnalyticsAPI
+			const response = await analyticsAPI.getUserAnalytics(selectedPeriod); // Use analyticsAPI
 
 			// Transform API response to chart data format
 			const growthData = {
@@ -104,7 +104,7 @@ const AnalyticsPage = () => {
 
 	const fetchMonetizationData = async () => {
 		try {
-			const response = await enhancedAnalyticsAPI.getUserAnalytics(selectedPeriod); // Use enhancedAnalyticsAPI
+			const response = await analyticsAPI.getUserAnalytics(selectedPeriod); // Use analyticsAPI
 
 			// Transform API response to chart data format
 			const monetizationData = {

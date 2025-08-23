@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
@@ -20,12 +19,11 @@ import {
 import {
 	BarChart,
 	Plus,
-	TrendingUp,
-	DollarSign,
 	Eye,
-	MousePointer,
-	Target,
 	Calendar,
+	Bullseye,
+	CurrencyDollar,
+	Cursor,
 } from "react-bootstrap-icons";
 import { updatePageMeta } from "../utils/meta-utils";
 import { businessAPI } from "../config/ApiConfig";
@@ -129,7 +127,7 @@ const BusinessPage = () => {
 			<Row>
 				<Col>
 					<div className="d-flex align-items-center mb-4">
-						<TrendingUp size={32} className="me-3 text-primary" />
+						<Bullseye size={32} className="me-3 text-primary" />
 						<div>
 							<h2>Business Dashboard</h2>
 							<p className="text-muted mb-0">
@@ -151,13 +149,13 @@ const BusinessPage = () => {
 							</Nav.Item>
 							<Nav.Item>
 								<Nav.Link eventKey="campaigns">
-									<Target className="me-2" size={16} />
+									<Bullseye className="me-2" size={16} />
 									Campaigns
 								</Nav.Link>
 							</Nav.Item>
 							<Nav.Item>
 								<Nav.Link eventKey="analytics">
-									<TrendingUp className="me-2" size={16} />
+									<Bullseye className="me-2" size={16} />
 									Analytics
 								</Nav.Link>
 							</Nav.Item>
@@ -171,7 +169,7 @@ const BusinessPage = () => {
 											<Col md={3}>
 												<Card className="border-0 bg-primary text-white">
 													<Card.Body className="text-center">
-														<Target size={24} className="mb-2" />
+														<Bullseye size={24} className="mb-2" />
 														<h4>{overview.totalCampaigns || 0}</h4>
 														<small>Total Campaigns</small>
 													</Card.Body>
@@ -180,7 +178,7 @@ const BusinessPage = () => {
 											<Col md={3}>
 												<Card className="border-0 bg-success text-white">
 													<Card.Body className="text-center">
-														<DollarSign size={24} className="mb-2" />
+														<CurrencyDollar size={24} className="mb-2" />
 														<h4>${overview.totalSpent || 0}</h4>
 														<small>Total Spent</small>
 													</Card.Body>
@@ -198,7 +196,7 @@ const BusinessPage = () => {
 											<Col md={3}>
 												<Card className="border-0 bg-warning text-white">
 													<Card.Body className="text-center">
-														<MousePointer size={24} className="mb-2" />
+														<Cursor size={24} className="mb-2" />
 														<h4>{analytics.totalClicks || 0}</h4>
 														<small>Clicks</small>
 													</Card.Body>
@@ -304,7 +302,7 @@ const BusinessPage = () => {
 													variant="outline-secondary"
 													onClick={() => setActiveTab("analytics")}
 												>
-													<TrendingUp className="me-2" size={16} />
+													<Bullseye className="me-2" size={16} />
 													View Analytics
 												</Button>
 											</Card.Body>
@@ -328,7 +326,7 @@ const BusinessPage = () => {
 								{campaigns.length === 0 ? (
 									<Card className="text-center py-5">
 										<Card.Body>
-											<Target size={48} className="text-muted mb-3" />
+											<Bullseye size={48} className="text-muted mb-3" />
 											<h5>No Campaigns Yet</h5>
 											<p className="text-muted">
 												Create your first ad campaign to start promoting your

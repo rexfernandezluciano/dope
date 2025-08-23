@@ -538,6 +538,53 @@ export const oauthAPI = {
 		});
 	},
 
+	// OAuth Apps Management
+	getApps: async () => {
+		return await apiRequest("/oauth/apps", { method: "GET" });
+	},
+
+	createApp: async (appData) => {
+		return await apiRequest("/oauth/apps", {
+			method: "POST",
+			data: appData,
+		});
+	},
+
+	deleteApp: async (appId) => {
+		return await apiRequest(`/oauth/apps/${appId}`, {
+			method: "DELETE",
+		});
+	},
+
+	regenerateSecret: async (appId) => {
+		return await apiRequest(`/oauth/apps/${appId}/regenerate-secret`, {
+			method: "POST",
+		});
+	},
+
+	// OAuth Authorizations
+	getAuthorizations: async () => {
+		return await apiRequest("/oauth/authorizations", { method: "GET" });
+	},
+
+	revokeAuthorization: async (authId) => {
+		return await apiRequest(`/oauth/authorizations/${authId}`, {
+			method: "DELETE",
+		});
+	},
+
+	// API Keys
+	getApiKeys: async () => {
+		return await apiRequest("/oauth/api-keys", { method: "GET" });
+	},
+
+	generateApiKey: async (keyData) => {
+		return await apiRequest("/oauth/api-keys", {
+			method: "POST",
+			data: keyData,
+		});
+	},
+
 	// Helper function to get authorization URL
 	getAuthorizationUrl: (clientId, redirectUri, scope = "read write", state = null) => {
 		const params = new URLSearchParams({
@@ -1082,20 +1129,67 @@ export const analyticsAPI = {
 // Business/Advertising API
 export const businessAPI = {
 	// Dashboard
-	getDashboard: () => api.get("/business/dashboard"),
+	getDashboard: async () => {
+		return await apiRequest("/business/dashboard", { method: "GET" });
+	},
 
 	// Ad Campaigns
-	getCampaigns: () => api.get("/business/campaigns"),
-	createCampaign: (data) => api.post("/business/campaigns", data),
-	updateCampaign: (id, data) => api.put(`/business/campaigns/${id}`, data),
-	deleteCampaign: (id) => api.delete(`/business/campaigns/${id}`),
-	getCampaign: (id) => api.get(`/business/campaigns/${id}`),
-	pauseCampaign: (id) => api.post(`/business/campaigns/${id}/pause`),
-	resumeCampaign: (id) => api.post(`/business/campaigns/${id}/resume`),
+	getCampaigns: async () => {
+		return await apiRequest("/business/campaigns", { method: "GET" });
+	},
+	
+	createCampaign: async (data) => {
+		return await apiRequest("/business/campaigns", {
+			method: "POST",
+			data: data,
+		});
+	},
+	
+	updateCampaign: async (id, data) => {
+		return await apiRequest(`/business/campaigns/${id}`, {
+			method: "PUT",
+			data: data,
+		});
+	},
+	
+	deleteCampaign: async (id) => {
+		return await apiRequest(`/business/campaigns/${id}`, {
+			method: "DELETE",
+		});
+	},
+	
+	getCampaign: async (id) => {
+		return await apiRequest(`/business/campaigns/${id}`, { method: "GET" });
+	},
+	
+	pauseCampaign: async (id) => {
+		return await apiRequest(`/business/campaigns/${id}/pause`, {
+			method: "POST",
+		});
+	},
+	
+	resumeCampaign: async (id) => {
+		return await apiRequest(`/business/campaigns/${id}/resume`, {
+			method: "POST",
+		});
+	},
 
 	// Analytics
-	getCampaignAnalytics: (id, params) => api.get(`/business/campaigns/${id}/analytics`, { params }),
-	getOverallAnalytics: (params) => api.get("/business/analytics", { params }),
+	getCampaignAnalytics: async (id, params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(
+			`/business/campaigns/${id}/analytics${queryString ? `?${queryString}` : ""}`,
+			{ method: "GET" }
+		);
+	},
+	
+	getOverallAnalytics: async (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(
+			`/business/analytics${queryString ? `?${queryString}` : ""}`,
+			{ method: "GET" }
+		);
+	},
 };
 
 // Payment API
