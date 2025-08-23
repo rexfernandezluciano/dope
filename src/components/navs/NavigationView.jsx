@@ -28,6 +28,8 @@ import {
 	Search,
 	Star,
 	BarChart,
+	Briefcase,
+	Palette,
 } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
@@ -245,6 +247,16 @@ const NavigationView = ({ children }) => {
 			label: "Analytics",
 			href: "/analytics",
 			icon: <BarChart size={18} className="me-2" />,
+		},
+		{
+			label: "Business",
+			href: "/business",
+			icon: <Briefcase size={18} className="me-2" />,
+		},
+		{
+			label: "Creator",
+			href: "/creator",
+			icon: <Palette size={18} className="me-2" />,
 		},
 	];
 
