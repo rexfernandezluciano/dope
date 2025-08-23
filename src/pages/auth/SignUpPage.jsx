@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
+import { Row, Col, Form, Button, Image, Alert, Spinner, Card } from "react-bootstrap";
 import "animate.css";
 import heic2any from "heic2any";
 
@@ -26,10 +26,12 @@ const SignUpPage = () => {
 	const [firstName, setFirstName] = useState("");
 	const [lastName, setLastName] = useState("");
 	const [email, setEmail] = useState("");
+	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [gender, setGender] = useState("");
 	const [birthday, setBirthday] = useState("");
-	const steps = ["Name", "Email", "Password", "Personal Info", "Profile Picture"];
+	const [selectedSubscription, setSelectedSubscription] = useState("free");
+	const steps = ["Name", "Email", "Username", "Password", "Personal Info", "Subscription", "Profile Picture"];
 
 	const [photo, setPhoto] = useState(null);
 	const [photoPreview, setPhotoPreview] = useState(null);
@@ -45,6 +47,49 @@ const SignUpPage = () => {
 	const [googleLoading, setGoogleLoading] = useState(false);
 
 	const navigate = useNavigate();
+
+	const subscriptionPlans = [
+		{
+			id: "free",
+			name: "Free",
+			price: "$0",
+			period: "forever",
+			features: [
+				"3 images per post",
+				"Basic profile features",
+				"Standard support",
+			],
+			color: "secondary",
+		},
+		{
+			id: "premium",
+			name: "Premium",
+			price: "₱560",
+			period: "month",
+			features: [
+				"10 images per post",
+				"Blue check verification",
+				"Priority support",
+				"Advanced privacy settings",
+			],
+			color: "primary",
+		},
+		{
+			id: "pro",
+			name: "Pro",
+			price: "₱1,120",
+			period: "month",
+			features: [
+				"Unlimited images per post",
+				"Blue check verification",
+				"Priority support",
+				"Advanced analytics",
+				"Custom themes",
+				"Early access to features",
+			],
+			color: "warning",
+		},
+	];
 
 	const nextStep = () => {
 		if (step < steps.length - 1) {
@@ -149,13 +194,34 @@ const SignUpPage = () => {
 		}
 	};
 
+	const handleNextUsername = async (e) => {
+		e.preventDefault();
+		if (!username || username.length < 3) {
+			setError("Username must be at least 3 characters long.");
+			return;
+		}
+		if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+			setError("Username can only contain letters, numbers, and underscores.");
+			return;
+		}
+		try {
+			setLoading(true);
+			// Here you could add username availability check if needed
+			changeStep(3, true);
+		} catch (err) {
+			setError(err.message);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	const handleNextPassword = (e) => {
 		e.preventDefault();
 		if (password.length < 6) {
 			setError("Password must be at least 6 characters.");
 			return;
 		}
-		changeStep(3, true);
+		changeStep(4, true);
 	};
 
 	const handleNextPersonalInfo = (e) => {
@@ -171,7 +237,12 @@ const SignUpPage = () => {
 			setError("You must be at least 13 years old to create an account.");
 			return;
 		}
-		changeStep(4, true);
+		changeStep(5, true);
+	};
+
+	const handleNextSubscription = (e) => {
+		e.preventDefault();
+		changeStep(6, true);
 	};
 
 	const handlePhotoChange = async (e) => {
@@ -260,7 +331,6 @@ const SignUpPage = () => {
 			setLoading(true);
 			const displayName = `${firstName} ${lastName}`.trim();
 			let photoURL = gravatarUrl; // Use the fetched Gravatar URL
-			const username = await createUsername(displayName);
 
 			// If user selected a custom photo, upload it using the API
 			if (photo) {
@@ -291,7 +361,7 @@ const SignUpPage = () => {
 				photoURL,
 				gender,
 				birthday,
-				subscription: "free",
+				subscription: selectedSubscription,
 			};
 
 			const result = await authAPI.register(userData);
@@ -465,8 +535,43 @@ const SignUpPage = () => {
 						</div>
 					)}
 
-					{/* STEP 3 */}
+					{/* STEP 3 - Username */}
 					{step === 2 && (
+						<div className={`animate__animated ${animation}`}>
+							<Form onSubmit={handleNextUsername}>
+								<Form.Floating className="mb-3">
+									<Form.Control
+										type="text"
+										value={username}
+										onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+										disabled={loading}
+										className="shadow-none"
+										required
+										placeholder="Username"
+										minLength={3}
+										maxLength={20}
+									/>
+									<label>Username</label>
+								</Form.Floating>
+								<Form.Text className="text-muted mb-3 d-block">
+									Choose a unique username. Only letters, numbers, and underscores are allowed.
+								</Form.Text>
+								<Button type="submit" disabled={loading} className="w-100 mb-2">
+									{loading ? <Spinner animation="border" size="sm" /> : "Next"}
+								</Button>
+								<Button
+									variant="secondary"
+									onClick={() => changeStep(1, false)}
+									className="w-100"
+								>
+									Back
+								</Button>
+							</Form>
+						</div>
+					)}
+
+					{/* STEP 4 - Password */}
+					{step === 3 && (
 						<div className={`animate__animated ${animation}`}>
 							<Form onSubmit={handleNextPassword}>
 								<Form.Floating className="mb-3">
@@ -490,7 +595,7 @@ const SignUpPage = () => {
 								</Button>
 								<Button
 									variant="secondary"
-									onClick={() => changeStep(1, false)}
+									onClick={() => changeStep(2, false)}
 									className="w-100"
 								>
 									Back
@@ -499,8 +604,8 @@ const SignUpPage = () => {
 						</div>
 					)}
 
-					{/* STEP 4 - Personal Info */}
-					{step === 3 && (
+					{/* STEP 5 - Personal Info */}
+					{step === 4 && (
 						<div className={`animate__animated ${animation}`}>
 							<Form onSubmit={handleNextPersonalInfo}>
 								<Form.Group className="mb-3">
@@ -544,7 +649,7 @@ const SignUpPage = () => {
 								</Button>
 								<Button
 									variant="secondary"
-									onClick={() => changeStep(2, false)}
+									onClick={() => changeStep(3, false)}
 									className="w-100"
 								>
 									Back
@@ -553,8 +658,86 @@ const SignUpPage = () => {
 						</div>
 					)}
 
-					{/* STEP 5 - Profile Picture */}
-					{step === 4 && (
+					{/* STEP 6 - Subscription Selection */}
+					{step === 5 && (
+						<div className={`animate__animated ${animation}`}>
+							<h5 className="text-center mb-4">Choose Your Plan</h5>
+							<Form onSubmit={handleNextSubscription}>
+								<Row className="g-3">
+									{subscriptionPlans.map((plan) => (
+										<Col key={plan.id} xs={12}>
+											<Card
+												className={`h-100 cursor-pointer ${
+													selectedSubscription === plan.id ? "border-primary shadow" : ""
+												}`}
+												onClick={() => setSelectedSubscription(plan.id)}
+											>
+												<Card.Body className="p-3">
+													<div className="d-flex justify-content-between align-items-start mb-2">
+														<div>
+															<h6 className="mb-1">{plan.name}</h6>
+															<h5 className="text-primary mb-0">
+																{plan.price}
+																{plan.period !== "forever" && (
+																	<small className="text-muted">/{plan.period}</small>
+																)}
+															</h5>
+														</div>
+														<Form.Check
+															type="radio"
+															name="subscription"
+															checked={selectedSubscription === plan.id}
+															onChange={() => setSelectedSubscription(plan.id)}
+														/>
+													</div>
+													<ul className="list-unstyled mb-0">
+														{plan.features.slice(0, 3).map((feature, idx) => (
+															<li
+																key={idx}
+																className="d-flex align-items-center gap-2 mb-1"
+															>
+																<small className="text-success">✓</small>
+																<small>{feature}</small>
+															</li>
+														))}
+														{plan.features.length > 3 && (
+															<li className="text-muted">
+																<small>+{plan.features.length - 3} more features</small>
+															</li>
+														)}
+													</ul>
+												</Card.Body>
+											</Card>
+										</Col>
+									))}
+								</Row>
+								<Button
+									type="submit"
+									disabled={loading}
+									className="w-100 mb-2 mt-4 d-flex align-items-center justify-content-center"
+								>
+									{loading ? <Spinner animation="border" size="sm" /> : "Continue"}
+								</Button>
+								<Button
+									variant="secondary"
+									onClick={() => changeStep(4, false)}
+									className="w-100"
+								>
+									Back
+								</Button>
+								<div className="text-center mt-3">
+									<small className="text-muted">
+										{selectedSubscription !== "free" 
+											? "You can change your plan anytime after signup" 
+											: "You can upgrade anytime from your settings"}
+									</small>
+								</div>
+							</Form>
+						</div>
+					)}
+
+					{/* STEP 7 - Profile Picture */}
+					{step === 6 && (
 						<div className={`animate__animated ${animation}`}>
 							<Form.Group className="mb-4 text-center">
 								<label htmlFor="profileUpload" style={{ cursor: "pointer" }}>
@@ -593,7 +776,7 @@ const SignUpPage = () => {
 							</Button>
 							<Button
 								variant="secondary"
-								onClick={() => changeStep(3, false)}
+								onClick={() => changeStep(5, false)}
 								className="w-100"
 							>
 								Back
