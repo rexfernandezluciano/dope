@@ -17,7 +17,8 @@ export const discoverActor = async (handle) => {
     if (parts.length === 2) {
       // This is a federated user, use the federated proxy
       const [username, domain] = parts;
-      const proxyUrl = `/federated?domain=${encodeURIComponent(domain)}&path=${encodeURIComponent('/.well-known/webfinger')}&resource=${encodeURIComponent(resource)}`;
+      const webfingerPath = `/.well-known/webfinger?resource=${encodeURIComponent(resource)}`;
+      const proxyUrl = `/federated?domain=${encodeURIComponent(domain)}&path=${encodeURIComponent(webfingerPath)}`;
       
       console.log(`🔍 Discovering federated actor: ${cleanHandle} via proxy: ${proxyUrl}`);
       
