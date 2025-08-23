@@ -194,12 +194,30 @@ const NavigationView = ({ children }) => {
 		setShowLogoutDialog(true);
 	};
 
-	const confirmLogout = () => {
-		authAPI.logout();
-		removeAuthToken();
-		setShowLogoutDialog(false);
-		NProgress.start();
-		navigate("/");
+	const confirmLogout = async () => {
+		try {
+			// Call the logout API endpoint to end the session
+			const { authAPI } = await import("../../config/ApiConfig");
+			await authAPI.logout();
+		} catch (error) {
+			console.error("Logout API error:", error);
+			// Continue with local logout even if API call fails
+		} finally {
+			try {
+				// Clear auth token using secure method
+				const { removeAuthToken } = await import("../../utils/app-utils");
+				removeAuthToken();
+
+				setShowLogoutDialog(false);
+
+				// Redirect to start page
+				window.location.href = "/";
+			} catch (error) {
+				console.error("Local logout error:", error);
+				// Even if there's an error, still redirect
+				window.location.href = "/";
+			}
+		}
 	};
 
 	const menuItems = [
@@ -332,8 +350,7 @@ const NavigationView = ({ children }) => {
 												"free" && (
 												<span
 													className={`ms-1 badge ${
-														(user?.membership?.subscription ||
-															user?.subscription) === "premium"
+														(user?.membership?.subscription || user?.subscription) === "premium"
 															? "bg-warning text-dark"
 															: (user?.membership?.subscription ||
 																		user?.subscription) === "pro"
