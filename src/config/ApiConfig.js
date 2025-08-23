@@ -6,8 +6,17 @@ import axios from "axios";
 // Always use proxy for both development and production
 const isUsingProxy = true;
 
+// Define API endpoints based on environment
+const API_ENDPOINTS = 
+	window.location.hostname.includes("replit.dev") ||
+	window.location.hostname.includes("replit.co") ||
+	window.location.hostname.includes("replit.app") ||
+	window.location.hostname === "localhost"
+		? ["", "https://api.dopp.eu.org"]
+		: [""];
+
 // Current active API base URL
-let API_BASE_URL = "";
+let API_BASE_URL = API_ENDPOINTS[0] || API_ENDPOINTS[1] || "";
 
 // Validate API URL is HTTPS (skip validation for proxy URLs and empty strings)
 if (API_BASE_URL && API_BASE_URL !== "" && validateAPIUrl(API_BASE_URL)) {
@@ -218,6 +227,34 @@ class HttpClient {
 	}
 
 	async requestWithFailover(endpoint, options = {}) {
+		const endpoints = API_ENDPOINTS.filter(url => url !== "");
+		let lastError;
+
+		// If using proxy (empty string), use current base URL
+		if (API_ENDPOINTS.includes("")) {
+			this.currentBaseURL = "";
+			try {
+				return await this.makeRequest(endpoint, options);
+			} catch (error) {
+				lastError = error;
+				console.log("Proxy request failed, trying direct API...");
+			}
+		}
+
+		// Try direct API endpoints
+		for (const baseUrl of endpoints) {
+			try {
+				this.currentBaseURL = baseUrl;
+				return await this.makeRequest(endpoint, options);
+			} catch (error) {
+				lastError = error;
+				console.log(`Request failed for ${baseUrl}:`, error.message);
+				continue;
+			}
+		}
+
+		// All endpoints failed
+		throw lastError || new Error("All API endpoints failed");
 	}
 }
 
