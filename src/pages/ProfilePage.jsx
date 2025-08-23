@@ -103,54 +103,79 @@ const ProfilePage = () => {
 
 		const loadFederatedProfile = async (handle) => {
 			try {
+				console.log(`🔍 Loading federated profile for: ${handle}`);
+				
 				// Discover the ActivityPub actor
 				const webfingerResult = await discoverActor(handle);
+				console.log(`✅ WebFinger discovery successful:`, webfingerResult);
 				
 				// Find the ActivityPub actor link
 				const actorLink = webfingerResult.links?.find(
-					link => link.rel === 'self' && link.type === 'application/activity+json'
+					link => link.rel === 'self' && 
+					(link.type === 'application/activity+json' || link.type === 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"')
 				);
 				
 				if (!actorLink) {
-					throw new Error("ActivityPub profile not found");
+					console.error('No ActivityPub actor link found in WebFinger response:', webfingerResult);
+					throw new Error("ActivityPub profile not found in WebFinger response");
 				}
 
 				// Get the actor profile
 				const actorUrl = actorLink.href;
-				console.log(`🎭 Fetching ActivityPub actor: ${actorUrl}`);
+				console.log(`🎭 Fetching ActivityPub actor from: ${actorUrl}`);
 				
 				const actorResponse = await fetch(actorUrl, {
 					headers: {
-						'Accept': 'application/activity+json, application/ld+json'
+						'Accept': 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
+						'User-Agent': 'DOPE-Network-Client/1.0'
 					}
 				});
 
 				if (!actorResponse.ok) {
+					const errorText = await actorResponse.text();
+					console.error(`❌ Failed to fetch actor profile:`, {
+						status: actorResponse.status,
+						statusText: actorResponse.statusText,
+						url: actorUrl,
+						response: errorText
+					});
 					throw new Error(`Failed to fetch ActivityPub profile: ${actorResponse.status} ${actorResponse.statusText}`);
 				}
 
 				const actor = await actorResponse.json();
+				console.log(`✅ ActivityPub actor fetched successfully:`, actor);
 				setFederatedActor(actor);
 
+				// Handle different ActivityPub actor formats
+				const actorName = actor.name || actor.displayName || actor.preferredUsername;
+				const actorBio = actor.summary || actor.note || '';
+				const actorAvatar = actor.icon?.url || actor.image?.url || actor.avatar?.url;
+				
 				// Convert ActivityPub actor to local profile format
 				const federatedProfile = {
 					uid: actor.id,
-					username: actor.preferredUsername,
-					name: actor.name || actor.preferredUsername,
-					bio: actor.summary || '',
-					photoURL: actor.icon?.url || actor.image?.url,
+					username: actor.preferredUsername || handle.split('@')[1],
+					name: actorName,
+					bio: actorBio.replace(/<[^>]*>/g, ''), // Strip HTML tags from bio
+					photoURL: actorAvatar,
 					createdAt: actor.published || new Date().toISOString(),
 					privacy: { profile: 'public' }, // Federated profiles are public
 					isFollowedByCurrentUser: false, // TODO: Check if following
 					hasBlueCheck: false, // Federated users don't have blue checks
-					membership: { subscription: 'free' }
+					membership: { subscription: 'free' },
+					url: actor.url || actor.id // Store original profile URL
 				};
 
+				console.log(`✅ Converted to local profile format:`, federatedProfile);
 				setProfileUser(federatedProfile);
 
 				// Load federated posts if outbox is available
 				if (actor.outbox) {
+					console.log(`📦 Loading posts from outbox: ${actor.outbox}`);
 					await loadFederatedPosts(actor.outbox);
+				} else {
+					console.log(`⚠️ No outbox found for actor`);
+					setPosts([]);
 				}
 
 				// Federated profiles can't be edited and don't have local followers/following
@@ -166,73 +191,98 @@ const ProfilePage = () => {
 
 		const loadFederatedPosts = async (outboxUrl) => {
 			try {
+				console.log(`📦 Fetching outbox from: ${outboxUrl}`);
+				
 				const outboxResponse = await fetch(outboxUrl, {
 					headers: {
-						'Accept': 'application/activity+json'
+						'Accept': 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
+						'User-Agent': 'DOPE-Network-Client/1.0'
 					}
 				});
 
 				if (!outboxResponse.ok) {
-					console.warn("Failed to fetch outbox");
+					console.warn(`⚠️ Failed to fetch outbox: ${outboxResponse.status} ${outboxResponse.statusText}`);
 					setPosts([]);
 					return;
 				}
 
 				const outbox = await outboxResponse.json();
+				console.log(`📦 Outbox response:`, outbox);
 				
 				// If it's a collection, get the first page
 				let items = [];
 				if (outbox.type === 'OrderedCollection' && outbox.first) {
-					const firstPageResponse = await fetch(outbox.first, {
-						headers: {
-							'Accept': 'application/activity+json'
+					console.log(`📑 Fetching first page: ${outbox.first}`);
+					try {
+						const firstPageResponse = await fetch(outbox.first, {
+							headers: {
+								'Accept': 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
+								'User-Agent': 'DOPE-Network-Client/1.0'
+							}
+						});
+						
+						if (firstPageResponse.ok) {
+							const firstPage = await firstPageResponse.json();
+							console.log(`📑 First page response:`, firstPage);
+							items = firstPage.orderedItems || firstPage.items || [];
 						}
-					});
-					
-					if (firstPageResponse.ok) {
-						const firstPage = await firstPageResponse.json();
-						items = firstPage.orderedItems || [];
+					} catch (pageErr) {
+						console.warn(`⚠️ Failed to fetch first page:`, pageErr);
 					}
 				} else if (outbox.orderedItems) {
 					items = outbox.orderedItems;
+				} else if (outbox.items) {
+					items = outbox.items;
 				}
+
+				console.log(`📝 Found ${items.length} items in outbox`);
 
 				// Convert ActivityPub activities to local post format
 				const federatedPosts = items
-					.filter(item => item.type === 'Create' && item.object?.type === 'Note')
-					.map(activity => {
-						const note = activity.object;
+					.filter(item => {
+						// Handle both Create activities and direct Note objects
+						const isCreateActivity = item.type === 'Create' && item.object?.type === 'Note';
+						const isNoteObject = item.type === 'Note';
+						return isCreateActivity || isNoteObject;
+					})
+					.slice(0, 20) // Limit to first 20 posts
+					.map(item => {
+						// Handle both Create activities and direct Note objects
+						const note = item.type === 'Create' ? item.object : item;
+						const activity = item.type === 'Create' ? item : null;
+						
 						const parsedNote = parseActivityPubNote(note);
 						
 						return {
-							id: note.id,
-							content: parsedNote.content,
-							createdAt: parsedNote.published,
+							id: note.id || activity?.id,
+							content: parsedNote.content.replace(/<[^>]*>/g, ''), // Strip HTML tags
+							createdAt: parsedNote.published || activity?.published,
 							author: federatedActor ? {
 								uid: federatedActor.id,
 								username: federatedActor.preferredUsername,
 								name: federatedActor.name || federatedActor.preferredUsername,
 								photoURL: federatedActor.icon?.url || federatedActor.image?.url
 							} : null,
-							imageUrls: parsedNote.attachments
+							imageUrls: (parsedNote.attachments || [])
 								.filter(att => att.type === 'Document' && att.mediaType?.startsWith('image/'))
 								.map(att => att.url),
 							likes: [],
 							comments: [],
 							shares: [],
 							stats: {
-								likes: 0,
-								comments: 0,
-								shares: 0
+								likes: note.likes?.totalItems || 0,
+								comments: note.replies?.totalItems || 0,
+								shares: note.shares?.totalItems || 0
 							},
 							privacy: 'public',
 							tags: parsedNote.hashtags,
 							mentions: parsedNote.mentions,
 							isFederated: true,
-							originalUrl: note.id
+							originalUrl: note.url || note.id
 						};
 					});
 
+				console.log(`✅ Converted ${federatedPosts.length} federated posts`);
 				setPosts(federatedPosts);
 			} catch (err) {
 				console.error("Error loading federated posts:", err);
