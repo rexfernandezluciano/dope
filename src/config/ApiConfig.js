@@ -6,26 +6,8 @@ import axios from "axios";
 // Always use proxy for both development and production
 const isUsingProxy = true;
 
-// API Configuration with failover support
-const API_ENDPOINTS =
-	window.location.hostname.includes("replit.dev") ||
-	window.location.hostname.includes("replit.co") ||
-	window.location.hostname.includes("replit.app") ||
-	window.location.hostname === "localhost"
-		? ["", "https://api.dopp.eu.org"]
-		: [""];
-
 // Current active API base URL
-let API_BASE_URL = API_ENDPOINTS[0];
-
-// Debug logging for production network issues
-console.log("🔍 API Configuration Debug:", {
-	NODE_ENV: process.env.NODE_ENV,
-	hostname: window.location.hostname,
-	isUsingProxy,
-	API_ENDPOINTS,
-	currentAPIUrl: API_ENDPOINTS[0],
-});
+let API_BASE_URL = "";
 
 // Validate API URL is HTTPS (skip validation for proxy URLs and empty strings)
 if (API_BASE_URL && API_BASE_URL !== "" && validateAPIUrl(API_BASE_URL)) {
@@ -95,7 +77,7 @@ apiClient.interceptors.response.use(
 class HttpClient {
 	constructor() {
 		this.currentEndpointIndex = 0;
-		this.currentBaseURL = API_ENDPOINTS[this.currentEndpointIndex];
+		this.currentBaseURL = "";
 	}
 
 	async makeRequest(endpoint, options = {}) {
@@ -236,30 +218,6 @@ class HttpClient {
 	}
 
 	async requestWithFailover(endpoint, options = {}) {
-		let lastError;
-
-		for (let i = 0; i < API_ENDPOINTS.length; i++) {
-			const currentEndpoint = API_ENDPOINTS[i];
-			this.currentBaseURL = currentEndpoint; // Update the base URL
-
-			console.log(`🔄 Trying endpoint: ${currentEndpoint}`);
-
-			try {
-				const response = await this.makeRequest(endpoint, options);
-				this.currentEndpointIndex = i;
-				return response;
-			} catch (error) {
-				lastError = error;
-				console.log(`❌ Request failed on ${currentEndpoint}:`, error.message);
-
-				// Continue to next endpoint
-				continue;
-			}
-		}
-
-		// All endpoints failed
-		console.log("🚨 All API endpoints failed");
-		throw lastError;
 	}
 }
 
@@ -271,14 +229,14 @@ export const apiRequest = async (endpoint, options = {}) => {
 	try {
 		const response = await httpClient.requestWithFailover(endpoint, options);
 
-		if (!response.ok) {
+		if (!response?.ok) {
 			throw new Error(
-				response.data?.message ||
-					`HTTP ${response.status}: ${response.statusText}`,
+				response?.data?.message ||
+					`HTTP ${response?.status}: ${response?.statusText}`,
 			);
 		}
 
-		return response.data;
+		return response?.data;
 	} catch (error) {
 		console.log("🚨 API request failed:", {
 			endpoint,
