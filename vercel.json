@@ -4,6 +4,14 @@
     {
       "source": "/v1/(.*)",
       "destination": "https://api.dopp.eu.org/v1/$1"
+    },
+    {
+      "source": "/activitypub/(.*)",
+      "destination": "https://api.dopp.eu.org/activitypub/$1"
+    },
+    {
+      "source": "/.well-known/(.*)",
+      "destination": "https://api.dopp.eu.org/.well-known/$1"
     }
   ],
   "headers": [

@@ -58,6 +58,52 @@ app.use(
   }),
 );
 
+// Proxy ActivityPub requests
+app.use(
+  "/activitypub",
+  createProxyMiddleware({
+    target: "https://api.dopp.eu.org",
+    changeOrigin: true,
+    secure: true,
+    followRedirects: true,
+    onProxyReq: (proxyReq, req, res) => {
+      // Log the proxied request
+      console.log(
+        `Proxying ActivityPub ${req.method} ${req.url} to https://api.dopp.eu.org${req.url}`,
+      );
+      // Set proper ActivityPub headers
+      if (req.headers.accept && req.headers.accept.includes('application/activity+json')) {
+        proxyReq.setHeader('Accept', 'application/activity+json');
+      }
+    },
+    onError: (err, req, res) => {
+      console.error("ActivityPub proxy error:", err.message);
+      res.status(500).json({ error: "ActivityPub proxy error", message: err.message });
+    },
+  }),
+);
+
+// Proxy WebFinger requests
+app.use(
+  "/.well-known",
+  createProxyMiddleware({
+    target: "https://api.dopp.eu.org",
+    changeOrigin: true,
+    secure: true,
+    followRedirects: true,
+    onProxyReq: (proxyReq, req, res) => {
+      // Log the proxied request
+      console.log(
+        `Proxying WebFinger ${req.method} ${req.url} to https://api.dopp.eu.org${req.url}`,
+      );
+    },
+    onError: (err, req, res) => {
+      console.error("WebFinger proxy error:", err.message);
+      res.status(500).json({ error: "WebFinger proxy error", message: err.message });
+    },
+  }),
+);
+
 // Serve static files from React build
 app.use(express.static(path.join(__dirname, "build")));
 
