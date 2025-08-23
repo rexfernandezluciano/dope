@@ -24,6 +24,8 @@ import {
 	Bullseye,
 	CurrencyDollar,
 	Cursor,
+	Wallet,
+	ArrowUpCircle,
 } from "react-bootstrap-icons";
 import { updatePageMeta } from "../utils/meta-utils";
 import { businessAPI } from "../config/ApiConfig";
@@ -32,24 +34,14 @@ const BusinessPage = () => {
 	const [activeTab, setActiveTab] = useState("overview");
 	const [dashboard, setDashboard] = useState({});
 	const [campaigns, setCampaigns] = useState([]);
+	const [credits, setCredits] = useState({ credits: 0, creditsDisplay: 0 });
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
 	const [showCreateModal, setShowCreateModal] = useState(false);
-
-	const [campaignForm, setCampaignForm] = useState({
-		title: "",
-		description: "",
-		targetType: "post",
-		targetId: "",
-		budget: "",
-		duration: 7,
-		adType: "promotion",
-		targetAudience: {
-			age: [18, 65],
-			interests: [],
-		},
-	});
+	const [showCreditsModal, setShowCreditsModal] = useState(false);
+	const [paymentMethodId, setPaymentMethodId] = useState("");
+	const [purchaseAmount, setPurchaseAmount] = useState(100);
 
 	useEffect(() => {
 		updatePageMeta({
@@ -57,6 +49,7 @@ const BusinessPage = () => {
 			description: "Manage your ad campaigns and business analytics",
 		});
 		loadBusinessData();
+		loadCredits();
 	}, []);
 
 	const loadBusinessData = async () => {
@@ -73,6 +66,35 @@ const BusinessPage = () => {
 			console.error(error);
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const loadCredits = async () => {
+		try {
+			const creditsResponse = await businessAPI.getCredits();
+			setCredits(creditsResponse);
+		} catch (error) {
+			setError("Failed to load credits");
+			console.error(error);
+		}
+	};
+
+	const handlePurchaseCredits = async (e) => {
+		e.preventDefault();
+		try {
+			setError("");
+			setSuccess("");
+			await businessAPI.purchaseCredits({
+				credits: parseInt(purchaseAmount),
+				paymentMethodId: paymentMethodId,
+			});
+			setSuccess("Credits purchased successfully!");
+			setShowCreditsModal(false);
+			setPaymentMethodId("");
+			setPurchaseAmount(100);
+			loadCredits(); // Reload credits after purchase
+		} catch (error) {
+			setError(error.message || "Failed to purchase credits");
 		}
 	};
 
@@ -163,47 +185,61 @@ const BusinessPage = () => {
 
 						<Tab.Content>
 							<Tab.Pane eventKey="overview">
+								<Row className="mb-4">
+									<Col md={3}>
+										<Card className="border-0 bg-primary text-white">
+											<Card.Body className="text-center">
+												<Bullseye size={24} className="mb-2" />
+												<h4>{overview.totalCampaigns || 0}</h4>
+												<small>Total Campaigns</small>
+											</Card.Body>
+										</Card>
+									</Col>
+									<Col md={3}>
+										<Card className="border-0 bg-success text-white">
+											<Card.Body className="text-center">
+												<CurrencyDollar size={24} className="mb-2" />
+												<h4>${overview.totalSpent || 0}</h4>
+												<small>Total Spent</small>
+											</Card.Body>
+										</Card>
+									</Col>
+									<Col md={3}>
+										<Card className="border-0 bg-info text-white">
+											<Card.Body className="text-center">
+												<Eye size={24} className="mb-2" />
+												<h4>{analytics.totalImpressions || 0}</h4>
+												<small>Impressions</small>
+											</Card.Body>
+										</Card>
+									</Col>
+									<Col md={3}>
+										<Card
+											className="border-0 bg-gradient text-white position-relative cursor-pointer"
+											style={{
+												background:
+													"linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+												cursor: "pointer",
+											}}
+											onClick={() => setShowCreditsModal(true)}
+										>
+											<Card.Body className="text-center">
+												<div className="d-flex align-items-center justify-content-center mb-2">
+													<Wallet size={24} className="me-2" />
+													<ArrowUpCircle size={16} className="opacity-75" />
+												</div>
+												<h4 className="mb-0">{credits.creditsDisplay || 0}</h4>
+												<small className="opacity-90">Available Credits</small>
+												<small className="d-block mt-1 opacity-75">
+													Click to add more
+												</small>
+											</Card.Body>
+										</Card>
+									</Col>
+								</Row>
+
 								<Row>
 									<Col lg={8}>
-										<Row className="mb-4">
-											<Col md={3}>
-												<Card className="border-0 bg-primary text-white">
-													<Card.Body className="text-center">
-														<Bullseye size={24} className="mb-2" />
-														<h4>{overview.totalCampaigns || 0}</h4>
-														<small>Total Campaigns</small>
-													</Card.Body>
-												</Card>
-											</Col>
-											<Col md={3}>
-												<Card className="border-0 bg-success text-white">
-													<Card.Body className="text-center">
-														<CurrencyDollar size={24} className="mb-2" />
-														<h4>${overview.totalSpent || 0}</h4>
-														<small>Total Spent</small>
-													</Card.Body>
-												</Card>
-											</Col>
-											<Col md={3}>
-												<Card className="border-0 bg-info text-white">
-													<Card.Body className="text-center">
-														<Eye size={24} className="mb-2" />
-														<h4>{analytics.totalImpressions || 0}</h4>
-														<small>Impressions</small>
-													</Card.Body>
-												</Card>
-											</Col>
-											<Col md={3}>
-												<Card className="border-0 bg-warning text-white">
-													<Card.Body className="text-center">
-														<Cursor size={24} className="mb-2" />
-														<h4>{analytics.totalClicks || 0}</h4>
-														<small>Clicks</small>
-													</Card.Body>
-												</Card>
-											</Col>
-										</Row>
-
 										<Card>
 											<Card.Header className="d-flex justify-content-between align-items-center">
 												<h5 className="mb-0">Recent Campaigns</h5>
@@ -600,6 +636,58 @@ const BusinessPage = () => {
 						</Button>
 						<Button type="submit" variant="primary">
 							Create Campaign
+						</Button>
+					</Modal.Footer>
+				</Form>
+			</Modal>
+
+			{/* Credits Modal */}
+			<Modal
+				show={showCreditsModal}
+				onHide={() => setShowCreditsModal(false)}
+				size="md"
+			>
+				<Modal.Header closeButton>
+					<Modal.Title>Add Credits</Modal.Title>
+				</Modal.Header>
+				<Form onSubmit={handlePurchaseCredits}>
+					<Modal.Body>
+						<p>
+							Your current credits:{" "}
+							<strong>{credits.creditsDisplay.toFixed(1)}</strong>
+						</p>
+						<Form.Group className="mb-3">
+							<Form.Label>Amount of Credits to Purchase</Form.Label>
+							<Form.Control
+								type="number"
+								value={purchaseAmount}
+								onChange={(e) => setPurchaseAmount(e.target.value)}
+								required
+							/>
+						</Form.Group>
+						<Form.Group className="mb-3">
+							<Form.Label>Payment Method ID</Form.Label>
+							<Form.Control
+								type="text"
+								value={paymentMethodId}
+								onChange={(e) => setPaymentMethodId(e.target.value)}
+								placeholder="e.g., pm_jsjs"
+								required
+							/>
+						</Form.Group>
+						<Alert variant="info">
+							<small>
+								Please ensure you have a valid payment method ID. Credits are
+								added instantly upon successful purchase.
+							</small>
+						</Alert>
+					</Modal.Body>
+					<Modal.Footer>
+						<Button variant="secondary" onClick={() => setShowCreditsModal(false)}>
+							Close
+						</Button>
+						<Button type="submit" variant="primary">
+							Purchase Credits
 						</Button>
 					</Modal.Footer>
 				</Form>

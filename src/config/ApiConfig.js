@@ -1275,6 +1275,18 @@ export const businessAPI = {
 			{ method: "GET" }
 		);
 	},
+
+	// Credits
+	getCredits: async () => {
+		return await apiRequest("/credits", { method: "GET" });
+	},
+
+	purchaseCredits: async (data) => {
+		return await apiRequest("/credits/purchase", {
+			method: "POST",
+			data: data,
+		});
+	},
 };
 
 // Payment API
