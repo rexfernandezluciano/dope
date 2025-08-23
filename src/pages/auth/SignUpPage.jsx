@@ -221,9 +221,13 @@ const SignUpPage = () => {
 					if (
 						uploadResult &&
 						uploadResult.imageUrls &&
-						uploadResult.imageUrls.length > 0
+						uploadResult.imageUrls.length > 0 &&
+						typeof uploadResult.imageUrls[0] === 'string' &&
+						uploadResult.imageUrls[0].startsWith('http')
 					) {
 						photoURL = uploadResult.imageUrls[0];
+					} else {
+						console.warn("Invalid upload result, using Gravatar:", uploadResult);
 					}
 				} catch (uploadErr) {
 					console.error("Photo upload failed:", uploadErr);
