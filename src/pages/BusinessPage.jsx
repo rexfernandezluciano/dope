@@ -130,7 +130,7 @@ const BusinessPage = () => {
 			setError("");
 			setSuccess("");
 			await businessAPI.purchaseCredits({
-				credits: selectedPackage.amount,
+				amount: selectedPackage.amount,
 				paymentMethodId: paymentMethodId,
 			});
 			setSuccess(`Credits purchased successfully! You received ${selectedPackage.totalCredits} credits (${selectedPackage.credits} base + ${selectedPackage.bonus} bonus).`);

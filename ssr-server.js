@@ -30,8 +30,7 @@ const corsOptions = {
     "Origin",
     "Cache-Control",
     "Pragma",
-  ],
-  headers: ["Server: DOPE Network SSR"],
+  ]
 };
 
 app.use(cors(corsOptions));
@@ -50,6 +49,14 @@ app.options("*", (req, res) => {
   res.header("Access-Control-Max-Age", "86400");
   res.header("Server", "DOPE Network");
   res.sendStatus(200);
+});
+
+app.use((req, res, next) => {
+	res.setHeader("Server", "DOPE/1.0");
+	res.setHeader("X-Powered-By", "DOPE/1.0");
+	res.setHeader("X-Origin", "DOPE/1.0");
+	res.setHeader("X-Content-Type-Options", "nosniff");
+	next();
 });
 
 // Load the HTML template
