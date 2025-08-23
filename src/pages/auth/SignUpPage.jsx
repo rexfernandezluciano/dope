@@ -6,7 +6,7 @@ import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 import "animate.css";
 import heic2any from "heic2any";
 
-import { authAPI } from "../../config/ApiConfig";
+import { authAPI, imageAPI } from "../../config/ApiConfig";
 import { getGravatar, createUsername } from "../../utils/app-utils";
 import { setAuthToken } from "../../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
@@ -164,29 +164,12 @@ const SignUpPage = () => {
 			let photoURL = getGravatar(email); // Default to Gravatar
 			const username = await createUsername(displayName);
 
-			// If user selected a custom photo, upload it to Cloudinary
+			// If user selected a custom photo, upload it using the API
 			if (photo) {
 				try {
-					const formData = new FormData();
-					formData.append("file", photo);
-					formData.append("upload_preset", "dope-network");
-					formData.append("folder", "profile_pictures");
-
-					const response = await fetch(
-						"https://api.cloudinary.com/v1_1/zxpic/image/upload",
-						{
-							method: "POST",
-							body: formData,
-						}
-					);
-
-					if (response.ok) {
-						const data = await response.json();
-						if (data && data.secure_url && typeof data.secure_url === 'string') {
-							photoURL = data.secure_url;
-						}
-					} else {
-						console.warn("Cloudinary upload failed with status:", response.status);
+					const uploadResult = await imageAPI.uploadImages([photo]);
+					if (uploadResult && uploadResult.imageUrls && uploadResult.imageUrls.length > 0) {
+						photoURL = uploadResult.imageUrls[0];
 					}
 				} catch (uploadErr) {
 					console.error("Photo upload failed:", uploadErr);
