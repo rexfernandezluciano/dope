@@ -1,40 +1,53 @@
-
 import { activityPubAPI } from '../config/ApiConfig';
 
 /**
  * Discover ActivityPub actor via WebFinger
  * @param {string} handle - User handle in format @username@domain
+ * @param {boolean} checkDiscoverable - Whether to check the federatedDiscoverable flag
  * @returns {Promise<Object>} WebFinger response
  */
-export const discoverActor = async (handle) => {
+export const discoverActor = async (handle, checkDiscoverable = true) => {
   try {
-    // Remove @ symbol if present
-    const cleanHandle = handle.startsWith('@') ? handle.slice(1) : handle;
-    const resource = `acct:${cleanHandle}`;
-    
-    // Check if this is a federated user (contains @)
+    if (!handle || typeof handle !== 'string') {
+      throw new Error('Invalid handle provided');
+    }
+
+    const cleanHandle = handle.replace(/^@/, '');
+    console.log(`🔍 Discovering ActivityPub actor: ${cleanHandle}`);
+
+    // Parse the handle
     const parts = cleanHandle.split('@');
-    if (parts.length === 2) {
+    const resource = `acct:${cleanHandle}`;
+
+    if (parts.length === 1) {
+      // This is a local user, use local webfinger endpoint
+      console.log(`🔍 Discovering local actor: ${cleanHandle}`);
+
+      // If checking discoverability, verify the user has federated discovery enabled
+      if (checkDiscoverable) {
+        try {
+          const userResponse = await fetch(`/v1/users/${parts[0]}`);
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            if (!userData.user?.federatedDiscoverable) {
+              throw new Error('User has disabled federated discovery');
+            }
+          }
+        } catch (err) {
+          console.warn('Could not verify federated discoverability:', err.message);
+        }
+      }
+
+      const response = await activityPubAPI.getWebfinger(resource);
+      return response;
+    } else if (parts.length === 2) {
       // This is a federated user, use the federated proxy
       const [username, domain] = parts;
       const webfingerPath = `/.well-known/webfinger?resource=${encodeURIComponent(resource)}`;
       const proxyUrl = `/federated?domain=${encodeURIComponent(domain)}&path=${encodeURIComponent(webfingerPath)}`;
-      
+
       console.log(`🔍 Discovering federated actor: ${cleanHandle} via proxy: ${proxyUrl}`);
-      
-      const response = await fetch(proxyUrl, {
-        headers: {
-          'Accept': 'application/jrd+json, application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Federated WebFinger lookup failed: ${response.status} ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } else {
-      // Local user, use the API
+
       const response = await activityPubAPI.getWebfinger(resource);
       return response;
     }
@@ -91,12 +104,12 @@ export const isFederatedHandle = (handle) => {
  */
 export const formatActivityPubHandle = (handle) => {
   if (!handle) return '';
-  
+
   // If it's a federated handle, return as-is
   if (isFederatedHandle(handle)) {
     return handle;
   }
-  
+
   // If it's a local user, just show @username
   return handle.startsWith('@') ? handle : `@${handle}`;
 };

@@ -15,7 +15,8 @@ const AccountSettingsPage = () => {
 	const [settings, setSettings] = useState({
 		username: "",
 		email: "",
-		name: ""
+		name: "",
+		federatedDiscoverable: false
 	});
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
@@ -27,7 +28,8 @@ const AccountSettingsPage = () => {
 			setSettings({
 				username: user.username || "",
 				email: user.email || "",
-				name: user.name || ""
+				name: user.name || "",
+				federatedDiscoverable: user.federatedDiscoverable || false
 			});
 		}
 	}, [user]);
@@ -154,6 +156,19 @@ const AccountSettingsPage = () => {
 							</div>
 							<Form.Text className="text-muted">
 								Email changes require verification. Contact support to change your email.
+							</Form.Text>
+						</Form.Group>
+
+						<Form.Group className="mb-3">
+							<Form.Check
+								type="switch"
+								id="federatedDiscoverable"
+								label="Federated Discovery (ActivityPub/Fediverse)"
+								checked={settings.federatedDiscoverable}
+								onChange={(e) => setSettings(prev => ({ ...prev, federatedDiscoverable: e.target.checked }))}
+							/>
+							<Form.Text className="text-muted">
+								Allow your profile to be discoverable from other ActivityPub/Fediverse platforms like Mastodon, Pleroma, and others.
 							</Form.Text>
 						</Form.Group>
 					</Form>

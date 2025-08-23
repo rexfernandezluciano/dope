@@ -368,6 +368,7 @@ app.get("*", async (req, res) => {
                 username,
                 displayName: userData.user.name,
                 avatar: userData.user.avatar,
+                federatedDiscoverable: userData.user.federatedDiscoverable,
               });
             } else {
               metaData = getMetaData("/");

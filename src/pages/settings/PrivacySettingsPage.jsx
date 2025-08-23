@@ -1,10 +1,9 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
 import { Container, Card, Form, Button, Alert } from "react-bootstrap";
-import { Eye, Globe, People, Lock } from "react-bootstrap-icons";
+import { Eye, Globe, People, Lock, Shield } from "react-bootstrap-icons";
 
 import { userAPI } from "../../config/ApiConfig";
 
@@ -31,7 +30,14 @@ const PrivacySettingsPage = () => {
 					comments: "public",
 					sharing: true,
 					chat: "public"
-				}
+				},
+				isProfilePrivate: user.isProfilePrivate || false,
+				allowFollowRequests: user.allowFollowRequests !== false,
+				showOnlineStatus: user.showOnlineStatus !== false,
+				allowDirectMessages: user.allowDirectMessages !== false,
+				allowTagging: user.allowTagging !== false,
+				showBirthday: user.showBirthday || false,
+				federatedDiscoverable: user.federatedDiscoverable || false
 			});
 		}
 	}, [user]);
@@ -154,6 +160,22 @@ const PrivacySettingsPage = () => {
 							/>
 							<Form.Text className="text-muted d-block">
 								When enabled, other users can repost your content
+							</Form.Text>
+						</Form.Group>
+
+						{/* Federated Discovery */}
+						<Form.Group className="mb-4">
+							<Form.Label className="fw-bold">Federated Discovery</Form.Label>
+							<Form.Check
+								type="switch"
+								id="federatedDiscoverable"
+								label="Federated Discovery (Fediverse/ActivityPub)"
+								checked={settings.federatedDiscoverable}
+								onChange={(e) => setSettings(prev => ({ ...prev, federatedDiscoverable: e.target.checked }))}
+								className="mb-3"
+							/>
+							<Form.Text className="text-muted d-block mb-3">
+								Allow your profile to be discoverable from other ActivityPub/Fediverse platforms like Mastodon, Pleroma, and others. When enabled, your profile can be found using webfinger lookups.
 							</Form.Text>
 						</Form.Group>
 					</Form>
