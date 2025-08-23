@@ -54,7 +54,7 @@ const OAuthAppsPage = () => {
 		try {
 			setLoading(true);
 			const response = await oauthAPI.getApps();
-			setApps(response.apps || []);
+			setApps(response.applications || []);
 		} catch (error) {
 			setError("Failed to load OAuth apps");
 			console.error(error);

@@ -1,4 +1,3 @@
-
 /** @format */
 
 import React, { useState, useEffect } from "react";
@@ -21,7 +20,7 @@ import { updatePageMeta } from "../../utils/meta-utils";
 const OAuthAuthorizePage = () => {
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
-	
+
 	const [loading, setLoading] = useState(true);
 	const [authorizing, setAuthorizing] = useState(false);
 	const [error, setError] = useState("");
@@ -43,7 +42,7 @@ const OAuthAuthorizePage = () => {
 			title: "Authorize Application - DOPE Network",
 			description: "Authorize third-party application access",
 		});
-		
+
 		loadAuthorizationData();
 	}, []);
 
@@ -67,18 +66,13 @@ const OAuthAuthorizePage = () => {
 			const userResponse = await authAPI.getCurrentUser();
 			setUser(userResponse.user);
 
-			// Load application info (this will need backend implementation)
-			try {
-				const appResponse = await oauthAPI.getAppInfo(clientId);
-				setAppInfo(appResponse.app);
-				
-				// Initialize selected scopes with requested scopes
-				const requestedScopes = scope.split(" ").filter(s => s);
-				setSelectedScopes(requestedScopes);
-			} catch (appError) {
-				setError("Invalid application. The requested application was not found.");
-				return;
-			}
+			// Load app information
+			const appResponse = await oauthAPI.getAppInfo(clientId);
+			setAppInfo(appResponse.application || appResponse.app);
+
+			// Initialize selected scopes with requested scopes
+			const requestedScopes = scope.split(" ").filter(s => s);
+			setSelectedScopes(requestedScopes);
 
 		} catch (err) {
 			console.error("Failed to load authorization data:", err);
@@ -113,7 +107,7 @@ const OAuthAuthorizePage = () => {
 				if (state) {
 					redirectUrl.searchParams.set("state", state);
 				}
-				
+
 				window.location.href = redirectUrl.toString();
 			} else {
 				setError("Authorization failed. Please try again.");
@@ -135,7 +129,7 @@ const OAuthAuthorizePage = () => {
 		if (state) {
 			redirectUrl.searchParams.set("state", state);
 		}
-		
+
 		window.location.href = redirectUrl.toString();
 	};
 

@@ -143,11 +143,11 @@ const OAuthConsentPage = () => {
 											<tr key={auth.id}>
 												<td>
 													<div>
-														<strong>{auth.app.name}</strong>
-														{auth.app.website && (
+														<strong>{auth.application.name}</strong>
+														{auth.application.website && (
 															<div>
 																<small className="text-muted">
-																	{auth.app.website}
+																	{auth.application.website}
 																</small>
 															</div>
 														)}
@@ -155,7 +155,7 @@ const OAuthConsentPage = () => {
 												</td>
 												<td>
 													<div>
-														{auth.scopes.map((scope) => (
+														{auth.scope.split(' ').map((scope) => (
 															<Badge
 																key={scope}
 																bg="light"
@@ -228,21 +228,21 @@ const OAuthConsentPage = () => {
 						<div>
 							<Row className="mb-3">
 								<Col>
-									<h5>{selectedAuth.app.name}</h5>
-									{selectedAuth.app.description && (
+									<h5>{selectedAuth.application.name}</h5>
+									{selectedAuth.application.description && (
 										<p className="text-muted">
-											{selectedAuth.app.description}
+											{selectedAuth.application.description}
 										</p>
 									)}
-									{selectedAuth.app.website && (
+									{selectedAuth.application.website && (
 										<p>
 											<strong>Website:</strong>{" "}
 											<a
-												href={selectedAuth.app.website}
+												href={selectedAuth.application.website}
 												target="_blank"
 												rel="noopener noreferrer"
 											>
-												{selectedAuth.app.website}
+												{selectedAuth.application.website}
 											</a>
 										</p>
 									)}
@@ -262,7 +262,7 @@ const OAuthConsentPage = () => {
 								<Col>
 									<strong>Granted Permissions:</strong>
 									<div className="mt-2">
-										{selectedAuth.scopes.map((scope) => (
+										{selectedAuth.scope.split(' ').map((scope) => (
 											<div key={scope} className="mb-2">
 												<Badge bg="primary" className="me-2">
 													{scope}
