@@ -131,7 +131,11 @@ const SignUpPage = () => {
 		if (!file) {
 			// If no file selected, clear the preview and photo
 			setPhoto(null);
-			if (photoPreview && !photoPreview.includes("gravatar") && !photoPreview.includes("pravatar")) {
+			if (
+				photoPreview &&
+				!photoPreview.includes("gravatar") &&
+				!photoPreview.includes("pravatar")
+			) {
 				URL.revokeObjectURL(photoPreview);
 			}
 			setPhotoPreview(null);
@@ -169,7 +173,11 @@ const SignUpPage = () => {
 			}
 
 			// Clean up previous preview URL to prevent memory leaks
-			if (photoPreview && !photoPreview.includes("gravatar") && !photoPreview.includes("pravatar")) {
+			if (
+				photoPreview &&
+				!photoPreview.includes("gravatar") &&
+				!photoPreview.includes("pravatar")
+			) {
 				URL.revokeObjectURL(photoPreview);
 			}
 
@@ -217,7 +225,7 @@ const SignUpPage = () => {
 				email,
 				username,
 				password,
-				photoURL: photoURL ?? "https://i.pravatar.cc/300",
+				photoURL: "https://i.pravatar.cc/300",
 				subscription: "free",
 			};
 
