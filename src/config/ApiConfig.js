@@ -230,6 +230,16 @@ class HttpClient {
 		const endpoints = API_ENDPOINTS.filter(url => url !== "");
 		let lastError;
 
+		// Helper function to determine if error should trigger failover
+		const shouldFailover = (error) => {
+			// Don't failover for HTTP status codes that indicate the API is working
+			// Only failover for network/connectivity issues
+			if (error.status >= 400 && error.status < 600) {
+				return false; // API responded with an error, don't try other endpoints
+			}
+			return true; // Network error, try next endpoint
+		};
+
 		// If using proxy (empty string), use current base URL
 		if (API_ENDPOINTS.includes("")) {
 			this.currentBaseURL = "";
@@ -237,7 +247,11 @@ class HttpClient {
 				return await this.makeRequest(endpoint, options);
 			} catch (error) {
 				lastError = error;
-				console.log("Proxy request failed, trying direct API...");
+				if (!shouldFailover(error)) {
+					// API responded with an error (like 401, 404, etc.), don't try other endpoints
+					throw error;
+				}
+				console.log("Proxy request failed due to network error, trying direct API...");
 			}
 		}
 
@@ -248,12 +262,16 @@ class HttpClient {
 				return await this.makeRequest(endpoint, options);
 			} catch (error) {
 				lastError = error;
-				console.log(`Request failed for ${baseUrl}:`, error.message);
+				if (!shouldFailover(error)) {
+					// API responded with an error, don't try other endpoints
+					throw error;
+				}
+				console.log(`Network error for ${baseUrl}, trying next endpoint:`, error.message);
 				continue;
 			}
 		}
 
-		// All endpoints failed
+		// All endpoints failed due to network issues
 		throw lastError || new Error("All API endpoints failed");
 	}
 }
