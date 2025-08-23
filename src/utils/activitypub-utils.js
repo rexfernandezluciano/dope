@@ -12,8 +12,31 @@ export const discoverActor = async (handle) => {
     const cleanHandle = handle.startsWith('@') ? handle.slice(1) : handle;
     const resource = `acct:${cleanHandle}`;
     
-    const response = await activityPubAPI.getWebfinger(resource);
-    return response;
+    // Check if this is a federated user (contains @)
+    const parts = cleanHandle.split('@');
+    if (parts.length === 2) {
+      // This is a federated user, query their domain directly
+      const [username, domain] = parts;
+      const webfingerUrl = `https://${domain}/.well-known/webfinger?resource=${encodeURIComponent(resource)}`;
+      
+      console.log(`🔍 Discovering federated actor: ${cleanHandle} at ${webfingerUrl}`);
+      
+      const response = await fetch(webfingerUrl, {
+        headers: {
+          'Accept': 'application/jrd+json, application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`WebFinger lookup failed: ${response.status} ${response.statusText}`);
+      }
+      
+      return await response.json();
+    } else {
+      // Local user, use the API
+      const response = await activityPubAPI.getWebfinger(resource);
+      return response;
+    }
   } catch (error) {
     console.error('Failed to discover ActivityPub actor:', error);
     throw error;

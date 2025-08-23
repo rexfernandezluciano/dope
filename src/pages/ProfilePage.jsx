@@ -117,14 +117,16 @@ const ProfilePage = () => {
 
 				// Get the actor profile
 				const actorUrl = actorLink.href;
+				console.log(`🎭 Fetching ActivityPub actor: ${actorUrl}`);
+				
 				const actorResponse = await fetch(actorUrl, {
 					headers: {
-						'Accept': 'application/activity+json'
+						'Accept': 'application/activity+json, application/ld+json'
 					}
 				});
 
 				if (!actorResponse.ok) {
-					throw new Error("Failed to fetch ActivityPub profile");
+					throw new Error(`Failed to fetch ActivityPub profile: ${actorResponse.status} ${actorResponse.statusText}`);
 				}
 
 				const actor = await actorResponse.json();
