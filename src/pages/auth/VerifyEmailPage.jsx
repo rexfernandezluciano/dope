@@ -1,4 +1,3 @@
-
 /** @format */
 
 import React, { useState, useEffect } from "react";
@@ -14,7 +13,7 @@ import socialNetIllustration from "../../assets/images/undraw_social-networking_
 const VerifyEmailPage = () => {
 	const { verificationId } = useParams();
 	const navigate = useNavigate();
-	
+
 	const [code, setCode] = useState("");
 	const [email, setEmail] = useState("");
 	const [error, setError] = useState("");
@@ -28,7 +27,9 @@ const VerifyEmailPage = () => {
 		// Validate verification ID and get email
 		const validateVerificationId = async () => {
 			if (!verificationId) {
-				setError("Invalid verification link. Please check your email for the correct link.");
+				setError(
+					"Invalid verification link. Please check your email for the correct link.",
+				);
 				return;
 			}
 
@@ -53,26 +54,41 @@ const VerifyEmailPage = () => {
 
 	const handleVerifyEmail = async (e) => {
 		e.preventDefault();
-		
+
 		if (!code || code.length !== 6) {
 			setError("Please enter a valid 6-digit verification code.");
 			return;
 		}
 
 		if (!verificationValidated) {
-			setError("Invalid verification link. Please check your email for the correct link.");
+			setError(
+				"Invalid verification link. Please check your email for the correct link.",
+			);
 			return;
 		}
 
 		try {
 			setLoading(true);
-			await authAPI.verifyEmail(email, code, verificationId);
-			
+			const verificationData = {
+				email,
+				code,
+				verificationId,
+			};
+
+			setError("");
+
+			await authAPI.verifyEmail(verificationData);
+
 			setShowDialog(true);
 			setDialogTitle("Email Verified Successfully!");
-			setDialogMessage("Your email has been verified. You can now log in to your account.");
+			setDialogMessage(
+				"Your email has been verified. You can now log in to your account.",
+			);
 		} catch (err) {
-			setError(err.message || "Verification failed. Please check your code and try again.");
+			setError(
+				err.message ||
+					"Verification failed. Please check your code and try again.",
+			);
 		} finally {
 			setLoading(false);
 		}
@@ -80,7 +96,9 @@ const VerifyEmailPage = () => {
 
 	const handleResendCode = async () => {
 		if (!verificationValidated || !email) {
-			setError("Invalid verification link. Please check your email for the correct link.");
+			setError(
+				"Invalid verification link. Please check your email for the correct link.",
+			);
 			return;
 		}
 
@@ -90,7 +108,9 @@ const VerifyEmailPage = () => {
 			setError("");
 			setShowDialog(true);
 			setDialogTitle("Verification Code Sent");
-			setDialogMessage("A new verification code has been sent to your email address.");
+			setDialogMessage(
+				"A new verification code has been sent to your email address.",
+			);
 		} catch (err) {
 			setError(err.message || "Failed to resend verification code.");
 		} finally {
@@ -125,10 +145,7 @@ const VerifyEmailPage = () => {
 						)}
 
 						{error && (
-							<Alert
-								variant="danger"
-								dismissible
-								onClose={() => setError("")}>
+							<Alert variant="danger" dismissible onClose={() => setError("")}>
 								{error}
 							</Alert>
 						)}
@@ -141,12 +158,14 @@ const VerifyEmailPage = () => {
 									value={code}
 									onChange={(e) => {
 										// Only allow numbers and limit to 6 digits
-										const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+										const value = e.target.value
+											.replace(/[^0-9]/g, "")
+											.slice(0, 6);
 										setCode(value);
 									}}
 									disabled={loading || !verificationValidated}
 									className="text-center"
-									style={{ letterSpacing: '0.5rem', fontSize: '1.2rem' }}
+									style={{ letterSpacing: "0.5rem", fontSize: "1.2rem" }}
 									maxLength={6}
 									required
 								/>
@@ -158,15 +177,14 @@ const VerifyEmailPage = () => {
 									variant="primary"
 									type="submit"
 									size="md"
-									disabled={loading || code.length !== 6 || !verificationValidated}
-									className="d-flex align-items-center justify-content-center">
+									disabled={
+										loading || code.length !== 6 || !verificationValidated
+									}
+									className="d-flex align-items-center justify-content-center"
+								>
 									{loading ? (
 										<>
-											<Spinner
-												animation="border"
-												size="sm"
-												className="me-2"
-											/>
+											<Spinner animation="border" size="sm" className="me-2" />
 											Verifying...
 										</>
 									) : (
@@ -182,7 +200,8 @@ const VerifyEmailPage = () => {
 								variant="link"
 								onClick={handleResendCode}
 								disabled={loading || !verificationValidated}
-								className="p-0 text-decoration-none">
+								className="p-0 text-decoration-none"
+							>
 								Resend verification code
 							</Button>
 						</div>

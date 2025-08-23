@@ -504,7 +504,7 @@ export const authAPI = {
 	},
 
 	validateVerificationId: async (verificationId) => {
-		return await apiRequest(`/auth/validate/${verificationId}`, {
+		return await apiRequest(`/auth/validate-verification-id/${verificationId}`, {
 			method: "GET",
 		});
 	},
