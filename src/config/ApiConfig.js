@@ -1,3 +1,4 @@
+
 /** @format */
 
 import Cookies from "js-cookie";
@@ -442,10 +443,10 @@ export const authAPI = {
 		});
 	},
 
-	loginWithGoogle: async (idToken) => {
+	loginWithGoogle: async (token) => {
 		return await apiRequest("/auth/google", {
 			method: "POST",
-			data: { idToken },
+			data: { token },
 		});
 	},
 
@@ -456,16 +457,22 @@ export const authAPI = {
 	},
 
 	verifyEmail: async (verificationData) => {
-		return await apiRequest("/auth/verify", {
+		return await apiRequest("/auth/verify-email", {
 			method: "POST",
 			data: verificationData,
 		});
 	},
 
 	resendVerification: async (email) => {
-		return await apiRequest("/auth/resend-verification", {
+		return await apiRequest("/auth/resend-code", {
 			method: "POST",
 			data: { email },
+		});
+	},
+
+	validateVerificationId: async (verificationId) => {
+		return await apiRequest(`/auth/validate/${verificationId}`, {
+			method: "GET",
 		});
 	},
 
@@ -488,10 +495,76 @@ export const authAPI = {
 			method: "GET",
 		});
 	},
+
+	checkEmailExists: async (email) => {
+		return await apiRequest(`/auth/check-email?email=${encodeURIComponent(email)}`, {
+			method: "GET",
+		});
+	},
+};
+
+// OAuth API
+export const oauthAPI = {
+	registerApp: async (appData) => {
+		return await apiRequest("/oauth/register", {
+			method: "POST",
+			data: appData,
+		});
+	},
+
+	authorize: async (params) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/oauth/authorize?${queryString}`, {
+			method: "GET",
+		});
+	},
+
+	exchangeToken: async (tokenData) => {
+		return await apiRequest("/oauth/token", {
+			method: "POST",
+			data: tokenData,
+		});
+	},
+
+	revokeToken: async (tokenData) => {
+		return await apiRequest("/oauth/revoke", {
+			method: "POST",
+			data: tokenData,
+		});
+	},
+
+	getUserInfo: async () => {
+		return await apiRequest("/oauth/userinfo", {
+			method: "GET",
+		});
+	},
+
+	// Helper function to get authorization URL
+	getAuthorizationUrl: (clientId, redirectUri, scope = "read write", state = null) => {
+		const params = new URLSearchParams({
+			response_type: "code",
+			client_id: clientId,
+			redirect_uri: redirectUri,
+			scope: scope,
+		});
+		
+		if (state) {
+			params.append("state", state);
+		}
+		
+		return `${API_BASE_URL}/v1/oauth/authorize?${params.toString()}`;
+	},
 };
 
 // User API
 export const userAPI = {
+	getAllUsers: async (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/users${queryString ? `?${queryString}` : ""}`, {
+			method: "GET",
+		});
+	},
+
 	getUser: async (username) => {
 		if (username) {
 			return await apiRequest(`/users/${username}`, {
@@ -514,20 +587,14 @@ export const userAPI = {
 	updateUser: async (username, userData) => {
 		return await apiRequest(`/users/${username}`, {
 			method: "PUT",
-			body: JSON.stringify(userData),
-		});
-	},
-
-	followUser: async (username) => {
-		return await apiRequest(`/users/${username}/follow`, {
-			method: "POST",
+			data: userData,
 		});
 	},
 
 	updateProfile: async (userData) => {
-		return await apiRequest(`/users/profile`, {
+		return await apiRequest("/user/profile", {
 			method: "PUT",
-			body: JSON.stringify(userData),
+			data: userData,
 		});
 	},
 
@@ -537,25 +604,14 @@ export const userAPI = {
 		});
 	},
 
-	updateProfile: async (profileData) => {
-		return await apiRequest("/user/profile", {
-			method: "PUT",
-			data: profileData,
-		});
-	},
-
-	getUserById: async (uid) => {
-		return await apiRequest(`/users/${uid}`);
-	},
-
 	followUser: async (username) => {
-		return await apiRequest(`/users/follow/${username}`, {
+		return await apiRequest(`/users/${username}/follow`, {
 			method: "POST",
 		});
 	},
 
 	unfollowUser: async (username) => {
-		return await apiRequest(`/users/unfollow/${username}`, {
+		return await apiRequest(`/users/${username}/unfollow`, {
 			method: "POST",
 		});
 	},
@@ -586,10 +642,10 @@ export const userAPI = {
 
 	searchUsers: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
-			query: query,
+			search: query,
 			...params,
 		});
-		return await apiRequest(`/users/search?${searchParams.toString()}`);
+		return await apiRequest(`/users?${searchParams.toString()}`);
 	},
 
 	updateSettings: async (settings) => {
@@ -603,10 +659,6 @@ export const userAPI = {
 		return await apiRequest("/users/settings", {
 			method: "GET",
 		});
-	},
-
-	getAllUsers: async () => {
-		return await apiRequest("/users");
 	},
 
 	getUserEarnings: async () => {
@@ -628,18 +680,14 @@ export const userAPI = {
 		});
 	},
 
-	// New endpoints from API documentation
 	checkUserExists: async (uid) => {
 		return await apiRequest(`/users/exists/${uid}`);
 	},
 
-	checkEmailExists: (email) =>
-		apiRequest(`/auth/check-email?email=${encodeURIComponent(email)}`),
 	getRecommendedUsers: (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
 		return apiRequest(`/users/recommended${queryString ? `?${queryString}` : ""}`);
 	},
-	followUser: (userId) => apiRequest(`/users/${userId}/follow`, { method: "POST" }),
 };
 
 // Post API
@@ -651,8 +699,9 @@ export const postAPI = {
 		});
 	},
 
-	getPosts: async (page = 1, limit = 10) => {
-		return await apiRequest(`/posts?page=${page}&limit=${limit}`, {
+	getPosts: async (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/posts${queryString ? `?${queryString}` : ""}`, {
 			method: "GET",
 		});
 	},
@@ -679,35 +728,58 @@ export const postAPI = {
 	likePost: async (postId) => {
 		return await apiRequest(`/posts/${postId}/like`, {
 			method: "POST",
-			data: { postId },
 		});
 	},
 
 	unlikePost: async (postId) => {
 		return await apiRequest(`/posts/${postId}/unlike`, {
 			method: "DELETE",
-			data: { postId },
 		});
 	},
 
-	getUserPosts: async (username, page = 1, limit = 10) => {
+	getPostLikes: async (postId, params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
 		return await apiRequest(
-			`/posts/user/${username}?page=${page}&limit=${limit}`,
+			`/posts/${postId}/likes${queryString ? `?${queryString}` : ""}`,
+		);
+	},
+
+	sharePost: async (postId) => {
+		return await apiRequest(`/posts/share/${postId}`, {
+			method: "POST",
+		});
+	},
+
+	trackView: async (postId) => {
+		return await apiRequest(`/posts/${postId}/view`, {
+			method: "POST",
+		});
+	},
+
+	updatePostEngagement: async (postId, action) => {
+		return await apiRequest(`/posts/${postId}/engagement`, {
+			method: "POST",
+			data: { action },
+		});
+	},
+
+	getUserPosts: async (username, params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(
+			`/posts?author=${username}${queryString ? `&${queryString}` : ""}`,
 			{
 				method: "GET",
 			},
 		);
 	},
 
-	searchPosts: async (query) => {
-		return await apiRequest(`/posts/search?q=${encodeURIComponent(query)}`, {
-			method: "GET",
+	searchPosts: async (query, params = {}) => {
+		const searchParams = new URLSearchParams({
+			search: query,
+			...params,
 		});
-	},
-
-	sharePost: async (postId) => {
-		return await apiRequest(`/posts/${postId}/share`, {
-			method: "POST",
+		return await apiRequest(`/posts?${searchParams.toString()}`, {
+			method: "GET",
 		});
 	},
 
@@ -743,33 +815,43 @@ export const postAPI = {
 			},
 		);
 	},
+};
 
-	// New endpoints from API documentation
-	getPostLikes: async (postId, params = {}) => {
-		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(
-			`/posts/${postId}/likes${queryString ? `?${queryString}` : ""}`,
-		);
-	},
-
-	updatePostEngagement: async (postId, action) => {
-		return await apiRequest(`/posts/${postId}/engagement`, {
+// Poll API
+export const pollAPI = {
+	vote: async (pollId, optionIds) => {
+		return await apiRequest(`/polls/${pollId}/vote`, {
 			method: "POST",
-			data: { action },
+			data: { optionIds },
 		});
 	},
 
-	trackView: async (postId) => {
-		return await apiRequest(`/posts/${postId}/view`, {
-			method: "POST",
+	getResults: async (pollId) => {
+		return await apiRequest(`/polls/${pollId}/results`, {
+			method: "GET",
+		});
+	},
+
+	getUserVote: async (pollId) => {
+		return await apiRequest(`/polls/${pollId}/user-vote`, {
+			method: "GET",
 		});
 	},
 };
 
+// Image API
 export const imageAPI = {
-	uploadImage: async (imageFile) => {
+	uploadImages: async (imageFiles) => {
 		const formData = new FormData();
-		formData.append("image", imageFile);
+		
+		// Handle single file or array of files
+		if (Array.isArray(imageFiles)) {
+			imageFiles.forEach((file, index) => {
+				formData.append('images', file);
+			});
+		} else {
+			formData.append('images', imageFiles);
+		}
 
 		return await apiRequest("/images/upload", {
 			method: "POST",
@@ -808,6 +890,7 @@ export const sessionAPI = {
 	},
 };
 
+// Comment API
 export const commentAPI = {
 	getComments: async (postId, params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
@@ -844,7 +927,6 @@ export const commentAPI = {
 		return await apiRequest(`/comments/search?${searchParams.toString()}`);
 	},
 
-	// Comment likes
 	likeComment: async (commentId) => {
 		return await apiRequest(`/comments/${commentId}/like`, {
 			method: "POST",
@@ -856,15 +938,6 @@ export const commentAPI = {
 		return await apiRequest(
 			`/comments/${commentId}/likes${queryString ? `?${queryString}` : ""}`,
 		);
-	},
-};
-
-// Like API
-export const likeAPI = {
-	likeReply: async (replyId) => {
-		return await apiRequest(`/likes/reply/${replyId}`, {
-			method: "POST",
-		});
 	},
 };
 
@@ -894,6 +967,15 @@ export const replyAPI = {
 	deleteReply: async (replyId) => {
 		return await apiRequest(`/replies/${replyId}`, {
 			method: "DELETE",
+		});
+	},
+};
+
+// Like API
+export const likeAPI = {
+	likeReply: async (replyId) => {
+		return await apiRequest(`/likes/reply/${replyId}`, {
+			method: "POST",
 		});
 	},
 };
@@ -961,6 +1043,73 @@ export const blockAPI = {
 	},
 };
 
+// Recommendation API
+export const recommendationAPI = {
+	getUserRecommendations: async (params = {}) => {
+		const queryString = new URLSearchParams({ type: 'users', limit: 10, ...params }).toString();
+		return await apiRequest(`/recommendations${queryString ? `?${queryString}` : ""}`);
+	},
+
+	getPostRecommendations: async (params = {}) => {
+		const queryString = new URLSearchParams({ type: 'posts', limit: 10, ...params }).toString();
+		return await apiRequest(`/recommendations${queryString ? `?${queryString}` : ""}`);
+	},
+
+	getTrendingHashtags: async (params = {}) => {
+		const queryString = new URLSearchParams({ limit: 10, ...params }).toString();
+		return await apiRequest(`/recommendations/trending${queryString ? `?${queryString}` : ""}`);
+	}
+};
+
+// Analytics API
+export const analyticsAPI = {
+	getUserAnalytics: async (period = "30d") => {
+		return await apiRequest(`/analytics/user?period=${period}`);
+	},
+
+	getPostAnalytics: async (postId) => {
+		return await apiRequest(`/analytics/post/${postId}`);
+	},
+
+	getPlatformAnalytics: async () => {
+		return await apiRequest("/analytics/platform");
+	},
+
+	getEarningsAnalytics: async (period = "month") => {
+		return await apiRequest(`/analytics/earnings?period=${period}`);
+	},
+};
+
+// Business/Advertising API
+export const businessAPI = {
+	createCampaign: async (campaignData) => {
+		return await apiRequest("/business/campaigns", {
+			method: "POST",
+			data: campaignData,
+		});
+	},
+
+	getCampaigns: async (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/business/campaigns${queryString ? `?${queryString}` : ""}`);
+	},
+
+	getCampaignAnalytics: async (campaignId) => {
+		return await apiRequest(`/business/campaigns/${campaignId}/analytics`);
+	},
+
+	trackAdInteraction: async (interactionData) => {
+		return await apiRequest("/business/track", {
+			method: "POST",
+			data: interactionData,
+		});
+	},
+
+	getDashboard: async () => {
+		return await apiRequest("/business/dashboard");
+	}
+};
+
 // Payment API
 export const paymentAPI = {
 	getProviders: async () => {
@@ -1008,10 +1157,10 @@ export const searchAPI = {
 
 	searchUsers: async (query, params = {}) => {
 		const searchParams = new URLSearchParams({
-			query: query,
+			search: query,
 			...params,
 		});
-		return await apiRequest(`/users/search?${searchParams.toString()}`);
+		return await apiRequest(`/users?${searchParams.toString()}`);
 	},
 
 	searchPosts: async (query, params = {}) => {
@@ -1027,21 +1176,6 @@ export const searchAPI = {
 		return await apiRequest(
 			`/search/hashtags?query=${encodeURIComponent(query)}`,
 		);
-	},
-};
-
-// Analytics API
-export const analyticsAPI = {
-	getEarningsAnalytics: async (period = "month") => {
-		return await apiRequest(`/analytics/earnings?period=${period}`);
-	},
-
-	getUserAnalytics: async (userId, period = "month") => {
-		return await apiRequest(`/analytics/user/${userId}?period=${period}`);
-	},
-
-	getPostAnalytics: async (postId) => {
-		return await apiRequest(`/analytics/post/${postId}`);
 	},
 };
 
@@ -1178,6 +1312,54 @@ export const adminAPI = {
 	},
 };
 
+// ActivityPub API
+export const activityPubAPI = {
+	getWebfinger: async (resource) => {
+		return await apiRequest(`/.well-known/webfinger?resource=${encodeURIComponent(resource)}`);
+	},
+
+	getUserActor: async (username) => {
+		return await apiRequest(`/activitypub/users/${username}`, {
+			headers: {
+				'Accept': 'application/activity+json'
+			}
+		});
+	},
+
+	getUserOutbox: async (username, page = null) => {
+		const url = `/activitypub/users/${username}/outbox${page ? `?page=${page}` : ''}`;
+		return await apiRequest(url, {
+			headers: {
+				'Accept': 'application/activity+json'
+			}
+		});
+	},
+
+	getUserFollowers: async (username) => {
+		return await apiRequest(`/activitypub/users/${username}/followers`, {
+			headers: {
+				'Accept': 'application/activity+json'
+			}
+		});
+	},
+
+	getUserFollowing: async (username) => {
+		return await apiRequest(`/activitypub/users/${username}/following`, {
+			headers: {
+				'Accept': 'application/activity+json'
+			}
+		});
+	},
+
+	getPostActivity: async (postId) => {
+		return await apiRequest(`/activitypub/posts/${postId}`, {
+			headers: {
+				'Accept': 'application/activity+json'
+			}
+		});
+	},
+};
+
 // Backward compatibility - keeping the original api object
 export const api = {
 	// Authentication
@@ -1254,8 +1436,6 @@ export const api = {
 };
 
 // Placeholder for createRateLimiter if it's defined elsewhere
-// If createRateLimiter is not globally available, you might need to import it
-// or define it here. For now, assuming it's available.
 function createRateLimiter(limit, interval) {
 	const requests = [];
 	return async (callback) => {
@@ -1274,101 +1454,6 @@ function createRateLimiter(limit, interval) {
 		return callback();
 	};
 }
-
-// Recommendation API
-export const recommendationAPI = {
-	getUserRecommendations: async (params = {}) => {
-		const queryString = new URLSearchParams({ type: 'users', limit: 10, ...params }).toString();
-		return await apiRequest(`/recommendations${queryString ? `?${queryString}` : ""}`);
-	},
-
-	getPostRecommendations: async (params = {}) => {
-		const queryString = new URLSearchParams({ type: 'posts', limit: 10, ...params }).toString();
-		return await apiRequest(`/recommendations${queryString ? `?${queryString}` : ""}`);
-	},
-
-	getTrendingHashtags: async (params = {}) => {
-		const queryString = new URLSearchParams({ limit: 10, ...params }).toString();
-		return await apiRequest(`/recommendations/trending${queryString ? `?${queryString}` : ""}`);
-	}
-};
-
-// Business/Ads API
-export const businessAPI = {
-	createCampaign: async (campaignData) => {
-		return await apiRequest("/business/campaigns", {
-			method: "POST",
-			data: campaignData,
-		});
-	},
-
-	getCampaigns: async (params = {}) => {
-		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/business/campaigns${queryString ? `?${queryString}` : ""}`);
-	},
-
-	getCampaignAnalytics: async (campaignId) => {
-		return await apiRequest(`/business/campaigns/${campaignId}/analytics`);
-	},
-
-	trackAdInteraction: async (interactionData) => {
-		return await apiRequest("/business/track", {
-			method: "POST",
-			data: interactionData,
-		});
-	},
-
-	getDashboard: async () => {
-		return await apiRequest("/business/dashboard");
-	}
-};
-
-// Enhanced Analytics API
-export const enhancedAnalyticsAPI = {
-	getUserAnalytics: async (period = "30d") => {
-		return await apiRequest(`/analytics/user?period=${period}&includeGrowth=true&includeMonetization=true`);
-	},
-
-	getPostAnalytics: async (postId) => {
-		return await apiRequest(`/analytics/post/${postId}`);
-	},
-
-	getPlatformAnalytics: async () => {
-		return await apiRequest("/analytics/platform");
-	},
-
-	getGrowthAnalytics: async (period = "30d") => {
-		return await apiRequest(`/analytics/growth?period=${period}`);
-	},
-
-	getMonetizationAnalytics: async (period = "30d") => {
-		return await apiRequest(`/analytics/monetization?period=${period}`);
-	}
-};
-
-// ActivityPub API
-export const activityPubAPI = {
-	getWebfinger: async (resource) => {
-		return await apiRequest(`/.well-known/webfinger?resource=${encodeURIComponent(resource)}`);
-	},
-
-	getUserActor: async (username) => {
-		return await apiRequest(`/activitypub/users/${username}`, {
-			headers: {
-				'Accept': 'application/activity+json'
-			}
-		});
-	},
-
-	getUserOutbox: async (username, page = null) => {
-		const url = `/activitypub/users/${username}/outbox${page ? `?page=${page}` : ''}`;
-		return await apiRequest(url, {
-			headers: {
-				'Accept': 'application/activity+json'
-			}
-		});
-	}
-};
 
 // Export commonly used rate limiters
 export const searchRateLimiter = createRateLimiter(10, 60000); // 10 requests per minute
