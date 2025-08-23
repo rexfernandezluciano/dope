@@ -11,7 +11,7 @@ import {
 // Make authenticated API request
 const makeRequest = async (url, options = {}) => {
   const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-  
+
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
@@ -29,22 +29,50 @@ const makeRequest = async (url, options = {}) => {
       ? ["", "https://api.dopp.eu.org"]
       : [""];
 
-  const baseUrl = API_ENDPOINTS[0] || API_ENDPOINTS[1];
-  
-  const response = await fetch(`${baseUrl}${url}`, {
-    ...options,
-    headers: defaultOptions.headers
-  });
+  // Always use proxy (empty string) first, then fallback to direct API
+  let baseUrl = API_ENDPOINTS[0] || "";
+  let lastError;
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const error = new Error(errorData.message || `HTTP ${response.status}`);
-    error.status = response.status;
-    error.data = errorData;
-    throw error;
+  // Try proxy first
+  try {
+    const response = await fetch(`${baseUrl}${url}`, {
+      ...options,
+      headers: defaultOptions.headers
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    lastError = error;
+    console.log("Proxy request failed, trying direct API...", error.message);
   }
 
-  return response.json();
+  // Try direct API if proxy fails
+  if (API_ENDPOINTS[1]) {
+    try {
+      baseUrl = API_ENDPOINTS[1];
+      const response = await fetch(`${baseUrl}${url}`, {
+        ...options,
+        headers: defaultOptions.headers
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.log(`Direct API request failed for ${baseUrl}:`, error.message);
+    }
+  }
+
+  // All endpoints failed
+  throw lastError || new Error("All API endpoints failed");
 };
 
 // Content moderation utilities
