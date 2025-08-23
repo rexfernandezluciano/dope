@@ -228,7 +228,7 @@ const BusinessPage = () => {
 									</Col>
 									<Col md={3}>
 										<Card
-											className="border-0 bg-gradient text-white position-relative cursor-pointer"
+											className="border-0 bg-gradient text-black position-relative cursor-pointer"
 											style={{
 												background:
 													"linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -667,7 +667,7 @@ const BusinessPage = () => {
 					<Modal.Body>
 						<p>
 							Your current credits:{" "}
-							<strong>{credits.creditsDisplay.toFixed(1)}</strong>
+							<strong>{credits.credits?.toFixed(1)}</strong>
 						</p>
 						<Form.Group className="mb-3">
 							<Form.Label>Amount of Credits to Purchase</Form.Label>
