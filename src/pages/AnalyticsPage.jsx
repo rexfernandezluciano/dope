@@ -1,4 +1,3 @@
-
 /** @format */
 
 import React, { useState, useEffect } from "react";
@@ -368,17 +367,24 @@ const AnalyticsPage = () => {
 		</>
 	);
 
-	const renderMonetizationTab = () => (
+	const renderMonetizationTab = () => {
+		const totalRevenue = analytics?.overview?.totalEarnings || 0;
+		const totalSubscriptions = analytics?.overview?.totalSubscriptions || 0; // Assuming this data exists
+		const followers = analytics?.overview?.currentFollowers || 0;
+		const revenueGrowth = 15.2; // Placeholder, replace with actual calculation
+		const growthRate = revenueGrowth; // Using revenueGrowth as a placeholder for simplicity
+
+		return (
 		<>
 			<Row className="mb-4">
 				<Col md={3} className="mb-3">
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Body className="text-center">
 							<h3 className="text-success mb-1">
-								${analytics?.overview?.totalEarnings?.toFixed(2) || "0.00"}
+								${totalRevenue.toFixed(2)}
 							</h3>
 							<p className="text-muted mb-0">Total Revenue</p>
-							<small className="text-success">+12.5% vs last month</small>
+							<small className="text-success">{revenueGrowth >= 0 ? '+' : ''}{revenueGrowth.toFixed(1)}% vs last month</small>
 						</Card.Body>
 					</Card>
 				</Col>
@@ -386,7 +392,7 @@ const AnalyticsPage = () => {
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Body className="text-center">
 							<h3 className="text-info mb-1">
-								${(analytics?.overview?.totalEarnings * 0.6)?.toFixed(2) || "0.00"}
+								${(totalRevenue * 0.6).toFixed(2)}
 							</h3>
 							<p className="text-muted mb-0">Ad Revenue</p>
 							<small className="text-muted">60% of total</small>
@@ -397,7 +403,7 @@ const AnalyticsPage = () => {
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Body className="text-center">
 							<h3 className="text-warning mb-1">
-								${(analytics?.overview?.totalEarnings * 0.3)?.toFixed(2) || "0.00"}
+								${(totalRevenue * 0.3).toFixed(2)}
 							</h3>
 							<p className="text-muted mb-0">Subscriptions</p>
 							<small className="text-muted">30% of total</small>
@@ -408,10 +414,61 @@ const AnalyticsPage = () => {
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Body className="text-center">
 							<h3 className="text-purple mb-1">
-								${(analytics?.overview?.totalEarnings * 0.1)?.toFixed(2) || "0.00"}
+								${(totalRevenue * 0.1).toFixed(2)}
 							</h3>
 							<p className="text-muted mb-0">Tips & Donations</p>
 							<small className="text-muted">10% of total</small>
+						</Card.Body>
+					</Card>
+				</Col>
+			</Row>
+
+			<Row className="mb-4">
+				<Col lg={12}>
+					<Card className="border-0 shadow-sm">
+						<Card.Header>
+							<h5 className="mb-0">Revenue Performance Metrics</h5>
+						</Card.Header>
+						<Card.Body>
+							<Row>
+								<Col md={3} className="mb-3">
+									<div className="text-center p-3 bg-light rounded">
+										<h6 className="text-muted mb-1">RPM (Revenue per Mille)</h6>
+										<h4 className="text-primary mb-0">
+											${analytics?.overview?.totalViews > 0 ? ((totalRevenue / analytics.overview.totalViews) * 1000).toFixed(2) : '0.00'}
+										</h4>
+										<small className="text-muted">Per 1000 views</small>
+									</div>
+								</Col>
+								<Col md={3} className="mb-3">
+									<div className="text-center p-3 bg-light rounded">
+										<h6 className="text-muted mb-1">ARPU</h6>
+										<h4 className="text-success mb-0">
+											${analytics?.overview?.currentFollowers > 0 ? (totalRevenue / analytics.overview.currentFollowers).toFixed(2) : '0.00'}
+										</h4>
+										<small className="text-muted">Average Revenue Per User</small>
+									</div>
+								</Col>
+								<Col md={3} className="mb-3">
+									<div className="text-center p-3 bg-light rounded">
+										<h6 className="text-muted mb-1">Conversion Rate</h6>
+										<h4 className="text-warning mb-0">
+											{analytics?.overview?.currentFollowers > 0 && totalSubscriptions > 0 ? 
+												((totalSubscriptions / analytics.overview.currentFollowers) * 100).toFixed(2) : '0.00'}%
+										</h4>
+										<small className="text-muted">Followers to subscribers</small>
+									</div>
+								</Col>
+								<Col md={3} className="mb-3">
+									<div className="text-center p-3 bg-light rounded">
+										<h6 className="text-muted mb-1">Monthly Growth</h6>
+										<h4 className={`mb-0 ${growthRate >= 0 ? 'text-success' : 'text-danger'}`}>
+											{growthRate >= 0 ? '+' : ''}{growthRate.toFixed(1)}%
+										</h4>
+										<small className="text-muted">Revenue trend</small>
+									</div>
+								</Col>
+							</Row>
 						</Card.Body>
 					</Card>
 				</Col>
@@ -480,7 +537,7 @@ const AnalyticsPage = () => {
 							<hr />
 							<div className="text-center">
 								<h5 className="text-success mb-1">
-									${analytics?.overview?.totalEarnings?.toFixed(2) || "0.00"}
+									${totalRevenue.toFixed(2)}
 								</h5>
 								<small className="text-muted">Total this period</small>
 							</div>
@@ -490,6 +547,7 @@ const AnalyticsPage = () => {
 			</Row>
 		</>
 	);
+	}
 
 	return (
 		<Container className="py-4">
