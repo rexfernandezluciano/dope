@@ -545,7 +545,7 @@ const AnalyticsPage = () => {
 
 	return (
 		<Container className="py-4">
-			<div className="d-flex justify-content-between align-items-center mb-4">
+			<div className="d-flex justify-content-between align-items-center px-3 mb-4">
 				<h2 className="mb-0">Analytics Dashboard</h2>
 				<div className="d-flex gap-2">
 					{['7d', '30d', '90d'].map(period => (
