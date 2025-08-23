@@ -33,6 +33,8 @@ const LiveStreamPage = lazy(() => import("../pages/LiveStreamPage"));
 const PrivacyPolicyPage = lazy(() => import("../pages/PrivacyPolicyPage"));
 const TermsOfServicePage = lazy(() => import("../pages/TermsOfServicePage"));
 const NetworkTestPage = lazy(() => import("../pages/NetworkTestPage"));
+const DeveloperPage = lazy(() => import("../pages/DeveloperPage"));
+const BusinessPage = lazy(() => import("../pages/BusinessPage"));
 
 const router = createBrowserRouter([
 	{
@@ -215,6 +217,30 @@ const router = createBrowserRouter([
 	{
 		path: "/network-test",
 		element: <NetworkTestPage />,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/developer",
+		element: (
+			<RequireAuth>
+				<NavigationView>
+					<DeveloperPage />
+				</NavigationView>
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/business",
+		element: (
+			<RequireAuth>
+				<NavigationView>
+					<BusinessPage />
+				</NavigationView>
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
 		hydrateFallbackElement: <LoadingView />,
 	},
 ]);

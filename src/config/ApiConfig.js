@@ -1,4 +1,3 @@
-
 /** @format */
 
 import Cookies from "js-cookie";
@@ -547,11 +546,11 @@ export const oauthAPI = {
 			redirect_uri: redirectUri,
 			scope: scope,
 		});
-		
+
 		if (state) {
 			params.append("state", state);
 		}
-		
+
 		return `${API_BASE_URL}/v1/oauth/authorize?${params.toString()}`;
 	},
 };
@@ -843,7 +842,7 @@ export const pollAPI = {
 export const imageAPI = {
 	uploadImages: async (imageFiles) => {
 		const formData = new FormData();
-		
+
 		// Handle single file or array of files
 		if (Array.isArray(imageFiles)) {
 			imageFiles.forEach((file, index) => {
@@ -1082,32 +1081,21 @@ export const analyticsAPI = {
 
 // Business/Advertising API
 export const businessAPI = {
-	createCampaign: async (campaignData) => {
-		return await apiRequest("/business/campaigns", {
-			method: "POST",
-			data: campaignData,
-		});
-	},
+	// Dashboard
+	getDashboard: () => api.get("/business/dashboard"),
 
-	getCampaigns: async (params = {}) => {
-		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/business/campaigns${queryString ? `?${queryString}` : ""}`);
-	},
+	// Ad Campaigns
+	getCampaigns: () => api.get("/business/campaigns"),
+	createCampaign: (data) => api.post("/business/campaigns", data),
+	updateCampaign: (id, data) => api.put(`/business/campaigns/${id}`, data),
+	deleteCampaign: (id) => api.delete(`/business/campaigns/${id}`),
+	getCampaign: (id) => api.get(`/business/campaigns/${id}`),
+	pauseCampaign: (id) => api.post(`/business/campaigns/${id}/pause`),
+	resumeCampaign: (id) => api.post(`/business/campaigns/${id}/resume`),
 
-	getCampaignAnalytics: async (campaignId) => {
-		return await apiRequest(`/business/campaigns/${campaignId}/analytics`);
-	},
-
-	trackAdInteraction: async (interactionData) => {
-		return await apiRequest("/business/track", {
-			method: "POST",
-			data: interactionData,
-		});
-	},
-
-	getDashboard: async () => {
-		return await apiRequest("/business/dashboard");
-	}
+	// Analytics
+	getCampaignAnalytics: (id, params) => api.get(`/business/campaigns/${id}/analytics`, { params }),
+	getOverallAnalytics: (params) => api.get("/business/analytics", { params }),
 };
 
 // Payment API

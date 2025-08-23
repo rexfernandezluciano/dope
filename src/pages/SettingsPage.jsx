@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Container, Nav, Button } from "react-bootstrap";
+import { Container, Nav, Button, Tab } from "react-bootstrap";
 import {
 	ChevronLeft,
 	Person,
@@ -19,6 +19,8 @@ import ProfileSettingsPage from "./settings/ProfileSettingsPage";
 import PrivacySettingsPage from "./settings/PrivacySettingsPage";
 import NotificationSettingsPage from "./settings/NotificationSettingsPage";
 import SessionSettingsPage from "./settings/SessionSettingsPage";
+import OAuthAppsPage from "./settings/OAuthAppsPage"; // Assuming this component exists
+import OAuthConsentPage from "./settings/OAuthConsentPage"; // Assuming this component exists
 import { authAPI } from "../config/ApiConfig";
 import { removeAuthToken } from "../config/ApiConfig";
 
@@ -64,6 +66,18 @@ const SettingsPage = () => {
 				label: "Sessions",
 				icon: <Shield size={20} />,
 				component: <SessionSettingsPage />,
+			},
+			{
+				key: "oauth-apps",
+				label: "OAuth Apps",
+				icon: <Shield size={20} />,
+				component: <OAuthAppsPage />,
+			},
+			{
+				key: "oauth-consent",
+				label: "Authorizations",
+				icon: <Shield size={20} />,
+				component: <OAuthConsentPage />,
 			},
 		],
 		[],
@@ -152,14 +166,22 @@ const SettingsPage = () => {
 
 				{/* Main Content */}
 				<div className="col-md-8 col-lg-9">
-					<div className="p-4">
-						<div className="d-flex align-items-center gap-2 mb-4">
-							{currentTab?.icon}
-							<h5 className="mb-0">{currentTab?.label}</h5>
-						</div>
+					<Tab.Container activeKey={activeTab}>
+						<div className="p-4">
+							<div className="d-flex align-items-center gap-2 mb-4">
+								{currentTab?.icon}
+								<h5 className="mb-0">{currentTab?.label}</h5>
+							</div>
 
-						{currentTab?.component}
-					</div>
+							<Tab.Content>
+								{settingsTabs.map((tab) => (
+									<Tab.Pane key={tab.key} eventKey={tab.key}>
+										{tab.component}
+									</Tab.Pane>
+								))}
+							</Tab.Content>
+						</div>
+					</Tab.Container>
 				</div>
 			</div>
 		</Container>
