@@ -42,6 +42,19 @@ const BusinessPage = () => {
 	const [showCreditsModal, setShowCreditsModal] = useState(false);
 	const [paymentMethodId, setPaymentMethodId] = useState("");
 	const [purchaseAmount, setPurchaseAmount] = useState(100);
+	const [campaignForm, setCampaignForm] = useState({
+		title: "",
+		description: "",
+		targetType: "post",
+		targetId: "",
+		budget: "",
+		duration: 7,
+		adType: "promotion",
+		targetAudience: {
+			age: [18, 65],
+			interests: [],
+		},
+	});
 
 	useEffect(() => {
 		updatePageMeta({
