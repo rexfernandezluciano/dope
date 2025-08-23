@@ -298,70 +298,54 @@ export const validateCommentContent = (content) => {
 
 // Utility for handling API errors
 export const handleAPIError = (error) => {
-  console.error('API Error:', error);
+	console.log('🚨 API Error Details:', {
+		name: error.name,
+		message: error.message,
+		status: error.status,
+		data: error.data,
+		stack: error.stack
+	});
 
-  const status = error.response?.status;
-  const data = error.response?.data;
-  
-  // Use server-provided error message if available
-  const serverMessage = data?.message || data?.error;
+	// Handle network errors
+	if (!error.status && (error.message?.includes('fetch') || error.message?.includes('Network'))) {
+		return 'Network connection failed. Please check your internet connection and try again.';
+	}
 
-  switch (status) {
-    case 400:
-      return serverMessage || 'Invalid request. Please check your input and try again.';
-    
-    case 401:
-      return serverMessage || 'Your session has expired. Please log in again.';
-    
-    case 403:
-      return serverMessage || 'You do not have permission to perform this action.';
-    
-    case 404:
-      return serverMessage || 'The requested resource was not found.';
-    
-    case 409:
-      // Handle specific conflict scenarios
-      if (serverMessage?.toLowerCase().includes('username')) {
-        return 'This username is already taken. Please choose a different one.';
-      } else if (serverMessage?.toLowerCase().includes('email')) {
-        return 'This email address is already registered. Please use a different email or try logging in.';
-      } else if (serverMessage?.toLowerCase().includes('already exists')) {
-        return serverMessage;
-      } else {
-        return serverMessage || 'This resource already exists. Please check your input.';
-      }
-    
-    case 422:
-      return serverMessage || 'Validation failed. Please check your input and try again.';
-    
-    case 429:
-      return serverMessage || 'Too many requests. Please wait a moment and try again.';
-    
-    case 500:
-      return 'Internal server error. Our team has been notified. Please try again later.';
-    
-    case 502:
-      return 'Service temporarily unavailable. Please try again in a few moments.';
-    
-    case 503:
-      return 'Service is currently under maintenance. Please try again later.';
-    
-    case 504:
-      return 'Request timeout. Please check your connection and try again.';
-    
-    default:
-      if (status >= 500) {
-        return serverMessage || 'Server error. Please try again later.';
-      } else if (status >= 400) {
-        return serverMessage || 'Request failed. Please check your input and try again.';
-      } else if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
-        return 'Network connection failed. Please check your internet connection and try again.';
-      } else if (error.message) {
-        return error.message;
-      } else {
-        return 'An unexpected error occurred. Please try again.';
-      }
-  }
+	// Handle specific HTTP status codes
+	switch (error.status) {
+		case 400:
+			return error.data?.message || error.message || 'Invalid request. Please check your input and try again.';
+		case 401:
+			return 'Your session has expired. Please log in again.';
+		case 403:
+			return 'You do not have permission to perform this action.';
+		case 404:
+			// Handle specific 404 cases
+			if (error.message?.includes('email') || error.message?.includes('account')) {
+				return 'No account found with this email address.';
+			}
+			return 'The requested resource was not found.';
+		case 409:
+			return error.data?.message || error.message || 'This action conflicts with existing data.';
+		case 422:
+			if (error.data?.details && Array.isArray(error.data.details)) {
+				return `Validation failed: ${error.data.details.join(', ')}`;
+			}
+			return error.data?.message || error.message || 'Validation failed. Please check your input.';
+		case 429:
+			// Handle rate limiting for password reset specifically
+			if (error.message?.includes('password') || error.message?.includes('reset')) {
+				return 'Too many password reset requests. Please wait before trying again.';
+			}
+			return 'Too many requests. Please wait a moment before trying again.';
+		case 500:
+		case 502:
+		case 503:
+		case 504:
+			return 'Server is temporarily unavailable. Please try again later.';
+		default:
+			return error.message || 'An unexpected error occurred. Please try again.';
+	}
 };
 
 // Rate limiting utilities

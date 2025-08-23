@@ -243,9 +243,19 @@ const LoginPage = () => {
 							</Button>
 						</div>
 
-						<p className="text-center mt-3 mb-0">
-							Don't have an account yet? <Link to="/auth/signup">Sign Up</Link>
-						</p>
+						<div className="text-center">
+							<p className="text-muted mb-2">
+								<Link to="/auth/forgot-password" className="text-decoration-none">
+									Forgot your password?
+								</Link>
+							</p>
+							<p className="text-muted mb-0">
+								Don't have an account?{" "}
+								<Link to="/auth/signup" className="text-decoration-none">
+									Sign up here
+								</Link>
+							</p>
+						</div>
 					</div>
 				</Col>
 			</Row>

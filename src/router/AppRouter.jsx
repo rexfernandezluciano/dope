@@ -35,6 +35,8 @@ const TermsOfServicePage = lazy(() => import("../pages/TermsOfServicePage"));
 const NetworkTestPage = lazy(() => import("../pages/NetworkTestPage"));
 const DeveloperPage = lazy(() => import("../pages/DeveloperPage"));
 const BusinessPage = lazy(() => import("../pages/BusinessPage"));
+const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
 
 const router = createBrowserRouter([
 	{
@@ -60,6 +62,16 @@ const router = createBrowserRouter([
 	{
 		path: "/auth/google/callback",
 		element: <GoogleCallbackPage />,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/auth/forgot-password",
+		element: <ForgotPasswordPage />,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/auth/reset-password",
+		element: <ResetPasswordPage />,
 		hydrateFallbackElement: <LoadingView />,
 	},
 	{

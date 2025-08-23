@@ -175,6 +175,18 @@ const getMetaData = (url, params = {}) => {
       keywords: "authentication, oauth, callback, DOPE Network",
       ogImage: "/logo512.png",
     },
+    "/auth/forgot-password": {
+      title: "Forgot Password - DOPE Network",
+      description: "Reset your DOPE Network password. Enter your email to receive reset instructions.",
+      keywords: "forgot password, password reset, recover account, DOPE Network",
+      ogImage: "/logo512.png",
+    },
+    "/auth/reset-password": {
+      title: "Reset Password - DOPE Network",
+      description: "Set a new password for your DOPE Network account.",
+      keywords: "reset password, new password, account recovery, DOPE Network",
+      ogImage: "/logo512.png",
+    },
   };
 
   return routes[url] || routes["/"];
