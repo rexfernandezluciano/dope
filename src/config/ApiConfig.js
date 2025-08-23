@@ -160,8 +160,10 @@ class HttpClient {
 			if (error.response) {
 				// Server error - API responded with error status
 				let errorMsg;
+				const status = error.response.status;
+				const data = error.response.data;
 
-				if (error.response.status === 405) {
+				if (status === 405) {
 					errorMsg = `Method ${options.method || "GET"} not allowed for ${endpoint}. Check if the endpoint supports this HTTP method.`;
 					console.log("🚨 405 Method Not Allowed Details:", {
 						requestedMethod: options.method || "GET",
@@ -169,19 +171,51 @@ class HttpClient {
 						allowedMethods: error.response.headers?.allow || "Not specified",
 						url: error.config?.url,
 					});
+				} else if (status === 409) {
+					// Handle conflict errors specifically
+					errorMsg = data?.message || data?.error || `Conflict error (${status})`;
+					console.log("🚨 409 Conflict Details:", {
+						endpoint,
+						message: data?.message,
+						details: data?.details,
+						url: error.config?.url,
+					});
+				} else if (status === 422) {
+					// Handle validation errors
+					errorMsg = data?.message || data?.error || "Validation failed";
+					if (data?.details && Array.isArray(data.details)) {
+						errorMsg += `: ${data.details.join(', ')}`;
+					}
+					console.log("🚨 422 Validation Error Details:", {
+						endpoint,
+						message: data?.message,
+						details: data?.details,
+						url: error.config?.url,
+					});
+				} else if (status >= 500) {
+					errorMsg = data?.message || error.response.statusText || `Server error (${status})`;
+					console.log("🚨 Server Error Details:", {
+						status,
+						endpoint,
+						message: data?.message,
+						url: error.config?.url,
+					});
 				} else {
-					errorMsg =
-						error.response.data?.message ||
-						error.response.statusText ||
-						`Server error (${error.response.status})`;
+					errorMsg = data?.message || error.response.statusText || `Request failed (${status})`;
 				}
 
-				console.log("🚨 Server Error Details:", {
-					status: error.response.status,
-					headers: error.response.headers,
-					data: error.response.data,
+				console.log("🚨 HTTP Error Response:", {
+					status,
+					statusText: error.response.statusText,
+					data,
+					url: error.config?.url,
 				});
-				throw new Error(errorMsg);
+				
+				// Create error with additional context
+				const apiError = new Error(errorMsg);
+				apiError.status = status;
+				apiError.data = data;
+				throw apiError;
 			} else if (error.request) {
 				// Network error - request was made but no response
 				console.log("🌐 Network Error Details:", {

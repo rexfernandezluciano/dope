@@ -36,8 +36,11 @@ export const useAuth = () => {
       setUser(response.user);
       return response;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      // Import the error handler to provide better error messages
+      const { handleAPIError } = await import('../utils/dope-api-utils');
+      const errorMessage = handleAPIError(err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -50,8 +53,11 @@ export const useAuth = () => {
       const response = await authAPI.register(userData);
       return response;
     } catch (err) {
-      setError(err.message);
-      throw err;
+      // Import the error handler to provide better error messages
+      const { handleAPIError } = await import('../utils/dope-api-utils');
+      const errorMessage = handleAPIError(err);
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
