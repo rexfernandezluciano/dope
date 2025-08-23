@@ -187,9 +187,11 @@ const SignUpPage = () => {
 
 					if (response.ok) {
 						const data = await response.json();
-						if (data.secure_url) {
+						if (data && data.secure_url && typeof data.secure_url === 'string') {
 							photoURL = data.secure_url;
 						}
+					} else {
+						console.warn("Cloudinary upload failed with status:", response.status);
 					}
 				} catch (uploadErr) {
 					console.error("Photo upload failed:", uploadErr);
