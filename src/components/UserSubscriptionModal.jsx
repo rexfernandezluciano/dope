@@ -24,31 +24,38 @@ const UserSubscriptionModal = ({ show, onHide, targetUser, currentUser }) => {
   const loadSubscriptionTiers = async () => {
     try {
       setLoading(true);
-      // Mock data - replace with actual API call when available
-      const tiers = [
-        {
-          id: 'basic',
-          name: 'Basic Support',
-          price: 100, // in PHP cents
-          description: 'Show your support',
-          benefits: ['Access to subscriber-only posts', 'Monthly thank you message']
-        },
-        {
-          id: 'premium',
-          name: 'Premium Support',
-          price: 500,
-          description: 'Strong support',
-          benefits: ['All basic benefits', 'Exclusive content', 'Direct messaging access']
-        },
-        {
-          id: 'vip',
-          name: 'VIP Support',
-          price: 1000,
-          description: 'Maximum support',
-          benefits: ['All premium benefits', 'Monthly video call', 'Priority responses']
-        }
-      ];
-      setSubscriptionTiers(tiers);
+      // Try to load from API, fallback to mock data
+      try {
+        const response = await subscriptionAPI.getSubscriptionTiers?.(targetUser.uid);
+        setSubscriptionTiers(response.tiers || []);
+      } catch (apiError) {
+        console.warn('API not available, using default tiers:', apiError);
+        // Fallback to default tiers
+        const tiers = [
+          {
+            id: 'basic',
+            name: 'Basic Support',
+            price: 100, // in PHP cents
+            description: 'Show your support',
+            benefits: ['Access to subscriber-only posts', 'Monthly thank you message']
+          },
+          {
+            id: 'premium',
+            name: 'Premium Support',
+            price: 500,
+            description: 'Strong support',
+            benefits: ['All basic benefits', 'Exclusive content', 'Direct messaging access']
+          },
+          {
+            id: 'vip',
+            name: 'VIP Support',
+            price: 1000,
+            description: 'Maximum support',
+            benefits: ['All premium benefits', 'Monthly video call', 'Priority responses']
+          }
+        ];
+        setSubscriptionTiers(tiers);
+      }
     } catch (error) {
       console.error('Failed to load subscription tiers:', error);
       setMessage('Failed to load subscription options');

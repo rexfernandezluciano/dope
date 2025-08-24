@@ -1473,24 +1473,24 @@ export const subscriptionAPI = {
 
 	// Creator subscription methods
 	subscribeToCreator: async (subscriptionData) => {
-		return await apiRequest("/subscriptions/creator/subscribe", {
+		return await apiRequest("/subscriptions/subscribe", {
 			method: "POST",
 			data: subscriptionData,
 		});
 	},
 
 	unsubscribeFromCreator: async (creatorId) => {
-		return await apiRequest(`/subscriptions/creator/${creatorId}/unsubscribe`, {
+		return await apiRequest(`/subscriptions/unsubscribe/${creatorId}`, {
 			method: "POST",
 		});
 	},
 
 	getCreatorSubscriptions: async () => {
-		return await apiRequest("/subscriptions/creator/my-subscriptions");
+		return await apiRequest("/subscriptions/my-subscriptions");
 	},
 
 	getSubscribers: async () => {
-		return await apiRequest("/subscriptions/creator/subscribers");
+		return await apiRequest("/subscriptions/subscribers");
 	},
 
 	sendTip: async (tipData) => {
@@ -1505,6 +1505,22 @@ export const subscriptionAPI = {
 			method: "POST",
 			data: donationData,
 		});
+	},
+
+	// Get subscription tiers for a creator
+	getSubscriptionTiers: async (creatorId) => {
+		return await apiRequest(`/subscriptions/tiers/${creatorId}`);
+	},
+
+	// Get subscription status with a creator
+	getSubscriptionStatus: async (creatorId) => {
+		return await apiRequest(`/subscriptions/status/${creatorId}`);
+	},
+
+	// Get subscription history
+	getSubscriptionHistory: async (params = {}) => {
+		const queryString = new URLSearchParams(params).toString();
+		return await apiRequest(`/subscriptions/history${queryString ? `?${queryString}` : ""}`);
 	},
 };
 

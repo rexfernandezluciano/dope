@@ -73,8 +73,9 @@ const ProfilePage = () => {
 	const [federatedActor, setFederatedActor] = useState(null);
 	const [showBlockModal, setShowBlockModal] = useState(false);
 	const [isBlocked, setIsBlocked] = useState(false);
-	const [showReportModal, setShowReportModal] = useState(false);
 	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+	const [showReportModal, setShowReportModal] = useState(false);
+	const [reportType, setReportType] = useState("user");
 
 	const navigate = useNavigate();
 
@@ -807,41 +808,30 @@ const ProfilePage = () => {
 						</div>
 					) : (
 						<div className="d-flex gap-2">
-							{isBlocked ? (
-								<Button
-									variant="outline-success"
-									size="sm"
-									onClick={handleUnblockUser}
-								>
-									Unblock
-								</Button>
-							) : (
-								<>
-									<Button
-										variant={isFollowing ? "outline-primary" : "primary"}
-										size="sm"
-										onClick={handleFollow}
-									>
-										{isFollowing ? "Following" : "Follow"}
-									</Button>
-									<Button
-										variant="outline-danger"
-										size="sm"
-										onClick={() => setShowBlockModal(true)}
-									>
-										Block
-									</Button>
-									<Button
-										variant="outline-primary"
-										size="sm"
-										className="me-2"
-										onClick={() => setShowSubscriptionModal(true)}
-									>
-										<Heart size={16} className="me-1" />
-										Subscribe
-									</Button>
-								</>
-							)}
+							<Button
+								variant={isFollowing ? "outline-primary" : "primary"}
+								size="sm"
+								onClick={handleFollow}
+								className="me-2"
+							>
+								{isFollowing ? "Following" : "Follow"}
+							</Button>
+							<Button
+								variant="outline-danger"
+								size="sm"
+								onClick={() => setShowBlockModal(true)}
+							>
+								Block
+							</Button>
+							<Button
+								variant="warning"
+								size="sm"
+								onClick={() => setShowSubscriptionModal(true)}
+								className="me-2"
+							>
+								<Heart size={16} className="me-1" />
+								Subscribe
+							</Button>
 						</div>
 					)}
 				</div>
@@ -1278,18 +1268,11 @@ const ProfilePage = () => {
 			<UserBlockModal
 				show={showBlockModal}
 				onHide={() => setShowBlockModal(false)}
-				user={profileUser}
+				targetUser={profileUser}
 				currentUser={currentUser}
 				onBlock={handleBlockUser}
 				onUnblock={handleUnblockUser}
 				isBlocked={isBlocked}
-			/>
-
-			<ReportModal
-				show={showReportModal}
-				onHide={() => setShowReportModal(false)}
-				targetUser={profileUser}
-				currentUser={currentUser}
 			/>
 
 			<UserSubscriptionModal
@@ -1297,6 +1280,14 @@ const ProfilePage = () => {
 				onHide={() => setShowSubscriptionModal(false)}
 				targetUser={profileUser}
 				currentUser={currentUser}
+			/>
+
+			<ReportModal
+				show={showReportModal}
+				onHide={() => setShowReportModal(false)}
+				type={reportType}
+				targetId={profileUser?.uid}
+				targetName={profileUser?.name}
 			/>
 		</Container>
 	);

@@ -26,6 +26,11 @@ const MySubscriptionsPage = () => {
       setSubscriptions(response.subscriptions || []);
     } catch (error) {
       console.error('Failed to load subscriptions:', error);
+      if (error.status === 404) {
+        setMessage('Subscription API not available. Please try again later.');
+        setMessageType('warning');
+      }
+      setSubscriptions([]); // Set empty array on error
     }
   };
 
@@ -35,6 +40,11 @@ const MySubscriptionsPage = () => {
       setSubscribers(response.subscribers || []);
     } catch (error) {
       console.error('Failed to load subscribers:', error);
+      if (error.status === 404) {
+        setMessage('Subscription API not available. Please try again later.');
+        setMessageType('warning');
+      }
+      setSubscribers([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -66,7 +76,7 @@ const MySubscriptionsPage = () => {
 
   return (
     <Container className="py-4">
-      <h2 className="mb-4">My Subscriptions</h2>
+      <h2 className="mb-4 px-4">My Subscriptions</h2>
 
       {message && (
         <Alert variant={messageType} dismissible onClose={() => setMessage('')}>

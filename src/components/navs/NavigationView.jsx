@@ -33,6 +33,7 @@ import {
 	Palette,
 	CurrencyDollar,
 	Heart,
+	Video,
 } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
@@ -574,6 +575,26 @@ const NavigationView = ({ children }) => {
 								{item.label}
 							</Link>
 						))}
+						<Nav.Link
+							as={Link}
+							to="/creator"
+							className={`${
+								location.pathname === "/creator" ? "active" : ""
+							} d-flex align-items-center gap-2`}
+						>
+							<Video size={20} />
+							Creator
+						</Nav.Link>
+						<Nav.Link
+							as={Link}
+							to="/subscriptions"
+							className={`${
+								location.pathname === "/subscriptions" ? "active" : ""
+							} d-flex align-items-center gap-2`}
+						>
+							<Heart size={20} />
+							Subscriptions
+						</Nav.Link>
 						<Nav.Link
 							onClick={handleLogout}
 							className="nav-link text-danger px-3 py-2 rounded-pill"
