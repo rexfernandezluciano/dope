@@ -93,7 +93,7 @@ class HttpClient {
 		// Add /v1 prefix if not already present, except for WebFinger and ActivityPub endpoints
 		const isWebFingerOrActivityPub = endpoint.startsWith("/.well-known") || 
 			endpoint.startsWith("/activitypub");
-		
+
 		const normalizedEndpoint = endpoint.startsWith("/v1") || isWebFingerOrActivityPub
 			? endpoint
 			: `/v1${endpoint}`;
@@ -190,7 +190,7 @@ class HttpClient {
 					// Handle rate limiting
 					const retryAfter = error.response.headers['retry-after'] || data?.retryAfter;
 					errorMsg = data?.message || "Rate limit exceeded";
-					
+
 					console.log("🚨 429 Rate Limit Details:", {
 						endpoint,
 						message: data?.message,
@@ -198,7 +198,7 @@ class HttpClient {
 						headers: error.response.headers,
 						url: error.config?.url,
 					});
-					
+
 					// Add retry information to error data for better handling
 					if (retryAfter) {
 						errorMsg += `. Please wait ${retryAfter} seconds before trying again.`;
@@ -221,17 +221,17 @@ class HttpClient {
 					data,
 					url: error.config?.url,
 				});
-				
+
 				// Create error with additional context
 				const apiError = new Error(errorMsg);
 				apiError.status = status;
 				apiError.data = data;
-				
+
 				// Add retry-after header for rate limiting
 				if (status === 429) {
 					apiError.retryAfter = error.response.headers['retry-after'] || data?.retryAfter;
 				}
-				
+
 				throw apiError;
 			} else if (error.request) {
 				// Network error - request was made but no response
@@ -830,11 +830,13 @@ export const postAPI = {
 		});
 	},
 
-	getPosts: async (params = {}) => {
-		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/posts${queryString ? `?${queryString}` : ""}`, {
-			method: "GET",
+	getPosts: async (page = 1, limit = 20, params = {}) => {
+		const queryParams = new URLSearchParams({
+			page: page.toString(),
+			limit: limit.toString(),
+			...params
 		});
+		return apiRequest(`/v1/posts?${queryParams.toString()}`);
 	},
 
 	getPost: async (postId) => {
@@ -1222,37 +1224,37 @@ export const businessAPI = {
 	getCampaigns: async () => {
 		return await apiRequest("/business/campaigns", { method: "GET" });
 	},
-	
+
 	createCampaign: async (data) => {
 		return await apiRequest("/business/campaigns", {
 			method: "POST",
 			data: data,
 		});
 	},
-	
+
 	updateCampaign: async (id, data) => {
 		return await apiRequest(`/business/campaigns/${id}`, {
 			method: "PUT",
 			data: data,
 		});
 	},
-	
+
 	deleteCampaign: async (id) => {
 		return await apiRequest(`/business/campaigns/${id}`, {
 			method: "DELETE",
 		});
 	},
-	
+
 	getCampaign: async (id) => {
 		return await apiRequest(`/business/campaigns/${id}`, { method: "GET" });
 	},
-	
+
 	pauseCampaign: async (id) => {
 		return await apiRequest(`/business/campaigns/${id}/pause`, {
 			method: "POST",
 		});
 	},
-	
+
 	resumeCampaign: async (id) => {
 		return await apiRequest(`/business/campaigns/${id}/resume`, {
 			method: "POST",
@@ -1267,7 +1269,7 @@ export const businessAPI = {
 			{ method: "GET" }
 		);
 	},
-	
+
 	getOverallAnalytics: async (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
 		return await apiRequest(

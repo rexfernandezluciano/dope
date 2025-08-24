@@ -696,7 +696,7 @@ const HomePage = () => {
 											}}
 										/>
 									)}
-									
+
 									{/* Show advertisement every few posts */}
 									{showAds && index > 0 && index % adInterval === 0 && (
 										<Advertisement 
@@ -705,7 +705,7 @@ const HomePage = () => {
 											onClose={() => setShowAds(false)}
 										/>
 									)}
-									
+
 									<PostCard
 										key={post.id}
 										post={post}
