@@ -3,14 +3,13 @@
 
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Tab, Tabs } from "react-bootstrap";
-import { analyticsAPI, businessAPI, subscriptionAPI } from "../config/ApiConfig";
+import { analyticsAPI, subscriptionAPI } from "../config/ApiConfig";
 import { formatTimeAgo, formatCurrency } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
 const AnalyticsPage = () => {
 	const [analytics, setAnalytics] = useState(null);
-	const [businessDashboard, setBusinessDashboard] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [selectedPeriod, setSelectedPeriod] = useState("30d");
@@ -35,14 +34,12 @@ const AnalyticsPage = () => {
 	const loadAnalytics = async () => {
 		try {
 			setLoading(true);
-			const [userAnalytics, businessData, subscriberData] = await Promise.all([
+			const [userAnalytics, subscriberData] = await Promise.all([
 				analyticsAPI.getUserAnalytics(selectedPeriod),
-				businessAPI.getDashboard().catch(() => null),
 				subscriptionAPI.getSubscribers().catch(() => ({ subscribers: [], stats: {} }))
 			]);
 
 			setAnalytics(userAnalytics);
-			setBusinessDashboard(businessData);
 			setSubscribers(subscriberData.subscribers || []);
 			setSubscriberStats(subscriberData.stats || {});
 		} catch (err) {
@@ -798,34 +795,7 @@ const AnalyticsPage = () => {
 				</Card>
 			)}
 
-			{/* Business Dashboard if available */}
-			{businessDashboard && (
-				<Card className="border-0 shadow-sm mt-4">
-					<Card.Header>
-						<h6 className="mb-0">Business Analytics</h6>
-					</Card.Header>
-					<Card.Body>
-						<Row className="g-3">
-							<Col xs={6} md={3} className="text-center">
-								<h5 className="text-primary">{businessDashboard.overview?.totalCampaigns || 0}</h5>
-								<small className="text-muted">Total Campaigns</small>
-							</Col>
-							<Col xs={6} md={3} className="text-center">
-								<h5 className="text-success">${businessDashboard.overview?.totalSpent?.toFixed(2) || '0.00'}</h5>
-								<small className="text-muted">Total Spent</small>
-							</Col>
-							<Col xs={6} md={3} className="text-center">
-								<h5 className="text-info">{formatNumber(businessDashboard.analytics?.totalImpressions || 0)}</h5>
-								<small className="text-muted">Impressions</small>
-							</Col>
-							<Col xs={6} md={3} className="text-center">
-								<h5 className="text-warning">{businessDashboard.analytics?.averageCTR?.toFixed(2) || 0}%</h5>
-								<small className="text-muted">Average CTR</small>
-							</Col>
-						</Row>
-					</Card.Body>
-				</Card>
-			)}
+			
 		</Container>
 	);
 };
