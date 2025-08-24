@@ -2,16 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useLoaderData, useNavigate } from "react-router-dom";
-import {
-	Container,
-	Card,
-	Image,
-	Button,
-	Form,
-	Alert,
-	Spinner,
-	Modal,
-} from "react-bootstrap";
+import { Container, Card, Image, Button, Form, Alert, Spinner, Modal } from "react-bootstrap";
 import {
 	ArrowLeft,
 	Heart,
@@ -32,17 +23,10 @@ import {
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import CommentItem from "../components/CommentItem";
-import {
-	formatTimeAgo,
-	deletePost as deletePostUtil,
-	sharePost,
-} from "../utils/common-utils";
+import { formatTimeAgo, deletePost as deletePostUtil, sharePost } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
-import {
-	handleLikeNotification,
-	handleCommentNotification,
-} from "../utils/notification-helpers";
+import { handleLikeNotification, handleCommentNotification } from "../utils/notification-helpers";
 import { replyAPI, likeAPI } from "../config/ApiConfig";
 
 const PostDetailPage = () => {
@@ -56,6 +40,7 @@ const PostDetailPage = () => {
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState("");
+	const [commentError, setCommentError] = useState("");
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
@@ -76,9 +61,9 @@ const PostDetailPage = () => {
 	const [editingCommentId, setEditingCommentId] = useState(null);
 	const [editingCommentText, setEditingCommentText] = useState("");
 	// State for comment tip/donation
-	const [commentMode, setCommentMode] = useState('comment'); // 'comment', 'tip', 'donation'
-	const [commentTipAmount, setCommentTipAmount] = useState('');
-	const [commentDonationAmount, setCommentDonationAmount] = useState('');
+	const [commentMode, setCommentMode] = useState("comment"); // 'comment', 'tip', 'donation'
+	const [commentTipAmount, setCommentTipAmount] = useState("");
+	const [commentDonationAmount, setCommentDonationAmount] = useState("");
 	const [commentIsAnonymous, setCommentIsAnonymous] = useState(false);
 
 	const loadPost = useCallback(async () => {
@@ -149,9 +134,9 @@ const PostDetailPage = () => {
 	useEffect(() => {
 		if (post && currentUser) {
 			if (post.author.uid !== currentUser.uid) {
-				setCommentMode('tip'); // Default to tip for others' posts
+				setCommentMode("tip"); // Default to tip for others' posts
 			} else {
-				setCommentMode('comment'); // Default to comment for own posts
+				setCommentMode("comment"); // Default to comment for own posts
 			}
 		}
 	}, [post, currentUser]);
@@ -162,7 +147,7 @@ const PostDetailPage = () => {
 			updatePageMeta({
 				title: `Post by ${post.author.name} - DOPE Network`,
 				description: post.content ? `${post.content.substring(0, 160)}...` : "View post on DOPE Network",
-				keywords: `post, content, ${post.author.name}, DOPE Network, social media`
+				keywords: `post, content, ${post.author.name}, DOPE Network, social media`,
 			});
 		}
 	}, [post]);
@@ -172,12 +157,10 @@ const PostDetailPage = () => {
 			const response = await postAPI.likePost(postId);
 
 			// Update post state locally based on the liked response
-			setPost((prevPost) => {
+			setPost(prevPost => {
 				if (!prevPost) return prevPost;
 
-				const isCurrentlyLiked = prevPost.likes.some(
-					(like) => like.user.uid === currentUser.uid,
-				);
+				const isCurrentlyLiked = prevPost.likes.some(like => like.user.uid === currentUser.uid);
 
 				if (response.liked && !isCurrentlyLiked) {
 					// Add like
@@ -193,9 +176,7 @@ const PostDetailPage = () => {
 					// Remove like
 					return {
 						...prevPost,
-						likes: prevPost.likes.filter(
-							(like) => like.user.uid !== currentUser.uid,
-						),
+						likes: prevPost.likes.filter(like => like.user.uid !== currentUser.uid),
 						stats: {
 							...prevPost.stats,
 							likes: prevPost.stats.likes - 1,
@@ -207,9 +188,7 @@ const PostDetailPage = () => {
 			});
 
 			// Send like notification to post owner only when user actually likes (not unlikes)
-			const wasLiked = post.likes.some(
-				(like) => like.user.uid === currentUser.uid,
-			);
+			const wasLiked = post.likes.some(like => like.user.uid === currentUser.uid);
 			if (response.liked && !wasLiked) {
 				try {
 					await handleLikeNotification(postId, post, currentUser);
@@ -223,20 +202,20 @@ const PostDetailPage = () => {
 	};
 
 	// Replaced handleSharePost with the reusable sharePost utility
-	const handleSharePost = async (postId) => {
+	const handleSharePost = async postId => {
 		const postUrl = `${window.location.origin}/post/${postId}`;
 		await sharePost(postUrl);
 	};
 
-	const handleHashtagClick = (hashtag) => {
+	const handleHashtagClick = hashtag => {
 		navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=comments`);
 	};
 
-	const handleMentionClick = (username) => {
+	const handleMentionClick = username => {
 		navigate(`/${username}`);
 	};
 
-	const handleLinkClick = (url) => {
+	const handleLinkClick = url => {
 		window.open(url, "_blank", "noopener,noreferrer");
 	};
 
@@ -248,9 +227,7 @@ const PostDetailPage = () => {
 			await commentAPI.deleteComment(commentToDelete);
 
 			// Remove the comment from local state
-			setComments(prevComments =>
-				prevComments.filter(comment => comment.id !== commentToDelete)
-			);
+			setComments(prevComments => prevComments.filter(comment => comment.id !== commentToDelete));
 
 			// Clean up replies for the deleted comment
 			setReplies(prevReplies => {
@@ -258,7 +235,6 @@ const PostDetailPage = () => {
 				delete newReplies[commentToDelete];
 				return newReplies;
 			});
-
 		} catch (err) {
 			console.error("Error deleting comment:", err);
 			setError("Failed to delete comment");
@@ -290,7 +266,7 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const handleDeletePost = (postId) => {
+	const handleDeletePost = postId => {
 		setPostToDelete(postId);
 		setShowDeleteDialog(true);
 	};
@@ -335,7 +311,7 @@ const PostDetailPage = () => {
 		setCurrentImageIndex(0);
 	};
 
-	const canComment = (post) => {
+	const canComment = post => {
 		if (!currentUser) return false;
 
 		// Post owner can always comment
@@ -355,42 +331,62 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const getPrivacyIcon = (privacy) => {
+	const getPrivacyIcon = privacy => {
 		switch (privacy) {
 			case "public":
-				return <Globe size={14} className="text-muted" />;
+				return (
+					<Globe
+						size={14}
+						className="text-muted"
+					/>
+				);
 			case "private":
-				return <Lock size={14} className="text-muted" />;
+				return (
+					<Lock
+						size={14}
+						className="text-muted"
+					/>
+				);
 			case "followers":
-				return <PersonFill size={14} className="text-muted" />;
+				return (
+					<PersonFill
+						size={14}
+						className="text-muted"
+					/>
+				);
 			default:
-				return <Globe size={14} className="text-muted" />;
+				return (
+					<Globe
+						size={14}
+						className="text-muted"
+					/>
+				);
 		}
 	};
 
-	const handleSubmitComment = async (e) => {
+	const handleSubmitComment = async e => {
 		e.preventDefault();
 		if (!newComment.trim()) return;
 
 		try {
 			setSubmitting(true);
-			
+
 			let requestBody = {
 				content: newComment.trim(),
 			};
 
 			// Add tip data if applicable
-			if (commentMode === 'tip' && commentTipAmount) {
+			if (commentMode === "tip" && commentTipAmount) {
 				requestBody.tipAmount = parseInt(commentTipAmount);
 				requestBody.receiverId = post.author.uid;
 			}
 
 			const response = await commentAPI.createComment(postId, requestBody);
-			console.log('Comment API Response:', response); // Debug log
+			console.log("Comment API Response:", response); // Debug log
 
 			// Handle different response structures
 			const commentData = response.comment || response;
-			
+
 			// Ensure the comment has a proper structure
 			const newCommentObj = {
 				id: commentData.id || `temp_${Date.now()}`,
@@ -409,21 +405,21 @@ const PostDetailPage = () => {
 				},
 				stats: commentData.stats || {
 					likes: 0,
-					replies: 0
+					replies: 0,
 				},
 				likes: commentData.likes || [],
 				replies: commentData.replies || [],
-				tipAmount: commentMode === 'tip' && commentTipAmount ? parseInt(commentTipAmount) : undefined,
-				donationAmount: commentMode === 'donation' && commentDonationAmount ? parseInt(commentDonationAmount) : undefined
+				tipAmount: commentMode === "tip" && commentTipAmount ? parseInt(commentTipAmount) : undefined,
+				donationAmount: commentMode === "donation" && commentDonationAmount ? parseInt(commentDonationAmount) : undefined,
 			};
 
 			// Add to comments list
-			setComments((prevComments) => [newCommentObj, ...prevComments]);
-			
+			setComments(prevComments => [newCommentObj, ...prevComments]);
+
 			// Initialize replies for the new comment
 			setReplies(prevReplies => ({
 				...prevReplies,
-				[newCommentObj.id]: []
+				[newCommentObj.id]: [],
 			}));
 
 			// Update post comment count
@@ -431,43 +427,38 @@ const PostDetailPage = () => {
 				...prevPost,
 				stats: {
 					...prevPost.stats,
-					comments: (prevPost.stats?.comments || 0) + 1
-				}
+					comments: (prevPost.stats?.comments || 0) + 1,
+				},
 			}));
 
 			// Send comment notification to post owner
 			try {
 				await handleCommentNotification(postId, post, currentUser, newComment);
 			} catch (notificationError) {
-				console.error(
-					"Failed to send comment notification:",
-					notificationError,
-				);
+				console.error("Failed to send comment notification:", notificationError);
 			}
 
 			// Reset form
 			setNewComment("");
-			setCommentMode(post && currentUser && post.author.uid !== currentUser.uid ? 'tip' : 'comment');
-			setCommentTipAmount('');
-			setError(''); // Clear any previous errors
+			setCommentMode(post && currentUser && post.author.uid !== currentUser.uid ? "tip" : "comment");
+			setCommentTipAmount("");
+			setError(""); // Clear any previous errors
 		} catch (err) {
-			console.error('Failed to create comment:', err);
-			setError(err.message || 'Failed to create comment');
+			console.error("Failed to create comment:", err);
+			setCommentError(err.message || "Failed to create comment");
 		} finally {
 			setSubmitting(false);
 		}
 	};
 
-	const handleLikeComment = async (commentId) => {
+	const handleLikeComment = async commentId => {
 		try {
 			const response = await likeAPI.likeComment(commentId);
 
 			setComments(prevComments =>
 				prevComments.map(comment => {
 					if (comment.id === commentId) {
-						const isCurrentlyLiked = comment.likes?.some(
-							like => like.user.uid === currentUser.uid
-						);
+						const isCurrentlyLiked = comment.likes?.some(like => like.user.uid === currentUser.uid);
 
 						if (response.liked && !isCurrentlyLiked) {
 							return {
@@ -475,51 +466,49 @@ const PostDetailPage = () => {
 								likes: [...(comment.likes || []), { user: { uid: currentUser.uid } }],
 								stats: {
 									...comment.stats,
-									likes: (comment.stats?.likes || 0) + 1
-								}
+									likes: (comment.stats?.likes || 0) + 1,
+								},
 							};
 						} else if (!response.liked && isCurrentlyLiked) {
 							return {
 								...comment,
-								likes: (comment.likes || []).filter(
-									like => like.user.uid !== currentUser.uid
-								),
+								likes: (comment.likes || []).filter(like => like.user.uid !== currentUser.uid),
 								stats: {
 									...comment.stats,
-									likes: Math.max(0, (comment.stats?.likes || 0) - 1)
-								}
+									likes: Math.max(0, (comment.stats?.likes || 0) - 1),
+								},
 							};
 						}
 					}
 					return comment;
-				})
+				}),
 			);
 		} catch (error) {
 			console.error("Failed to like comment:", error);
 		}
 	};
 
-	const toggleReplyForm = (commentId) => {
+	const toggleReplyForm = commentId => {
 		setShowReplyForms(prev => ({
 			...prev,
-			[commentId]: !prev[commentId]
+			[commentId]: !prev[commentId],
 		}));
 	};
 
 	const handleReplyTextChange = (commentId, text) => {
 		setReplyTexts(prev => ({
 			...prev,
-			[commentId]: text
+			[commentId]: text,
 		}));
 	};
 
-	const handleSubmitReply = async (commentId, replyText, type = 'reply') => {
+	const handleSubmitReply = async (commentId, replyText, type = "reply") => {
 		if (!replyText?.trim()) return;
 
 		try {
 			let response;
-			
-			if (type === 'tip' || type === 'donation') {
+
+			if (type === "tip" || type === "donation") {
 				// For tips and donations, the comment has already been created
 				// Just refresh the comments
 				await loadPost();
@@ -528,7 +517,7 @@ const PostDetailPage = () => {
 
 			// Regular reply
 			response = await replyAPI.createReply(commentId, {
-				content: replyText.trim()
+				content: replyText.trim(),
 			});
 
 			const newReply = {
@@ -544,15 +533,15 @@ const PostDetailPage = () => {
 					hasBlueCheck: currentUser.hasBlueCheck || false,
 				},
 				stats: {
-					likes: 0
+					likes: 0,
 				},
-				likes: []
+				likes: [],
 			};
 
 			// Add to replies
 			setReplies(prev => ({
 				...prev,
-				[commentId]: [newReply, ...(prev[commentId] || [])]
+				[commentId]: [newReply, ...(prev[commentId] || [])],
 			}));
 
 			// Update comment reply count
@@ -563,13 +552,12 @@ const PostDetailPage = () => {
 								...comment,
 								stats: {
 									...comment.stats,
-									replies: (comment.stats?.replies || 0) + 1
-								}
-							}
-						: comment
-				)
+									replies: (comment.stats?.replies || 0) + 1,
+								},
+						  }
+						: comment,
+				),
 			);
-
 		} catch (error) {
 			console.error("Failed to submit reply:", error);
 			setError("Failed to submit reply");
@@ -584,9 +572,7 @@ const PostDetailPage = () => {
 				...prev,
 				[commentId]: (prev[commentId] || []).map(reply => {
 					if (reply.id === replyId) {
-						const isCurrentlyLiked = reply.likes?.some(
-							like => like.user.uid === currentUser.uid
-						);
+						const isCurrentlyLiked = reply.likes?.some(like => like.user.uid === currentUser.uid);
 
 						if (response.liked && !isCurrentlyLiked) {
 							return {
@@ -594,24 +580,22 @@ const PostDetailPage = () => {
 								likes: [...(reply.likes || []), { user: { uid: currentUser.uid } }],
 								stats: {
 									...reply.stats,
-									likes: (reply.stats?.likes || 0) + 1
-								}
+									likes: (reply.stats?.likes || 0) + 1,
+								},
 							};
 						} else if (!response.liked && isCurrentlyLiked) {
 							return {
 								...reply,
-								likes: (reply.likes || []).filter(
-									like => like.user.uid !== currentUser.uid
-								),
+								likes: (reply.likes || []).filter(like => like.user.uid !== currentUser.uid),
 								stats: {
 									...reply.stats,
-									likes: Math.max(0, (reply.stats?.likes || 0) - 1)
-								}
+									likes: Math.max(0, (reply.stats?.likes || 0) - 1),
+								},
 							};
 						}
 					}
 					return reply;
-				})
+				}),
 			}));
 		} catch (error) {
 			console.error("Failed to like reply:", error);
@@ -622,16 +606,12 @@ const PostDetailPage = () => {
 	const handleUpdateComment = async (commentId, newContent) => {
 		try {
 			const response = await commentAPI.updateComment(commentId, {
-				content: newContent.trim()
+				content: newContent.trim(),
 			});
 
 			// Update the comment in local state
 			setComments(prevComments =>
-				prevComments.map(comment =>
-					comment.id === commentId
-						? { ...comment, content: newContent.trim(), updatedAt: new Date().toISOString() }
-						: comment
-				)
+				prevComments.map(comment => (comment.id === commentId ? { ...comment, content: newContent.trim(), updatedAt: new Date().toISOString() } : comment)),
 			);
 		} catch (error) {
 			console.error("Failed to update comment:", error);
@@ -644,7 +624,10 @@ const PostDetailPage = () => {
 	if (loading) {
 		return (
 			<Container className="text-center py-5">
-				<Spinner animation="border" variant="primary" />
+				<Spinner
+					animation="border"
+					variant="primary"
+				/>
 			</Container>
 		);
 	}
@@ -665,14 +648,12 @@ const PostDetailPage = () => {
 				style={{
 					top: "112px" /* Below navbar (56px) + tabs (56px) */,
 					zIndex: 1018 /* Below tabs but above content */,
-				}}
-			>
+				}}>
 				<Button
 					variant="link"
 					size="sm"
 					className="text-dark p-0"
-					onClick={() => navigate(-1)}
-				>
+					onClick={() => navigate(-1)}>
 					<ArrowLeft size={20} />
 				</Button>
 				<h5 className="mb-0">Post</h5>
@@ -683,8 +664,7 @@ const PostDetailPage = () => {
 					variant="link"
 					size="sm"
 					className="text-dark p-0"
-					onClick={() => navigate(-1)}
-				>
+					onClick={() => navigate(-1)}>
 					<ArrowLeft size={20} />
 				</Button>
 				<h5 className="mb-0">Post</h5>
@@ -712,17 +692,17 @@ const PostDetailPage = () => {
 									<span
 										className="fw-bold"
 										style={{ cursor: "pointer", color: "inherit" }}
-										onClick={() => navigate(`/${post.author.username}`)}
-									>
+										onClick={() => navigate(`/${post.author.username}`)}>
 										{post.author.name}
 									</span>
 									{post.author.hasBlueCheck && (
-										<CheckCircleFill className="text-primary" size={16} />
+										<CheckCircleFill
+											className="text-primary"
+											size={16}
+										/>
 									)}
 									<span className="text-muted">·</span>
-									<span className="text-muted small">
-										{formatTimeAgo(post.createdAt)}
-									</span>
+									<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
 									<span className="text-muted">·</span>
 									{getPrivacyIcon(post.privacy)}
 								</div>
@@ -736,8 +716,7 @@ const PostDetailPage = () => {
 										border: "none !important",
 										boxShadow: "none !important",
 									}}
-									onClick={() => setShowPostOptionsModal(true)}
-								>
+									onClick={() => setShowPostOptionsModal(true)}>
 									<ThreeDots size={16} />
 								</Button>
 							</div>
@@ -768,7 +747,9 @@ const PostDetailPage = () => {
 										/>
 									) : (
 										// Multiple images - box layout
-										<div className="d-flex gap-2" style={{ height: "300px" }}>
+										<div
+											className="d-flex gap-2"
+											style={{ height: "300px" }}>
 											{/* Main image on the left */}
 											<div style={{ flex: "2" }}>
 												<Image
@@ -785,16 +766,11 @@ const PostDetailPage = () => {
 											{post.imageUrls.length > 1 && (
 												<div
 													className="d-flex flex-column gap-2"
-													style={{ flex: "1" }}
-												>
+													style={{ flex: "1" }}>
 													<div
 														style={{
-															height:
-																post.imageUrls.length > 2
-																	? "calc(50% - 4px)"
-																	: "100%",
-														}}
-													>
+															height: post.imageUrls.length > 2 ? "calc(50% - 4px)" : "100%",
+														}}>
 														<Image
 															src={post.imageUrls[1]}
 															className="rounded w-100 h-100"
@@ -808,8 +784,7 @@ const PostDetailPage = () => {
 													{post.imageUrls.length > 2 && (
 														<div
 															style={{ height: "calc(50% - 4px)" }}
-															className="position-relative"
-														>
+															className="position-relative">
 															<Image
 																src={post.imageUrls[2]}
 																className="rounded w-100 h-100"
@@ -817,9 +792,7 @@ const PostDetailPage = () => {
 																	objectFit: "cover",
 																	cursor: "pointer",
 																}}
-																onClick={() =>
-																	openImageViewer(post.imageUrls, 2)
-																}
+																onClick={() => openImageViewer(post.imageUrls, 2)}
 															/>
 															{/* Show more indicator */}
 															{post.imageUrls.length > 3 && (
@@ -832,10 +805,7 @@ const PostDetailPage = () => {
 																		fontWeight: "bold",
 																		fontSize: "1.2rem",
 																	}}
-																	onClick={() =>
-																		openImageViewer(post.imageUrls, 2)
-																	}
-																>
+																	onClick={() => openImageViewer(post.imageUrls, 2)}>
 																	+{post.imageUrls.length - 3}
 																</div>
 															)}
@@ -852,18 +822,13 @@ const PostDetailPage = () => {
 								<div className="d-flex flex-wrap gap-3 small text-muted">
 									{post.likes.length > 0 &&
 										(() => {
-											const currentUserLiked = post.likes.some(
-												(like) => like.user.uid === currentUser.uid,
-											);
-											const otherLikesCount = currentUserLiked
-												? post.likes.length - 1
-												: post.likes.length;
+											const currentUserLiked = post.likes.some(like => like.user.uid === currentUser.uid);
+											const otherLikesCount = currentUserLiked ? post.likes.length - 1 : post.likes.length;
 
 											if (currentUserLiked && otherLikesCount > 0) {
 												return (
 													<span>
-														<span className="fw-bold">You</span> &{" "}
-														{otherLikesCount} others reacted.
+														<span className="fw-bold">You</span> & {otherLikesCount} others reacted.
 													</span>
 												);
 											} else if (currentUserLiked && otherLikesCount === 0) {
@@ -875,19 +840,13 @@ const PostDetailPage = () => {
 											} else if (!currentUserLiked && post.likes.length === 1) {
 												return (
 													<span>
-														<span className="fw-bold">
-															{post.likes[0].user.name || "Someone"}
-														</span>{" "}
-														reacted.
+														<span className="fw-bold">{post.likes[0].user.name || "Someone"}</span> reacted.
 													</span>
 												);
 											} else if (!currentUserLiked && post.likes.length > 1) {
 												return (
 													<span>
-														<span className="fw-bold">
-															{post.likes[0].user.name || "Someone"}
-														</span>{" "}
-														& {post.likes.length - 1} others reacted.
+														<span className="fw-bold">{post.likes[0].user.name || "Someone"}</span> & {post.likes.length - 1} others reacted.
 													</span>
 												);
 											}
@@ -895,19 +854,14 @@ const PostDetailPage = () => {
 										})()}
 								</div>
 								<div className="d-flex flex-wrap gap-3 small text-muted">
-									{post.analytics?.views > 0 && (
-										<span>{post.analytics.views} views</span>
-									)}
-									{post.analytics?.shares > 0 && (
-										<span>{post.analytics.shares} shares</span>
-									)}
+									{post.analytics?.views > 0 && <span>{post.analytics.views} views</span>}
+									{post.analytics?.shares > 0 && <span>{post.analytics.shares} shares</span>}
 								</div>
 							</div>
 
 							<div
 								className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
-								style={{ maxWidth: "400px" }}
-							>
+								style={{ maxWidth: "400px" }}>
 								<Button
 									variant="link"
 									size="sm"
@@ -918,30 +872,24 @@ const PostDetailPage = () => {
 										height: "36px",
 									}}
 									disabled={!canComment(post)}
-									title={
-										!canComment(post)
-											? "You cannot comment on this post"
-											: "Comment"
-									}
-									onMouseEnter={(e) => {
+									title={!canComment(post) ? "You cannot comment on this post" : "Comment"}
+									onMouseEnter={e => {
 										if (canComment(post)) {
-											e.target.closest(".action-btn").style.backgroundColor =
-												"rgba(29, 161, 242, 0.1)";
+											e.target.closest(".action-btn").style.backgroundColor = "rgba(29, 161, 242, 0.1)";
 											e.target.closest(".action-btn").style.color = "#1da1f2";
 										}
 									}}
-									onMouseLeave={(e) => {
+									onMouseLeave={e => {
 										if (canComment(post)) {
-											e.target.closest(".action-btn").style.backgroundColor =
-												"transparent";
+											e.target.closest(".action-btn").style.backgroundColor = "transparent";
 											e.target.closest(".action-btn").style.color = "#6c757d";
 										}
-									}}
-								>
-									<ChatDots size={24} style={{ flexShrink: 0 }} />
-									{post.stats.comments > 0 && (
-										<span className="small">{post.stats.comments}</span>
-									)}
+									}}>
+									<ChatDots
+										size={24}
+										style={{ flexShrink: 0 }}
+									/>
+									{post.stats.comments > 0 && <span className="small">{post.stats.comments}</span>}
 								</Button>
 
 								<Button
@@ -949,49 +897,36 @@ const PostDetailPage = () => {
 									size="sm"
 									className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 									style={{
-										color: (post.likes || []).some(
-											(like) => like.user.uid === currentUser.uid,
-										)
-											? "#dc3545"
-											: "#6c757d",
+										color: (post.likes || []).some(like => like.user.uid === currentUser.uid) ? "#dc3545" : "#6c757d",
 										transition: "all 0.2s",
 										minWidth: "40px",
 										height: "36px",
 									}}
 									onClick={handleLikePost}
-									onMouseEnter={(e) => {
-										if (
-											!(post.likes || []).some(
-												(like) => like.user.uid === currentUser.uid,
-											)
-										) {
-											e.target.closest(".action-btn").style.backgroundColor =
-												"rgba(220, 53, 69, 0.1)";
+									onMouseEnter={e => {
+										if (!(post.likes || []).some(like => like.user.uid === currentUser.uid)) {
+											e.target.closest(".action-btn").style.backgroundColor = "rgba(220, 53, 69, 0.1)";
 											e.target.closest(".action-btn").style.color = "#dc3545";
 										}
 									}}
-									onMouseLeave={(e) => {
-										if (
-											!(post.likes || []).some(
-												(like) => like.user.uid === currentUser.uid,
-											)
-										) {
-											e.target.closest(".action-btn").style.backgroundColor =
-												"transparent";
+									onMouseLeave={e => {
+										if (!(post.likes || []).some(like => like.user.uid === currentUser.uid)) {
+											e.target.closest(".action-btn").style.backgroundColor = "transparent";
 											e.target.closest(".action-btn").style.color = "#6c757d";
 										}
-									}}
-								>
-									{(post.likes || []).some(
-										(like) => like.user.uid === currentUser.uid,
-									) ? (
-										<HeartFill size={24} style={{ flexShrink: 0 }} />
+									}}>
+									{(post.likes || []).some(like => like.user.uid === currentUser.uid) ? (
+										<HeartFill
+											size={24}
+											style={{ flexShrink: 0 }}
+										/>
 									) : (
-										<Heart size={24} style={{ flexShrink: 0 }} />
+										<Heart
+											size={24}
+											style={{ flexShrink: 0 }}
+										/>
 									)}
-									{post.stats.likes > 0 && (
-										<span className="small">{post.stats.likes}</span>
-									)}
+									{post.stats.likes > 0 && <span className="small">{post.stats.likes}</span>}
 								</Button>
 
 								<Button
@@ -1004,18 +939,18 @@ const PostDetailPage = () => {
 										height: "36px",
 									}}
 									onClick={() => handleSharePost(post.id)}
-									onMouseEnter={(e) => {
-										e.target.closest(".action-btn").style.backgroundColor =
-											"rgba(23, 191, 99, 0.1)";
+									onMouseEnter={e => {
+										e.target.closest(".action-btn").style.backgroundColor = "rgba(23, 191, 99, 0.1)";
 										e.target.closest(".action-btn").style.color = "#17bf63";
 									}}
-									onMouseLeave={(e) => {
-										e.target.closest(".action-btn").style.backgroundColor =
-											"transparent";
+									onMouseLeave={e => {
+										e.target.closest(".action-btn").style.backgroundColor = "transparent";
 										e.target.closest(".action-btn").style.color = "#6c757d";
-									}}
-								>
-									<Share size={24} style={{ flexShrink: 0 }} />
+									}}>
+									<Share
+										size={24}
+										style={{ flexShrink: 0 }}
+									/>
 								</Button>
 							</div>
 						</div>
@@ -1030,9 +965,7 @@ const PostDetailPage = () => {
 						<Form onSubmit={handleSubmitComment}>
 							<div className="d-flex gap-3">
 								<Image
-									src={
-										currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"
-									}
+									src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
 									alt="avatar"
 									roundedCircle
 									width="40"
@@ -1048,61 +981,64 @@ const PostDetailPage = () => {
 										as="textarea"
 										rows={2}
 										value={newComment}
-										onChange={(e) => setNewComment(e.target.value)}
+										onChange={e => setNewComment(e.target.value)}
 										placeholder={
-											commentMode === 'tip' 
-												? "Add a message with your tip..." 
-												: commentMode === 'donation' 
-													? "Add a message with your donation..." 
-													: "Post your reply"
+											commentMode === "tip" ? "Add a message with your tip..." : commentMode === "donation" ? "Add a message with your donation..." : "Post your reply"
 										}
 										className="border-0 shadow-none resize-none"
 										style={{ fontSize: "1.1rem" }}
 									/>
-									
+
 									{/* Tip Button (shown by default for others' posts) */}
 									{post.author.uid !== currentUser.uid && (
 										<div className="mt-2 mb-2">
 											<Button
 												type="button"
-												variant={commentMode === 'tip' ? 'warning' : 'outline-warning'}
+												variant={commentMode === "tip" ? "warning" : "outline-warning"}
 												size="sm"
-												onClick={() => setCommentMode('tip')}
-											>
-												<Gift size={14} className="me-1" />
+												onClick={() => setCommentMode("tip")}>
+												<Gift
+													size={14}
+													className="me-1"
+												/>
 												Tip
 											</Button>
 										</div>
 									)}
 
 									{/* Tip Amount Selection */}
-									{commentMode === 'tip' && (
+									{commentMode === "tip" && (
 										<div className="mb-2">
 											<Form.Group>
 												<Form.Label className="small text-muted">Select Tip Amount</Form.Label>
 												<div className="d-flex flex-wrap gap-2 mb-2">
-													{[100, 500, 1000, 2000, 3000, 5000].map((amount) => (
+													{[100, 500, 1000, 2000, 3000, 5000].map(amount => (
 														<Button
 															key={amount}
-															variant={commentTipAmount === amount.toString() ? 'warning' : 'outline-warning'}
+															variant={commentTipAmount === amount.toString() ? "warning" : "outline-warning"}
 															size="sm"
-															onClick={() => setCommentTipAmount(amount.toString())}
-														>
+															onClick={() => setCommentTipAmount(amount.toString())}>
 															₱{(amount / 100).toFixed(2)}
 														</Button>
 													))}
 												</div>
 												<div className="d-flex align-items-center gap-2">
 													<Form.Label className="small text-muted mb-0">Custom Amount:</Form.Label>
-													<div className="input-group" style={{ maxWidth: "120px" }}>
+													<div
+														className="input-group"
+														style={{ maxWidth: "120px" }}>
 														<span className="input-group-text">₱</span>
 														<Form.Control
 															type="number"
 															min="1"
 															max="50"
 															step="0.01"
-															value={commentTipAmount && !['100', '500', '1000', '2000', '3000', '5000'].includes(commentTipAmount) ? (parseInt(commentTipAmount) / 100).toFixed(2) : ''}
-															onChange={(e) => {
+															value={
+																commentTipAmount && !["100", "500", "1000", "2000", "3000", "5000"].includes(commentTipAmount)
+																	? (parseInt(commentTipAmount) / 100).toFixed(2)
+																	: ""
+															}
+															onChange={e => {
 																const amount = Math.round(parseFloat(e.target.value || 0) * 100);
 																if (amount >= 100 && amount <= 5000) {
 																	setCommentTipAmount(amount.toString());
@@ -1119,35 +1055,32 @@ const PostDetailPage = () => {
 									)}
 
 									<div className="d-flex justify-content-end mt-2">
-										{commentMode === 'tip' && (
+										{commentMode === "tip" && (
 											<Button
 												type="button"
 												variant="link"
 												size="sm"
 												onClick={() => {
-													setCommentMode('comment');
-													setCommentTipAmount('');
+													setCommentMode("comment");
+													setCommentTipAmount("");
 												}}
-												className="me-2"
-											>
+												className="me-2">
 												Cancel
 											</Button>
 										)}
 										<Button
 											type="submit"
 											size="sm"
-											disabled={
-												!newComment.trim() || 
-												submitting ||
-												(commentMode === 'tip' && !commentTipAmount)
-											}
+											disabled={!newComment.trim() || submitting || (commentMode === "tip" && !commentTipAmount)}
 											className="rounded-pill px-3"
-											variant={commentMode === 'tip' ? 'warning' : 'primary'}
-										>
+											variant={commentMode === "tip" ? "warning" : "primary"}>
 											{submitting ? (
-												<Spinner size="sm" animation="border" />
-											) : commentMode === 'tip' ? (
-												`Send Tip ${commentTipAmount ? `₱${(parseInt(commentTipAmount) / 100).toFixed(2)}` : ''}`
+												<Spinner
+													size="sm"
+													animation="border"
+												/>
+											) : commentMode === "tip" ? (
+												`Send Tip ${commentTipAmount ? `₱${(parseInt(commentTipAmount) / 100).toFixed(2)}` : ""}`
 											) : (
 												"Reply"
 											)}
@@ -1167,8 +1100,8 @@ const PostDetailPage = () => {
 								{post.privacy === "private"
 									? "Only the author can comment on this post"
 									: post.privacy === "followers"
-										? "Only followers can comment on this post"
-										: "Comments are restricted"}
+									? "Only followers can comment on this post"
+									: "Comments are restricted"}
 							</span>
 						</div>
 					</Card.Body>
@@ -1190,7 +1123,7 @@ const PostDetailPage = () => {
 							onLike={handleLikeComment}
 							onReply={handleSubmitReply}
 							onUpdateComment={handleUpdateComment}
-							onDeleteComment={(commentId) => {
+							onDeleteComment={commentId => {
 								setCommentToDelete(commentId);
 								setShowDeleteCommentDialog(true);
 							}}
@@ -1204,6 +1137,7 @@ const PostDetailPage = () => {
 					))}
 				</div>
 			)}
+			
 			{/* Image Viewer Modal */}
 			{showImageViewer && (
 				<Modal
@@ -1211,16 +1145,14 @@ const PostDetailPage = () => {
 					onHide={closeImageViewer}
 					centered
 					size="lg"
-					className="image-viewer-modal"
-				>
+					className="image-viewer-modal">
 					<Modal.Body className="p-0 bg-dark text-center">
 						<div className="position-relative">
 							<Button
 								variant="link"
 								className="position-absolute top-0 end-0 m-2 text-white"
 								style={{ zIndex: 10 }}
-								onClick={closeImageViewer}
-							>
+								onClick={closeImageViewer}>
 								<X size={24} />
 							</Button>
 
@@ -1231,10 +1163,7 @@ const PostDetailPage = () => {
 										className="position-absolute top-50 start-0 translate-middle-y text-white ms-2"
 										style={{ zIndex: 10 }}
 										disabled={currentImageIndex === 0}
-										onClick={() =>
-											setCurrentImageIndex((prev) => Math.max(0, prev - 1))
-										}
-									>
+										onClick={() => setCurrentImageIndex(prev => Math.max(0, prev - 1))}>
 										<ChevronLeft size={32} />
 									</Button>
 
@@ -1243,12 +1172,7 @@ const PostDetailPage = () => {
 										className="position-absolute top-50 end-0 translate-middle-y text-white me-2"
 										style={{ zIndex: 10 }}
 										disabled={currentImageIndex === currentImages.length - 1}
-										onClick={() =>
-											setCurrentImageIndex((prev) =>
-												Math.min(currentImages.length - 1, prev + 1),
-											)
-										}
-									>
+										onClick={() => setCurrentImageIndex(prev => Math.min(currentImages.length - 1, prev + 1))}>
 										<ChevronRight size={32} />
 									</Button>
 								</>
@@ -1274,129 +1198,140 @@ const PostDetailPage = () => {
 			)}
 
 			{/* Post Options Modal */}
-			<Modal
-				show={showPostOptionsModal}
-				onHide={() => setShowPostOptionsModal(false)}
-				centered
-			>
-				<Modal.Header closeButton>
-					<Modal.Title>Post Options</Modal.Title>
-				</Modal.Header>
-				<Modal.Body className="p-0">
-					<div className="list-group list-group-flush">
-						<button
-							className="list-group-item list-group-item-action border-0"
-							onClick={() => {
-								navigator.clipboard.writeText(
-									`${window.location.origin}/post/${post.id}`,
-								);
-								setShowPostOptionsModal(false);
-							}}
-						>
-							Copy Link
-						</button>
-						<button
-							className="list-group-item list-group-item-action border-0"
-							onClick={() => setShowPostOptionsModal(false)}
-						>
-							Repost
-						</button>
-						{post.author.id !== currentUser.uid && (
+			{setShowPostOptionsModal && (
+				<Modal
+					show={showPostOptionsModal}
+					onHide={() => setShowPostOptionsModal(false)}
+					centered>
+					<Modal.Header closeButton>
+						<Modal.Title>Post Options</Modal.Title>
+					</Modal.Header>
+					<Modal.Body className="p-0">
+						<div className="list-group list-group-flush">
 							<button
-								className="list-group-item list-group-item-action border-0 text-danger"
-								onClick={() => setShowPostOptionsModal(false)}
-							>
-								Report
-							</button>
-						)}
-						{post.author.uid === currentUser.uid && (
-							<button
-								className="list-group-item list-group-item-action border-0 text-danger"
+								className="list-group-item list-group-item-action border-0"
 								onClick={() => {
+									navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
 									setShowPostOptionsModal(false);
-									handleDeletePost(post.id);
-								}}
-							>
-								Delete Post
+								}}>
+								Copy Link
 							</button>
-						)}
-					</div>
-				</Modal.Body>
-			</Modal>
+							<button
+								className="list-group-item list-group-item-action border-0"
+								onClick={() => setShowPostOptionsModal(false)}>
+								Repost
+							</button>
+							{post.author.id !== currentUser.uid && (
+								<button
+									className="list-group-item list-group-item-action border-0 text-danger"
+									onClick={() => setShowPostOptionsModal(false)}>
+									Report
+								</button>
+							)}
+							{post.author.uid === currentUser.uid && (
+								<button
+									className="list-group-item list-group-item-action border-0 text-danger"
+									onClick={() => {
+										setShowPostOptionsModal(false);
+										handleDeletePost(post.id);
+									}}>
+									Delete Post
+								</button>
+							)}
+						</div>
+					</Modal.Body>
+				</Modal>
+			)}
 
 			{/* Delete Post Confirmation Dialog */}
-			<AlertDialog
-				show={showDeleteDialog}
-				onHide={() => {
-					if (!deletingPost) {
-						setShowDeleteDialog(false);
-						setPostToDelete(null);
-					}
-				}}
-				title="Delete Post"
-				message="Are you sure you want to delete this post? This action cannot be undone."
-				dialogButtonMessage={deletingPost ? "Deleting..." : "Delete"}
-				onDialogButtonClick={confirmDeletePost}
-				type="danger"
-				disabled={deletingPost}
-			/>
+			{showDeleteDialog && (
+				<AlertDialog
+					show={showDeleteDialog}
+					onHide={() => {
+						if (!deletingPost) {
+							setShowDeleteDialog(false);
+							setPostToDelete(null);
+						}
+					}}
+					title="Delete Post"
+					message="Are you sure you want to delete this post? This action cannot be undone."
+					dialogButtonMessage={deletingPost ? "Deleting..." : "Delete"}
+					onDialogButtonClick={confirmDeletePost}
+					type="danger"
+					disabled={deletingPost}
+				/>
+			)}
 
 			{/* Comment Options Modal */}
-			<Modal
-				show={showCommentOptionsModal}
-				onHide={() => {
-					setShowCommentOptionsModal(false);
-					setSelectedComment(null);
-				}}
-				centered
-			>
-				<Modal.Header closeButton>
-					<Modal.Title>Comment Options</Modal.Title>
-				</Modal.Header>
-				<Modal.Body className="p-0 pb-2">
-					<div className="list-group list-group-flush">
-						<button
-							className="list-group-item list-group-item-action border-0"
-							onClick={handleCopyComment}
-						>
-							Copy Comment
-						</button>
-						{selectedComment?.author.uid !== currentUser.uid && (
+			{showCommentOptionsModal && (
+				<Modal
+					show={showCommentOptionsModal}
+					onHide={() => {
+						setShowCommentOptionsModal(false);
+						setSelectedComment(null);
+					}}
+					centered>
+					<Modal.Header closeButton>
+						<Modal.Title>Comment Options</Modal.Title>
+					</Modal.Header>
+					<Modal.Body className="p-0 pb-2">
+						<div className="list-group list-group-flush">
 							<button
-								className="list-group-item list-group-item-action border-0 text-warning"
-								onClick={handleReportComment}
-							>
-								Report Comment
+								className="list-group-item list-group-item-action border-0"
+								onClick={handleCopyComment}>
+								Copy Comment
 							</button>
-						)}
-						{selectedComment?.author.uid === currentUser.uid && (
-							<button
-								className="list-group-item list-group-item-action border-0 text-danger"
-								onClick={handleDeleteCommentFromModal}
-							>
-								Delete Comment
-							</button>
-						)}
-					</div>
-				</Modal.Body>
-			</Modal>
+							{selectedComment?.author.uid !== currentUser.uid && (
+								<button
+									className="list-group-item list-group-item-action border-0 text-warning"
+									onClick={handleReportComment}>
+									Report Comment
+								</button>
+							)}
+							{selectedComment?.author.uid === currentUser.uid && (
+								<button
+									className="list-group-item list-group-item-action border-0 text-danger"
+									onClick={handleDeleteCommentFromModal}>
+									Delete Comment
+								</button>
+							)}
+						</div>
+					</Modal.Body>
+				</Modal>
+			)}
 
 			{/* Delete Comment Confirmation Dialog */}
-			<AlertDialog
-				show={showDeleteCommentDialog}
-				onHide={() => {
-					if (!deletingComment) {
-						setShowDeleteDialog(false);
-						setCommentToDelete(null);
-					}
-				}}
-				title="Delete Comment"
-				message="Are you sure you want to delete this comment? This action cannot be undone."
-				dialogButtonMessage={deletingComment ? "Deleting..." : "Delete"}
-				onDialogButtonClick={confirmDeleteComment}
-				type="danger"
-				disabled={deletingComment}
-			/>
+			{showDeleteCommentDialog && (
+				<AlertDialog
+					show={showDeleteCommentDialog}
+					onHide={() => {
+						if (!deletingComment) {
+							setShowDeleteDialog(false);
+							setCommentToDelete(null);
+						}
+					}}
+					title="Delete Comment"
+					message="Are you sure you want to delete this comment? This action cannot be undone."
+					dialogButtonMessage={deletingComment ? "Deleting..." : "Delete"}
+					onDialogButtonClick={confirmDeleteComment}
+					type="danger"
+					disabled={deletingComment}
+				/>
+			)}
+
+			{commentError !== "" && (
+				<AlertDialog
+					show={commentError !== ""}
+					onHide={() => {
+						setCommentError("");
+					}}
+					title="Error"
+					message={commentError}
+					dialogButtonMessage="Okay"
+					onDialogButtonClick={() => setCommentError("")}
+					type="primary"
+				/>
+			)}
 		</Container>
 	);
 };

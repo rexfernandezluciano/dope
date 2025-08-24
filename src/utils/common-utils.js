@@ -7,7 +7,7 @@ import { postAPI } from "../config/ApiConfig";
  * @param {string} dateString - ISO date string
  * @returns {string} Formatted time ago string
  */
-export const formatTimeAgo = (dateString) => {
+export const formatTimeAgo = dateString => {
 	const date = new Date(dateString);
 	const now = new Date();
 	const diffMs = now - date;
@@ -26,7 +26,7 @@ export const formatTimeAgo = (dateString) => {
  * @param {string} dateString - ISO date string
  * @returns {string} Formatted join date
  */
-export const formatJoinDate = (dateString) => {
+export const formatJoinDate = dateString => {
 	const date = new Date(dateString);
 	return date.toLocaleDateString("en-US", {
 		year: "numeric",
@@ -56,7 +56,7 @@ export const deletePost = async (postId, onSuccess, onError) => {
  * @param {string} postId - Post ID to share
  * @returns {Promise<void>}
  */
-export const sharePost = async (postId) => {
+export const sharePost = async postId => {
 	try {
 		await postAPI.sharePost(postId);
 
@@ -88,11 +88,9 @@ export const sharePost = async (postId) => {
  * @param {string} postId - Post ID
  * @returns {Promise<void>}
  */
-export const copyPostLink = async (postId) => {
+export const copyPostLink = async postId => {
 	try {
-		await navigator.clipboard.writeText(
-			`${window.location.origin}/post/${postId}`,
-		);
+		await navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
 	} catch (err) {
 		console.error("Failed to copy to clipboard:", err);
 	}
@@ -152,7 +150,7 @@ export const formatCurrency = (amount, currency = "USD") => {
 	}).format(amount);
 };
 
-export const formatNumber = (number) => {
+export const formatNumber = number => {
 	if (number >= 1000000) {
 		return (number / 1000000).toFixed(1) + "M";
 	} else if (number >= 1000) {
@@ -166,7 +164,7 @@ export const formatNumber = (number) => {
  * @param {string} postId - Post ID to track view for
  * @returns {Promise} Promise that resolves when view is tracked
  */
-export const trackPostView = async (postId) => {
+export const trackPostView = async postId => {
 	try {
 		const { postAPI } = await import("../config/ApiConfig");
 		await postAPI.trackView(postId);
@@ -186,30 +184,28 @@ export const getGrowthPercentage = (current, previous) => {
  * @param {string} privacy - Privacy setting
  * @returns {JSX.Element} Privacy icon component
  */
-export const getPrivacyIcon = (privacy) => {
+export const getPrivacyIcon = privacy => {
 	// This would need to be imported from react-bootstrap-icons in the component
 	// Return null here as the icon selection should be done in the component
 	return null;
 };
-
-
 
 /**
  * Format large numbers with K, M, B suffixes
  * @param {number} num - Number to format
  * @returns {string} Formatted number string
  */
-export const formatLargeNumber = (num) => {
+export const formatLargeNumber = num => {
 	if (num >= 1000000000) {
-		return (num / 1000000000).toFixed(1) + 'B';
+		return (num / 1000000000).toFixed(1) + "B";
 	}
 	if (num >= 1000000) {
-		return (num / 1000000).toFixed(1) + 'M';
+		return (num / 1000000).toFixed(1) + "M";
 	}
 	if (num >= 1000) {
-		return (num / 1000).toFixed(1) + 'K';
+		return (num / 1000).toFixed(1) + "K";
 	}
-	return num?.toString() || '0';
+	return num?.toString() || "0";
 };
 
 /**
@@ -220,11 +216,19 @@ export const formatLargeNumber = (num) => {
 export const trackBusinessMetric = async (metric, data) => {
 	try {
 		// This would integrate with your analytics service
-		console.log('Business metric tracked:', metric, data);
-		
+		console.log("Business metric tracked:", metric, data);
+
 		// If you have a business API endpoint for custom tracking
 		// await businessAPI.trackCustomMetric(metric, data);
 	} catch (error) {
-		console.error('Failed to track business metric:', error);
+		console.error("Failed to track business metric:", error);
 	}
+};
+
+export const pesosToCentavos = pesos => {
+	return pesos * 100;
+};
+
+export const centavosToPesos = centavos => {
+	return centavos / 100;
 };

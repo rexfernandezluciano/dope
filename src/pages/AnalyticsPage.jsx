@@ -168,7 +168,7 @@ const AnalyticsPage = () => {
 		{ name: 'Shares', value: analytics?.overview?.totalShares || 0, color: '#ff7300' }
 	];
 
-	const StatCard = ({ icon, value, label, subtitle, variant = "primary" }) => (
+	const StatCard = ({ icon = null, value, label, subtitle, variant = "primary" }) => (
 		<Card className="h-100 border-0 shadow-sm">
 			<Card.Body className="text-center p-3">
 				{icon && <div className={`text-${variant} mb-2`}>{icon}</div>}

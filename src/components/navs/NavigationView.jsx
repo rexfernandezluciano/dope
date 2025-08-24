@@ -11,6 +11,7 @@ import { businessAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../config/ApiConfig";
 import { initializeNotifications, requestNotificationPermission, setupNotificationListener, getUnreadNotificationCount } from "../../utils/messaging-utils";
 import { getUser } from "../../utils/app-utils";
+import { centavosToPesos } from "../../utils/common-utils";
 
 import logo from "../../assets/images/dope.png";
 import AlertDialog from "../dialogs/AlertDialog";
@@ -530,11 +531,7 @@ const NavigationView = ({ children }) => {
 						</p>
 						<p className="text-center">
 							<small className="text-success fw-bold d-flex align-items-center justify-content-center">
-								<CurrencyDollar
-									size={14}
-									className="me-1"
-								/>
-								{credits.creditsDisplay || "₱0.00"}
+								₱{centavosToPesos(credits?.creditsInCentavos || "0.00").toFixed(2)}
 							</small>
 						</p>
 					</Container>
@@ -550,20 +547,6 @@ const NavigationView = ({ children }) => {
 							</Link>
 						))}
 						<Nav.Link
-							as={Link}
-							to="/analytics"
-							className={`nav-link ${location.pathname === "/analytics" ? "active" : ""} d-flex align-items-center gap-2`}>
-							<CameraVideo size={20} />
-							Creator
-						</Nav.Link>
-						<Nav.Link
-							as={Link}
-							to="/subscriptions"
-							className={`${location.pathname === "/subscriptions" ? "active" : ""} d-flex align-items-center gap-2`}>
-							<Heart size={20} />
-							Subscriptions
-						</Nav.Link>
-						<Nav.Link
 							onClick={handleLogout}
 							className="nav-link text-danger px-3 py-2 rounded-pill"
 							style={{ cursor: "pointer" }}>
@@ -577,15 +560,17 @@ const NavigationView = ({ children }) => {
 				</div>
 				<div style={{ marginLeft: "250px" }}>{children}</div>
 			</div>
-			<AlertDialog
-				show={showLogoutDialog}
-				onHide={() => setShowLogoutDialog(false)}
-				title="Logout Confirmation"
-				message="Are you sure you want to logout?"
-				onDialogButtonClick={confirmLogout}
-				dialogButtonMessage="Logout"
-				type="danger"
-			/>
+			{showLogoutDialog && (
+				<AlertDialog
+					show={showLogoutDialog}
+					onHide={() => setShowLogoutDialog(false)}
+					title="Logout Confirmation"
+					message="Are you sure you want to logout?"
+					onDialogButtonClick={confirmLogout}
+					dialogButtonMessage="Logout"
+					type="danger"
+				/>
+			)}
 		</>
 	);
 };
