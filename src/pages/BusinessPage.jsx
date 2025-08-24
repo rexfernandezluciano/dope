@@ -46,6 +46,7 @@ const BusinessPage = () => {
 	const [paymentMethods, setPaymentMethods] = useState([]);
 	const [modalError, setModalError] = useState("");
 	const [modalSuccess, setModalSuccess] = useState("");
+	const [purchaseLoading, setPurchaseLoading] = useState(false);
 	const [campaignForm, setCampaignForm] = useState({
 		title: "",
 		description: "",
@@ -69,6 +70,32 @@ const BusinessPage = () => {
 		loadCredits();
 		loadPaymentMethods();
 		loadCreditsPackages();
+
+		// Check for PayPal payment completion
+		const urlParams = new URLSearchParams(window.location.search);
+		const paymentStatus = urlParams.get('payment');
+		const paymentId = urlParams.get('paymentId');
+		
+		if (paymentStatus === 'success' && paymentId) {
+			setSuccess("Payment completed successfully! Your credits have been added to your account.");
+			loadCredits(); // Reload credits after successful payment
+			
+			// Clean up URL parameters
+			const newUrl = window.location.pathname;
+			window.history.replaceState({}, '', newUrl);
+		} else if (paymentStatus === 'cancelled') {
+			setError("Payment was cancelled. Your credits were not purchased.");
+			
+			// Clean up URL parameters
+			const newUrl = window.location.pathname;
+			window.history.replaceState({}, '', newUrl);
+		} else if (paymentStatus === 'failed') {
+			setError("Payment failed. Please try again or contact support.");
+			
+			// Clean up URL parameters
+			const newUrl = window.location.pathname;
+			window.history.replaceState({}, '', newUrl);
+		}
 	}, []);
 
 	const loadBusinessData = async () => {
@@ -129,23 +156,40 @@ const BusinessPage = () => {
 	const handlePurchaseCredits = async (e) => {
 		e.preventDefault();
 		try {
+			setPurchaseLoading(true);
 			setModalError("");
 			setModalSuccess("");
-			await businessAPI.purchaseCredits({
-				amount: selectedPackage.credits,
+			
+			// Send the purchase request
+			const response = await businessAPI.purchaseCredits({
+				credits: selectedPackage.credits,
 				paymentMethodId: paymentMethodId,
 			});
-			setModalSuccess(`Credits purchased successfully! You received ${selectedPackage.totalCredits} credits (${selectedPackage.credits} base + ${selectedPackage.bonus} bonus).`);
-			setTimeout(() => {
-				setShowCreditsModal(false);
-				setPaymentMethodId("");
-				setSelectedPackage(null);
-				setModalError("");
-				setModalSuccess("");
-				loadCredits(); // Reload credits after purchase
-			}, 2000); // Show success message for 2 seconds before closing
+
+			// Check if response contains approveUrl for PayPal approval
+			if (response.approveUrl) {
+				setModalSuccess("Redirecting to PayPal for payment approval...");
+				
+				// Redirect to PayPal approval URL
+				setTimeout(() => {
+					window.location.href = response.approveUrl;
+				}, 1500);
+			} else {
+				// Payment was processed immediately (shouldn't happen with PayPal but just in case)
+				setModalSuccess(`Credits purchased successfully! You received ${selectedPackage.totalCredits} credits (${selectedPackage.credits} base + ${selectedPackage.bonus} bonus).`);
+				setTimeout(() => {
+					setShowCreditsModal(false);
+					setPaymentMethodId("");
+					setSelectedPackage(null);
+					setModalError("");
+					setModalSuccess("");
+					loadCredits(); // Reload credits after purchase
+				}, 2000);
+			}
 		} catch (error) {
 			setModalError(error.message || "Failed to purchase credits");
+		} finally {
+			setPurchaseLoading(false);
 		}
 	};
 
@@ -842,9 +886,9 @@ const BusinessPage = () => {
 						<Button 
 							type="submit" 
 							variant="primary" 
-							disabled={!selectedPackage || !paymentMethodId || paymentMethods.length === 0}
+							disabled={!selectedPackage || !paymentMethodId || paymentMethods.length === 0 || purchaseLoading}
 						>
-							Purchase {selectedPackage ? selectedPackage.priceDisplay : 'Package'}
+							{purchaseLoading ? "Processing..." : `Purchase ${selectedPackage ? selectedPackage.priceDisplay : 'Package'}`}
 						</Button>
 					</Modal.Footer>
 				</Form>
