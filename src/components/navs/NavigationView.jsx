@@ -19,6 +19,7 @@ import {
 	Form,
 	InputGroup,
 	Button,
+	Dropdown,
 } from "react-bootstrap";
 import {
 	House,
@@ -31,6 +32,7 @@ import {
 	Briefcase,
 	Palette,
 	CurrencyDollar,
+	Heart,
 } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
@@ -260,6 +262,11 @@ const NavigationView = ({ children }) => {
 			icon: <Star size={18} className="me-2" />,
 		},
 		{
+			label: "My Subscriptions",
+			href: "/my-subscriptions",
+			icon: <Heart size={18} className="me-2" />,
+		},
+		{
 			label: "Analytics",
 			href: "/analytics",
 			icon: <BarChart size={18} className="me-2" />,
@@ -305,7 +312,7 @@ const NavigationView = ({ children }) => {
 
 	return (
 		<>
-			{/* Mobile Navbar */}
+			{/* MobileNavbar */}
 			<div className="d-md-none">
 				<Navbar expand={false} className="bg-white border-bottom sticky-top">
 					<Container fluid>

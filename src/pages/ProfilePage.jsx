@@ -18,6 +18,8 @@ import {
 	Calendar,
 	CheckCircleFill,
 	Camera,
+	Heart,
+	Gift,
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI, blockAPI } from "../config/ApiConfig";
@@ -29,14 +31,16 @@ import {
 	formatJoinDate,
 } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
-import { 
-	discoverActor, 
+import {
+	discoverActor,
 	formatActivityPubHandle,
-	parseActivityPubNote 
+	parseActivityPubNote
 } from "../utils/activitypub-utils";
 import PostCard from "../components/PostCard";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import UserBlockModal from "../components/UserBlockModal";
+import ReportModal from "../components/ReportModal";
+import UserSubscriptionModal from "../components/UserSubscriptionModal";
 
 const ProfilePage = () => {
 	const { username: rawUsername, handle } = useParams();
@@ -69,6 +73,8 @@ const ProfilePage = () => {
 	const [federatedActor, setFederatedActor] = useState(null);
 	const [showBlockModal, setShowBlockModal] = useState(false);
 	const [isBlocked, setIsBlocked] = useState(false);
+	const [showReportModal, setShowReportModal] = useState(false);
+	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
 	const navigate = useNavigate();
 
@@ -104,17 +110,17 @@ const ProfilePage = () => {
 		const loadFederatedProfile = async (handle) => {
 			try {
 				console.log(`🔍 Loading federated profile for: ${handle}`);
-				
+
 				// Discover the ActivityPub actor
 				const webfingerResult = await discoverActor(handle);
 				console.log(`✅ WebFinger discovery successful:`, webfingerResult);
-				
+
 				// Find the ActivityPub actor link
 				const actorLink = webfingerResult.links?.find(
-					link => link.rel === 'self' && 
+					link => link.rel === 'self' &&
 					(link.type === 'application/activity+json' || link.type === 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"')
 				);
-				
+
 				if (!actorLink) {
 					console.error('No ActivityPub actor link found in WebFinger response:', webfingerResult);
 					throw new Error("ActivityPub profile not found in WebFinger response");
@@ -123,7 +129,7 @@ const ProfilePage = () => {
 				// Get the actor profile
 				const actorUrl = actorLink.href;
 				console.log(`🎭 Fetching ActivityPub actor from: ${actorUrl}`);
-				
+
 				const actorResponse = await fetch(actorUrl, {
 					headers: {
 						'Accept': 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
@@ -150,7 +156,7 @@ const ProfilePage = () => {
 				const actorName = actor.name || actor.displayName || actor.preferredUsername;
 				const actorBio = actor.summary || actor.note || '';
 				const actorAvatar = actor.icon?.url || actor.image?.url || actor.avatar?.url;
-				
+
 				// Convert ActivityPub actor to local profile format
 				const federatedProfile = {
 					uid: actor.id,
@@ -192,7 +198,7 @@ const ProfilePage = () => {
 		const loadFederatedPosts = async (outboxUrl) => {
 			try {
 				console.log(`📦 Fetching outbox from: ${outboxUrl}`);
-				
+
 				const outboxResponse = await fetch(outboxUrl, {
 					headers: {
 						'Accept': 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
@@ -208,7 +214,7 @@ const ProfilePage = () => {
 
 				const outbox = await outboxResponse.json();
 				console.log(`📦 Outbox response:`, outbox);
-				
+
 				// If it's a collection, get the first page
 				let items = [];
 				if (outbox.type === 'OrderedCollection' && outbox.first) {
@@ -220,7 +226,7 @@ const ProfilePage = () => {
 								'User-Agent': 'DOPE-Network-Client/1.0'
 							}
 						});
-						
+
 						if (firstPageResponse.ok) {
 							const firstPage = await firstPageResponse.json();
 							console.log(`📑 First page response:`, firstPage);
@@ -250,9 +256,9 @@ const ProfilePage = () => {
 						// Handle both Create activities and direct Note objects
 						const note = item.type === 'Create' ? item.object : item;
 						const activity = item.type === 'Create' ? item : null;
-						
+
 						const parsedNote = parseActivityPubNote(note);
-						
+
 						return {
 							id: note.id || activity?.id,
 							content: parsedNote.content.replace(/<[^>]*>/g, ''), // Strip HTML tags
@@ -581,10 +587,10 @@ const ProfilePage = () => {
 			});
 
 			console.log('Updating profile with data:', filteredUpdateData);
-			
+
 			const response = await userAPI.updateUser(username, filteredUpdateData);
 			console.log('Profile update response:', response);
-			
+
 			setProfileUser((prev) => ({ ...prev, ...filteredUpdateData }));
 			setShowEditModal(false);
 			setProfileImagePreview("");
@@ -611,7 +617,7 @@ const ProfilePage = () => {
 		}
 	};
 
-	
+
 
 	const handleDeletePost = (postId) => {
 		setPostToDelete(postId);
@@ -825,6 +831,15 @@ const ProfilePage = () => {
 									>
 										Block
 									</Button>
+									<Button
+										variant="outline-primary"
+										size="sm"
+										className="me-2"
+										onClick={() => setShowSubscriptionModal(true)}
+									>
+										<Heart size={16} className="me-1" />
+										Subscribe
+									</Button>
 								</>
 							)}
 						</div>
@@ -868,13 +883,13 @@ const ProfilePage = () => {
 								{profileUser.membership.subscription.toUpperCase()}
 							</span>
 						</div>
-						
+
 						{profileUser.membership.subscription !== 'free' && profileUser.membership.nextBillingDate && (
 							<small className="text-muted">
 								Next billing: {new Date(profileUser.membership.nextBillingDate).toLocaleDateString()}
 							</small>
 						)}
-						
+
 						{profileUser.membership.subscription === 'free' && (
 							<small className="text-muted">
 								Free account - upgrade to unlock premium features
@@ -934,9 +949,9 @@ const ProfilePage = () => {
 						{isBlocked ? (
 							<div className="text-center py-5 text-muted">
 								<p>You have blocked this user</p>
-								<Button 
-									variant="outline-success" 
-									size="sm" 
+								<Button
+									variant="outline-success"
+									size="sm"
 									onClick={handleUnblockUser}
 								>
 									Unblock to see posts
@@ -1174,7 +1189,7 @@ const ProfilePage = () => {
 				</Modal>
 			)}
 
-			
+
 
 			{/* Post Options Modal */}
 			{showPostOptionsModal && selectedPostForOptions && (
@@ -1264,7 +1279,24 @@ const ProfilePage = () => {
 				show={showBlockModal}
 				onHide={() => setShowBlockModal(false)}
 				user={profileUser}
-				onBlockUser={handleBlockUser}
+				currentUser={currentUser}
+				onBlock={handleBlockUser}
+				onUnblock={handleUnblockUser}
+				isBlocked={isBlocked}
+			/>
+
+			<ReportModal
+				show={showReportModal}
+				onHide={() => setShowReportModal(false)}
+				targetUser={profileUser}
+				currentUser={currentUser}
+			/>
+
+			<UserSubscriptionModal
+				show={showSubscriptionModal}
+				onHide={() => setShowSubscriptionModal(false)}
+				targetUser={profileUser}
+				currentUser={currentUser}
 			/>
 		</Container>
 	);

@@ -7,6 +7,7 @@ import ProfilePage from "./ProfilePage";
 import SettingsPage from "./SettingsPage";
 import SubscriptionPage from "./SubscriptionPage";
 import AnalyticsPage from "./AnalyticsPage";
+import MySubscriptionsPage from "./MySubscriptionsPage";
 
 const IndexPage = () => {
 	const loaderData = useLoaderData() || {};
@@ -21,6 +22,15 @@ const IndexPage = () => {
 		return (
 			<NavigationView user={user}>
 				<SubscriptionPage />
+			</NavigationView>
+		);
+	}
+
+	// Check if it's my subscriptions page
+	if (pathname === "/my-subscriptions") {
+		return (
+			<NavigationView user={user}>
+				<MySubscriptionsPage />
 			</NavigationView>
 		);
 	}

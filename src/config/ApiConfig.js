@@ -1470,6 +1470,42 @@ export const subscriptionAPI = {
 			method: "POST",
 		});
 	},
+
+	// Creator subscription methods
+	subscribeToCreator: async (subscriptionData) => {
+		return await apiRequest("/subscriptions/creator/subscribe", {
+			method: "POST",
+			data: subscriptionData,
+		});
+	},
+
+	unsubscribeFromCreator: async (creatorId) => {
+		return await apiRequest(`/subscriptions/creator/${creatorId}/unsubscribe`, {
+			method: "POST",
+		});
+	},
+
+	getCreatorSubscriptions: async () => {
+		return await apiRequest("/subscriptions/creator/my-subscriptions");
+	},
+
+	getSubscribers: async () => {
+		return await apiRequest("/subscriptions/creator/subscribers");
+	},
+
+	sendTip: async (tipData) => {
+		return await apiRequest("/subscriptions/tip", {
+			method: "POST",
+			data: tipData,
+		});
+	},
+
+	sendDonation: async (donationData) => {
+		return await apiRequest("/subscriptions/donate", {
+			method: "POST",
+			data: donationData,
+		});
+	},
 };
 
 // Admin API
