@@ -478,8 +478,126 @@ const AnalyticsPage = () => {
 		const totalSubscriptions = analytics?.overview?.totalSubscriptions || 0;
 		const revenueGrowth = analytics?.overview?.revenueGrowth || 0;
 
+		// Get monetization eligibility from analytics (should come from /auth/me)
+		const monetization = analytics?.monetization || {
+			isEligible: false,
+			requirements: {
+				followers: { current: 0, required: 500, met: false },
+				recentActivity: { postsLast24h: 0, required: 1, met: false },
+				accountStatus: { blocked: false, restricted: false, violations: 0, goodStanding: true }
+			}
+		};
+
 		return (
 			<>
+				{/* Monetization Eligibility Card */}
+				<Card className="border-0 shadow-sm mb-4">
+					<Card.Header>
+						<div className="d-flex justify-content-between align-items-center">
+							<h6 className="mb-0">Monetization Eligibility</h6>
+							<Badge bg={monetization.isEligible ? 'success' : 'warning'}>
+								{monetization.isEligible ? 'Eligible' : 'Not Eligible'}
+							</Badge>
+						</div>
+					</Card.Header>
+					<Card.Body>
+						{!monetization.isEligible && (
+							<div className="mb-3">
+								<div className="alert alert-info mb-3">
+									<small>
+										<strong>Complete the requirements below to start monetizing your content!</strong>
+									</small>
+								</div>
+							</div>
+						)}
+						
+						<Row className="g-3">
+							{/* Followers Requirement */}
+							<Col md={4}>
+								<div className="p-3 border rounded">
+									<div className="d-flex justify-content-between align-items-center mb-2">
+										<small className="text-muted">Followers</small>
+										<Badge bg={monetization.requirements.followers.met ? 'success' : 'secondary'}>
+											{monetization.requirements.followers.met ? '✓' : '✗'}
+										</Badge>
+									</div>
+									<div className="mb-2">
+										<strong>{monetization.requirements.followers.current}</strong>
+										<span className="text-muted"> / {monetization.requirements.followers.required}</span>
+									</div>
+									<div className="progress" style={{ height: '4px' }}>
+										<div 
+											className={`progress-bar ${monetization.requirements.followers.met ? 'bg-success' : 'bg-primary'}`}
+											style={{ 
+												width: `${Math.min((monetization.requirements.followers.current / monetization.requirements.followers.required) * 100, 100)}%` 
+											}}
+										></div>
+									</div>
+									{!monetization.requirements.followers.met && (
+										<small className="text-muted">
+											{monetization.requirements.followers.required - monetization.requirements.followers.current} more needed
+										</small>
+									)}
+								</div>
+							</Col>
+
+							{/* Recent Activity Requirement */}
+							<Col md={4}>
+								<div className="p-3 border rounded">
+									<div className="d-flex justify-content-between align-items-center mb-2">
+										<small className="text-muted">Daily Activity</small>
+										<Badge bg={monetization.requirements.recentActivity.met ? 'success' : 'secondary'}>
+											{monetization.requirements.recentActivity.met ? '✓' : '✗'}
+										</Badge>
+									</div>
+									<div className="mb-2">
+										<strong>{monetization.requirements.recentActivity.postsLast24h}</strong>
+										<span className="text-muted"> / {monetization.requirements.recentActivity.required} posts</span>
+									</div>
+									<div className="progress" style={{ height: '4px' }}>
+										<div 
+											className={`progress-bar ${monetization.requirements.recentActivity.met ? 'bg-success' : 'bg-primary'}`}
+											style={{ 
+												width: `${Math.min((monetization.requirements.recentActivity.postsLast24h / monetization.requirements.recentActivity.required) * 100, 100)}%` 
+											}}
+										></div>
+									</div>
+									<small className="text-muted">Posts in last 24h</small>
+								</div>
+							</Col>
+
+							{/* Account Status Requirement */}
+							<Col md={4}>
+								<div className="p-3 border rounded">
+									<div className="d-flex justify-content-between align-items-center mb-2">
+										<small className="text-muted">Account Status</small>
+										<Badge bg={monetization.requirements.accountStatus.goodStanding ? 'success' : 'danger'}>
+											{monetization.requirements.accountStatus.goodStanding ? '✓' : '✗'}
+										</Badge>
+									</div>
+									<div className="mb-2">
+										<div className="d-flex justify-content-between">
+											<small>Good Standing</small>
+											<small className={monetization.requirements.accountStatus.goodStanding ? 'text-success' : 'text-danger'}>
+												{monetization.requirements.accountStatus.goodStanding ? 'Yes' : 'No'}
+											</small>
+										</div>
+										<div className="d-flex justify-content-between">
+											<small>Violations</small>
+											<small className={monetization.requirements.accountStatus.violations === 0 ? 'text-success' : 'text-warning'}>
+												{monetization.requirements.accountStatus.violations}
+											</small>
+										</div>
+									</div>
+									{(monetization.requirements.accountStatus.blocked || monetization.requirements.accountStatus.restricted) && (
+										<small className="text-danger">Account restricted</small>
+									)}
+								</div>
+							</Col>
+						</Row>
+					</Card.Body>
+				</Card>
+
 				<Row className="g-3 mb-4">
 					<Col xs={6} lg={3}>
 						<StatCard

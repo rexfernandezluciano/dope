@@ -1197,7 +1197,23 @@ export const recommendationAPI = {
 // Analytics API
 export const analyticsAPI = {
 	getUserAnalytics: async (period = "30d") => {
-		return await apiRequest(`/analytics/user?period=${period}`);
+		const [analyticsData, userData] = await Promise.all([
+			apiRequest(`/analytics/user?period=${period}`),
+			apiRequest("/auth/me").catch(() => ({ monetization: null }))
+		]);
+		
+		// Merge monetization eligibility data from /auth/me into analytics
+		return {
+			...analyticsData,
+			monetization: userData.monetization || {
+				isEligible: false,
+				requirements: {
+					followers: { current: 0, required: 500, met: false },
+					recentActivity: { postsLast24h: 0, required: 1, met: false },
+					accountStatus: { blocked: false, restricted: false, violations: 0, goodStanding: true }
+				}
+			}
+		};
 	},
 
 	getPostAnalytics: async (postId) => {
