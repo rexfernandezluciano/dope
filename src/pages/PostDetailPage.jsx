@@ -145,6 +145,17 @@ const PostDetailPage = () => {
 		}
 	}, [postId, loadPost]);
 
+	// Set default comment mode based on post ownership
+	useEffect(() => {
+		if (post && currentUser) {
+			if (post.author.uid !== currentUser.uid) {
+				setCommentMode('tip'); // Default to tip for others' posts
+			} else {
+				setCommentMode('comment'); // Default to comment for own posts
+			}
+		}
+	}, [post, currentUser]);
+
 	// Update page meta data when post loads
 	useEffect(() => {
 		if (post) {
@@ -1049,18 +1060,22 @@ const PostDetailPage = () => {
 													variant={commentMode === 'tip' ? 'warning' : 'outline-warning'}
 													size="sm"
 													onClick={() => setCommentMode('tip')}
+													title="Send a tip (₱1.00 - ₱1,000.00)"
 												>
 													<Gift size={14} className="me-1" />
 													Tip
+													<small className="ms-1 text-muted">(₱1-₱1K)</small>
 												</Button>
 												<Button
 													type="button"
 													variant={commentMode === 'donation' ? 'info' : 'outline-info'}
 													size="sm"
 													onClick={() => setCommentMode('donation')}
+													title="Send a donation (₱1.00 - ₱5,000.00)"
 												>
 													<CurrencyDollar size={14} className="me-1" />
 													Donate
+													<small className="ms-1 text-muted">(₱1-₱5K)</small>
 												</Button>
 											</>
 										)}
