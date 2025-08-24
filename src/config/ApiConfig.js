@@ -1490,7 +1490,7 @@ export const subscriptionAPI = {
 	},
 
 	getSubscribers: async () => {
-		return await apiRequest("/subscriptions/subscribers");
+		return await apiRequest("/subscriptions/my-subscribers");
 	},
 
 	sendTip: async (tipData) => {
