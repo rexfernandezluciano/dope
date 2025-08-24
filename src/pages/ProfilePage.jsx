@@ -561,8 +561,6 @@ const ProfilePage = () => {
 				try {
 					const uploadedUrl = await uploadProfileImageToCloudinary(editForm.profileImageFile);
 					updateData.photoURL = uploadedUrl;
-					// Remove the file from update data
-					delete updateData.profileImageFile;
 				} catch (uploadError) {
 					setError(`Image upload failed: ${uploadError.message}`);
 					setUploadingProfileImage(false);
@@ -570,12 +568,29 @@ const ProfilePage = () => {
 				}
 			}
 
-			await userAPI.updateUser(username, updateData);
-			setProfileUser((prev) => ({ ...prev, ...updateData }));
+			// Remove the file from update data
+			delete updateData.profileImageFile;
+
+			// Only send fields that can be updated
+			const allowedFields = ['name', 'bio', 'photoURL'];
+			const filteredUpdateData = {};
+			allowedFields.forEach(field => {
+				if (updateData[field] !== undefined) {
+					filteredUpdateData[field] = updateData[field];
+				}
+			});
+
+			console.log('Updating profile with data:', filteredUpdateData);
+			
+			const response = await userAPI.updateUser(username, filteredUpdateData);
+			console.log('Profile update response:', response);
+			
+			setProfileUser((prev) => ({ ...prev, ...filteredUpdateData }));
 			setShowEditModal(false);
 			setProfileImagePreview("");
 		} catch (err) {
-			setError(err.message);
+			console.error('Profile update error:', err);
+			setError(err.message || 'Failed to update profile');
 		} finally {
 			setUploadingProfileImage(false);
 		}
@@ -835,6 +850,60 @@ const ProfilePage = () => {
 						<span className="text-muted"> Followers</span>
 					</span>
 				</div>
+
+				{/* Subscription and Membership Info */}
+				{profileUser.membership && (
+					<div className="mb-3">
+						<div className="d-flex align-items-center gap-2 mb-2">
+							<h6 className="mb-0">Membership</h6>
+							<span
+								className={`badge ${
+									profileUser.membership.subscription === "premium"
+										? "bg-warning text-dark"
+										: profileUser.membership.subscription === "pro"
+											? "bg-primary"
+											: "bg-secondary"
+								}`}
+							>
+								{profileUser.membership.subscription.toUpperCase()}
+							</span>
+						</div>
+						
+						{profileUser.membership.subscription !== 'free' && profileUser.membership.nextBillingDate && (
+							<small className="text-muted">
+								Next billing: {new Date(profileUser.membership.nextBillingDate).toLocaleDateString()}
+							</small>
+						)}
+						
+						{profileUser.membership.subscription === 'free' && (
+							<small className="text-muted">
+								Free account - upgrade to unlock premium features
+							</small>
+						)}
+					</div>
+				)}
+
+				{/* Creator Subscription Tiers (if not own profile) */}
+				{!isOwnProfile && !isFederatedProfile && profileUser.subscriptionTiers && (
+					<div className="mb-3">
+						<h6>Support {profileUser.name}</h6>
+						<div className="d-flex gap-2 flex-wrap">
+							{Object.entries(profileUser.subscriptionTiers).map(([tier, info]) => (
+								<Button
+									key={tier}
+									variant="outline-primary"
+									size="sm"
+									onClick={() => {
+										// Handle subscription logic
+										console.log(`Subscribe to ${tier} tier`);
+									}}
+								>
+									{tier.charAt(0).toUpperCase() + tier.slice(1)} - ₱{(info.price / 100).toFixed(2)}
+								</Button>
+							))}
+						</div>
+					</div>
+				)}
 			</div>
 
 			{/* Tabs */}

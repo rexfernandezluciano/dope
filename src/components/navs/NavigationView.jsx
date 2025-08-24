@@ -33,6 +33,7 @@ import {
 } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
+import { businessAPI } from "../../config/ApiConfig";
 import { removeAuthToken } from "../../config/ApiConfig";
 import {
 	initializeNotifications,
@@ -58,6 +59,7 @@ const NavigationView = ({ children }) => {
 	const [user, setUser] = useState(null);
 	const [notifications, setNotifications] = useState([]);
 	const [unreadCount, setUnreadCount] = useState(0);
+	const [credits, setCredits] = useState({ credits: 0, creditsDisplay: "₱0.00" });
 
 	// Handle NProgress for all navigation including browser back/forward
 	useEffect(() => {
@@ -116,6 +118,19 @@ const NavigationView = ({ children }) => {
 		if ("Notification" in window) {
 			setNotificationsEnabled(Notification.permission === "granted");
 		}
+
+		// Load credits for authenticated user
+		const loadCredits = async () => {
+			if (loaderUserData && loaderUserData.uid) {
+				try {
+					const creditsData = await businessAPI.getCredits();
+					setCredits(creditsData);
+				} catch (error) {
+					console.error("Failed to load credits:", error);
+				}
+			}
+		};
+		loadCredits();
 
 		return () => {
 			window.removeEventListener("beforeunload", handleStart);
@@ -377,6 +392,11 @@ const NavigationView = ({ children }) => {
 												</span>
 											)}
 									</small>
+									<div className="mt-1">
+										<small className="text-success fw-bold">
+											💰 {credits.creditsDisplay}
+										</small>
+									</div>
 								</div>
 								<Nav className="flex-column">
 									{menuItems.map((item, idx) => (
@@ -525,6 +545,11 @@ const NavigationView = ({ children }) => {
 										).toUpperCase()}
 									</span>
 								)}
+						</p>
+						<p className="text-center">
+							<small className="text-success fw-bold">
+								💰 {credits.creditsDisplay}
+							</small>
 						</p>
 					</Container>
 					<Nav className="flex-column gap-1 pe-3">

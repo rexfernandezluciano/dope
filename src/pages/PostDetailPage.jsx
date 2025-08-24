@@ -69,6 +69,9 @@ const PostDetailPage = () => {
 	const [replyTexts, setReplyTexts] = useState({});
 	const [submittingReply, setSubmittingReply] = useState({});
 	const [replies, setReplies] = useState({});
+	// State for comment editing
+	const [editingCommentId, setEditingCommentId] = useState(null);
+	const [editingCommentText, setEditingCommentText] = useState("");
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -175,7 +178,7 @@ const PostDetailPage = () => {
 							(like) => like.user.uid !== currentUser.uid,
 						),
 						stats: {
-							...prevPost.stats,
+							...prev.stats,
 							likes: prevPost.stats.likes - 1,
 						},
 					};
@@ -1015,209 +1018,261 @@ const PostDetailPage = () => {
 				</div>
 			) : (
 				<div className="comment-thread px-3 py-4">
-					{comments.map((comment, index) => (
-						<div
-							key={comment.id}
-							className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""} d-flex gap-2 mb-3`}
-						>
-							<Image
-								src={
-									comment.author.photoURL || "https://i.pravatar.cc/150?img=10"
-								}
-								alt="avatar"
-								roundedCircle
-								width="40"
-								height="40"
-								className="comment-avatar"
-								style={{
-									objectFit: "cover",
-									minWidth: "40px",
-									minHeight: "40px",
-								}}
-							/>
-							<div className="comment-content flex-grow-1">
-								<div className="d-flex align-items-center justify-content-between">
-									<div className="d-flex align-items-center gap-1 mb-1">
-										<span className="fw-bold">
-											{comment.author?.name || "Unknown User"}
-										</span>
-										{comment.author?.hasBlueCheck && (
-											<span className="text-primary">
-												<CheckCircleFill className="text-primary" size={16} />
+					{comments.map((comment, index) => {
+						// Check if the current comment is being edited
+						const isEditing = editingCommentId === comment.id;
+
+						return (
+							<div
+								key={comment.id}
+								className={`comment-item ${index === comments.length - 1 ? "mb-0" : ""} d-flex gap-2 mb-3`}
+							>
+								<Image
+									src={
+										comment.author.photoURL || "https://i.pravatar.cc/150?img=10"
+									}
+									alt="avatar"
+									roundedCircle
+									width="40"
+									height="40"
+									className="comment-avatar"
+									style={{
+										objectFit: "cover",
+										minWidth: "40px",
+										minHeight: "40px",
+									}}
+								/>
+								<div className="comment-content flex-grow-1">
+									<div className="d-flex align-items-center justify-content-between">
+										<div className="d-flex align-items-center gap-1 mb-1">
+											<span className="fw-bold">
+												{comment.author?.name || "Unknown User"}
 											</span>
+											{comment.author?.hasBlueCheck && (
+												<span className="text-primary">
+													<CheckCircleFill className="text-primary" size={16} />
+												</span>
+											)}
+											<span className="text-muted">·</span>
+											<span className="text-muted small">
+												{formatTimeAgo(comment.createdAt)}
+											</span>
+										</div>
+										{comment.author?.uid === currentUser?.uid && (
+											<Button
+												variant="link"
+												className="text-muted p-1 border-0"
+												onClick={() => {
+													setSelectedComment(comment);
+													setShowCommentOptionsModal(true);
+												}}
+											>
+												<ThreeDots size={14} />
+											</Button>
 										)}
-										<span className="text-muted">·</span>
-										<span className="text-muted small">
-											{formatTimeAgo(comment.createdAt)}
-										</span>
 									</div>
-									{comment.author?.uid === currentUser?.uid && (
-										<Button
-											variant="link"
-											className="text-muted p-1 border-0"
-											onClick={() => {
-												setSelectedComment(comment);
-												setShowCommentOptionsModal(true);
-											}}
-										>
-											<ThreeDots size={14} />
-										</Button>
-									)}
-								</div>
 
-								<div className="mb-2">
-									{parseTextContent(comment.content, {
-										onHashtagClick: handleHashtagClick,
-										onMentionClick: handleMentionClick,
-										onLinkClick: handleLinkClick,
-									})}
-								</div>
-
-								{/* Comment Actions */}
-								<div className="d-flex align-items-center gap-3 mb-2">
-									<Button
-										variant="link"
-										size="sm"
-										className="p-0 border-0 d-flex align-items-center gap-1"
-										style={{
-											color: comment.likes?.some(like => like.user.uid === currentUser.uid)
-												? "#dc3545" : "#6c757d",
-											fontSize: "0.75rem",
-										}}
-										onClick={() => handleLikeComment(comment.id)}
-									>
-										{comment.likes?.some(like => like.user.uid === currentUser.uid) ? (
-											<HeartFill size={12} />
-										) : (
-											<Heart size={12} />
-										)}
-										{comment.stats?.likes > 0 && <span>{comment.stats.likes}</span>}
-									</Button>
-
-									<Button
-										variant="link"
-										size="sm"
-										className="p-0 border-0 d-flex align-items-center gap-1 text-muted"
-										style={{ fontSize: "0.75rem" }}
-										onClick={() => toggleReplyForm(comment.id)}
-									>
-										<ChatDots size={12} />
-										Reply
-									</Button>
-
-									{comment.stats?.replies > 0 && (
-										<span className="text-muted small">
-											{comment.stats.replies} {comment.stats.replies === 1 ? 'reply' : 'replies'}
-										</span>
-									)}
-								</div>
-
-								{/* Reply Form */}
-								{showReplyForms[comment.id] && (
-									<div className="mt-2 mb-3">
-										<div className="d-flex gap-2">
-											<Image
-												src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
-												alt="avatar"
-												roundedCircle
-												width="32"
-												height="32"
-												style={{ objectFit: "cover" }}
-											/>
-											<div className="flex-grow-1">
+									<div className="mb-2">
+										{isEditing ? (
+											// Editable comment content
+											<Form className="d-flex gap-2">
 												<Form.Control
 													as="textarea"
 													rows={2}
-													value={replyTexts[comment.id] || ""}
-													onChange={(e) => handleReplyTextChange(comment.id, e.target.value)}
-													placeholder="Write a reply..."
-													className="border-0 shadow-none resize-none"
-													style={{ fontSize: "0.9rem" }}
+													value={editingCommentText}
+													onChange={(e) => setEditingCommentText(e.target.value)}
+													className="resize-none border-0 shadow-none flex-grow-1"
+													style={{ fontSize: "0.9rem", outline: "none", boxShadow: "none" }}
 												/>
-												<div className="d-flex justify-content-end gap-2 mt-2">
+												<div className="d-flex flex-column gap-1">
 													<Button
-														variant="outline-secondary"
+														variant="success"
 														size="sm"
-														onClick={() => toggleReplyForm(comment.id)}
+														onClick={() => {
+															// Call the update handler with comment ID and new text
+															handleUpdateComment(comment.id, editingCommentText);
+															setEditingCommentId(null); // Exit editing mode
+														}}
+													>
+														Save
+													</Button>
+													<Button
+														variant="secondary"
+														size="sm"
+														onClick={() => {
+															setEditingCommentId(null); // Cancel editing
+														}}
 													>
 														Cancel
 													</Button>
-													<Button
-														size="sm"
-														disabled={!replyTexts[comment.id]?.trim() || submittingReply[comment.id]}
-														onClick={() => handleSubmitReply(comment.id)}
-													>
-														{submittingReply[comment.id] ? (
-															<Spinner size="sm" animation="border" />
-														) : (
-															"Reply"
-														)}
-													</Button>
 												</div>
-											</div>
-										</div>
+											</Form>
+										) : (
+											// Display comment content
+											parseTextContent(comment.content, {
+												onHashtagClick: handleHashtagClick,
+												onMentionClick: handleMentionClick,
+												onLinkClick: handleLinkClick,
+											})
+										)}
 									</div>
-								)}
 
-								{/* Replies */}
-								{replies[comment.id] && replies[comment.id].length > 0 && (
-									<div className="replies-section mt-2 ms-3 border-start border-2 ps-3">
-										{replies[comment.id].map((reply, replyIndex) => (
-											<div key={reply.id || `reply-${comment.id}-${replyIndex}`} className="d-flex gap-2 mb-2">
+									{/* Comment Actions */}
+									<div className="d-flex align-items-center gap-3 mb-2">
+										<Button
+											variant="link"
+											size="sm"
+											className="p-0 border-0 d-flex align-items-center gap-1"
+											style={{
+												color: comment.likes?.some(like => like.user.uid === currentUser.uid)
+													? "#dc3545" : "#6c757d",
+												fontSize: "0.75rem",
+											}}
+											onClick={() => handleLikeComment(comment.id)}
+										>
+											{comment.likes?.some(like => like.user.uid === currentUser.uid) ? (
+												<HeartFill size={12} />
+											) : (
+												<Heart size={12} />
+											)}
+											{comment.stats?.likes > 0 && <span>{comment.stats.likes}</span>}
+										</Button>
+
+										<Button
+											variant="link"
+											size="sm"
+											className="p-0 border-0 d-flex align-items-center gap-1 text-muted"
+											style={{ fontSize: "0.75rem" }}
+											onClick={() => {
+												// If already editing, focus the reply form for this comment
+												if (isEditing) {
+													toggleReplyForm(comment.id);
+												} else {
+													// Otherwise, start editing
+													setEditingCommentId(comment.id);
+													setEditingCommentText(comment.content);
+													toggleReplyForm(comment.id); // Ensure reply form is closed when editing
+												}
+											}}
+										>
+											<ChatDots size={12} />
+											Reply
+										</Button>
+
+										{comment.stats?.replies > 0 && (
+											<span className="text-muted small">
+												{comment.stats.replies} {comment.stats.replies === 1 ? 'reply' : 'replies'}
+											</span>
+										)}
+									</div>
+
+									{/* Reply Form */}
+									{showReplyForms[comment.id] && !isEditing && ( // Hide reply form if editing
+										<div className="mt-2 mb-3">
+											<div className="d-flex gap-2">
 												<Image
-													src={reply.author?.photoURL || "https://i.pravatar.cc/150?img=10"}
+													src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
 													alt="avatar"
 													roundedCircle
-													width="28"
-													height="28"
+													width="32"
+													height="32"
 													style={{ objectFit: "cover" }}
 												/>
 												<div className="flex-grow-1">
-													<div className="d-flex align-items-center gap-1 mb-1">
-														<span className="fw-bold small">
-															{reply.author?.name || "Unknown User"}
-														</span>
-														{reply.author?.hasBlueCheck && (
-															<CheckCircleFill className="text-primary" size={12} />
-														)}
-														<span className="text-muted">·</span>
-														<span className="text-muted small">
-															{reply.createdAt ? formatTimeAgo(reply.createdAt) : "just now"}
-														</span>
+													<Form.Control
+														as="textarea"
+														rows={2}
+														value={replyTexts[comment.id] || ""}
+														onChange={(e) => handleReplyTextChange(comment.id, e.target.value)}
+														placeholder="Write a reply..."
+														className="border-0 shadow-none resize-none"
+														style={{ fontSize: "0.9rem" }}
+													/>
+													<div className="d-flex justify-content-end gap-2 mt-2">
+														<Button
+															variant="outline-secondary"
+															size="sm"
+															onClick={() => toggleReplyForm(comment.id)}
+														>
+															Cancel
+														</Button>
+														<Button
+															size="sm"
+															disabled={!replyTexts[comment.id]?.trim() || submittingReply[comment.id]}
+															onClick={() => handleSubmitReply(comment.id)}
+														>
+															{submittingReply[comment.id] ? (
+																<Spinner size="sm" animation="border" />
+															) : (
+																"Reply"
+															)}
+														</Button>
 													</div>
-													<div className="mb-1" style={{ fontSize: "0.9rem" }}>
-														{reply.content ? parseTextContent(reply.content, {
-															onHashtagClick: handleHashtagClick,
-															onMentionClick: handleMentionClick,
-															onLinkClick: handleLinkClick,
-														}) : "No content"}
-													</div>
-													<Button
-														variant="link"
-														size="sm"
-														className="p-0 border-0 d-flex align-items-center gap-1"
-														style={{
-															color: reply.likes?.some(like => like.user.uid === currentUser.uid)
-																? "#dc3545" : "#6c757d",
-															fontSize: "0.7rem",
-														}}
-														onClick={() => handleLikeReply(reply.id, comment.id)}
-													>
-														{reply.likes?.some(like => like.user.uid === currentUser.uid) ? (
-															<HeartFill size={10} />
-														) : (
-															<Heart size={10} />
-														)}
-														{reply.stats?.likes > 0 && <span>{reply.stats.likes}</span>}
-													</Button>
 												</div>
 											</div>
-										))}
-									</div>
-								)}
+										</div>
+									)}
+
+									{/* Replies */}
+									{replies[comment.id] && replies[comment.id].length > 0 && (
+										<div className="replies-section mt-2 ms-3 border-start border-2 ps-3">
+											{replies[comment.id].map((reply, replyIndex) => (
+												<div key={reply.id || `reply-${comment.id}-${replyIndex}`} className="d-flex gap-2 mb-2">
+													<Image
+														src={reply.author?.photoURL || "https://i.pravatar.cc/150?img=10"}
+														alt="avatar"
+														roundedCircle
+														width="28"
+														height="28"
+														style={{ objectFit: "cover" }}
+													/>
+													<div className="flex-grow-1">
+														<div className="d-flex align-items-center gap-1 mb-1">
+															<span className="fw-bold small">
+																{reply.author?.name || "Unknown User"}
+															</span>
+															{reply.author?.hasBlueCheck && (
+																<CheckCircleFill className="text-primary" size={12} />
+															)}
+															<span className="text-muted">·</span>
+															<span className="text-muted small">
+																{reply.createdAt ? formatTimeAgo(reply.createdAt) : "just now"}
+															</span>
+														</div>
+														<div className="mb-1" style={{ fontSize: "0.9rem" }}>
+															{reply.content ? parseTextContent(reply.content, {
+																onHashtagClick: handleHashtagClick,
+																onMentionClick: handleMentionClick,
+																onLinkClick: handleLinkClick,
+															}) : "No content"}
+														</div>
+														<Button
+															variant="link"
+															size="sm"
+															className="p-0 border-0 d-flex align-items-center gap-1"
+															style={{
+																color: reply.likes?.some(like => like.user.uid === currentUser.uid)
+																	? "#dc3545" : "#6c757d",
+																fontSize: "0.7rem",
+															}}
+															onClick={() => handleLikeReply(reply.id, comment.id)}
+														>
+															{reply.likes?.some(like => like.user.uid === currentUser.uid) ? (
+																<HeartFill size={10} />
+															) : (
+																<Heart size={10} />
+															)}
+															{reply.stats?.likes > 0 && <span>{reply.stats.likes}</span>}
+														</Button>
+													</div>
+												</div>
+											))}
+										</div>
+									)}
+								</div>
 							</div>
-						</div>
-					))}
+						);
+					})}
 				</div>
 			)}
 			{/* Image Viewer Modal */}
