@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Button, Row, Col, Badge, Alert, Spinner, Modal } from 'react-bootstrap';
-import { Heart, Calendar, CurrencyDollar, XCircle } from 'react-bootstrap-icons';
+import { Heart, Calendar, CurrencyDollar, XCircle, CameraVideo } from 'react-bootstrap-icons';
 import { subscriptionAPI } from '../config/ApiConfig';
 import { useNavigate } from 'react-router-dom';
 
@@ -118,7 +117,7 @@ const MySubscriptionsPage = () => {
                           <small className="text-muted">@{subscription.creator.username}</small>
                         </div>
                       </div>
-                      
+
                       <div className="mb-3">
                         <Badge bg="primary" className="me-2">
                           {subscription.tier.name}
@@ -161,58 +160,22 @@ const MySubscriptionsPage = () => {
         </Card.Body>
       </Card>
 
-      {/* My Subscribers */}
+      {/* Note: Subscribers section moved to Creator Dashboard */}
       <Card>
         <Card.Header>
-          <h5 className="mb-0">My Subscribers</h5>
+          <h5 className="mb-0">Creator Dashboard</h5>
         </Card.Header>
-        <Card.Body>
-          {subscribers.length === 0 ? (
-            <div className="text-center py-4">
-              <CurrencyDollar size={48} className="text-muted mb-3" />
-              <p className="text-muted">No subscribers yet</p>
-              <small className="text-muted">Share your profile to start getting supporters!</small>
-            </div>
-          ) : (
-            <Row className="g-3">
-              {subscribers.map((subscriber) => (
-                <Col md={6} key={subscriber.id}>
-                  <Card>
-                    <Card.Body>
-                      <div className="d-flex align-items-center gap-3 mb-3">
-                        <img
-                          src={subscriber.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(subscriber.user.name)}&size=40`}
-                          alt={subscriber.user.name}
-                          className="rounded-circle"
-                          width="40"
-                          height="40"
-                          style={{ objectFit: 'cover' }}
-                        />
-                        <div>
-                          <h6 className="mb-1">{subscriber.user.name}</h6>
-                          <small className="text-muted">@{subscriber.user.username}</small>
-                        </div>
-                      </div>
-                      
-                      <div className="mb-2">
-                        <Badge bg="primary" className="me-2">
-                          {subscriber.tier.name}
-                        </Badge>
-                        <Badge bg="success">
-                          ₱{(subscriber.tier.price / 100).toFixed(2)}/month
-                        </Badge>
-                      </div>
-
-                      <div className="d-flex align-items-center gap-2 text-muted">
-                        <Calendar size={14} />
-                        <small>Since {new Date(subscriber.createdAt).toLocaleDateString()}</small>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          )}
+        <Card.Body className="text-center py-4">
+          <CameraVideo size={48} className="text-muted mb-3" />
+          <p className="text-muted mb-3">
+            Want to see your subscribers and manage your creator monetization?
+          </p>
+          <Button
+            variant="primary"
+            onClick={() => navigate('/creator')}
+          >
+            Go to Creator Dashboard
+          </Button>
         </Card.Body>
       </Card>
 

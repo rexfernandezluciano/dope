@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Alert, Badge, Tab, Tabs, Form, Modal, Table, ProgressBar } from "react-bootstrap";
 import { CurrencyDollar, GraphUpArrow, Calendar, Eye, Heart, Share, Plus, Gear } from "react-bootstrap-icons";
-import { analyticsAPI, businessAPI } from "../config/ApiConfig";
+import { analyticsAPI, businessAPI, subscriptionAPI } from "../config/ApiConfig";
 import { formatTimeAgo, formatCurrency } from "../utils/common-utils";
 import { updatePageMeta } from "../utils/meta-utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
@@ -43,14 +43,22 @@ const CreatorPage = () => {
 	const loadCreatorData = async () => {
 		try {
 			setLoading(true);
-			const [analyticsData, businessData] = await Promise.all([
+			const [analyticsData, businessData, subscriberData] = await Promise.all([
 				analyticsAPI.getUserAnalytics(selectedPeriod),
-				businessAPI.getDashboard().catch(() => ({}))
+				businessAPI.getDashboard().catch(() => ({})),
+				subscriptionAPI.getSubscribers().catch(() => ({ subscribers: [], stats: {} }))
 			]);
 
-			setAnalytics(analyticsData);
-			setEarnings(analyticsData.earnings || {});
-			setMonetization(analyticsData.monetization || {});
+			// Merge subscriber data into analytics
+			const mergedAnalytics = {
+				...analyticsData,
+				subscribers: subscriberData.subscribers || [],
+				subscriberStats: subscriberData.stats || {}
+			};
+
+			setAnalytics(mergedAnalytics);
+			setEarnings(mergedAnalytics.earnings || {});
+			setMonetization(mergedAnalytics.monetization || {});
 		} catch (error) {
 			setError("Failed to load creator data");
 			console.error(error);
@@ -285,6 +293,132 @@ const CreatorPage = () => {
 												<span className="fw-bold">{item.value}%</span>
 											</div>
 										))}
+									</div>
+								</Card.Body>
+							</Card>
+						</Col>
+					</Row>
+				</Tab>
+
+				<Tab eventKey="subscribers" title={
+					<span className="d-flex align-items-center">
+						<Heart className="me-2" size={16} />
+						<span className="d-none d-sm-inline">Subscribers</span>
+					</span>
+				}>
+					<Row className="g-3 mb-4">
+						<Col lg={8}>
+							<Card className="border-0 shadow-sm">
+								<Card.Header>
+									<h5 className="mb-0">My Subscribers</h5>
+								</Card.Header>
+								<Card.Body>
+									{analytics.subscribers?.length === 0 ? (
+										<div className="text-center py-4">
+											<CurrencyDollar size={48} className="text-muted mb-3" />
+											<p className="text-muted">No subscribers yet</p>
+											<small className="text-muted">Share your profile to start getting supporters!</small>
+										</div>
+									) : (
+										<Row className="g-3">
+											{(analytics.subscribers || []).map((subscriber) => (
+												<Col md={6} key={subscriber.id}>
+													<Card className="h-100">
+														<Card.Body>
+															<div className="d-flex align-items-center gap-3 mb-3">
+																<img
+																	src={subscriber.subscriber?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(subscriber.subscriber?.name || 'User')}&size=40`}
+																	alt={subscriber.subscriber?.name || 'User'}
+																	className="rounded-circle"
+																	width="40"
+																	height="40"
+																	style={{ objectFit: 'cover' }}
+																/>
+																<div>
+																	<h6 className="mb-1">{subscriber.subscriber?.name || 'Anonymous'}</h6>
+																	<small className="text-muted">@{subscriber.subscriber?.username || 'user'}</small>
+																</div>
+															</div>
+															<div className="d-flex justify-content-between align-items-center mb-2">
+																<Badge bg={subscriber.tier === 'premium' ? 'success' : subscriber.tier === 'vip' ? 'warning' : 'primary'}>
+																	{subscriber.tier?.charAt(0).toUpperCase() + subscriber.tier?.slice(1) || 'Basic'}
+																</Badge>
+																<Badge bg={subscriber.status === 'active' ? 'success' : 'secondary'}>
+																	{subscriber.status?.charAt(0).toUpperCase() + subscriber.status?.slice(1) || 'Unknown'}
+																</Badge>
+															</div>
+															<div className="d-flex align-items-center gap-2 text-muted">
+																<Calendar size={14} />
+																<small>Since {subscriber.createdAt ? new Date(subscriber.createdAt).toLocaleDateString() : 'Unknown'}</small>
+															</div>
+														</Card.Body>
+													</Card>
+												</Col>
+											))}
+										</Row>
+									)}
+								</Card.Body>
+							</Card>
+						</Col>
+						<Col lg={4}>
+							<Card className="border-0 shadow-sm">
+								<Card.Header>
+									<h5 className="mb-0">Subscriber Stats</h5>
+								</Card.Header>
+								<Card.Body>
+									<div className="mb-3">
+										<div className="d-flex justify-content-between align-items-center mb-1">
+											<small className="text-muted">Total Subscribers</small>
+											<strong>{analytics.subscriberStats?.totalSubscribers || 0}</strong>
+										</div>
+										<ProgressBar 
+											now={100} 
+											variant="primary" 
+											style={{ height: '6px' }}
+										/>
+									</div>
+									<div className="mb-3">
+										<div className="d-flex justify-content-between align-items-center mb-1">
+											<small className="text-muted">Basic Tier</small>
+											<strong>{analytics.subscriberStats?.basicSubscribers || 0}</strong>
+										</div>
+										<ProgressBar 
+											now={analytics.subscriberStats?.totalSubscribers > 0 ? 
+												(analytics.subscriberStats?.basicSubscribers || 0) / analytics.subscriberStats.totalSubscribers * 100 : 0} 
+											variant="primary" 
+											style={{ height: '6px' }}
+										/>
+									</div>
+									<div className="mb-3">
+										<div className="d-flex justify-content-between align-items-center mb-1">
+											<small className="text-muted">Premium Tier</small>
+											<strong>{analytics.subscriberStats?.premiumSubscribers || 0}</strong>
+										</div>
+										<ProgressBar 
+											now={analytics.subscriberStats?.totalSubscribers > 0 ? 
+												(analytics.subscriberStats?.premiumSubscribers || 0) / analytics.subscriberStats.totalSubscribers * 100 : 0} 
+											variant="success" 
+											style={{ height: '6px' }}
+										/>
+									</div>
+									<div className="mb-3">
+										<div className="d-flex justify-content-between align-items-center mb-1">
+											<small className="text-muted">VIP Tier</small>
+											<strong>{analytics.subscriberStats?.vipSubscribers || 0}</strong>
+										</div>
+										<ProgressBar 
+											now={analytics.subscriberStats?.totalSubscribers > 0 ? 
+												(analytics.subscriberStats?.vipSubscribers || 0) / analytics.subscriberStats.totalSubscribers * 100 : 0} 
+											variant="warning" 
+											style={{ height: '6px' }}
+										/>
+									</div>
+									<hr />
+									<div className="text-center">
+										<h4 className="text-success mb-1">
+											${analytics.subscriberStats?.monthlyRevenue ? (analytics.subscriberStats.monthlyRevenue / 100).toFixed(2) : '0.00'}
+										</h4>
+										<small className="text-muted">Monthly Revenue</small>
 									</div>
 								</Card.Body>
 							</Card>
