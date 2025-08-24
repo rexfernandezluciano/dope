@@ -7,6 +7,7 @@ import { analyticsAPI, subscriptionAPI } from "../config/ApiConfig";
 import { formatTimeAgo, formatCurrency } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { CheckCircle, XCircle } from 'react-bootstrap-icons';
 
 const AnalyticsPage = () => {
 	const [analytics, setAnalytics] = useState(null);
@@ -518,7 +519,7 @@ const AnalyticsPage = () => {
 									<div className="d-flex justify-content-between align-items-center mb-2">
 										<small className="text-muted">Followers</small>
 										<Badge bg={monetization.requirements.followers.met ? 'success' : 'secondary'}>
-											{monetization.requirements.followers.met ? '✓' : '✗'}
+											{monetization.requirements.followers.met ? <CheckCircle size={12} /> : <XCircle size={12} />}
 										</Badge>
 									</div>
 									<div className="mb-2">
@@ -547,7 +548,7 @@ const AnalyticsPage = () => {
 									<div className="d-flex justify-content-between align-items-center mb-2">
 										<small className="text-muted">Daily Activity</small>
 										<Badge bg={monetization.requirements.recentActivity.met ? 'success' : 'secondary'}>
-											{monetization.requirements.recentActivity.met ? '✓' : '✗'}
+											{monetization.requirements.recentActivity.met ? <CheckCircle size={12} /> : <XCircle size={12} />}
 										</Badge>
 									</div>
 									<div className="mb-2">
@@ -572,7 +573,7 @@ const AnalyticsPage = () => {
 									<div className="d-flex justify-content-between align-items-center mb-2">
 										<small className="text-muted">Account Status</small>
 										<Badge bg={monetization.requirements.accountStatus.goodStanding ? 'success' : 'danger'}>
-											{monetization.requirements.accountStatus.goodStanding ? '✓' : '✗'}
+											{monetization.requirements.accountStatus.goodStanding ? <CheckCircle size={12} /> : <XCircle size={12} />}
 										</Badge>
 									</div>
 									<div className="mb-2">
