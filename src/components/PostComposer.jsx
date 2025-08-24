@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useCallback } from 'react';
-import { Card, Form, Button, Image, Alert, Spinner, Modal, InputGroup } from 'react-bootstrap';
-import { Camera, Globe, Lock, PersonFill, EmojiSmile, X, Search, CameraVideo } from 'react-bootstrap-icons';
+import { Card, Form, Button, Image, Alert, Spinner, Modal, InputGroup, Row, Col } from 'react-bootstrap';
+import { Camera, Globe, Lock, PersonFill, EmojiSmile, X, Search, CameraVideo, GeoAlt, Calendar3, BarChart } from 'react-bootstrap-icons';
 import { postAPI, imageAPI } from '../config/ApiConfig';
 import MentionDropdown from './MentionDropdown';
 import LiveStudioModal from './LiveStudioModal';
@@ -17,6 +18,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
   const [postType, setPostType] = useState('text');
   const [liveVideoUrl, setLiveVideoUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [error, setError] = useState('');
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState('');
@@ -43,7 +45,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
       case "pro":
         return Infinity;
       default:
-        return 3;
+        return 4;
     }
   };
 
@@ -58,7 +60,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = "auto";
-      textarea.style.height = textarea.scrollHeight + "px";
+      textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
     }
 
     // Check for mention trigger
@@ -96,7 +98,6 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
     const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
 
     if (mentionMatch) {
-      // Use uid for mentions since server will convert @uid to display name
       const uid = user.uid || user.username;
       const newText = textBeforeCursor.replace(mentionMatch[0], `@${uid} `) + textAfterCursor;
       setContent(newText);
@@ -127,7 +128,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
         });
       } catch (err) {
         console.error("Error converting HEIC:", err);
-        return null;
+        throw new Error("Failed to convert HEIC image");
       }
     }
 
@@ -139,48 +140,54 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
       if (response && response.imageUrls && response.imageUrls.length > 0) {
         return response.imageUrls[0];
       }
-      return null;
+      throw new Error("No image URL returned");
     } catch (error) {
       console.error("Error uploading image:", error);
-      return null;
+      throw error;
     }
   };
 
   const handleImageUpload = useCallback(async (e) => {
     const files = Array.from(e.target.files);
-    const imageLimit = getImageUploadLimit(currentUser?.subscription);
+    if (files.length === 0) return;
 
-    if (files.length > imageLimit) {
-      alert(
-        `You can only upload ${imageLimit === Infinity ? "unlimited" : imageLimit} images per post. ${imageLimit === 3 ? "Upgrade to Premium or Pro for more uploads." : ""}`
-      );
+    const imageLimit = getImageUploadLimit(currentUser?.subscription);
+    const currentImages = images || [];
+    const remainingSlots = imageLimit - currentImages.length;
+
+    if (files.length > remainingSlots) {
+      setError(`You can only upload ${remainingSlots} more image(s). ${imageLimit === 4 ? "Upgrade to Premium or Pro for more uploads." : ""}`);
       e.target.value = "";
       return;
     }
 
-    const currentImages = images || [];
-    const remainingSlots = imageLimit - currentImages.length;
-    const filesToUpload = files.slice(0, remainingSlots);
-
-    if (filesToUpload.length < files.length) {
-      alert(
-        `You can only upload up to ${imageLimit} images. Only the first ${filesToUpload.length} will be uploaded.`
-      );
-    }
+    setUploadingImages(true);
+    setError('');
 
     const uploadedUrls = [];
-    for (const file of filesToUpload) {
-      try {
-        const url = await uploadImage(file);
-        if (url) {
-          uploadedUrls.push(url);
+    
+    try {
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+          throw new Error(`${file.name} is not a valid image file`);
         }
-      } catch (err) {
-        console.error("Error processing file:", err);
-        setError("Failed to process one or more images.");
+        
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+          throw new Error(`${file.name} is too large. Maximum size is 10MB`);
+        }
+
+        const url = await uploadImage(file);
+        uploadedUrls.push(url);
       }
+      
+      setImages(prev => [...prev, ...uploadedUrls]);
+    } catch (err) {
+      console.error("Error processing files:", err);
+      setError(err.message || "Failed to upload one or more images");
+    } finally {
+      setUploadingImages(false);
+      e.target.value = "";
     }
-    setImages((prev) => [...(prev || []), ...uploadedUrls]);
   }, [images, currentUser]);
 
   const handleSelectGif = (gif) => {
@@ -188,25 +195,18 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
     const imageLimit = getImageUploadLimit(currentUser?.subscription);
 
     if (currentImages.length >= imageLimit) {
-      alert(
-        `You can only add up to ${imageLimit === Infinity ? "unlimited" : imageLimit} images/GIFs. ${imageLimit === 3 ? "Upgrade to Premium or Pro for more uploads." : ""}`
-      );
+      setError(`You can only add up to ${imageLimit === Infinity ? "unlimited" : imageLimit} images/GIFs. ${imageLimit === 4 ? "Upgrade to Premium or Pro for more uploads." : ""}`);
       return;
     }
 
     const imageUrl = gif.images.fixed_height.url;
-    setImages((prev) => [...(prev || []), imageUrl]);
+    setImages(prev => [...prev, imageUrl]);
     setShowStickerModal(false);
   };
 
   const handleStartLiveStream = async (streamData) => {
     try {
       setIsStreaming(true);
-      // Keep the LiveStudioModal open - don't close it
-
-      // Don't create post here - let HomePage handle the actual stream creation
-      // Just update local state to show live indicator
-
     } catch (error) {
       console.error('Error starting live stream:', error);
       setError('Failed to start live stream');
@@ -216,7 +216,6 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 
   const handleStopLiveStream = () => {
     setIsStreaming(false);
-    // Keep the LiveStudioModal open - don't close it automatically
   };
 
   const handleSubmit = useCallback(async (e) => {
@@ -233,23 +232,9 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
       setSubmitting(true);
       setError('');
 
-      let uploadedImageUrls = [];
-      if (images.length > 0) {
-        if (typeof images[0] === "object") {
-          const formData = new FormData();
-          images.forEach((file) => {
-            formData.append("images", file);
-          });
-          const response = await imageAPI.uploadImages(formData);
-          uploadedImageUrls = response.imageUrls || [];
-        } else {
-          uploadedImageUrls = images;
-        }
-      }
-
       const postData = {
         content: cleanContent,
-        imageUrls: uploadedImageUrls,
+        imageUrls: images,
         privacy: privacy.toLowerCase(),
         postType,
         hashtags: extractHashtags(cleanContent),
@@ -295,40 +280,32 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
     setSearchTerm(e.target.value);
   };
 
-  const privacyOptions = {
-    public: <Globe size={14} className="me-1" />,
-    followers: <PersonFill size={14} className="me-1" />,
-    private: <Lock size={14} className="me-1" />,
-  };
+  const isPostDisabled = submitting || uploadingImages || (!content.trim() && images.length === 0);
+  const characterCount = content.length;
+  const characterLimit = 2000;
+  const isOverLimit = characterCount > characterLimit;
 
   return (
     <>
       {/* Inline Post Composer */}
-      <Card className="border-0 border-bottom rounded-0">
-        <Card.Body className="px-3 py-3">
+      <Card className="border-0 border-bottom rounded-0 shadow-sm">
+        <Card.Body className="px-4 py-3">
           <div className="d-flex gap-3">
             <Image
               src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
               alt="avatar"
               roundedCircle
-              width="40"
-              height="40"
-              style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
+              width="48"
+              height="48"
+              style={{ objectFit: "cover", minWidth: "48px", minHeight: "48px" }}
             />
             <div 
-              className="flex-grow-1 bg-light rounded-pill px-3 py-2 cursor-pointer"
+              className="flex-grow-1 d-flex align-items-center bg-light rounded-pill px-4 py-3 cursor-pointer border"
               onClick={() => setShowComposerModal(true)}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: 'pointer', minHeight: '52px' }}
             >
-              <span className="text-muted">{placeholder}</span>
+              <span className="text-muted fs-5">{placeholder}</span>
             </div>
-            <Button
-              variant="primary"
-              className="rounded-pill px-3"
-              onClick={() => setShowComposerModal(true)}
-            >
-              Post
-            </Button>
           </div>
         </Card.Body>
       </Card>
@@ -336,21 +313,46 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
       {/* Full Post Composer Modal */}
       <Modal
         show={showComposerModal}
-        size="md"
+        size="lg"
         fullscreen="md-down"
         backdrop="static"
         onHide={() => setShowComposerModal(false)}
         centered
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Create Post</Modal.Title>
+        <Modal.Header className="border-0 pb-0">
+          <div className="d-flex align-items-center w-100">
+            <Button
+              variant="link"
+              className="p-0 me-3 text-dark"
+              onClick={() => setShowComposerModal(false)}
+            >
+              <X size={24} />
+            </Button>
+            <h5 className="mb-0 flex-grow-1">Create Post</h5>
+            <Button
+              onClick={handleSubmit}
+              disabled={isPostDisabled || isOverLimit}
+              className="rounded-pill px-4 fw-bold"
+              style={{ 
+                backgroundColor: isPostDisabled || isOverLimit ? '#ccc' : '#1DA1F2',
+                border: 'none',
+                opacity: isPostDisabled || isOverLimit ? 0.5 : 1
+              }}
+            >
+              {submitting ? (
+                <Spinner size="sm" animation="border" />
+              ) : (
+                "Post"
+              )}
+            </Button>
+          </div>
         </Modal.Header>
 
-        <Modal.Body className="overflow-x-hidden">
+        <Modal.Body className="pt-2">
           {error && <Alert variant="danger" className="mb-3">{error}</Alert>}
 
           <Form onSubmit={handleSubmit}>
-            <div className="d-flex gap-3 mb-3">
+            <div className="d-flex gap-3">
               <Image
                 src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
                 alt="avatar"
@@ -364,157 +366,255 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
                 }}
               />
               <div className="flex-grow-1">
+                {/* Privacy Selector */}
+                <div className="mb-2">
+                  <Form.Select
+                    size="sm"
+                    value={privacy}
+                    onChange={(e) => setPrivacy(e.target.value)}
+                    style={{ width: 'auto', fontSize: '14px' }}
+                    className="border-0 bg-light rounded-pill px-3"
+                  >
+                    <option value="public">🌍 Everyone can reply</option>
+                    <option value="followers">👥 Followers can reply</option>
+                    <option value="private">🔒 Only you can see</option>
+                  </Form.Select>
+                </div>
+
+                {/* Text Input */}
                 <Form.Control
                   ref={textareaRef}
                   as="textarea"
-                  rows={4}
+                  rows={3}
                   value={content}
                   onChange={handleContentChange}
                   placeholder={placeholder}
-                  className="border-0 shadow-none resize-none fs-5"
-                  maxLength={2000}
-                  style={{ fontSize: "1.25rem" }}
+                  className="border-0 shadow-none resize-none"
+                  style={{ 
+                    fontSize: "20px", 
+                    lineHeight: "24px",
+                    minHeight: "120px",
+                    maxHeight: "200px"
+                  }}
+                  maxLength={characterLimit}
                 />
 
+                {/* Live Video URL Input */}
                 {postType === 'live_video' && (
                   <Form.Control
                     type="url"
                     value={liveVideoUrl}
                     onChange={(e) => setLiveVideoUrl(e.target.value)}
                     placeholder="Live video stream URL (optional)"
-                    className="form-control-sm mt-2"
+                    className="border-0 shadow-none mt-2"
+                    style={{ fontSize: "16px" }}
                   />
                 )}
 
                 {/* Image Previews */}
                 {images.length > 0 && (
                   <div className="mt-3">
-                    <div className="d-flex flex-wrap gap-2">
-                      {images.map((image, index) => (
-                        <div key={index} className="position-relative">
+                    <div className="border rounded-3 p-2" style={{ backgroundColor: '#f8f9fa' }}>
+                      {images.length === 1 ? (
+                        // Single image
+                        <div className="position-relative">
                           <Image
-                            src={image}
-                            alt={`Upload ${index + 1}`}
-                            className="rounded"
+                            src={images[0]}
+                            alt="Upload"
+                            className="rounded-3 w-100"
                             style={{
-                              width: "120px",
-                              height: "120px",
+                              height: "300px",
                               objectFit: "cover",
                             }}
                           />
                           <Button
-                            variant="danger"
+                            variant="dark"
                             size="sm"
-                            className="position-absolute top-0 end-0 m-1 rounded-circle d-flex align-items-center justify-content-center"
-                            style={{ width: "24px", height: "24px" }}
-                            onClick={() => removeImage(index)}
+                            className="position-absolute top-0 end-0 m-2 rounded-circle d-flex align-items-center justify-content-center"
+                            style={{ width: "32px", height: "32px", opacity: 0.8 }}
+                            onClick={() => removeImage(0)}
                           >
-                            <X size={12} />
+                            <X size={16} />
                           </Button>
                         </div>
-                      ))}
+                      ) : images.length === 2 ? (
+                        // Two images side by side
+                        <Row className="g-2">
+                          {images.map((image, index) => (
+                            <Col key={index} xs={6}>
+                              <div className="position-relative">
+                                <Image
+                                  src={image}
+                                  alt={`Upload ${index + 1}`}
+                                  className="rounded-3 w-100"
+                                  style={{
+                                    height: "200px",
+                                    objectFit: "cover",
+                                  }}
+                                />
+                                <Button
+                                  variant="dark"
+                                  size="sm"
+                                  className="position-absolute top-0 end-0 m-2 rounded-circle d-flex align-items-center justify-content-center"
+                                  style={{ width: "28px", height: "28px", opacity: 0.8 }}
+                                  onClick={() => removeImage(index)}
+                                >
+                                  <X size={12} />
+                                </Button>
+                              </div>
+                            </Col>
+                          ))}
+                        </Row>
+                      ) : (
+                        // Three or four images in grid
+                        <Row className="g-2">
+                          <Col xs={6}>
+                            <div className="position-relative">
+                              <Image
+                                src={images[0]}
+                                alt="Upload 1"
+                                className="rounded-3 w-100"
+                                style={{
+                                  height: images.length === 3 ? "260px" : "150px",
+                                  objectFit: "cover",
+                                }}
+                              />
+                              <Button
+                                variant="dark"
+                                size="sm"
+                                className="position-absolute top-0 end-0 m-2 rounded-circle d-flex align-items-center justify-content-center"
+                                style={{ width: "28px", height: "28px", opacity: 0.8 }}
+                                onClick={() => removeImage(0)}
+                              >
+                                <X size={12} />
+                              </Button>
+                            </div>
+                          </Col>
+                          <Col xs={6}>
+                            <div className="d-flex flex-column gap-2">
+                              {images.slice(1).map((image, index) => (
+                                <div key={index + 1} className="position-relative">
+                                  <Image
+                                    src={image}
+                                    alt={`Upload ${index + 2}`}
+                                    className="rounded-3 w-100"
+                                    style={{
+                                      height: images.length === 3 ? (index === 0 ? "125px" : "125px") : "72px",
+                                      objectFit: "cover",
+                                    }}
+                                  />
+                                  <Button
+                                    variant="dark"
+                                    size="sm"
+                                    className="position-absolute top-0 end-0 m-1 rounded-circle d-flex align-items-center justify-content-center"
+                                    style={{ width: "24px", height: "24px", opacity: 0.8 }}
+                                    onClick={() => removeImage(index + 1)}
+                                  >
+                                    <X size={10} />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </Col>
+                        </Row>
+                      )}
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
 
-            <div className="d-flex justify-content-between align-items-center">
-              <div className="d-flex gap-2">
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="text-primary p-1"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Add Photos"
-                >
-                  <Camera size={20} />
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  onChange={handleImageUpload}
-                  accept="image/*"
-                  multiple
-                  style={{ display: "none" }}
-                />
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="text-primary p-1"
-                  onClick={() => setShowStickerModal(true)}
-                  title="Add GIF/Sticker"
-                >
-                  <EmojiSmile size={18} />
-                </Button>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className={isStreaming ? "text-danger p-1" : "text-primary p-1"}
-                  onClick={() => setShowLiveStudioModal(true)}
-                  title={isStreaming ? "Manage Live Stream" : "Go Live"}
-                >
-                  <CameraVideo size={18} />
-                  {isStreaming && <span className="ms-1 text-danger fw-bold">LIVE</span>}
-                </Button>
-
-                <Form.Select
-                  size="sm"
-                  value={postType}
-                  onChange={(e) => setPostType(e.target.value)}
-                  style={{ width: 'auto' }}
-                >
-                  <option value="text">Text Post</option>
-                  <option value="live_video">Live Video</option>
-                </Form.Select>
-              </div>
-
-              <div className="d-flex align-items-center gap-2">
-                <Form.Select
-                  size="sm"
-                  value={privacy}
-                  onChange={(e) => setPrivacy(e.target.value)}
-                  style={{ width: 'auto' }}
-                >
-                  <option value="public">
-                    {privacyOptions.public} Public
-                  </option>
-                  <option value="followers">
-                    {privacyOptions.followers} Followers
-                  </option>
-                  <option value="private">
-                    {privacyOptions.private} Only Me
-                  </option>
-                </Form.Select>
-                <small className="text-muted">{content.length}/2000</small>
+                {/* Upload Progress */}
+                {uploadingImages && (
+                  <div className="mt-3 p-3 bg-light rounded-3 text-center">
+                    <Spinner size="sm" animation="border" className="me-2" />
+                    <span className="text-muted">Uploading images...</span>
+                  </div>
+                )}
               </div>
             </div>
           </Form>
         </Modal.Body>
 
-        <Modal.Footer className="d-flex justify-content-between align-items-center">
-          <div className="d-flex align-items-center gap-2">
-            {getPrivacyIcon()}
-            <small className="text-muted">
-              {privacy === 'public' ? 'Anyone can see this' : 
-               privacy === 'followers' ? 'Only followers can see this' : 
-               'Only you can see this'}
-            </small>
+        <Modal.Footer className="border-0 pt-0">
+          <div className="d-flex justify-content-between align-items-center w-100">
+            <div className="d-flex gap-1">
+              <Button
+                variant="link"
+                size="sm"
+                className="text-primary p-2 rounded-circle d-flex align-items-center justify-content-center"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImages || images.length >= getImageUploadLimit(currentUser?.subscription)}
+                title="Add Photos"
+                style={{ width: "36px", height: "36px" }}
+              >
+                <Camera size={18} />
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleImageUpload}
+                accept="image/*"
+                multiple
+                style={{ display: "none" }}
+              />
+              <Button
+                variant="link"
+                size="sm"
+                className="text-primary p-2 rounded-circle d-flex align-items-center justify-content-center"
+                onClick={() => setShowStickerModal(true)}
+                title="Add GIF"
+                style={{ width: "36px", height: "36px" }}
+              >
+                <EmojiSmile size={18} />
+              </Button>
+              <Button
+                variant="link"
+                size="sm"
+                className={`p-2 rounded-circle d-flex align-items-center justify-content-center ${isStreaming ? "text-danger" : "text-primary"}`}
+                onClick={() => setShowLiveStudioModal(true)}
+                title={isStreaming ? "Manage Live Stream" : "Go Live"}
+                style={{ width: "36px", height: "36px" }}
+              >
+                <CameraVideo size={18} />
+              </Button>
+            </div>
+
+            <div className="d-flex align-items-center gap-3">
+              {/* Character Count */}
+              {characterCount > 0 && (
+                <div className="d-flex align-items-center gap-2">
+                  <svg width="20" height="20" viewBox="0 0 20 20">
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8"
+                      fill="none"
+                      stroke={isOverLimit ? "#ff6b6b" : characterCount > characterLimit * 0.8 ? "#ffb347" : "#e1e8ed"}
+                      strokeWidth="2"
+                    />
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="8"
+                      fill="none"
+                      stroke={isOverLimit ? "#ff6b6b" : "#1DA1F2"}
+                      strokeWidth="2"
+                      strokeDasharray={`${(characterCount / characterLimit) * 50.26} 50.26`}
+                      strokeLinecap="round"
+                      transform="rotate(-90 10 10)"
+                    />
+                  </svg>
+                  <small className={`fw-bold ${isOverLimit ? "text-danger" : "text-muted"}`}>
+                    {characterLimit - characterCount}
+                  </small>
+                </div>
+              )}
+
+              {/* Privacy Indicator */}
+              <div className="d-flex align-items-center text-muted">
+                {getPrivacyIcon()}
+              </div>
+            </div>
           </div>
-          <Button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={
-              submitting || (!content.trim() && images.length === 0)
-            }
-            className="rounded-pill px-4"
-          >
-            {submitting ? (
-              <Spinner size="sm" animation="border" />
-            ) : (
-              "Post"
-            )}
-          </Button>
         </Modal.Footer>
       </Modal>
 
@@ -524,28 +624,29 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
         onHide={() => setShowStickerModal(false)}
         fullscreen="md-down"
         centered
+        size="lg"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Stickers & GIFs</Modal.Title>
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title>Choose a GIF</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <InputGroup className="mb-3">
-            <InputGroup.Text>
+            <InputGroup.Text className="bg-light border-0">
               <Search />
             </InputGroup.Text>
             <Form.Control
               type="text"
-              placeholder="Search stickers and GIFs..."
+              placeholder="Search for GIFs"
               value={searchTerm}
               onChange={handleSearchChange}
-              className="shadow-none"
+              className="shadow-none border-0 bg-light"
             />
           </InputGroup>
 
-          <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
             <Grid
               columns={3}
-              width={window.innerWidth - 40}
+              width={window.innerWidth > 768 ? 500 : window.innerWidth - 40}
               fetchGifs={fetchGifs}
               onGifClick={(gif, e) => {
                 e.preventDefault();
