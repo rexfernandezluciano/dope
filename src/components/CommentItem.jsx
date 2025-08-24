@@ -185,20 +185,20 @@ const CommentItem = ({
           )}
 
           {/* Payment indicators */}
-          {comment.tipAmount && (
+          {comment.tip && (
             <div className="mb-1">
               <Badge bg="warning" text="dark" className="small">
                 <Gift size={10} className="me-1" />
-                Tip: ₱{(comment.tipAmount / 100).toFixed(2)}
+                Tip: ₱{(comment.tip?.amount / 100).toFixed(2)}
               </Badge>
             </div>
           )}
 
-          {comment.donationAmount && (
+          {comment.donation && (
             <div className="mb-1">
               <Badge bg="info" className="small">
                 <CurrencyDollar size={10} className="me-1" />
-                Donation: ₱{(comment.donationAmount / 100).toFixed(2)}
+                Donation: ₱{(comment.donation?.amount / 100).toFixed(2)}
               </Badge>
             </div>
           )}
