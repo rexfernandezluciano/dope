@@ -1,63 +1,113 @@
+<!-- @format -->
+
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="theme-color" content="#6366f1" />
+		<link
+			rel="icon"
+			href="%PUBLIC_URL%/favicon.ico" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1" />
+		<meta
+			name="theme-color"
+			content="#6366f1" />
 		<meta
 			name="description"
-			content="DOPE Network - A modern social media platform connecting communities worldwide. Share, discover, and engage with friends and communities."
-		/>
+			content="DOPE Network - A modern social media platform connecting communities worldwide. Share, discover, and engage with friends and communities." />
 		<meta
 			name="keywords"
-			content="DOPE Network, social media, community, social networking, microblogging, posts, friends"
-		/>
-		<meta name="author" content="DOPE Network Team" />
+			content="DOPE Network, social media, community, social networking, microblogging, posts, friends" />
+		<meta
+			name="author"
+			content="DOPE Network Team" />
 
 		<!-- Open Graph / Facebook -->
-		<meta property="og:type" content="website" />
-		<meta property="og:url" content="https://www.dopp.eu.org/" />
-		<meta property="og:title" content="DOPE Network - Social Media Platform" />
+		<meta
+			property="og:type"
+			content="website" />
+		<meta
+			property="og:url"
+			content="https://www.dopp.eu.org/" />
+		<meta
+			property="og:title"
+			content="DOPE Network - Social Media Platform" />
 		<meta
 			property="og:description"
-			content="Join DOPE Network, the modern social media platform. Connect with communities, share content, and discover new friends around the world."
-		/>
-		<meta property="og:image" content="%PUBLIC_URL%/logo512.png" />
-		<meta property="og:image:width" content="512" />
-		<meta property="og:image:height" content="512" />
-		<meta property="og:site_name" content="DOPE Network" />
-		<meta property="og:locale" content="en_US" />
+			content="Join DOPE Network, the modern social media platform. Connect with communities, share content, and discover new friends around the world." />
+		<meta
+			property="og:image"
+			content="%PUBLIC_URL%/logo512.png" />
+		<meta
+			property="og:image:width"
+			content="512" />
+		<meta
+			property="og:image:height"
+			content="512" />
+		<meta
+			property="og:site_name"
+			content="DOPE Network" />
+		<meta
+			property="og:locale"
+			content="en_US" />
 
 		<!-- Twitter -->
-		<meta name="twitter:card" content="summary_large_image" />
-		<meta name="twitter:url" content="https://www.dopp.eu.org/" />
-		<meta name="twitter:title" content="DOPE Network - Social Media Platform" />
+		<meta
+			name="twitter:card"
+			content="summary_large_image" />
+		<meta
+			name="twitter:url"
+			content="https://www.dopp.eu.org/" />
+		<meta
+			name="twitter:title"
+			content="DOPE Network - Social Media Platform" />
 		<meta
 			name="twitter:description"
-			content="Join DOPE Network, the modern social media platform. Connect with communities, share content, and discover new friends around the world."
-		/>
-		<meta name="twitter:image" content="%PUBLIC_URL%/logo512.png" />
-		<meta name="twitter:image:alt" content="DOPE Network Logo" />
-		<meta name="twitter:creator" content="@dopenetwork" />
-		<meta name="twitter:site" content="@dopenetwork" />
+			content="Join DOPE Network, the modern social media platform. Connect with communities, share content, and discover new friends around the world." />
+		<meta
+			name="twitter:image"
+			content="%PUBLIC_URL%/logo512.png" />
+		<meta
+			name="twitter:image:alt"
+			content="DOPE Network Logo" />
+		<meta
+			name="twitter:creator"
+			content="@dopenetwork" />
+		<meta
+			name="twitter:site"
+			content="@dopenetwork" />
 
 		<!-- Additional SEO -->
-		<meta name="robots" content="index, follow" />
-		<meta name="googlebot" content="index, follow" />
-		<link rel="canonical" href="https://www.dopp.eu.org/" />
+		<meta
+			name="robots"
+			content="index, follow" />
+		<meta
+			name="googlebot"
+			content="index, follow" />
+		<link
+			rel="canonical"
+			href="https://www.dopp.eu.org/" />
 
-		<link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+		<link
+			rel="apple-touch-icon"
+			href="%PUBLIC_URL%/logo192.png" />
 		<link
 			rel="apple-touch-icon"
 			sizes="180x180"
-			href="%PUBLIC_URL%/logo192.png"
-		/>
-		<link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!-- PayPal SDK -->
-    <script src="https://www.paypal.com/sdk/js?client-id=AYv5Ao5cq7A49Hd19TSrw59YEiPboazIE7WXrmLkpklVCmsgQmartssMsFap9XI7lM6LOnjMHgux2nJR&vault=true&intent=subscription"></script>
-    <title>DOPE Network - Social Media Platform</title>
-  </head>
+			href="%PUBLIC_URL%/logo192.png" />
+		<link
+			rel="manifest"
+			href="%PUBLIC_URL%/manifest.json" />
+		<!-- PayPal SDK -->
+		<script src="https://www.paypal.com/sdk/js?client-id=AYv5Ao5cq7A49Hd19TSrw59YEiPboazIE7WXrmLkpklVCmsgQmartssMsFap9XI7lM6LOnjMHgux2nJR&vault=true&intent=subscription"></script>
+		<title>DOPE Network - Social Media Platform</title>
+		<script src="//cdn.jsdelivr.net/npm/eruda"></script>
+		<script>
+			const searchParams = new URLSearchParams(window.location.search);
+			if (searchParams.get("debug") === "true") eruda.init();
+		</script>
+	</head>
 	<body>
 		<noscript>You need to enable JavaScript to run this app.</noscript>
 		<div id="root"></div>
