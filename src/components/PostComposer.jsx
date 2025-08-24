@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Card, Form, Button, Image, Alert, Spinner, Modal, InputGroup, Row, Col } from 'react-bootstrap';
+import { Card, Form, Button, Image, Alert, Spinner, Modal, InputGroup, Row, Col, Dropdown } from 'react-bootstrap';
 import { Camera, Globe, Lock, PersonFill, EmojiSmile, X, Search, CameraVideo, GeoAlt, Calendar3, BarChart } from 'react-bootstrap-icons';
 import { postAPI, imageAPI } from '../config/ApiConfig';
 import MentionDropdown from './MentionDropdown';
@@ -366,19 +366,69 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
                 }}
               />
               <div className="flex-grow-1">
-                {/* Privacy Selector */}
+                {/* Privacy Dropdown */}
                 <div className="mb-2">
-                  <Form.Select
-                    size="sm"
-                    value={privacy}
-                    onChange={(e) => setPrivacy(e.target.value)}
-                    style={{ width: 'auto', fontSize: '14px' }}
-                    className="border-0 bg-light rounded-pill px-3"
-                  >
-                    <option value="public">🌍 Everyone can reply</option>
-                    <option value="followers">👥 Followers can reply</option>
-                    <option value="private">🔒 Only you can see</option>
-                  </Form.Select>
+                  <Dropdown>
+                    <Dropdown.Toggle
+                      variant="link"
+                      className="border-0 bg-light rounded-pill px-3 py-1 text-decoration-none text-start d-flex align-items-center gap-2"
+                      style={{ fontSize: '14px', color: '#1DA1F2', width: 'auto' }}
+                    >
+                      {privacy === 'public' && (
+                        <>
+                          <Globe size={14} />
+                          <span>Everyone can reply</span>
+                        </>
+                      )}
+                      {privacy === 'followers' && (
+                        <>
+                          <PersonFill size={14} />
+                          <span>Followers can reply</span>
+                        </>
+                      )}
+                      {privacy === 'private' && (
+                        <>
+                          <Lock size={14} />
+                          <span>Only you can see</span>
+                        </>
+                      )}
+                    </Dropdown.Toggle>
+
+                    <Dropdown.Menu className="shadow-sm border" style={{ minWidth: '200px' }}>
+                      <Dropdown.Item
+                        onClick={() => setPrivacy('public')}
+                        className={`d-flex align-items-center gap-2 ${privacy === 'public' ? 'bg-primary bg-opacity-10 text-primary' : ''}`}
+                      >
+                        <Globe size={16} />
+                        <div>
+                          <div className="fw-bold">Everyone</div>
+                          <small className="text-muted">Anyone can reply</small>
+                        </div>
+                      </Dropdown.Item>
+                      
+                      <Dropdown.Item
+                        onClick={() => setPrivacy('followers')}
+                        className={`d-flex align-items-center gap-2 ${privacy === 'followers' ? 'bg-primary bg-opacity-10 text-primary' : ''}`}
+                      >
+                        <PersonFill size={16} />
+                        <div>
+                          <div className="fw-bold">Followers</div>
+                          <small className="text-muted">Only followers can reply</small>
+                        </div>
+                      </Dropdown.Item>
+                      
+                      <Dropdown.Item
+                        onClick={() => setPrivacy('private')}
+                        className={`d-flex align-items-center gap-2 ${privacy === 'private' ? 'bg-primary bg-opacity-10 text-primary' : ''}`}
+                      >
+                        <Lock size={16} />
+                        <div>
+                          <div className="fw-bold">Only you</div>
+                          <small className="text-muted">Only you can see this post</small>
+                        </div>
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
                 </div>
 
                 {/* Text Input */}
