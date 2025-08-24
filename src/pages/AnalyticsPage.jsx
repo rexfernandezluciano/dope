@@ -193,7 +193,7 @@ const AnalyticsPage = () => {
 				</Col>
 				<Col xs={6} lg={3}>
 					<StatCard
-						value={`$${analytics?.overview?.totalEarnings?.toFixed(2) || "0.00"}`}
+						value={analytics?.revenue?.totalRevenueFormatted || "₱0.00"}
 						label="Total Earnings"
 						subtitle={analytics?.period || '30 days'}
 						variant="success"
@@ -475,11 +475,11 @@ const AnalyticsPage = () => {
 	);
 
 	const renderMonetizationTab = () => {
-		const totalRevenue = analytics?.overview?.totalEarnings || 0;
+		const totalRevenue = analytics?.revenue?.totalRevenue || 0;
 		const totalSubscriptions = analytics?.overview?.totalSubscriptions || 0;
 		const revenueGrowth = analytics?.overview?.revenueGrowth || 0;
 
-		// Get monetization eligibility from analytics (should come from /auth/me)
+		// Get monetization eligibility from analytics
 		const monetization = analytics?.monetization || {
 			isEligible: false,
 			requirements: {
@@ -602,7 +602,7 @@ const AnalyticsPage = () => {
 				<Row className="g-3 mb-4">
 					<Col xs={6} lg={3}>
 						<StatCard
-							value={`$${totalRevenue.toFixed(2)}`}
+							value={analytics?.revenue?.totalRevenueFormatted || "₱0.00"}
 							label="Total Revenue"
 							subtitle={`${revenueGrowth >= 0 ? '+' : ''}${revenueGrowth.toFixed(1)}% vs last month`}
 							variant="success"
@@ -610,25 +610,25 @@ const AnalyticsPage = () => {
 					</Col>
 					<Col xs={6} lg={3}>
 						<StatCard
-							value={`$${analytics?.overview?.adRevenue?.toFixed(2) || "0.00"}`}
+							value={analytics?.revenue?.breakdown?.adRevenue?.formatted || "₱0.00"}
 							label="Ad Revenue"
-							subtitle={`${analytics?.overview?.adRevenuePercentage || 0}% of total`}
+							subtitle={`${analytics?.revenue?.breakdown?.adRevenue?.percentage || 0}% of total`}
 							variant="info"
 						/>
 					</Col>
 					<Col xs={6} lg={3}>
 						<StatCard
-							value={`$${analytics?.overview?.subscriptionRevenue?.toFixed(2) || "0.00"}`}
+							value={analytics?.revenue?.breakdown?.subscriptionRevenue?.formatted || "₱0.00"}
 							label="Subscriptions"
-							subtitle={`${analytics?.overview?.subscriptionRevenuePercentage || 0}% of total`}
+							subtitle={`${analytics?.revenue?.breakdown?.subscriptionRevenue?.percentage || 0}% of total`}
 							variant="warning"
 						/>
 					</Col>
 					<Col xs={6} lg={3}>
 						<StatCard
-							value={`$${analytics?.overview?.tipsRevenue?.toFixed(2) || "0.00"}`}
+							value={`${analytics?.revenue?.breakdown?.tipsEarned?.formatted || "₱0.00"} + ${analytics?.revenue?.breakdown?.donationsEarned?.formatted || "₱0.00"}`}
 							label="Tips & Donations"
-							subtitle={`${analytics?.overview?.tipsRevenuePercentage || 0}% of total`}
+							subtitle={`${(analytics?.revenue?.breakdown?.tipsEarned?.percentage || 0) + (analytics?.revenue?.breakdown?.donationsEarned?.percentage || 0)}% of total`}
 							variant="danger"
 						/>
 					</Col>
@@ -676,42 +676,54 @@ const AnalyticsPage = () => {
 									<div>
 										<div className="d-flex justify-content-between mb-1">
 											<small>Ad Revenue</small>
-											<small className="fw-bold">{analytics?.overview?.adRevenuePercentage || 0}%</small>
+											<small className="fw-bold">{analytics?.revenue?.breakdown?.adRevenue?.percentage || 0}%</small>
 										</div>
 										<div className="progress" style={{ height: '6px' }}>
 											<div 
 												className="progress-bar bg-info" 
-												style={{ width: `${analytics?.overview?.adRevenuePercentage || 0}%` }}
+												style={{ width: `${analytics?.revenue?.breakdown?.adRevenue?.percentage || 0}%` }}
 											></div>
 										</div>
 									</div>
 									<div>
 										<div className="d-flex justify-content-between mb-1">
 											<small>Subscriptions</small>
-											<small className="fw-bold">{analytics?.overview?.subscriptionRevenuePercentage || 0}%</small>
+											<small className="fw-bold">{analytics?.revenue?.breakdown?.subscriptionRevenue?.percentage || 0}%</small>
 										</div>
 										<div className="progress" style={{ height: '6px' }}>
 											<div 
 												className="progress-bar bg-warning" 
-												style={{ width: `${analytics?.overview?.subscriptionRevenuePercentage || 0}%` }}
+												style={{ width: `${analytics?.revenue?.breakdown?.subscriptionRevenue?.percentage || 0}%` }}
 											></div>
 										</div>
 									</div>
 									<div>
 										<div className="d-flex justify-content-between mb-1">
 											<small>Tips & Donations</small>
-											<small className="fw-bold">{analytics?.overview?.tipsRevenuePercentage || 0}%</small>
+											<small className="fw-bold">{(analytics?.revenue?.breakdown?.tipsEarned?.percentage || 0) + (analytics?.revenue?.breakdown?.donationsEarned?.percentage || 0)}%</small>
 										</div>
 										<div className="progress" style={{ height: '6px' }}>
 											<div 
 												className="progress-bar bg-success" 
-												style={{ width: `${analytics?.overview?.tipsRevenuePercentage || 0}%` }}
+												style={{ width: `${(analytics?.revenue?.breakdown?.tipsEarned?.percentage || 0) + (analytics?.revenue?.breakdown?.donationsEarned?.percentage || 0)}%` }}
+											></div>
+										</div>
+									</div>
+									<div>
+										<div className="d-flex justify-content-between mb-1">
+											<small>Content Earnings</small>
+											<small className="fw-bold">{analytics?.revenue?.breakdown?.contentEarnings?.percentage || 0}%</small>
+										</div>
+										<div className="progress" style={{ height: '6px' }}>
+											<div 
+												className="progress-bar bg-primary" 
+												style={{ width: `${analytics?.revenue?.breakdown?.contentEarnings?.percentage || 0}%` }}
 											></div>
 										</div>
 									</div>
 									<hr />
 									<div className="text-center">
-										<h6 className="text-success mb-1">${totalRevenue.toFixed(2)}</h6>
+										<h6 className="text-success mb-1">{analytics?.revenue?.totalRevenueFormatted || "₱0.00"}</h6>
 										<small className="text-muted">Total this period</small>
 									</div>
 								</div>
