@@ -386,31 +386,53 @@ const PostDetailPage = () => {
 			}
 
 			const response = await commentAPI.createComment(postId, requestBody);
+			console.log('Comment API Response:', response); // Debug log
 
-			// Ensure the comment has a proper author object
+			// Handle different response structures
+			const commentData = response.comment || response;
+			
+			// Ensure the comment has a proper structure
 			const newCommentObj = {
-				...response.comment,
-				author: response.comment?.author || {
+				id: commentData.id || `temp_${Date.now()}`,
+				content: newComment.trim(),
+				createdAt: commentData.createdAt || new Date().toISOString(),
+				updatedAt: commentData.updatedAt || new Date().toISOString(),
+				postId: postId,
+				authorId: currentUser.uid,
+				...commentData,
+				author: commentData.author || {
 					uid: currentUser.uid,
 					name: currentUser.name,
 					username: currentUser.username,
 					photoURL: currentUser.photoURL,
 					hasBlueCheck: currentUser.hasBlueCheck || false,
 				},
-				stats: {
+				stats: commentData.stats || {
 					likes: 0,
 					replies: 0
 				},
-				likes: [],
-				replies: [],
-				tipAmount: commentMode === 'tip' ? parseInt(commentTipAmount) : undefined,
-				donationAmount: commentMode === 'donation' ? parseInt(commentDonationAmount) : undefined
+				likes: commentData.likes || [],
+				replies: commentData.replies || [],
+				tipAmount: commentMode === 'tip' && commentTipAmount ? parseInt(commentTipAmount) : undefined,
+				donationAmount: commentMode === 'donation' && commentDonationAmount ? parseInt(commentDonationAmount) : undefined
 			};
 
+			// Add to comments list
 			setComments((prevComments) => [newCommentObj, ...prevComments]);
+			
+			// Initialize replies for the new comment
 			setReplies(prevReplies => ({
 				...prevReplies,
 				[newCommentObj.id]: []
+			}));
+
+			// Update post comment count
+			setPost(prevPost => ({
+				...prevPost,
+				stats: {
+					...prevPost.stats,
+					comments: (prevPost.stats?.comments || 0) + 1
+				}
 			}));
 
 			// Send comment notification to post owner
@@ -425,10 +447,12 @@ const PostDetailPage = () => {
 
 			// Reset form
 			setNewComment("");
-			setCommentMode(post.author.uid !== currentUser.uid ? 'tip' : 'comment');
+			setCommentMode(post && currentUser && post.author.uid !== currentUser.uid ? 'tip' : 'comment');
 			setCommentTipAmount('');
+			setError(''); // Clear any previous errors
 		} catch (err) {
-			setError(err.message);
+			console.error('Failed to create comment:', err);
+			setError(err.message || 'Failed to create comment');
 		} finally {
 			setSubmitting(false);
 		}
