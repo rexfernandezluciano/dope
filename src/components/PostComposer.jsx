@@ -282,13 +282,13 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 
   const isPostDisabled = submitting || uploadingImages || (!content.trim() && images.length === 0);
   const characterCount = content.length;
-  const characterLimit = 2000;
+  const characterLimit = 280;
   const isOverLimit = characterCount > characterLimit;
 
   return (
     <>
       {/* Inline Post Composer */}
-      <Card className="border-0 border-bottom rounded-0 shadow-sm">
+      <Card className="border-0 border-bottom rounded-0 shadow-none">
         <Card.Body className="px-4 py-3">
           <div className="d-flex gap-3">
             <Image
@@ -300,7 +300,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
               style={{ objectFit: "cover", minWidth: "48px", minHeight: "48px" }}
             />
             <div 
-              className="flex-grow-1 d-flex align-items-center bg-light rounded-pill px-4 py-3 cursor-pointer border"
+              className="flex-grow-1 d-flex align-items-center bg-light rounded-pill px-4 py-0 mb-3 fs-6 cursor-pointer border"
               onClick={() => setShowComposerModal(true)}
               style={{ cursor: 'pointer', minHeight: '52px' }}
             >
@@ -326,7 +326,7 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
               className="p-0 me-3 text-dark"
               onClick={() => setShowComposerModal(false)}
             >
-              <X size={24} />
+              <X size={35} />
             </Button>
             <h5 className="mb-0 flex-grow-1">Create Post</h5>
             <Button

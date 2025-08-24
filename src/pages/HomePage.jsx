@@ -46,8 +46,6 @@ const HomePage = () => {
 	const [error, setError] = useState("");
 	const [hasMore, setHasMore] = useState(false);
 	const [nextCursor, setNextCursor] = useState(null);
-	// Removed unused post composer state and functions: const [newPost, setNewPost] = useState(""); const [submitting, setSubmitting] = useState(false); const [images, setImages] = useState([]); const fileInputRef = useRef(null);
-
 	const [streamTitle, setStreamTitle] = useState(""); // State for stream title
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [mediaStream, setMediaStream] = useState(null);
