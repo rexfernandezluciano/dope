@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Tab, Tabs } from "react-bootstrap";
-import { analyticsAPI, businessAPI } from "../config/ApiConfig";
+import { analyticsAPI, businessAPI, subscriptionAPI } from "../config/ApiConfig";
 import { formatTimeAgo, formatCurrency } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
@@ -17,6 +17,8 @@ const AnalyticsPage = () => {
 	const [activeTab, setActiveTab] = useState("overview");
 	const [growthData, setGrowthData] = useState({});
 	const [monetizationData, setMonetizationData] = useState({});
+	const [subscribers, setSubscribers] = useState([]);
+	const [subscriberStats, setSubscriberStats] = useState({});
 
 	useEffect(() => {
 		updatePageMeta(pageMetaData.analytics);
@@ -33,13 +35,16 @@ const AnalyticsPage = () => {
 	const loadAnalytics = async () => {
 		try {
 			setLoading(true);
-			const [userAnalytics, businessData] = await Promise.all([
+			const [userAnalytics, businessData, subscriberData] = await Promise.all([
 				analyticsAPI.getUserAnalytics(selectedPeriod),
-				businessAPI.getDashboard().catch(() => null)
+				businessAPI.getDashboard().catch(() => null),
+				subscriptionAPI.getSubscribers().catch(() => ({ subscribers: [], stats: {} }))
 			]);
 
 			setAnalytics(userAnalytics);
 			setBusinessDashboard(businessData);
+			setSubscribers(subscriberData.subscribers || []);
+			setSubscriberStats(subscriberData.stats || {});
 		} catch (err) {
 			setError(err.message);
 		} finally {
@@ -602,6 +607,137 @@ const AnalyticsPage = () => {
 		);
 	};
 
+	const renderSubscriberTab = () => (
+		<>
+			<Row className="g-3 mb-4">
+				<Col lg={8}>
+					<Card className="border-0 shadow-sm">
+						<Card.Header>
+							<h5 className="mb-0">My Subscribers</h5>
+						</Card.Header>
+						<Card.Body>
+							{subscribers.length === 0 ? (
+								<div className="text-center py-4">
+									<h5>No subscribers yet</h5>
+									<p className="text-muted">Share your profile to start getting supporters!</p>
+								</div>
+							) : (
+								<Row className="g-3">
+									{subscribers.map((subscriber) => (
+										<Col md={6} key={subscriber.id}>
+											<Card className="h-100">
+												<Card.Body>
+													<div className="d-flex align-items-center gap-3 mb-3">
+														<img
+															src={subscriber.subscriber?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(subscriber.subscriber?.name || 'User')}&size=40`}
+															alt={subscriber.subscriber?.name || 'User'}
+															className="rounded-circle"
+															width="40"
+															height="40"
+															style={{ objectFit: 'cover' }}
+														/>
+														<div>
+															<h6 className="mb-1">{subscriber.subscriber?.name || 'Anonymous'}</h6>
+															<small className="text-muted">@{subscriber.subscriber?.username || 'user'}</small>
+														</div>
+													</div>
+													<div className="d-flex justify-content-between align-items-center mb-2">
+														<Badge bg={subscriber.tier === 'premium' ? 'success' : subscriber.tier === 'vip' ? 'warning' : 'primary'}>
+															{subscriber.tier?.charAt(0).toUpperCase() + subscriber.tier?.slice(1) || 'Basic'}
+														</Badge>
+														<Badge bg={subscriber.status === 'active' ? 'success' : 'secondary'}>
+															{subscriber.status?.charAt(0).toUpperCase() + subscriber.status?.slice(1) || 'Unknown'}
+														</Badge>
+													</div>
+													<div className="d-flex align-items-center gap-2 text-muted">
+														<small>Since {subscriber.createdAt ? new Date(subscriber.createdAt).toLocaleDateString() : 'Unknown'}</small>
+													</div>
+												</Card.Body>
+											</Card>
+										</Col>
+									))}
+								</Row>
+							)}
+						</Card.Body>
+					</Card>
+				</Col>
+				<Col lg={4}>
+					<Card className="border-0 shadow-sm">
+						<Card.Header>
+							<h5 className="mb-0">Subscriber Stats</h5>
+						</Card.Header>
+						<Card.Body>
+							<div className="mb-3">
+								<div className="d-flex justify-content-between align-items-center mb-1">
+									<small className="text-muted">Total Subscribers</small>
+									<strong>{subscriberStats.totalSubscribers || 0}</strong>
+								</div>
+								<div className="progress" style={{ height: '6px' }}>
+									<div className="progress-bar bg-primary" style={{ width: '100%' }}></div>
+								</div>
+							</div>
+							<div className="mb-3">
+								<div className="d-flex justify-content-between align-items-center mb-1">
+									<small className="text-muted">Basic Tier</small>
+									<strong>{subscriberStats.basicSubscribers || 0}</strong>
+								</div>
+								<div className="progress" style={{ height: '6px' }}>
+									<div 
+										className="progress-bar bg-primary" 
+										style={{ 
+											width: subscriberStats.totalSubscribers > 0 ? 
+												`${(subscriberStats.basicSubscribers || 0) / subscriberStats.totalSubscribers * 100}%` : 
+												'0%'
+										}}>
+									</div>
+								</div>
+							</div>
+							<div className="mb-3">
+								<div className="d-flex justify-content-between align-items-center mb-1">
+									<small className="text-muted">Premium Tier</small>
+									<strong>{subscriberStats.premiumSubscribers || 0}</strong>
+								</div>
+								<div className="progress" style={{ height: '6px' }}>
+									<div 
+										className="progress-bar bg-success" 
+										style={{ 
+											width: subscriberStats.totalSubscribers > 0 ? 
+												`${(subscriberStats.premiumSubscribers || 0) / subscriberStats.totalSubscribers * 100}%` : 
+												'0%'
+										}}>
+									</div>
+								</div>
+							</div>
+							<div className="mb-3">
+								<div className="d-flex justify-content-between align-items-center mb-1">
+									<small className="text-muted">VIP Tier</small>
+									<strong>{subscriberStats.vipSubscribers || 0}</strong>
+								</div>
+								<div className="progress" style={{ height: '6px' }}>
+									<div 
+										className="progress-bar bg-warning" 
+										style={{ 
+											width: subscriberStats.totalSubscribers > 0 ? 
+												`${(subscriberStats.vipSubscribers || 0) / subscriberStats.totalSubscribers * 100}%` : 
+												'0%'
+										}}>
+									</div>
+								</div>
+							</div>
+							<hr />
+							<div className="text-center">
+								<h4 className="text-success mb-1">
+									${subscriberStats.monthlyRevenue ? (subscriberStats.monthlyRevenue / 100).toFixed(2) : '0.00'}
+								</h4>
+								<small className="text-muted">Monthly Revenue</small>
+							</div>
+						</Card.Body>
+					</Card>
+				</Col>
+			</Row>
+		</>
+	);
+
 	return (
 		<Container className="py-3 py-md-4">
 			<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center px-4 mb-4">
@@ -641,6 +777,11 @@ const AnalyticsPage = () => {
 						<span className="d-inline">Monetization</span>
 					}>
 						{renderMonetizationTab()}
+					</Tab>
+					<Tab eventKey="subscribers" title={
+						<span className="d-inline">Subscribers</span>
+					}>
+						{renderSubscriberTab()}
 					</Tab>
 				</Tabs>
 			) : (

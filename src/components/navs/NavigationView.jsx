@@ -577,9 +577,9 @@ const NavigationView = ({ children }) => {
 						))}
 						<Nav.Link
 							as={Link}
-							to="/creator"
-							className={`${
-								location.pathname === "/creator" ? "active" : ""
+							to="/analytics"
+							className={`nav-link ${
+								location.pathname === "/analytics" ? "active" : ""
 							} d-flex align-items-center gap-2`}
 						>
 							<CameraVideo size={20} />

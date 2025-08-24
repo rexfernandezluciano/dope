@@ -36,7 +36,6 @@ const TermsOfServicePage = lazy(() => import("../pages/TermsOfServicePage"));
 const NetworkTestPage = lazy(() => import("../pages/NetworkTestPage"));
 const DeveloperPage = lazy(() => import("../pages/DeveloperPage"));
 const BusinessPage = lazy(() => import("../pages/BusinessPage"));
-const CreatorPage = lazy(() => import("../pages/CreatorPage"));
 const MySubscriptionsPage = lazy(() => import("../pages/MySubscriptionsPage"));
 const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
@@ -301,18 +300,6 @@ const router = createBrowserRouter([
 			<RequireAuth>
 				<NavigationView>
 					<BusinessPage />
-				</NavigationView>
-			</RequireAuth>
-		),
-		loader: IndexPageLoader,
-		hydrateFallbackElement: <LoadingView />,
-	},
-	{
-		path: "/creator",
-		element: (
-			<RequireAuth>
-				<NavigationView>
-					<CreatorPage />
 				</NavigationView>
 			</RequireAuth>
 		),

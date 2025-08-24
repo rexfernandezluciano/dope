@@ -163,18 +163,18 @@ const MySubscriptionsPage = () => {
       {/* Note: Subscribers section moved to Creator Dashboard */}
       <Card>
         <Card.Header>
-          <h5 className="mb-0">Creator Dashboard</h5>
+          <h5 className="mb-0">Analytics Dashboard</h5>
         </Card.Header>
         <Card.Body className="text-center py-4">
           <CameraVideo size={48} className="text-muted mb-3" />
           <p className="text-muted mb-3">
-            Want to see your subscribers and manage your creator monetization?
+            Want to see your subscribers and detailed analytics?
           </p>
           <Button
             variant="primary"
-            onClick={() => navigate('/creator')}
+            onClick={() => navigate('/analytics')}
           >
-            Go to Creator Dashboard
+            Go to Analytics Dashboard
           </Button>
         </Card.Body>
       </Card>
