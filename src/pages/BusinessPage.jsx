@@ -132,7 +132,7 @@ const BusinessPage = () => {
 			setModalError("");
 			setModalSuccess("");
 			await businessAPI.purchaseCredits({
-				credits: selectedPackage.credits,
+				amount: selectedPackage.credits,
 				paymentMethodId: paymentMethodId,
 			});
 			setModalSuccess(`Credits purchased successfully! You received ${selectedPackage.totalCredits} credits (${selectedPackage.credits} base + ${selectedPackage.bonus} bonus).`);
@@ -695,6 +695,7 @@ const BusinessPage = () => {
 			{/* Credits Modal */}
 			<Modal
 				show={showCreditsModal}
+				fullscreen="md-down"
 				onHide={() => {
 					setShowCreditsModal(false);
 					setModalError("");
@@ -707,7 +708,7 @@ const BusinessPage = () => {
 					<Modal.Title>Purchase Credits</Modal.Title>
 				</Modal.Header>
 				<Form onSubmit={handlePurchaseCredits}>
-					<Modal.Body>
+					<Modal.Body className="overflow-y-auto">
 						{modalError && <Alert variant="danger" className="mb-3">{modalError}</Alert>}
 						{modalSuccess && <Alert variant="success" className="mb-3">{modalSuccess}</Alert>}
 						
