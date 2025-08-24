@@ -379,14 +379,10 @@ const PostDetailPage = () => {
 				content: newComment.trim(),
 			};
 
-			// Add tip/donation data if applicable
+			// Add tip data if applicable
 			if (commentMode === 'tip' && commentTipAmount) {
 				requestBody.tipAmount = parseInt(commentTipAmount);
 				requestBody.receiverId = post.author.uid;
-			} else if (commentMode === 'donation' && commentDonationAmount) {
-				requestBody.donationAmount = parseInt(commentDonationAmount);
-				requestBody.receiverId = post.author.uid;
-				requestBody.isAnonymous = commentIsAnonymous;
 			}
 
 			const response = await commentAPI.createComment(postId, requestBody);
@@ -429,10 +425,8 @@ const PostDetailPage = () => {
 
 			// Reset form
 			setNewComment("");
-			setCommentMode('comment');
+			setCommentMode(post.author.uid !== currentUser.uid ? 'tip' : 'comment');
 			setCommentTipAmount('');
-			setCommentDonationAmount('');
-			setCommentIsAnonymous(false);
 		} catch (err) {
 			setError(err.message);
 		} finally {
@@ -1042,104 +1036,66 @@ const PostDetailPage = () => {
 										style={{ fontSize: "1.1rem" }}
 									/>
 									
-									{/* Comment Mode Buttons */}
-									<div className="d-flex align-items-center gap-2 mt-2 mb-2">
-										<Button
-											type="button"
-											variant={commentMode === 'comment' ? 'primary' : 'outline-secondary'}
-											size="sm"
-											onClick={() => setCommentMode('comment')}
-										>
-											<ChatDots size={14} className="me-1" />
-											Comment
-										</Button>
-										{post.author.uid !== currentUser.uid && (
-											<>
-												<Button
-													type="button"
-													variant={commentMode === 'tip' ? 'warning' : 'outline-warning'}
-													size="sm"
-													onClick={() => setCommentMode('tip')}
-													title="Send a tip (₱1.00 - ₱1,000.00)"
-												>
-													<Gift size={14} className="me-1" />
-													Tip
-													<small className="ms-1 text-muted">(₱1-₱1K)</small>
-												</Button>
-												<Button
-													type="button"
-													variant={commentMode === 'donation' ? 'info' : 'outline-info'}
-													size="sm"
-													onClick={() => setCommentMode('donation')}
-													title="Send a donation (₱1.00 - ₱5,000.00)"
-												>
-													<CurrencyDollar size={14} className="me-1" />
-													Donate
-													<small className="ms-1 text-muted">(₱1-₱5K)</small>
-												</Button>
-											</>
-										)}
-									</div>
+									{/* Tip Button (shown by default for others' posts) */}
+									{post.author.uid !== currentUser.uid && (
+										<div className="mt-2 mb-2">
+											<Button
+												type="button"
+												variant={commentMode === 'tip' ? 'warning' : 'outline-warning'}
+												size="sm"
+												onClick={() => setCommentMode('tip')}
+											>
+												<Gift size={14} className="me-1" />
+												Tip
+											</Button>
+										</div>
+									)}
 
-									{/* Tip Amount Input */}
+									{/* Tip Amount Selection */}
 									{commentMode === 'tip' && (
 										<div className="mb-2">
 											<Form.Group>
-												<Form.Label className="small text-muted">Tip Amount</Form.Label>
+												<Form.Label className="small text-muted">Select Tip Amount</Form.Label>
+												<div className="d-flex flex-wrap gap-2 mb-2">
+													{[100, 500, 1000, 2000, 3000, 5000].map((amount) => (
+														<Button
+															key={amount}
+															variant={commentTipAmount === amount.toString() ? 'warning' : 'outline-warning'}
+															size="sm"
+															onClick={() => setCommentTipAmount(amount.toString())}
+														>
+															₱{(amount / 100).toFixed(2)}
+														</Button>
+													))}
+												</div>
 												<div className="d-flex align-items-center gap-2">
-													<div className="input-group" style={{ maxWidth: "150px" }}>
+													<Form.Label className="small text-muted mb-0">Custom Amount:</Form.Label>
+													<div className="input-group" style={{ maxWidth: "120px" }}>
 														<span className="input-group-text">₱</span>
 														<Form.Control
 															type="number"
 															min="1"
-															max="1000"
+															max="50"
 															step="0.01"
-															value={commentTipAmount ? (parseInt(commentTipAmount) / 100).toFixed(2) : ''}
-															onChange={(e) => setCommentTipAmount(Math.round(parseFloat(e.target.value || 0) * 100).toString())}
-															placeholder="0.00"
+															value={commentTipAmount && !['100', '500', '1000', '2000', '3000', '5000'].includes(commentTipAmount) ? (parseInt(commentTipAmount) / 100).toFixed(2) : ''}
+															onChange={(e) => {
+																const amount = Math.round(parseFloat(e.target.value || 0) * 100);
+																if (amount >= 100 && amount <= 5000) {
+																	setCommentTipAmount(amount.toString());
+																}
+															}}
+															placeholder="1.00"
 															size="sm"
 														/>
 													</div>
-													<small className="text-muted">Min: ₱1.00, Max: ₱1,000.00</small>
 												</div>
+												<small className="text-muted d-block mt-1">Range: ₱1.00 - ₱50.00</small>
 											</Form.Group>
 										</div>
 									)}
 
-									{/* Donation Amount Input */}
-									{commentMode === 'donation' && (
-										<div className="mb-2">
-											<Form.Group>
-												<Form.Label className="small text-muted">Donation Amount</Form.Label>
-												<div className="d-flex align-items-center gap-2 mb-2">
-													<div className="input-group" style={{ maxWidth: "150px" }}>
-														<span className="input-group-text">₱</span>
-														<Form.Control
-															type="number"
-															min="1"
-															max="5000"
-															step="0.01"
-															value={commentDonationAmount ? (parseInt(commentDonationAmount) / 100).toFixed(2) : ''}
-															onChange={(e) => setCommentDonationAmount(Math.round(parseFloat(e.target.value || 0) * 100).toString())}
-															placeholder="0.00"
-															size="sm"
-														/>
-													</div>
-													<small className="text-muted">Min: ₱1.00, Max: ₱5,000.00</small>
-												</div>
-												<Form.Check
-													type="checkbox"
-													label="Send anonymously"
-													checked={commentIsAnonymous}
-													onChange={(e) => setCommentIsAnonymous(e.target.checked)}
-													className="small"
-												/>
-											</Form.Group>
-										</div>
-									)}
-									
 									<div className="d-flex justify-content-end mt-2">
-										{commentMode !== 'comment' && (
+										{commentMode === 'tip' && (
 											<Button
 												type="button"
 												variant="link"
@@ -1147,8 +1103,6 @@ const PostDetailPage = () => {
 												onClick={() => {
 													setCommentMode('comment');
 													setCommentTipAmount('');
-													setCommentDonationAmount('');
-													setCommentIsAnonymous(false);
 												}}
 												className="me-2"
 											>
@@ -1161,24 +1115,15 @@ const PostDetailPage = () => {
 											disabled={
 												!newComment.trim() || 
 												submitting ||
-												(commentMode === 'tip' && !commentTipAmount) ||
-												(commentMode === 'donation' && !commentDonationAmount)
+												(commentMode === 'tip' && !commentTipAmount)
 											}
 											className="rounded-pill px-3"
-											variant={
-												commentMode === 'tip' 
-													? 'warning' 
-													: commentMode === 'donation' 
-														? 'info' 
-														: 'primary'
-											}
+											variant={commentMode === 'tip' ? 'warning' : 'primary'}
 										>
 											{submitting ? (
 												<Spinner size="sm" animation="border" />
 											) : commentMode === 'tip' ? (
 												`Send Tip ${commentTipAmount ? `₱${(parseInt(commentTipAmount) / 100).toFixed(2)}` : ''}`
-											) : commentMode === 'donation' ? (
-												`Send Donation ${commentDonationAmount ? `₱${(parseInt(commentDonationAmount) / 100).toFixed(2)}` : ''}`
 											) : (
 												"Reply"
 											)}
