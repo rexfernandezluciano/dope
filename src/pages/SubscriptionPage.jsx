@@ -47,6 +47,7 @@ const SubscriptionPage = () => {
 
 	const [paymentMethods, setPaymentMethods] = useState([]);
 	const [loading, setLoading] = useState(false);
+	const [purchaseLoading, setPurchaseLoading] = useState(false); // State for purchase loading
 	const [message, setMessage] = useState("");
 	const [messageType, setMessageType] = useState("success");
 	const [showCancelModal, setShowCancelModal] = useState(false);
@@ -220,12 +221,12 @@ const SubscriptionPage = () => {
 
 	useEffect(() => {
 		updatePageMeta(pageMetaData.subscription);
-		
+
 		// Check if this is part of signup flow
 		const isPayment = searchParams.get('payment') === 'true';
 		const isSignup = searchParams.get('signup') === 'true';
 		const planParam = searchParams.get('plan');
-		
+
 		if (isPayment && isSignup) {
 			setIsSignupFlow(true);
 			const storedData = sessionStorage.getItem('pendingSignupData');
@@ -242,7 +243,7 @@ const SubscriptionPage = () => {
 			}
 			setShowAddPaymentModal(true);
 		}
-		
+
 		if (user && typeof user === "object") {
 			// Handle both old and new API structures
 			const userSubscription = user.membership?.subscription || user.subscription || "free";
@@ -258,7 +259,7 @@ const SubscriptionPage = () => {
 					lastNameChange: null,
 				},
 			});
-			
+
 
 			// Load payment methods
 			loadPaymentMethods();
@@ -328,7 +329,7 @@ const SubscriptionPage = () => {
 		}
 
 		try {
-			setLoading(true);
+			setPurchaseLoading(true); // Set purchase loading state
 
 			if (planId !== "free") {
 				// Find default payment method
@@ -350,10 +351,10 @@ const SubscriptionPage = () => {
 				if (isSignupFlow) {
 					setMessage(`Account created successfully with ${planId} plan! Redirecting to email verification...`);
 					setMessageType("success");
-					
+
 					// Clear pending signup data
 					sessionStorage.removeItem('pendingSignupData');
-					
+
 					// Redirect to verification after payment success
 					setTimeout(() => {
 						if (pendingSignupData) {
@@ -408,7 +409,7 @@ const SubscriptionPage = () => {
 			setMessage(err.message || "Failed to upgrade subscription");
 			setMessageType("danger");
 		} finally {
-			setLoading(false);
+			setPurchaseLoading(false); // Reset purchase loading state
 		}
 	};
 
@@ -569,9 +570,10 @@ const SubscriptionPage = () => {
 													variant={plan.color}
 													size="sm"
 													onClick={() => handleUpgrade(plan.id)}
-													disabled={loading}
+													disabled={loading || purchaseLoading}
 												>
-													{plan.id === "free" ? "Downgrade" : 
+													{purchaseLoading ? "Processing..." :
+													 plan.id === "free" ? "Downgrade" : 
 													 (plan.id !== "free" && (!paymentMethods || paymentMethods.length === 0)) ? "Add Payment Method" : 
 													 "Upgrade"}
 												</Button>
