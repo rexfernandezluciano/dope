@@ -26,6 +26,8 @@ import {
 	ThreeDots,
 	ChevronLeft,
 	ChevronRight,
+	Gift,
+	CurrencyDollar,
 } from "react-bootstrap-icons";
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -73,6 +75,11 @@ const PostDetailPage = () => {
 	// State for comment editing
 	const [editingCommentId, setEditingCommentId] = useState(null);
 	const [editingCommentText, setEditingCommentText] = useState("");
+	// State for comment tip/donation
+	const [commentMode, setCommentMode] = useState('comment'); // 'comment', 'tip', 'donation'
+	const [commentTipAmount, setCommentTipAmount] = useState('');
+	const [commentDonationAmount, setCommentDonationAmount] = useState('');
+	const [commentIsAnonymous, setCommentIsAnonymous] = useState(false);
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -356,9 +363,22 @@ const PostDetailPage = () => {
 
 		try {
 			setSubmitting(true);
-			const response = await commentAPI.createComment(postId, {
+			
+			let requestBody = {
 				content: newComment.trim(),
-			});
+			};
+
+			// Add tip/donation data if applicable
+			if (commentMode === 'tip' && commentTipAmount) {
+				requestBody.tipAmount = parseInt(commentTipAmount);
+				requestBody.receiverId = post.author.uid;
+			} else if (commentMode === 'donation' && commentDonationAmount) {
+				requestBody.donationAmount = parseInt(commentDonationAmount);
+				requestBody.receiverId = post.author.uid;
+				requestBody.isAnonymous = commentIsAnonymous;
+			}
+
+			const response = await commentAPI.createComment(postId, requestBody);
 
 			// Ensure the comment has a proper author object
 			const newCommentObj = {
@@ -375,7 +395,9 @@ const PostDetailPage = () => {
 					replies: 0
 				},
 				likes: [],
-				replies: []
+				replies: [],
+				tipAmount: commentMode === 'tip' ? parseInt(commentTipAmount) : undefined,
+				donationAmount: commentMode === 'donation' ? parseInt(commentDonationAmount) : undefined
 			};
 
 			setComments((prevComments) => [newCommentObj, ...prevComments]);
@@ -394,7 +416,12 @@ const PostDetailPage = () => {
 				);
 			}
 
+			// Reset form
 			setNewComment("");
+			setCommentMode('comment');
+			setCommentTipAmount('');
+			setCommentDonationAmount('');
+			setCommentIsAnonymous(false);
 		} catch (err) {
 			setError(err.message);
 		} finally {
@@ -993,19 +1020,150 @@ const PostDetailPage = () => {
 										rows={2}
 										value={newComment}
 										onChange={(e) => setNewComment(e.target.value)}
-										placeholder="Post your reply"
+										placeholder={
+											commentMode === 'tip' 
+												? "Add a message with your tip..." 
+												: commentMode === 'donation' 
+													? "Add a message with your donation..." 
+													: "Post your reply"
+										}
 										className="border-0 shadow-none resize-none"
 										style={{ fontSize: "1.1rem" }}
 									/>
+									
+									{/* Comment Mode Buttons */}
+									<div className="d-flex align-items-center gap-2 mt-2 mb-2">
+										<Button
+											type="button"
+											variant={commentMode === 'comment' ? 'primary' : 'outline-secondary'}
+											size="sm"
+											onClick={() => setCommentMode('comment')}
+										>
+											<ChatDots size={14} className="me-1" />
+											Comment
+										</Button>
+										{post.author.uid !== currentUser.uid && (
+											<>
+												<Button
+													type="button"
+													variant={commentMode === 'tip' ? 'warning' : 'outline-warning'}
+													size="sm"
+													onClick={() => setCommentMode('tip')}
+												>
+													<Gift size={14} className="me-1" />
+													Tip
+												</Button>
+												<Button
+													type="button"
+													variant={commentMode === 'donation' ? 'info' : 'outline-info'}
+													size="sm"
+													onClick={() => setCommentMode('donation')}
+												>
+													<CurrencyDollar size={14} className="me-1" />
+													Donate
+												</Button>
+											</>
+										)}
+									</div>
+
+									{/* Tip Amount Input */}
+									{commentMode === 'tip' && (
+										<div className="mb-2">
+											<Form.Group>
+												<Form.Label className="small text-muted">Tip Amount</Form.Label>
+												<div className="d-flex align-items-center gap-2">
+													<div className="input-group" style={{ maxWidth: "150px" }}>
+														<span className="input-group-text">₱</span>
+														<Form.Control
+															type="number"
+															min="1"
+															max="1000"
+															step="0.01"
+															value={commentTipAmount ? (parseInt(commentTipAmount) / 100).toFixed(2) : ''}
+															onChange={(e) => setCommentTipAmount(Math.round(parseFloat(e.target.value || 0) * 100).toString())}
+															placeholder="0.00"
+															size="sm"
+														/>
+													</div>
+													<small className="text-muted">Min: ₱1.00, Max: ₱1,000.00</small>
+												</div>
+											</Form.Group>
+										</div>
+									)}
+
+									{/* Donation Amount Input */}
+									{commentMode === 'donation' && (
+										<div className="mb-2">
+											<Form.Group>
+												<Form.Label className="small text-muted">Donation Amount</Form.Label>
+												<div className="d-flex align-items-center gap-2 mb-2">
+													<div className="input-group" style={{ maxWidth: "150px" }}>
+														<span className="input-group-text">₱</span>
+														<Form.Control
+															type="number"
+															min="1"
+															max="5000"
+															step="0.01"
+															value={commentDonationAmount ? (parseInt(commentDonationAmount) / 100).toFixed(2) : ''}
+															onChange={(e) => setCommentDonationAmount(Math.round(parseFloat(e.target.value || 0) * 100).toString())}
+															placeholder="0.00"
+															size="sm"
+														/>
+													</div>
+													<small className="text-muted">Min: ₱1.00, Max: ₱5,000.00</small>
+												</div>
+												<Form.Check
+													type="checkbox"
+													label="Send anonymously"
+													checked={commentIsAnonymous}
+													onChange={(e) => setCommentIsAnonymous(e.target.checked)}
+													className="small"
+												/>
+											</Form.Group>
+										</div>
+									)}
+									
 									<div className="d-flex justify-content-end mt-2">
+										{commentMode !== 'comment' && (
+											<Button
+												type="button"
+												variant="link"
+												size="sm"
+												onClick={() => {
+													setCommentMode('comment');
+													setCommentTipAmount('');
+													setCommentDonationAmount('');
+													setCommentIsAnonymous(false);
+												}}
+												className="me-2"
+											>
+												Cancel
+											</Button>
+										)}
 										<Button
 											type="submit"
 											size="sm"
-											disabled={!newComment.trim() || submitting}
+											disabled={
+												!newComment.trim() || 
+												submitting ||
+												(commentMode === 'tip' && !commentTipAmount) ||
+												(commentMode === 'donation' && !commentDonationAmount)
+											}
 											className="rounded-pill px-3"
+											variant={
+												commentMode === 'tip' 
+													? 'warning' 
+													: commentMode === 'donation' 
+														? 'info' 
+														: 'primary'
+											}
 										>
 											{submitting ? (
 												<Spinner size="sm" animation="border" />
+											) : commentMode === 'tip' ? (
+												`Send Tip ${commentTipAmount ? `₱${(parseInt(commentTipAmount) / 100).toFixed(2)}` : ''}`
+											) : commentMode === 'donation' ? (
+												`Send Donation ${commentDonationAmount ? `₱${(parseInt(commentDonationAmount) / 100).toFixed(2)}` : ''}`
 											) : (
 												"Reply"
 											)}
