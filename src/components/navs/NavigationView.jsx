@@ -33,7 +33,7 @@ import {
 	Palette,
 	CurrencyDollar,
 	Heart,
-	Video,
+	CameraVideo,
 } from "react-bootstrap-icons";
 
 import { authAPI } from "../../config/ApiConfig";
@@ -582,7 +582,7 @@ const NavigationView = ({ children }) => {
 								location.pathname === "/creator" ? "active" : ""
 							} d-flex align-items-center gap-2`}
 						>
-							<Video size={20} />
+							<CameraVideo size={20} />
 							Creator
 						</Nav.Link>
 						<Nav.Link
