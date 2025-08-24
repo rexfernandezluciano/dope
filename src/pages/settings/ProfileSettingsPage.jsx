@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
@@ -16,7 +15,7 @@ const ProfileSettingsPage = () => {
 		bio: "",
 		photoURL: "",
 		birthday: "",
-		gender: ""
+		gender: "",
 	});
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
@@ -31,7 +30,7 @@ const ProfileSettingsPage = () => {
 				bio: user.bio || "",
 				photoURL: user.photoURL || "",
 				birthday: user.birthday || "",
-				gender: user.gender || ""
+				gender: user.gender || "",
 			});
 		}
 	}, [user]);
@@ -44,14 +43,14 @@ const ProfileSettingsPage = () => {
 		);
 	}
 
-	const checkNameChangeLimit = (lastChange) => {
+	const checkNameChangeLimit = lastChange => {
 		if (!lastChange) return false;
 		const fourteenDaysAgo = new Date();
 		fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 		return new Date(lastChange) > fourteenDaysAgo;
 	};
 
-	const uploadProfileImageToCloudinary = async (file) => {
+	const uploadProfileImageToCloudinary = async file => {
 		// Handle HEIC files
 		let finalFile = file;
 		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
@@ -77,25 +76,22 @@ const ProfileSettingsPage = () => {
 
 		try {
 			console.log("Uploading image to Cloudinary...", finalFile.name);
-			const response = await fetch(
-				"https://api.cloudinary.com/v1_1/zxpic/image/upload",
-				{
-					method: "POST",
-					body: formData,
-				},
-			);
-			
+			const response = await fetch("https://api.cloudinary.com/v1_1/zxpic/image/upload", {
+				method: "POST",
+				body: formData,
+			});
+
 			if (!response.ok) {
 				throw new Error(`Cloudinary upload failed: ${response.status} ${response.statusText}`);
 			}
-			
+
 			const data = await response.json();
 			console.log("Cloudinary upload successful:", data.secure_url);
-			
+
 			if (!data.secure_url) {
 				throw new Error("No secure URL returned from Cloudinary");
 			}
-			
+
 			return data.secure_url;
 		} catch (error) {
 			console.error("Error uploading to Cloudinary:", error);
@@ -111,7 +107,7 @@ const ProfileSettingsPage = () => {
 
 			// Check name change limit
 			if (settings.name !== user.name && checkNameChangeLimit(user.lastNameChange)) {
-				const daysLeft = Math.ceil((new Date(user.lastNameChange).getTime() + (14 * 24 * 60 * 60 * 1000) - Date.now()) / (24 * 60 * 60 * 1000));
+				const daysLeft = Math.ceil((new Date(user.lastNameChange).getTime() + 14 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000));
 				setMessage(`You can only change your name once every 14 days. Please wait ${daysLeft} more days.`);
 				setMessageType("warning");
 				setLoading(false);
@@ -121,7 +117,7 @@ const ProfileSettingsPage = () => {
 
 			// Add timestamp if name was changed
 			if (settings.name !== user.name) {
-				updateData.lastNameChange = new Date().toISOString();
+				//updateData.lastNameChange = new Date().toISOString();
 			}
 
 			// Upload profile image if a new file was selected
@@ -145,8 +141,8 @@ const ProfileSettingsPage = () => {
 			setMessageType("success");
 			setProfileImagePreview("");
 		} catch (err) {
-			console.error('Error updating profile:', err);
-			setMessage(err.message || 'Failed to update profile');
+			console.error("Error updating profile:", err);
+			setMessage(err.message || "Failed to update profile");
 			setMessageType("danger");
 		} finally {
 			setLoading(false);
@@ -154,18 +150,18 @@ const ProfileSettingsPage = () => {
 		}
 	};
 
-	const handleProfileImageUpload = (e) => {
+	const handleProfileImageUpload = e => {
 		const file = e.target.files[0];
 		if (file) {
 			// Create preview
 			const reader = new FileReader();
-			reader.onload = (e) => {
+			reader.onload = e => {
 				setProfileImagePreview(e.target.result);
 			};
 			reader.readAsDataURL(file);
 
 			// Store file for later upload
-			setSettings((prev) => ({ ...prev, profileImageFile: file }));
+			setSettings(prev => ({ ...prev, profileImageFile: file }));
 		}
 	};
 
@@ -196,12 +192,10 @@ const ProfileSettingsPage = () => {
 									<Form.Control
 										type="text"
 										value={settings.name}
-										onChange={(e) => setSettings(prev => ({ ...prev, name: e.target.value }))}
+										onChange={e => setSettings(prev => ({ ...prev, name: e.target.value }))}
 										placeholder="Your display name"
 									/>
-									<Form.Text className="text-muted">
-										You can change your display name once every 14 days
-									</Form.Text>
+									<Form.Text className="text-muted">You can change your display name once every 14 days</Form.Text>
 								</Form.Group>
 							</Col>
 							<Col md={6}>
@@ -223,16 +217,14 @@ const ProfileSettingsPage = () => {
 												size="sm"
 												className="position-absolute bottom-0 end-0 rounded-circle p-1"
 												style={{ width: "25px", height: "25px", fontSize: "12px" }}
-												onClick={() => document.getElementById("profile-upload").click()}
-											>
+												onClick={() => document.getElementById("profile-upload").click()}>
 												<Camera size={12} />
 											</Button>
 										</div>
 										<Button
 											variant="outline-primary"
 											size="sm"
-											onClick={() => document.getElementById("profile-upload").click()}
-										>
+											onClick={() => document.getElementById("profile-upload").click()}>
 											Change Photo
 										</Button>
 									</div>
@@ -253,13 +245,11 @@ const ProfileSettingsPage = () => {
 								as="textarea"
 								rows={3}
 								value={settings.bio}
-								onChange={(e) => setSettings(prev => ({ ...prev, bio: e.target.value }))}
+								onChange={e => setSettings(prev => ({ ...prev, bio: e.target.value }))}
 								placeholder="Tell us about yourself"
 								maxLength={160}
 							/>
-							<Form.Text className="text-muted">
-								{settings.bio.length}/160 characters
-							</Form.Text>
+							<Form.Text className="text-muted">{settings.bio.length}/160 characters</Form.Text>
 						</Form.Group>
 
 						<Row>
@@ -269,12 +259,10 @@ const ProfileSettingsPage = () => {
 									<Form.Control
 										type="date"
 										value={settings.birthday}
-										onChange={(e) => setSettings(prev => ({ ...prev, birthday: e.target.value }))}
-										max={new Date().toISOString().split('T')[0]}
+										onChange={e => setSettings(prev => ({ ...prev, birthday: e.target.value }))}
+										max={new Date().toISOString().split("T")[0]}
 									/>
-									<Form.Text className="text-muted">
-										Your birthday information
-									</Form.Text>
+									<Form.Text className="text-muted">Your birthday information</Form.Text>
 								</Form.Group>
 							</Col>
 							<Col md={6}>
@@ -282,17 +270,14 @@ const ProfileSettingsPage = () => {
 									<Form.Label>Gender</Form.Label>
 									<Form.Select
 										value={settings.gender}
-										onChange={(e) => setSettings(prev => ({ ...prev, gender: e.target.value }))}
-									>
+										onChange={e => setSettings(prev => ({ ...prev, gender: e.target.value }))}>
 										<option value="">Select Gender</option>
 										<option value="male">Male</option>
 										<option value="female">Female</option>
 										<option value="non_binary">Non-binary</option>
 										<option value="prefer_not_to_say">Prefer not to say</option>
 									</Form.Select>
-									<Form.Text className="text-muted">
-										Your gender identity
-									</Form.Text>
+									<Form.Text className="text-muted">Your gender identity</Form.Text>
 								</Form.Group>
 							</Col>
 						</Row>
