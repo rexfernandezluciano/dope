@@ -259,7 +259,10 @@ const ProfileSettingsPage = () => {
 									<Form.Control
 										type="date"
 										value={settings.birthday}
-										onChange={e => setSettings(prev => ({ ...prev, birthday: e.target.value }))}
+										onChange={e => {
+											const date = new Date(e.target.value);
+											setSettings(prev => ({ ...prev, birthday: date.toISOString() }));
+										}}
 										max={new Date().toISOString().split("T")[0]}
 									/>
 									<Form.Text className="text-muted">Your birthday information</Form.Text>
