@@ -178,7 +178,7 @@ const PostDetailPage = () => {
 							(like) => like.user.uid !== currentUser.uid,
 						),
 						stats: {
-							...prev.stats,
+							...prevPost.stats,
 							likes: prevPost.stats.likes - 1,
 						},
 					};
@@ -558,6 +558,27 @@ const PostDetailPage = () => {
 			}));
 		} catch (error) {
 			console.error("Failed to like reply:", error);
+		}
+	};
+
+	// Handle comment updates
+	const handleUpdateComment = async (commentId, newContent) => {
+		try {
+			const response = await commentAPI.updateComment(commentId, {
+				content: newContent.trim()
+			});
+
+			// Update the comment in local state
+			setComments(prevComments =>
+				prevComments.map(comment =>
+					comment.id === commentId
+						? { ...comment, content: newContent.trim(), updatedAt: new Date().toISOString() }
+						: comment
+				)
+			);
+		} catch (error) {
+			console.error("Failed to update comment:", error);
+			setError("Failed to update comment");
 		}
 	};
 
