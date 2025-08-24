@@ -258,10 +258,13 @@ const ProfileSettingsPage = () => {
 									<Form.Label>Birthday</Form.Label>
 									<Form.Control
 										type="date"
-										value={settings.birthday}
+										value={settings.birthday ? new Date(settings.birthday).toISOString().split("T")[0] : ""}
 										onChange={e => {
-											const date = new Date(e.target.value);
-											setSettings(prev => ({ ...prev, birthday: date.toISOString() }));
+											const date = e.target.value ? new Date(e.target.value) : null;
+											setSettings(prev => ({
+												...prev,
+												birthday: date ? date.toISOString() : null,
+											}));
 										}}
 										max={new Date().toISOString().split("T")[0]}
 									/>
