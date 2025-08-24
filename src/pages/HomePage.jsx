@@ -97,7 +97,7 @@ const HomePage = () => {
 		try {
 			setLoading(true);
 			setError("");
-			const additionalParams = {};
+			const additionalParams = { random: "true" };
 			if (cursor) additionalParams.cursor = cursor;
 
 			let response;
@@ -106,7 +106,7 @@ const HomePage = () => {
 				const params = { limit: 20, ...additionalParams };
 				response = await postAPI.getFollowingFeed(params);
 			} else {
-				// For "For You" tab, sort by engagement (likes + comments)
+				// For "For You" tab, sort by engagement (likes + comments) with randomization
 				additionalParams.sortBy = "engagement";
 				response = await postAPI.getPosts(1, 20, additionalParams);
 			}
