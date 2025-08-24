@@ -162,7 +162,7 @@ const BusinessPage = () => {
 			
 			// Send the purchase request
 			const response = await businessAPI.purchaseCredits({
-				credits: selectedPackage.credits,
+				amount: selectedPackage.credits,
 				paymentMethodId: paymentMethodId,
 			});
 
