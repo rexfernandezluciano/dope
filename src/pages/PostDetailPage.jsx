@@ -2,7 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useLoaderData, useNavigate } from "react-router-dom";
-import { Container, Card, Image, Button, Form, Alert, Spinner, Modal } from "react-bootstrap";
+import {
+	Container,
+	Card,
+	Image,
+	Button,
+	Form,
+	Alert,
+	Spinner,
+	Modal,
+} from "react-bootstrap";
 import {
 	ArrowLeft,
 	Heart,
@@ -23,10 +32,17 @@ import {
 import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import CommentItem from "../components/CommentItem";
-import { formatTimeAgo, deletePost as deletePostUtil, sharePost } from "../utils/common-utils";
+import {
+	formatTimeAgo,
+	deletePost as deletePostUtil,
+	sharePost,
+} from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
-import { handleLikeNotification, handleCommentNotification } from "../utils/notification-helpers";
+import {
+	handleLikeNotification,
+	handleCommentNotification,
+} from "../utils/notification-helpers";
 import { replyAPI, likeAPI } from "../config/ApiConfig";
 
 const PostDetailPage = () => {
@@ -93,10 +109,15 @@ const PostDetailPage = () => {
 					const repliesData = {};
 					for (const comment of commentsResponse.comments) {
 						try {
-							const repliesResponse = await replyAPI.getCommentReplies(comment?.id);
+							const repliesResponse = await replyAPI.getCommentReplies(
+								comment?.id,
+							);
 							repliesData[comment?.id] = repliesResponse.replies || [];
 						} catch (replyError) {
-							console.error(`Failed to load replies for comment ${comment?.id}:`, replyError);
+							console.error(
+								`Failed to load replies for comment ${comment?.id}:`,
+								replyError,
+							);
 							repliesData[comment?.id] = [];
 						}
 					}
@@ -138,17 +159,12 @@ const PostDetailPage = () => {
 	useEffect(() => {
 		if (loaderData?.post) {
 			setPost(loaderData.post);
-			setLiked(loaderData.post.likes?.some(like => like.user?.uid === currentUser?.uid) || false);
+			setLiked(
+				loaderData.post.likes?.some(
+					(like) => like.user?.uid === currentUser?.uid,
+				) || false,
+			);
 			setLikeCount(loaderData.post.likes?.length || 0);
-
-			// Initialize poll voting state
-			if (loaderData.post.poll && currentUser) {
-				const userVote = loaderData.post.poll.votes.findIndex(vote =>
-					vote.voters.some(voter => voter === currentUser.uid)
-				);
-				setUserVotedOption(userVote >= 0 ? userVote : null);
-				setPollVotes(loaderData.post.poll.votes);
-			}
 		}
 		if (loaderData?.comments) {
 			setComments(loaderData.comments);
@@ -171,7 +187,9 @@ const PostDetailPage = () => {
 		if (post) {
 			updatePageMeta({
 				title: `Post by ${post.author.name} - DOPE Network`,
-				description: post.content ? `${post.content.substring(0, 160)}...` : "View post on DOPE Network",
+				description: post.content
+					? `${post.content.substring(0, 160)}...`
+					: "View post on DOPE Network",
 				keywords: `post, content, ${post.author.name}, DOPE Network, social media`,
 			});
 		}
@@ -182,10 +200,12 @@ const PostDetailPage = () => {
 			const response = await postAPI.likePost(postId);
 
 			// Update post state locally based on the liked response
-			setPost(prevPost => {
+			setPost((prevPost) => {
 				if (!prevPost) return prevPost;
 
-				const isCurrentlyLiked = prevPost.likes.some(like => like.user.uid === currentUser.uid);
+				const isCurrentlyLiked = prevPost.likes.some(
+					(like) => like.user.uid === currentUser.uid,
+				);
 
 				if (response.liked && !isCurrentlyLiked) {
 					// Add like
@@ -201,7 +221,9 @@ const PostDetailPage = () => {
 					// Remove like
 					return {
 						...prevPost,
-						likes: prevPost.likes.filter(like => like.user.uid !== currentUser.uid),
+						likes: prevPost.likes.filter(
+							(like) => like.user.uid !== currentUser.uid,
+						),
 						stats: {
 							...prevPost.stats,
 							likes: prevPost.stats.likes - 1,
@@ -213,7 +235,9 @@ const PostDetailPage = () => {
 			});
 
 			// Send like notification to post owner only when user actually likes (not unlikes)
-			const wasLiked = post.likes.some(like => like.user.uid === currentUser.uid);
+			const wasLiked = post.likes.some(
+				(like) => like.user.uid === currentUser.uid,
+			);
 			if (response.liked && !wasLiked) {
 				try {
 					await handleLikeNotification(postId, post, currentUser);
@@ -227,20 +251,20 @@ const PostDetailPage = () => {
 	};
 
 	// Replaced handleSharePost with the reusable sharePost utility
-	const handleSharePost = async postId => {
+	const handleSharePost = async (postId) => {
 		const postUrl = `${window.location.origin}/post/${postId}`;
 		await sharePost(postUrl);
 	};
 
-	const handleHashtagClick = hashtag => {
+	const handleHashtagClick = (hashtag) => {
 		navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=comments`);
 	};
 
-	const handleMentionClick = username => {
+	const handleMentionClick = (username) => {
 		navigate(`/${username}`);
 	};
 
-	const handleLinkClick = url => {
+	const handleLinkClick = (url) => {
 		window.open(url, "_blank", "noopener,noreferrer");
 	};
 
@@ -252,10 +276,12 @@ const PostDetailPage = () => {
 			await commentAPI.deleteComment(commentToDelete);
 
 			// Remove the comment from local state
-			setComments(prevComments => prevComments.filter(comment => comment.id !== commentToDelete));
+			setComments((prevComments) =>
+				prevComments.filter((comment) => comment.id !== commentToDelete),
+			);
 
 			// Clean up replies for the deleted comment
-			setReplies(prevReplies => {
+			setReplies((prevReplies) => {
 				const newReplies = { ...prevReplies };
 				delete newReplies[commentToDelete];
 				return newReplies;
@@ -291,7 +317,7 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const handleDeletePost = postId => {
+	const handleDeletePost = (postId) => {
 		setPostToDelete(postId);
 		setShowDeleteDialog(true);
 	};
@@ -336,7 +362,7 @@ const PostDetailPage = () => {
 		setCurrentImageIndex(0);
 	};
 
-	const canComment = post => {
+	const canComment = (post) => {
 		if (!currentUser) return false;
 
 		// Post owner can always comment
@@ -356,156 +382,179 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const getPrivacyIcon = privacy => {
+	const getPrivacyIcon = (privacy) => {
 		switch (privacy) {
 			case "public":
-				return (
-					<Globe
-						size={14}
-						className="text-muted"
-					/>
-				);
+				return <Globe size={14} className="text-muted" />;
 			case "private":
-				return (
-					<Lock
-						size={14}
-						className="text-muted"
-					/>
-				);
+				return <Lock size={14} className="text-muted" />;
 			case "followers":
-				return (
-					<PersonFill
-						size={14}
-						className="text-muted"
-					/>
-				);
+				return <PersonFill size={14} className="text-muted" />;
 			default:
-				return (
-					<Globe
-						size={14}
-						className="text-muted"
-					/>
-				);
+				return <Globe size={14} className="text-muted" />;
 		}
 	};
 
-	const handlePollVote = useCallback(async (optionIndex) => {
-		if (!currentUser || userVotedOption !== null || !post) return;
+	const handlePollVote = useCallback(
+		async (optionIndex) => {
+			if (!currentUser || userVotedOption !== null || !post) return;
 
-		try {
-			const response = await postAPI.votePoll(post?.id, optionIndex);
-			if (response.success) {
-				setPollVotes(response.poll.votes);
-				setUserVotedOption(optionIndex);
-			}
-		} catch (error) {
-			console.error('Failed to vote on poll:', error);
-			setError('Failed to vote on poll');
-		}
-	}, [currentUser, userVotedOption, post]);
-
-	const handleSubmitComment = useCallback(async (e) => {
-		e.preventDefault();
-
-		const trimmedContent = newComment.trim();
-		if (!trimmedContent) return;
-
-		try {
-			setSubmitting(true);
-
-			let requestBody = {
-				content: trimmedContent,
-			};
-
-			// Add tip data if applicable
-			if (commentMode === "tip" && commentTipAmount) {
-				requestBody.tipAmount = parseInt(commentTipAmount);
-				requestBody.receiverId = post.author.uid;
-			}
-
-			const response = await commentAPI.createComment(postId, requestBody);
-			console.log("Comment API Response:", response); // Debug log
-
-			// Handle different response structures
-			const commentData = response.comment || response;
-
-			// Ensure the comment has a proper structure
-			const newCommentObj = {
-				id: commentData.id || `temp_${Date.now()}`,
-				content: newComment.trim(),
-				createdAt: commentData.createdAt || new Date().toISOString(),
-				updatedAt: commentData.updatedAt || new Date().toISOString(),
-				postId: postId,
-				authorId: currentUser.uid,
-				...commentData,
-				author: commentData.author || {
-					uid: currentUser.uid,
-					name: currentUser.name,
-					username: currentUser.username,
-					photoURL: currentUser.photoURL,
-					hasBlueCheck: currentUser.hasBlueCheck || false,
-				},
-				stats: commentData.stats || {
-					likes: 0,
-					replies: 0,
-				},
-				likes: commentData.likes || [],
-				replies: commentData.replies || [],
-				tip: { amount: commentMode === "tip" && commentTipAmount ? parseInt(commentTipAmount) : undefined},
-				donation: {amount: commentMode === "donation" && commentDonationAmount ? parseInt(commentDonationAmount) : undefined},
-			};
-
-			// Add to comments list
-			setComments(prevComments => [newCommentObj, ...prevComments]);
-
-			// Initialize replies for the new comment
-			setReplies(prevReplies => ({
-				...prevReplies,
-				[newCommentObj?.id]: [],
-			}));
-
-			// Update post comment count
-			setPost(prevPost => ({
-				...prevPost,
-				stats: {
-					...prevPost.stats,
-					comments: (prevPost.stats?.comments || 0) + 1,
-				},
-			}));
-
-			// Send comment notification to post owner
 			try {
-				await handleCommentNotification(postId, post, currentUser, newComment);
-			} catch (notificationError) {
-				console.error("Failed to send comment notification:", notificationError);
+				const response = await postAPI.votePoll(post?.id, optionIndex);
+				if (response.success) {
+					setPollVotes(response.poll.votes);
+					setUserVotedOption(optionIndex);
+				}
+			} catch (error) {
+				console.error("Failed to vote on poll:", error);
+				setError("Failed to vote on poll");
 			}
+		},
+		[currentUser, userVotedOption, post],
+	);
 
-			// Reset form
-			setNewComment("");
-			setCommentMode(post && currentUser && post.author.uid !== currentUser.uid ? "tip" : "comment");
-			setCommentTipAmount("");
-			setError(""); // Clear any previous errors
-		} catch (err) {
-			console.error("Failed to create comment:", err);
-			setCommentError(err.message || "Failed to create comment");
-		} finally {
-			setSubmitting(false);
-		}
-	}, [newComment, post?.id, post?.author.uid, currentUser, postId, commentMode, commentTipAmount, post, handleCommentNotification]);
+	const handleSubmitComment = useCallback(
+		async (e) => {
+			e.preventDefault();
 
-	const handleLikeComment = async commentId => {
+			const trimmedContent = newComment.trim();
+			if (!trimmedContent) return;
+
+			try {
+				setSubmitting(true);
+
+				let requestBody = {
+					content: trimmedContent,
+				};
+
+				// Add tip data if applicable
+				if (commentMode === "tip" && commentTipAmount) {
+					requestBody.tipAmount = parseInt(commentTipAmount);
+					requestBody.receiverId = post.author.uid;
+				}
+
+				const response = await commentAPI.createComment(postId, requestBody);
+				console.log("Comment API Response:", response); // Debug log
+
+				// Handle different response structures
+				const commentData = response.comment || response;
+
+				// Ensure the comment has a proper structure
+				const newCommentObj = {
+					id: commentData.id || `temp_${Date.now()}`,
+					content: newComment.trim(),
+					createdAt: commentData.createdAt || new Date().toISOString(),
+					updatedAt: commentData.updatedAt || new Date().toISOString(),
+					postId: postId,
+					authorId: currentUser.uid,
+					...commentData,
+					author: commentData.author || {
+						uid: currentUser.uid,
+						name: currentUser.name,
+						username: currentUser.username,
+						photoURL: currentUser.photoURL,
+						hasBlueCheck: currentUser.hasBlueCheck || false,
+					},
+					stats: commentData.stats || {
+						likes: 0,
+						replies: 0,
+					},
+					likes: commentData.likes || [],
+					replies: commentData.replies || [],
+					tip: {
+						amount:
+							commentMode === "tip" && commentTipAmount
+								? parseInt(commentTipAmount)
+								: undefined,
+					},
+					donation: {
+						amount:
+							commentMode === "donation" && commentDonationAmount
+								? parseInt(commentDonationAmount)
+								: undefined,
+					},
+				};
+
+				// Add to comments list
+				setComments((prevComments) => [newCommentObj, ...prevComments]);
+
+				// Initialize replies for the new comment
+				setReplies((prevReplies) => ({
+					...prevReplies,
+					[newCommentObj?.id]: [],
+				}));
+
+				// Update post comment count
+				setPost((prevPost) => ({
+					...prevPost,
+					stats: {
+						...prevPost.stats,
+						comments: (prevPost.stats?.comments || 0) + 1,
+					},
+				}));
+
+				// Send comment notification to post owner
+				try {
+					await handleCommentNotification(
+						postId,
+						post,
+						currentUser,
+						newComment,
+					);
+				} catch (notificationError) {
+					console.error(
+						"Failed to send comment notification:",
+						notificationError,
+					);
+				}
+
+				// Reset form
+				setNewComment("");
+				setCommentMode(
+					post && currentUser && post.author.uid !== currentUser.uid
+						? "tip"
+						: "comment",
+				);
+				setCommentTipAmount("");
+				setError(""); // Clear any previous errors
+			} catch (err) {
+				console.error("Failed to create comment:", err);
+				setCommentError(err.message || "Failed to create comment");
+			} finally {
+				setSubmitting(false);
+			}
+		},
+		[
+			newComment,
+			post?.id,
+			post?.author.uid,
+			currentUser,
+			postId,
+			commentMode,
+			commentTipAmount,
+			post,
+			handleCommentNotification,
+		],
+	);
+
+	const handleLikeComment = async (commentId) => {
 		try {
 			const response = await likeAPI.likeComment(commentId);
 
-			setComments(prevComments =>
-				prevComments.map(comment => {
+			setComments((prevComments) =>
+				prevComments.map((comment) => {
 					if (comment.id === commentId) {
-						const isCurrentlyLiked = comment.likes?.some(like => like.user.uid === currentUser.uid);
+						const isCurrentlyLiked = comment.likes?.some(
+							(like) => like.user.uid === currentUser.uid,
+						);
 
 						if (response.liked && !isCurrentlyLiked) {
 							return {
 								...comment,
-								likes: [...(comment.likes || []), { user: { uid: currentUser.uid } }],
+								likes: [
+									...(comment.likes || []),
+									{ user: { uid: currentUser.uid } },
+								],
 								stats: {
 									...comment.stats,
 									likes: (comment.stats?.likes || 0) + 1,
@@ -514,7 +563,9 @@ const PostDetailPage = () => {
 						} else if (!response.liked && isCurrentlyLiked) {
 							return {
 								...comment,
-								likes: (comment.likes || []).filter(like => like.user.uid !== currentUser.uid),
+								likes: (comment.likes || []).filter(
+									(like) => like.user.uid !== currentUser.uid,
+								),
 								stats: {
 									...comment.stats,
 									likes: Math.max(0, (comment.stats?.likes || 0) - 1),
@@ -530,15 +581,15 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const toggleReplyForm = commentId => {
-		setShowReplyForms(prev => ({
+	const toggleReplyForm = (commentId) => {
+		setShowReplyForms((prev) => ({
 			...prev,
 			[commentId]: !prev[commentId],
 		}));
 	};
 
 	const handleReplyTextChange = (commentId, text) => {
-		setReplyTexts(prev => ({
+		setReplyTexts((prev) => ({
 			...prev,
 			[commentId]: text,
 		}));
@@ -581,14 +632,14 @@ const PostDetailPage = () => {
 			};
 
 			// Add to replies
-			setReplies(prev => ({
+			setReplies((prev) => ({
 				...prev,
 				[commentId]: [newReply, ...(prev[commentId] || [])],
 			}));
 
 			// Update comment reply count
-			setComments(prevComments =>
-				prevComments.map(comment =>
+			setComments((prevComments) =>
+				prevComments.map((comment) =>
 					comment.id === commentId
 						? {
 								...comment,
@@ -596,7 +647,7 @@ const PostDetailPage = () => {
 									...comment.stats,
 									replies: (comment.stats?.replies || 0) + 1,
 								},
-						  }
+							}
 						: comment,
 				),
 			);
@@ -610,16 +661,21 @@ const PostDetailPage = () => {
 		try {
 			const response = await likeAPI.likeReply(replyId);
 
-			setReplies(prev => ({
+			setReplies((prev) => ({
 				...prev,
-				[commentId]: (prev[commentId] || []).map(reply => {
+				[commentId]: (prev[commentId] || []).map((reply) => {
 					if (reply.id === replyId) {
-						const isCurrentlyLiked = reply.likes?.some(like => like.user.uid === currentUser.uid);
+						const isCurrentlyLiked = reply.likes?.some(
+							(like) => like.user.uid === currentUser.uid,
+						);
 
 						if (response.liked && !isCurrentlyLiked) {
 							return {
 								...reply,
-								likes: [...(reply.likes || []), { user: { uid: currentUser.uid } }],
+								likes: [
+									...(reply.likes || []),
+									{ user: { uid: currentUser.uid } },
+								],
 								stats: {
 									...reply.stats,
 									likes: (reply.stats?.likes || 0) + 1,
@@ -628,7 +684,9 @@ const PostDetailPage = () => {
 						} else if (!response.liked && isCurrentlyLiked) {
 							return {
 								...reply,
-								likes: (reply.likes || []).filter(like => like.user.uid !== currentUser.uid),
+								likes: (reply.likes || []).filter(
+									(like) => like.user.uid !== currentUser.uid,
+								),
 								stats: {
 									...reply.stats,
 									likes: Math.max(0, (reply.stats?.likes || 0) - 1),
@@ -652,8 +710,16 @@ const PostDetailPage = () => {
 			});
 
 			// Update the comment in local state
-			setComments(prevComments =>
-				prevComments.map(comment => (comment.id === commentId ? { ...comment, content: newContent.trim(), updatedAt: new Date().toISOString() } : comment)),
+			setComments((prevComments) =>
+				prevComments.map((comment) =>
+					comment.id === commentId
+						? {
+								...comment,
+								content: newContent.trim(),
+								updatedAt: new Date().toISOString(),
+							}
+						: comment,
+				),
 			);
 		} catch (error) {
 			console.error("Failed to update comment:", error);
@@ -666,10 +732,7 @@ const PostDetailPage = () => {
 	if (loading) {
 		return (
 			<Container className="text-center py-5">
-				<Spinner
-					animation="border"
-					variant="primary"
-				/>
+				<Spinner animation="border" variant="primary" />
 			</Container>
 		);
 	}
@@ -690,12 +753,14 @@ const PostDetailPage = () => {
 				style={{
 					top: "112px" /* Below navbar (56px) + tabs (56px) */,
 					zIndex: 1018 /* Below tabs but above content */,
-				}}>
+				}}
+			>
 				<Button
 					variant="link"
 					size="sm"
 					className="text-dark p-0"
-					onClick={() => navigate(-1)}>
+					onClick={() => navigate(-1)}
+				>
 					<ArrowLeft size={20} />
 				</Button>
 				<h5 className="mb-0">Post</h5>
@@ -706,7 +771,8 @@ const PostDetailPage = () => {
 					variant="link"
 					size="sm"
 					className="text-dark p-0"
-					onClick={() => navigate(-1)}>
+					onClick={() => navigate(-1)}
+				>
 					<ArrowLeft size={20} />
 				</Button>
 				<h5 className="mb-0">Post</h5>
@@ -734,17 +800,17 @@ const PostDetailPage = () => {
 									<span
 										className="fw-bold"
 										style={{ cursor: "pointer", color: "inherit" }}
-										onClick={() => navigate(`/${post?.author.username}`)}>
+										onClick={() => navigate(`/${post?.author.username}`)}
+									>
 										{post.author.name}
 									</span>
 									{post.author.hasBlueCheck && (
-										<CheckCircleFill
-											className="text-primary"
-											size={16}
-										/>
+										<CheckCircleFill className="text-primary" size={16} />
 									)}
 									<span className="text-muted">·</span>
-									<span className="text-muted small">{formatTimeAgo(post.createdAt)}</span>
+									<span className="text-muted small">
+										{formatTimeAgo(post.createdAt)}
+									</span>
 									<span className="text-muted">·</span>
 									{getPrivacyIcon(post.privacy)}
 								</div>
@@ -758,7 +824,8 @@ const PostDetailPage = () => {
 										border: "none !important",
 										boxShadow: "none !important",
 									}}
-									onClick={() => setShowPostOptionsModal(true)}>
+									onClick={() => setShowPostOptionsModal(true)}
+								>
 									<ThreeDots size={16} />
 								</Button>
 							</div>
@@ -775,41 +842,94 @@ const PostDetailPage = () => {
 
 							{/* Poll Display */}
 							{post.poll && (
-								<div className="my-3 p-3 border rounded bg-light">
-									<h5 className="mb-3">{post.poll.question}</h5>
-									{post.poll.options.map((option, index) => {
-										const totalVotes = pollVotes.reduce((sum, pv) => sum + pv.count, 0);
-										const optionVotes = pollVotes.find(pv => pv.optionIndex === index)?.count || 0;
-										const percentage = totalVotes > 0 ? (optionVotes / totalVotes) * 100 : 0;
+								<div className="mb-2">
+									<div className="border rounded-3 p-3">
+										<div className="d-flex align-items-center justify-content-between mb-3">
+											<h6 className="mb-0">Poll</h6>
+											<small className="text-muted">
+												{(() => {
+													if (post.poll?.isExpired) {
+														return "Poll ended";
+													}
 
-										return (
-											<div
-												key={index}
-												className={`poll-option mb-2 p-2 rounded ${userVotedOption === index ? "border border-primary" : "border"}`}
-												onClick={() => handlePollVote(index)}
-												style={{ cursor: userVotedOption === null ? "pointer" : "default", backgroundColor: userVotedOption === index ? "rgba(23, 162, 184, 0.1)" : "white" }}>
-												<div className="d-flex justify-content-between align-items-center">
-													<span className="fw-bold">{option}</span>
-													{userVotedOption !== null && (
-														<span className="text-muted small">{percentage.toFixed(1)}%</span>
-													)}
-												</div>
-												{userVotedOption !== null && (
+													const now = new Date();
+													const endTime = new Date(post.poll?.expiresAt);
+													const timeLeft = endTime - now;
+
+													if (timeLeft <= 0) {
+														return "Poll ended";
+													}
+
+													const hoursLeft = Math.floor(
+														timeLeft / (1000 * 60 * 60),
+													);
+													const minutesLeft = Math.floor(
+														(timeLeft % (1000 * 60 * 60)) / (1000 * 60),
+													);
+
+													if (hoursLeft > 0) {
+														return `${hoursLeft}h ${minutesLeft}m left`;
+													} else {
+														return `${minutesLeft}m left`;
+													}
+												})()}
+											</small>
+										</div>
+
+										{post.poll?.options.map((option, index) => {
+											const canVote =
+												currentUser &&
+												!post.poll?.hasUserVoted &&
+												!post.poll?.isExpired;
+
+											return (
+												<div
+													key={option.id || index}
+													className={`position-relative border rounded-3 p-2 mb-2 ${
+														canVote ? "cursor-pointer" : ""
+													} ${
+														option.isUserChoice
+															? "border-primary bg-primary bg-opacity-10"
+															: "border-secondary"
+													}`}
+													style={{
+														cursor: canVote ? "pointer" : "default",
+														overflow: "hidden",
+													}}
+													onClick={() => canVote && handlePollVote(index)}
+												>
+													{/* Progress bar background */}
 													<div
-														className="progress mt-1"
-														style={{ height: "8px" }}>
-														<div
-															className={`progress-bar ${userVotedOption === index ? "bg-primary" : "bg-secondary"}`}
-															role="progressbar"
-															style={{ width: `${percentage}%` }}
-															aria-valuenow={percentage}
-															aria-valuemin="0"
-															aria-valuemax="100"></div>
+														className="position-absolute top-0 start-0 h-100 bg-light"
+														style={{
+															width: `${option.percentage}%`,
+															opacity: 0.3,
+															zIndex: 1,
+														}}
+													/>
+
+													<div
+														className="position-relative d-flex justify-content-between align-items-center"
+														style={{ zIndex: 2 }}
+													>
+														<span
+															className={`${option.isUserChoice ? "fw-bold text-primary" : ""}`}
+														>
+															{option.text}
+															{option.isUserChoice && " ✓"}
+														</span>
+														<span className="text-muted small">
+															{option.percentage}% ({option.votes})
+														</span>
 													</div>
-												)}
-											</div>
-										);
-									})}
+												</div>
+											);
+										})}
+
+										<div className="text-muted small mt-2">
+											{post.poll.totalVotes} votes
+										</div>
+									</div>
 								</div>
 							)}
 
@@ -829,9 +949,7 @@ const PostDetailPage = () => {
 										/>
 									) : (
 										// Multiple images - box layout
-										<div
-											className="d-flex gap-2"
-											style={{ height: "300px" }}>
+										<div className="d-flex gap-2" style={{ height: "300px" }}>
 											{/* Main image on the left */}
 											<div style={{ flex: "2" }}>
 												<Image
@@ -848,11 +966,16 @@ const PostDetailPage = () => {
 											{post.imageUrls.length > 1 && (
 												<div
 													className="d-flex flex-column gap-2"
-													style={{ flex: "1" }}>
+													style={{ flex: "1" }}
+												>
 													<div
 														style={{
-															height: post.imageUrls.length > 2 ? "calc(50% - 4px)" : "100%",
-														}}>
+															height:
+																post.imageUrls.length > 2
+																	? "calc(50% - 4px)"
+																	: "100%",
+														}}
+													>
 														<Image
 															src={post.imageUrls[1]}
 															className="rounded w-100 h-100"
@@ -866,7 +989,8 @@ const PostDetailPage = () => {
 													{post.imageUrls.length > 2 && (
 														<div
 															style={{ height: "calc(50% - 4px)" }}
-															className="position-relative">
+															className="position-relative"
+														>
 															<Image
 																src={post.imageUrls[2]}
 																className="rounded w-100 h-100"
@@ -874,7 +998,9 @@ const PostDetailPage = () => {
 																	objectFit: "cover",
 																	cursor: "pointer",
 																}}
-																onClick={() => openImageViewer(post.imageUrls, 2)}
+																onClick={() =>
+																	openImageViewer(post.imageUrls, 2)
+																}
 															/>
 															{/* Show more indicator */}
 															{post.imageUrls.length > 3 && (
@@ -887,7 +1013,10 @@ const PostDetailPage = () => {
 																		fontWeight: "bold",
 																		fontSize: "1.2rem",
 																	}}
-																	onClick={() => openImageViewer(post.imageUrls, 2)}>
+																	onClick={() =>
+																		openImageViewer(post.imageUrls, 2)
+																	}
+																>
 																	+{post.imageUrls.length - 3}
 																</div>
 															)}
@@ -904,13 +1033,18 @@ const PostDetailPage = () => {
 								<div className="d-flex flex-wrap gap-3 small text-muted">
 									{post.likes.length > 0 &&
 										(() => {
-											const currentUserLiked = post.likes.some(like => like.user.uid === currentUser.uid);
-											const otherLikesCount = currentUserLiked ? post.likes.length - 1 : post.likes.length;
+											const currentUserLiked = post.likes.some(
+												(like) => like.user.uid === currentUser.uid,
+											);
+											const otherLikesCount = currentUserLiked
+												? post.likes.length - 1
+												: post.likes.length;
 
 											if (currentUserLiked && otherLikesCount > 0) {
 												return (
 													<span>
-														<span className="fw-bold">You</span> & {otherLikesCount} others reacted.
+														<span className="fw-bold">You</span> &{" "}
+														{otherLikesCount} others reacted.
 													</span>
 												);
 											} else if (currentUserLiked && otherLikesCount === 0) {
@@ -922,13 +1056,19 @@ const PostDetailPage = () => {
 											} else if (!currentUserLiked && post.likes.length === 1) {
 												return (
 													<span>
-														<span className="fw-bold">{post.likes[0].user.name || "Someone"}</span> reacted.
+														<span className="fw-bold">
+															{post.likes[0].user.name || "Someone"}
+														</span>{" "}
+														reacted.
 													</span>
 												);
 											} else if (!currentUserLiked && post.likes.length > 1) {
 												return (
 													<span>
-														<span className="fw-bold">{post.likes[0].user.name || "Someone"}</span> & {post.likes.length - 1} others reacted.
+														<span className="fw-bold">
+															{post.likes[0].user.name || "Someone"}
+														</span>{" "}
+														& {post.likes.length - 1} others reacted.
 													</span>
 												);
 											}
@@ -936,14 +1076,19 @@ const PostDetailPage = () => {
 										})()}
 								</div>
 								<div className="d-flex flex-wrap gap-3 small text-muted">
-									{post.analytics?.views > 0 && <span>{post.analytics.views} views</span>}
-									{post.analytics?.shares > 0 && <span>{post.analytics.shares} shares</span>}
+									{post.analytics?.views > 0 && (
+										<span>{post.analytics.views} views</span>
+									)}
+									{post.analytics?.shares > 0 && (
+										<span>{post.analytics.shares} shares</span>
+									)}
 								</div>
 							</div>
 
 							<div
 								className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
-								style={{ maxWidth: "400px" }}>
+								style={{ maxWidth: "400px" }}
+							>
 								<Button
 									variant="link"
 									size="sm"
@@ -954,24 +1099,30 @@ const PostDetailPage = () => {
 										height: "36px",
 									}}
 									disabled={!canComment(post)}
-									title={!canComment(post) ? "You cannot comment on this post" : "Comment"}
-									onMouseEnter={e => {
+									title={
+										!canComment(post)
+											? "You cannot comment on this post"
+											: "Comment"
+									}
+									onMouseEnter={(e) => {
 										if (canComment(post)) {
-											e.target.closest(".action-btn").style.backgroundColor = "rgba(29, 161, 242, 0.1)";
+											e.target.closest(".action-btn").style.backgroundColor =
+												"rgba(29, 161, 242, 0.1)";
 											e.target.closest(".action-btn").style.color = "#1da1f2";
 										}
 									}}
-									onMouseLeave={e => {
+									onMouseLeave={(e) => {
 										if (canComment(post)) {
-											e.target.closest(".action-btn").style.backgroundColor = "transparent";
+											e.target.closest(".action-btn").style.backgroundColor =
+												"transparent";
 											e.target.closest(".action-btn").style.color = "#6c757d";
 										}
-									}}>
-									<ChatDots
-										size={24}
-										style={{ flexShrink: 0 }}
-									/>
-									{post.stats.comments > 0 && <span className="small">{post.stats.comments}</span>}
+									}}
+								>
+									<ChatDots size={24} style={{ flexShrink: 0 }} />
+									{post.stats.comments > 0 && (
+										<span className="small">{post.stats.comments}</span>
+									)}
 								</Button>
 
 								<Button
@@ -979,36 +1130,49 @@ const PostDetailPage = () => {
 									size="sm"
 									className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 									style={{
-										color: (post.likes || []).some(like => like.user.uid === currentUser.uid) ? "#dc3545" : "#6c757d",
+										color: (post.likes || []).some(
+											(like) => like.user.uid === currentUser.uid,
+										)
+											? "#dc3545"
+											: "#6c757d",
 										transition: "all 0.2s",
 										minWidth: "40px",
 										height: "36px",
 									}}
 									onClick={handleLikePost}
-									onMouseEnter={e => {
-										if (!(post.likes || []).some(like => like.user.uid === currentUser.uid)) {
-											e.target.closest(".action-btn").style.backgroundColor = "rgba(220, 53, 69, 0.1)";
+									onMouseEnter={(e) => {
+										if (
+											!(post.likes || []).some(
+												(like) => like.user.uid === currentUser.uid,
+											)
+										) {
+											e.target.closest(".action-btn").style.backgroundColor =
+												"rgba(220, 53, 69, 0.1)";
 											e.target.closest(".action-btn").style.color = "#dc3545";
 										}
 									}}
-									onMouseLeave={e => {
-										if (!(post.likes || []).some(like => like.user.uid === currentUser.uid)) {
-											e.target.closest(".action-btn").style.backgroundColor = "transparent";
+									onMouseLeave={(e) => {
+										if (
+											!(post.likes || []).some(
+												(like) => like.user.uid === currentUser.uid,
+											)
+										) {
+											e.target.closest(".action-btn").style.backgroundColor =
+												"transparent";
 											e.target.closest(".action-btn").style.color = "#6c757d";
 										}
-									}}>
-									{(post.likes || []).some(like => like.user.uid === currentUser.uid) ? (
-										<HeartFill
-											size={24}
-											style={{ flexShrink: 0 }}
-										/>
+									}}
+								>
+									{(post.likes || []).some(
+										(like) => like.user.uid === currentUser.uid,
+									) ? (
+										<HeartFill size={24} style={{ flexShrink: 0 }} />
 									) : (
-										<Heart
-											size={24}
-											style={{ flexShrink: 0 }}
-										/>
+										<Heart size={24} style={{ flexShrink: 0 }} />
 									)}
-									{post.stats.likes > 0 && <span className="small">{post.stats.likes}</span>}
+									{post.stats.likes > 0 && (
+										<span className="small">{post.stats.likes}</span>
+									)}
 								</Button>
 
 								<Button
@@ -1021,18 +1185,18 @@ const PostDetailPage = () => {
 										height: "36px",
 									}}
 									onClick={() => handleSharePost(post.id)}
-									onMouseEnter={e => {
-										e.target.closest(".action-btn").style.backgroundColor = "rgba(23, 191, 99, 0.1)";
+									onMouseEnter={(e) => {
+										e.target.closest(".action-btn").style.backgroundColor =
+											"rgba(23, 191, 99, 0.1)";
 										e.target.closest(".action-btn").style.color = "#17bf63";
 									}}
-									onMouseLeave={e => {
-										e.target.closest(".action-btn").style.backgroundColor = "transparent";
+									onMouseLeave={(e) => {
+										e.target.closest(".action-btn").style.backgroundColor =
+											"transparent";
 										e.target.closest(".action-btn").style.color = "#6c757d";
-									}}>
-									<Share
-										size={24}
-										style={{ flexShrink: 0 }}
-									/>
+									}}
+								>
+									<Share size={24} style={{ flexShrink: 0 }} />
 								</Button>
 							</div>
 						</div>
@@ -1047,7 +1211,9 @@ const PostDetailPage = () => {
 						<Form onSubmit={handleSubmitComment}>
 							<div className="d-flex gap-3">
 								<Image
-									src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
+									src={
+										currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"
+									}
 									alt="avatar"
 									roundedCircle
 									width="40"
@@ -1063,9 +1229,13 @@ const PostDetailPage = () => {
 										as="textarea"
 										rows={2}
 										value={newComment}
-										onChange={e => setNewComment(e.target.value)}
+										onChange={(e) => setNewComment(e.target.value)}
 										placeholder={
-											commentMode === "tip" ? "Add a message with your tip..." : commentMode === "donation" ? "Add a message with your donation..." : "Post your reply"
+											commentMode === "tip"
+												? "Add a message with your tip..."
+												: commentMode === "donation"
+													? "Add a message with your donation..."
+													: "Post your reply"
 										}
 										className="border-0 shadow-none resize-none"
 										style={{ fontSize: "1.1rem" }}
@@ -1076,13 +1246,13 @@ const PostDetailPage = () => {
 										<div className="mt-2 mb-2">
 											<Button
 												type="button"
-												variant={commentMode === "tip" ? "warning" : "outline-warning"}
+												variant={
+													commentMode === "tip" ? "warning" : "outline-warning"
+												}
 												size="sm"
-												onClick={() => setCommentMode("tip")}>
-												<Gift
-													size={14}
-													className="me-1"
-												/>
+												onClick={() => setCommentMode("tip")}
+											>
+												<Gift size={14} className="me-1" />
 												Tip
 											</Button>
 										</div>
@@ -1092,23 +1262,35 @@ const PostDetailPage = () => {
 									{commentMode === "tip" && (
 										<div className="mb-2">
 											<Form.Group>
-												<Form.Label className="small text-muted">Select Tip Amount</Form.Label>
+												<Form.Label className="small text-muted">
+													Select Tip Amount
+												</Form.Label>
 												<div className="d-flex flex-wrap gap-2 mb-2">
-													{[100, 500, 1000, 2000, 3000, 5000].map(amount => (
+													{[100, 500, 1000, 2000, 3000, 5000].map((amount) => (
 														<Button
 															key={amount}
-															variant={commentTipAmount === amount.toString() ? "warning" : "outline-warning"}
+															variant={
+																commentTipAmount === amount.toString()
+																	? "warning"
+																	: "outline-warning"
+															}
 															size="sm"
-															onClick={() => setCommentTipAmount(amount.toString())}>
-															₱{(amount / 100).toFixed(2)}
+															onClick={() =>
+																setCommentTipAmount(amount.toString())
+															}
+														>
+															${(amount / 100).toFixed(2)}
 														</Button>
 													))}
 												</div>
 												<div className="d-flex align-items-center gap-2">
-													<Form.Label className="small text-muted mb-0">Custom Amount:</Form.Label>
+													<Form.Label className="small text-muted mb-0">
+														Custom Amount:
+													</Form.Label>
 													<div
 														className="input-group"
-														style={{ maxWidth: "120px" }}>
+														style={{ maxWidth: "120px" }}
+													>
 														<span className="input-group-text">$</span>
 														<Form.Control
 															type="number"
@@ -1116,12 +1298,24 @@ const PostDetailPage = () => {
 															max="50"
 															step="0.01"
 															value={
-																commentTipAmount && !["100", "500", "1000", "2000", "3000", "5000"].includes(commentTipAmount)
-																	? (parseInt(commentTipAmount) / 100).toFixed(2)
+																commentTipAmount &&
+																![
+																	"100",
+																	"500",
+																	"1000",
+																	"2000",
+																	"3000",
+																	"5000",
+																].includes(commentTipAmount)
+																	? (parseInt(commentTipAmount) / 100).toFixed(
+																			2,
+																		)
 																	: ""
 															}
-															onChange={e => {
-																const amount = Math.round(parseFloat(e.target.value || 0) * 100);
+															onChange={(e) => {
+																const amount = Math.round(
+																	parseFloat(e.target.value || 0) * 100,
+																);
 																if (amount >= 100 && amount <= 5000) {
 																	setCommentTipAmount(amount.toString());
 																}
@@ -1131,7 +1325,9 @@ const PostDetailPage = () => {
 														/>
 													</div>
 												</div>
-												<small className="text-muted d-block mt-1">Range: $1.00 - $50.00</small>
+												<small className="text-muted d-block mt-1">
+													Range: $1.00 - $50.00
+												</small>
 											</Form.Group>
 										</div>
 									)}
@@ -1146,23 +1342,26 @@ const PostDetailPage = () => {
 													setCommentMode("comment");
 													setCommentTipAmount("");
 												}}
-												className="me-2">
+												className="me-2"
+											>
 												Cancel
 											</Button>
 										)}
 										<Button
 											type="submit"
 											size="sm"
-											disabled={!newComment.trim() || submitting || (commentMode === "tip" && !commentTipAmount)}
+											disabled={
+												!newComment.trim() ||
+												submitting ||
+												(commentMode === "tip" && !commentTipAmount)
+											}
 											className="rounded-pill px-3"
-											variant={commentMode === "tip" ? "warning" : "primary"}>
+											variant={commentMode === "tip" ? "warning" : "primary"}
+										>
 											{submitting ? (
-												<Spinner
-													size="sm"
-													animation="border"
-												/>
+												<Spinner size="sm" animation="border" />
 											) : commentMode === "tip" ? (
-												`Send Tip ${commentTipAmount ? `₱${(parseInt(commentTipAmount) / 100).toFixed(2)}` : ""}`
+												`Send Tip ${commentTipAmount ? `$${(parseInt(commentTipAmount) / 100).toFixed(2)}` : ""}`
 											) : (
 												"Reply"
 											)}
@@ -1182,8 +1381,8 @@ const PostDetailPage = () => {
 								{post.privacy === "private"
 									? "Only the author can comment on this post"
 									: post.privacy === "followers"
-									? "Only followers can comment on this post"
-									: "Comments are restricted"}
+										? "Only followers can comment on this post"
+										: "Comments are restricted"}
 							</span>
 						</div>
 					</Card.Body>
@@ -1205,7 +1404,7 @@ const PostDetailPage = () => {
 							onLike={handleLikeComment}
 							onReply={handleSubmitReply}
 							onUpdateComment={handleUpdateComment}
-							onDeleteComment={commentId => {
+							onDeleteComment={(commentId) => {
 								setCommentToDelete(commentId);
 								setShowDeleteCommentDialog(true);
 							}}
@@ -1227,14 +1426,16 @@ const PostDetailPage = () => {
 					onHide={closeImageViewer}
 					centered
 					size="lg"
-					className="image-viewer-modal">
+					className="image-viewer-modal"
+				>
 					<Modal.Body className="p-0 bg-dark text-center">
 						<div className="position-relative">
 							<Button
 								variant="link"
 								className="position-absolute top-0 end-0 m-2 text-white"
 								style={{ zIndex: 10 }}
-								onClick={closeImageViewer}>
+								onClick={closeImageViewer}
+							>
 								<X size={24} />
 							</Button>
 
@@ -1245,7 +1446,10 @@ const PostDetailPage = () => {
 										className="position-absolute top-50 start-0 translate-middle-y text-white ms-2"
 										style={{ zIndex: 10 }}
 										disabled={currentImageIndex === 0}
-										onClick={() => setCurrentImageIndex(prev => Math.max(0, prev - 1))}>
+										onClick={() =>
+											setCurrentImageIndex((prev) => Math.max(0, prev - 1))
+										}
+									>
 										<ChevronLeft size={32} />
 									</Button>
 
@@ -1254,7 +1458,12 @@ const PostDetailPage = () => {
 										className="position-absolute top-50 end-0 translate-middle-y text-white me-2"
 										style={{ zIndex: 10 }}
 										disabled={currentImageIndex === currentImages.length - 1}
-										onClick={() => setCurrentImageIndex(prev => Math.min(currentImages.length - 1, prev + 1))}>
+										onClick={() =>
+											setCurrentImageIndex((prev) =>
+												Math.min(currentImages.length - 1, prev + 1),
+											)
+										}
+									>
 										<ChevronRight size={32} />
 									</Button>
 								</>
@@ -1284,7 +1493,8 @@ const PostDetailPage = () => {
 				<Modal
 					show={showPostOptionsModal}
 					onHide={() => setShowPostOptionsModal(false)}
-					centered>
+					centered
+				>
 					<Modal.Header closeButton>
 						<Modal.Title>Post Options</Modal.Title>
 					</Modal.Header>
@@ -1293,20 +1503,25 @@ const PostDetailPage = () => {
 							<button
 								className="list-group-item list-group-item-action border-0"
 								onClick={() => {
-									navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+									navigator.clipboard.writeText(
+										`${window.location.origin}/post/${post.id}`,
+									);
 									setShowPostOptionsModal(false);
-								}}>
+								}}
+							>
 								Copy Link
 							</button>
 							<button
 								className="list-group-item list-group-item-action border-0"
-								onClick={() => setShowPostOptionsModal(false)}>
+								onClick={() => setShowPostOptionsModal(false)}
+							>
 								Repost
 							</button>
 							{post.author.id !== currentUser.uid && (
 								<button
 									className="list-group-item list-group-item-action border-0 text-danger"
-									onClick={() => setShowPostOptionsModal(false)}>
+									onClick={() => setShowPostOptionsModal(false)}
+								>
 									Report
 								</button>
 							)}
@@ -1316,7 +1531,8 @@ const PostDetailPage = () => {
 									onClick={() => {
 										setShowPostOptionsModal(false);
 										handleDeletePost(post.id);
-									}}>
+									}}
+								>
 									Delete Post
 								</button>
 							)}
@@ -1352,7 +1568,8 @@ const PostDetailPage = () => {
 						setShowCommentOptionsModal(false);
 						setSelectedComment(null);
 					}}
-					centered>
+					centered
+				>
 					<Modal.Header closeButton>
 						<Modal.Title>Comment Options</Modal.Title>
 					</Modal.Header>
@@ -1360,20 +1577,23 @@ const PostDetailPage = () => {
 						<div className="list-group list-group-flush">
 							<button
 								className="list-group-item list-group-item-action border-0"
-								onClick={handleCopyComment}>
+								onClick={handleCopyComment}
+							>
 								Copy Comment
 							</button>
 							{selectedComment?.author.uid !== currentUser.uid && (
 								<button
 									className="list-group-item list-group-item-action border-0 text-warning"
-									onClick={handleReportComment}>
+									onClick={handleReportComment}
+								>
 									Report Comment
 								</button>
 							)}
 							{selectedComment?.author.uid === currentUser.uid && (
 								<button
 									className="list-group-item list-group-item-action border-0 text-danger"
-									onClick={handleDeleteCommentFromModal}>
+									onClick={handleDeleteCommentFromModal}
+								>
 									Delete Comment
 								</button>
 							)}

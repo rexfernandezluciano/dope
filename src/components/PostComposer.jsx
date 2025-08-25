@@ -129,7 +129,7 @@ const PostComposer = ({
 			const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
 
 			if (mentionMatch) {
-				const uid = user.uid || user.username;
+				const uid = user.username;
 				const newText =
 					textBeforeCursor.replace(mentionMatch[0], `@${uid} `) +
 					textAfterCursor;
@@ -452,6 +452,7 @@ const PostComposer = ({
 				backdrop="static"
 				onHide={() => setShowComposerModal(false)}
 				centered
+				className="animate__animated animate__slideUp"
 			>
 				<Modal.Header className="border-0 pb-0">
 					<div className="d-flex align-items-center w-100">

@@ -108,13 +108,13 @@ const MentionDropdown = ({
               key={user.uid}
               action
               active={index === selectedIndex}
+              className={`d-flex align-items-center gap-2 py-2 ${index === selectedIndex ? 'text-white' : ''}`}
               onClick={() => onSelect({
                 ...user,
                 uid: user.uid,
                 username: user.username,
                 name: user.name || 'Unknown User'
               })}
-              className="d-flex align-items-center gap-2 py-2"
               style={{ cursor: 'pointer' }}
             >
               <Image
@@ -132,7 +132,7 @@ const MentionDropdown = ({
                     <CheckCircleFill className="text-primary" size={14} />
                   )}
                 </div>
-                <small className="text-muted">@{user.username}</small>
+                <small className={`${index === selectedIndex ? "text-white" : "text-muted"}`}>@{user.username}</small>
               </div>
             </ListGroup.Item>
           ))}

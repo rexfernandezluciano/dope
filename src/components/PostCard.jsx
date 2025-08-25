@@ -1,6 +1,12 @@
 /** @format */
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+	useState,
+	useEffect,
+	useRef,
+	useCallback,
+	useMemo,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Image, Button, Modal } from "react-bootstrap";
 import {
@@ -18,7 +24,7 @@ import {
 	ChevronRight,
 } from "react-bootstrap-icons";
 
-import { postAPI, commentAPI, replyAPI } from "../config/ApiConfig";
+import { postAPI, commentAPI, replyAPI, pollAPI } from "../config/ApiConfig";
 import {
 	formatTimeAgo,
 	deletePost as deletePostUtil,
@@ -27,6 +33,7 @@ import {
 import { parseTextContent } from "../utils/text-utils";
 import { handleLikeNotification } from "../utils/notification-helpers";
 import CommentItem from "./CommentItem";
+import PollView from "./PollView";
 
 const PostCard = ({
 	post,
@@ -46,24 +53,11 @@ const PostCard = ({
 	const [viewTracked, setViewTracked] = useState(false);
 	const [showComments, setShowComments] = useState(false); // Local state for comments visibility
 	const [localComments, setLocalComments] = useState([]);
-	const [userVotedOption, setUserVotedOption] = useState(null);
 
 	// Initialize local comments and showComments state based on props
 	useEffect(() => {
 		setLocalComments(comments);
-		// Set initial showComments state based on prop, but allow it to be toggled by user action
 		setShowComments(propShowComments);
-		
-		// Initialize poll voting state
-		if (post.poll && currentUser) {
-			// Check if user has voted based on hasUserVoted flag or find user's choice
-			if (post.poll.hasUserVoted) {
-				const userChoice = post.poll.options.findIndex(option => option.isUserChoice);
-				setUserVotedOption(userChoice >= 0 ? userChoice : null);
-			} else {
-				setUserVotedOption(null);
-			}
-		}
 	}, [comments, propShowComments, post.poll, currentUser]);
 
 	// Track view when post comes into view
@@ -118,7 +112,12 @@ const PostCard = ({
 			default:
 				return true;
 		}
-	}, [currentUser, post.author.uid, post.privacy, post.author.isFollowedByCurrentUser]);
+	}, [
+		currentUser,
+		post.author.uid,
+		post.privacy,
+		post.author.isFollowedByCurrentUser,
+	]);
 
 	const privacyIcon = useMemo(() => {
 		switch (post.privacy) {
@@ -133,9 +132,12 @@ const PostCard = ({
 		}
 	}, [post.privacy]);
 
-	const currentUserLiked = useMemo(() => 
-		currentUser ? post.likes.some(like => like.user?.uid === currentUser.uid) : false,
-		[post.likes, currentUser]
+	const currentUserLiked = useMemo(
+		() =>
+			currentUser
+				? post.likes.some((like) => like.user?.uid === currentUser.uid)
+				: false,
+		[post.likes, currentUser],
 	);
 
 	const openImageViewer = useCallback((images, startIndex = 0) => {
@@ -150,56 +152,67 @@ const PostCard = ({
 		setCurrentImageIndex(0);
 	}, []);
 
-	const handlePostClickView = useCallback(async (e) => {
-		// Prevent default behavior and stop propagation
-		e.preventDefault();
-		e.stopPropagation();
+	const handlePostClickView = useCallback(
+		async (e) => {
+			// Prevent default behavior and stop propagation
+			e.preventDefault();
+			e.stopPropagation();
 
-		// Don't navigate if clicking on interactive elements
-		const target = e.target;
-		if (!target || typeof target.closest !== "function") return;
+			// Don't navigate if clicking on interactive elements
+			const target = e.target;
+			if (!target || typeof target.closest !== "function") return;
 
-		const isButton = target.closest("button");
-		const isLink = target.closest("a");
-		const isModal = target.closest(".modal");
-		const isImage = target.closest("img");
-		const isInput = target.closest("input, textarea");
+			const isButton = target.closest("button");
+			const isLink = target.closest("a");
+			const isModal = target.closest(".modal");
+			const isImage = target.closest("img");
+			const isInput = target.closest("input, textarea");
 
-		if (isButton || isLink || isModal || isImage || isInput) {
-			return;
-		}
+			if (isButton || isLink || isModal || isImage || isInput) {
+				return;
+			}
 
-		// Navigate directly instead of using utility function
-		navigate(`/post/${post.id}`);
-	}, [post.id, navigate]);
+			// Navigate directly instead of using utility function
+			navigate(`/post/${post.id}`);
+		},
+		[post.id, navigate],
+	);
 
-	const handleLike = useCallback(async (e) => {
-		e.stopPropagation();
-		if (onLike && currentUser) {
-			const wasLiked = post.likes.some(like => like.user?.uid === currentUser.uid);
-			const response = await onLike(post.id);
+	const handleLike = useCallback(
+		async (e) => {
+			e.stopPropagation();
+			if (onLike && currentUser) {
+				const wasLiked = post.likes.some(
+					(like) => like.user?.uid === currentUser.uid,
+				);
+				const response = await onLike(post.id);
 
-			// Send like notification to post owner only when user actually likes (not unlikes)
-			if (response && response.liked && !wasLiked) {
-				try {
-					await handleLikeNotification(post.id, post, currentUser);
-				} catch (error) {
-					console.error('Failed to send like notification:', error);
+				// Send like notification to post owner only when user actually likes (not unlikes)
+				if (response && response.liked && !wasLiked) {
+					try {
+						await handleLikeNotification(post.id, post, currentUser);
+					} catch (error) {
+						console.error("Failed to send like notification:", error);
+					}
 				}
 			}
-		}
-	}, [onLike, post, currentUser]);
+		},
+		[onLike, post, currentUser],
+	);
 
-	const handleShare = useCallback((e) => {
-		e.stopPropagation();
-		sharePost(post.id); // Use the utility function
-		if (onShare) {
-			onShare(post.id);
-		}
-	}, [post.id, onShare]);
+	const handleShare = useCallback(
+		(e) => {
+			e.stopPropagation();
+			sharePost(post.id); // Use the utility function
+			if (onShare) {
+				onShare(post.id);
+			}
+		},
+		[post.id, onShare],
+	);
 
 	const handleCommentToggle = useCallback(() => {
-		setShowComments(prev => !prev);
+		setShowComments((prev) => !prev);
 	}, []);
 
 	const handleDeletePost = async (postId) => {
@@ -207,13 +220,19 @@ const PostCard = ({
 		onDeletePost?.(postId);
 	};
 
-	const handleHashtagClick = useCallback((hashtag) => {
-		navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=comments`);
-	}, [navigate]);
+	const handleHashtagClick = useCallback(
+		(hashtag) => {
+			navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=comments`);
+		},
+		[navigate],
+	);
 
-	const handleMentionClick = useCallback((username) => {
-		navigate(`/${username}`);
-	}, [navigate]);
+	const handleMentionClick = useCallback(
+		(username) => {
+			navigate(`/${username}`);
+		},
+		[navigate],
+	);
 
 	const handleLinkClick = useCallback((url) => {
 		window.open(url, "_blank", "noopener,noreferrer");
@@ -228,26 +247,29 @@ const PostCard = ({
 		setShowPostOptionsModal(false);
 	}, []);
 
-	const handlePollVote = useCallback(async (optionIndex) => {
-		if (!currentUser || post.poll.hasUserVoted || post.poll.isExpired) return;
-		
-		try {
-			const response = await postAPI.votePoll(post.id, optionIndex);
-			if (response && response.success) {
-				// Update the post poll data with the response
-				// This would typically be handled by a parent component or state management
-				console.log('Poll vote successful:', response);
+	const handlePollVote = useCallback(
+		async (optionId) => {
+			if (!currentUser || post.poll.hasUserVoted || post.poll.isExpired) return;
+
+			try {
+				const response = await pollAPI.vote(post.poll?.id, optionId);
+				if (response && response.poll) {
+					// Update the post poll data with the response
+					// This would typically be handled by a parent component or state management
+					console.log("Poll vote successful:", response);
+				}
+			} catch (error) {
+				console.error("Failed to vote on poll:", error);
 			}
-		} catch (error) {
-			console.error('Failed to vote on poll:', error);
-		}
-	}, [currentUser, post.poll.hasUserVoted, post.poll.isExpired, post.id]);
+		},
+		[currentUser, post.poll?.hasUserVoted, post.poll?.isExpired, post.id],
+	);
 
 	return (
 		<>
 			<Card
 				ref={cardRef}
-				className="border-0 border-bottom rounded-0 mb-0 post-card"
+				className="border-0 border-bottom rounded-0 mb-0"
 				style={{ cursor: "pointer" }}
 				onClick={handlePostClickView}
 			>
@@ -422,83 +444,7 @@ const PostCard = ({
 							)}
 
 							{/* Poll Display */}
-							{post.poll && (
-								<div className="mb-2">
-									<div className="border rounded-3 p-3" style={{ backgroundColor: "#f8f9fa" }}>
-										<div className="d-flex align-items-center justify-content-between mb-3">
-											<h6 className="mb-0">Poll</h6>
-											<small className="text-muted">
-												{(() => {
-													if (post.poll.isExpired) {
-														return "Poll ended";
-													}
-													
-													const now = new Date();
-													const endTime = new Date(post.poll.expiresAt);
-													const timeLeft = endTime - now;
-													
-													if (timeLeft <= 0) {
-														return "Poll ended";
-													}
-													
-													const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
-													const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-													
-													if (hoursLeft > 0) {
-														return `${hoursLeft}h ${minutesLeft}m left`;
-													} else {
-														return `${minutesLeft}m left`;
-													}
-												})()}
-											</small>
-										</div>
-										
-										{post.poll.options.map((option, index) => {
-											const canVote = currentUser && !post.poll.hasUserVoted && !post.poll.isExpired;
-											
-											return (
-												<div
-													key={option.id || index}
-													className={`position-relative border rounded-3 p-2 mb-2 ${
-														canVote ? "cursor-pointer" : ""
-													} ${
-														option.isUserChoice ? "border-primary bg-primary bg-opacity-10" : "border-secondary"
-													}`}
-													style={{ 
-														cursor: canVote ? "pointer" : "default",
-														overflow: "hidden"
-													}}
-													onClick={() => canVote && handlePollVote(index)}
-												>
-													{/* Progress bar background */}
-													<div
-														className="position-absolute top-0 start-0 h-100 bg-light"
-														style={{
-															width: `${option.percentage}%`,
-															opacity: 0.3,
-															zIndex: 1,
-														}}
-													/>
-													
-													<div className="position-relative d-flex justify-content-between align-items-center" style={{ zIndex: 2 }}>
-														<span className={`${option.isUserChoice ? "fw-bold text-primary" : ""}`}>
-															{option.text}
-															{option.isUserChoice && " ✓"}
-														</span>
-														<span className="text-muted small">
-															{option.percentage}% ({option.votes})
-														</span>
-													</div>
-												</div>
-											);
-										})}
-										
-										<div className="text-muted small mt-2">
-											{post.poll.totalVotes} votes
-										</div>
-									</div>
-								</div>
-							)}
+							{post.poll && <PollView post={post} currentUser={currentUser} />}
 
 							{post.postType === "live_video" && post.liveVideoUrl && (
 								<div className="mb-2">
@@ -543,39 +489,51 @@ const PostCard = ({
 
 							<div className="d-flex align-items-center justify-content-between">
 								<div className="d-flex flex-wrap gap-3 small text-muted">
-									{post.likes.length > 0 && currentUser && (() => {
-										const otherLikesCount = currentUserLiked ? post.likes.length - 1 : post.likes.length;
+									{post.likes.length > 0 &&
+										currentUser &&
+										(() => {
+											const otherLikesCount = currentUserLiked
+												? post.likes.length - 1
+												: post.likes.length;
 
-										if (currentUserLiked && otherLikesCount > 0) {
-											return (
-												<span>
-													<span className="fw-bold">You</span> & {otherLikesCount} others reacted.
-												</span>
-											);
-										} else if (currentUserLiked && otherLikesCount === 0) {
-											return (
-												<span>
-													<span className="fw-bold">You</span> reacted.
-												</span>
-											);
-										} else if (!currentUserLiked && post.likes.length === 1) {
-											return (
-												<span>
-													<span className="fw-bold">{post.likes[0].user.name || 'Someone'}</span> reacted.
-												</span>
-											);
-										} else if (!currentUserLiked && post.likes.length > 1) {
-											return (
-												<span>
-													<span className="fw-bold">{post.likes[0].user.name || 'Someone'}</span> & {post.likes.length - 1} others reacted.
-												</span>
-											);
-										}
-										return null;
-									})()}
+											if (currentUserLiked && otherLikesCount > 0) {
+												return (
+													<span>
+														<span className="fw-bold">You</span> &{" "}
+														{otherLikesCount} others reacted.
+													</span>
+												);
+											} else if (currentUserLiked && otherLikesCount === 0) {
+												return (
+													<span>
+														<span className="fw-bold">You</span> reacted.
+													</span>
+												);
+											} else if (!currentUserLiked && post.likes.length === 1) {
+												return (
+													<span>
+														<span className="fw-bold">
+															{post.likes[0].user.name || "Someone"}
+														</span>{" "}
+														reacted.
+													</span>
+												);
+											} else if (!currentUserLiked && post.likes.length > 1) {
+												return (
+													<span>
+														<span className="fw-bold">
+															{post.likes[0].user.name || "Someone"}
+														</span>{" "}
+														& {post.likes.length - 1} others reacted.
+													</span>
+												);
+											}
+											return null;
+										})()}
 									{post.likes.length > 0 && !currentUser && (
 										<span>
-											{post.likes.length} {post.likes.length === 1 ? 'reaction' : 'reactions'}
+											{post.likes.length}{" "}
+											{post.likes.length === 1 ? "reaction" : "reactions"}
 										</span>
 									)}
 								</div>
@@ -605,9 +563,7 @@ const PostCard = ({
 									onClick={handleCommentToggle} // Use toggle handler
 									disabled={!canComment}
 									title={
-										!canComment
-											? "You cannot comment on this post"
-											: "Comment"
+										!canComment ? "You cannot comment on this post" : "Comment"
 									}
 									onMouseEnter={(e) => {
 										if (canComment) {
@@ -635,9 +591,7 @@ const PostCard = ({
 									size="sm"
 									className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 									style={{
-										color: currentUserLiked
-											? "#dc3545"
-											: "#6c757d",
+										color: currentUserLiked ? "#dc3545" : "#6c757d",
 										transition: "all 0.2s",
 										minWidth: "40px",
 										height: "36px",
@@ -703,30 +657,48 @@ const PostCard = ({
 											currentUser={currentUser}
 											onLike={async (commentId) => {
 												try {
-													const response = await commentAPI.likeComment(commentId);
+													const response =
+														await commentAPI.likeComment(commentId);
 													// Update local comment state
-													setLocalComments(prev => prev.map(c => 
-														c.id === commentId 
-															? { ...c, likes: response.likes, isLiked: response.liked }
-															: c
-													));
+													setLocalComments((prev) =>
+														prev.map((c) =>
+															c.id === commentId
+																? {
+																		...c,
+																		likes: response.likes,
+																		isLiked: response.liked,
+																	}
+																: c,
+														),
+													);
 													return response;
 												} catch (error) {
-													console.error('Failed to like comment:', error);
+													console.error("Failed to like comment:", error);
 												}
 											}}
 											onReply={async (commentId, replyContent) => {
 												try {
-													const response = await replyAPI.createReply(commentId, { content: replyContent });
+													const response = await replyAPI.createReply(
+														commentId,
+														{ content: replyContent },
+													);
 													// Update local comment state with new reply
-													setLocalComments(prev => prev.map(c => 
-														c.id === commentId 
-															? { ...c, replies: [...(c.replies || []), response.reply] }
-															: c
-													));
+													setLocalComments((prev) =>
+														prev.map((c) =>
+															c.id === commentId
+																? {
+																		...c,
+																		replies: [
+																			...(c.replies || []),
+																			response.reply,
+																		],
+																	}
+																: c,
+														),
+													);
 													return response;
 												} catch (error) {
-													console.error('Failed to create reply:', error);
+													console.error("Failed to create reply:", error);
 												}
 											}}
 											onHashtagClick={handleHashtagClick}

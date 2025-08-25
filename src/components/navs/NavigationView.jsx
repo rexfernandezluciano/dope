@@ -1,15 +1,56 @@
 /** @format */
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, useLoaderData, Link } from "react-router-dom";
+import {
+	useNavigate,
+	useLocation,
+	useLoaderData,
+	Link,
+} from "react-router-dom";
 import NProgress from "nprogress";
-import { Navbar, Container, Image, Offcanvas, Nav, Row, Col, Form, InputGroup, Button, Dropdown } from "react-bootstrap";
-import { House, Person, Gear, BoxArrowRight, Search, Star, BarChart, Briefcase, Palette, CurrencyDollar, Heart, CameraVideo } from "react-bootstrap-icons";
+import {
+	Navbar,
+	Container,
+	Image,
+	Offcanvas,
+	Nav,
+	Row,
+	Col,
+	Form,
+	InputGroup,
+	Button,
+} from "react-bootstrap";
+import {
+	House,
+	Person,
+	Gear,
+	BoxArrowRight,
+	Search,
+	Star,
+	BarChart,
+	Briefcase,
+	Heart,
+} from "react-bootstrap-icons";
+import {
+	GoHome,
+	GoSearch,
+	GoBell,
+	GoPerson,
+	GoStar,
+	GoBriefcase,
+	GoHeart,
+	GoGear,
+	GoBoxArrowRight,
+} from "react-icons/go";
+import { TbBrandGoogleAnalytics } from "react-icons/tb";
+import { businessAPI, pollAPI } from "../../config/ApiConfig";
 
-import { authAPI } from "../../config/ApiConfig";
-import { businessAPI } from "../../config/ApiConfig";
-import { removeAuthToken } from "../../config/ApiConfig";
-import { initializeNotifications, requestNotificationPermission, setupNotificationListener, getUnreadNotificationCount } from "../../utils/messaging-utils";
+import {
+	initializeNotifications,
+	requestNotificationPermission,
+	setupNotificationListener,
+	getUnreadNotificationCount,
+} from "../../utils/messaging-utils";
 import { getUser } from "../../utils/app-utils";
 import { centavosToPesos } from "../../utils/common-utils";
 
@@ -29,7 +70,10 @@ const NavigationView = ({ children }) => {
 	const [user, setUser] = useState(null);
 	const [notifications, setNotifications] = useState([]);
 	const [unreadCount, setUnreadCount] = useState(0);
-	const [credits, setCredits] = useState({ credits: 0, creditsDisplay: "₱0.00" });
+	const [credits, setCredits] = useState({
+		credits: 0,
+		creditsDisplay: "₱0.00",
+	});
 
 	// Handle NProgress for all navigation including browser back/forward
 	useEffect(() => {
@@ -43,7 +87,7 @@ const NavigationView = ({ children }) => {
 		if (loaderUserData && loaderUserData.uid) {
 			setUser(loaderUserData);
 			initializeNotifications(loaderUserData.uid);
-			requestNotificationPermission().then(granted => {
+			requestNotificationPermission().then((granted) => {
 				setNotificationsEnabled(granted);
 			});
 		} else {
@@ -58,13 +102,18 @@ const NavigationView = ({ children }) => {
 						await initializeNotifications(userData.uid);
 
 						// Setup real-time notification listener
-						const unsubscribe = setupNotificationListener(userData.uid, newNotifications => {
-							setNotifications(newNotifications);
-							setUnreadCount(newNotifications.length);
-						});
+						const unsubscribe = setupNotificationListener(
+							userData.uid,
+							(newNotifications) => {
+								setNotifications(newNotifications);
+								setUnreadCount(newNotifications.length);
+							},
+						);
 
 						// Get initial unread count
-						const initialUnreadCount = await getUnreadNotificationCount(userData.uid);
+						const initialUnreadCount = await getUnreadNotificationCount(
+							userData.uid,
+						);
 						setUnreadCount(initialUnreadCount);
 
 						// Cleanup listener on unmount
@@ -110,15 +159,20 @@ const NavigationView = ({ children }) => {
 			initializeNotifications(loaderUserData.uid);
 
 			// Setup real-time notification listener
-			const unsubscribe = setupNotificationListener(loaderUserData.uid, newNotifications => {
-				setNotifications(newNotifications);
-				setUnreadCount(newNotifications.length);
-			});
+			const unsubscribe = setupNotificationListener(
+				loaderUserData.uid,
+				(newNotifications) => {
+					setNotifications(newNotifications);
+					setUnreadCount(newNotifications.length);
+				},
+			);
 
 			// Get initial unread count
-			getUnreadNotificationCount(loaderUserData.uid).then(initialUnreadCount => {
-				setUnreadCount(initialUnreadCount);
-			});
+			getUnreadNotificationCount(loaderUserData.uid).then(
+				(initialUnreadCount) => {
+					setUnreadCount(initialUnreadCount);
+				},
+			);
 
 			return () => {
 				if (unsubscribe) unsubscribe();
@@ -127,7 +181,7 @@ const NavigationView = ({ children }) => {
 	}, [loaderUserData]);
 
 	// Placeholder for checkAdminStatus if it's defined elsewhere
-	const checkAdminStatus = async userId => {
+	const checkAdminStatus = async (userId) => {
 		// Replace with actual admin check logic if needed
 		console.log(`Checking admin status for ${userId}`);
 	};
@@ -145,16 +199,21 @@ const NavigationView = ({ children }) => {
 			loadNotificationCount();
 
 			// Setup real-time notification listener
-			const unsubscribe = setupNotificationListener(user.uid, newNotifications => {
-				setNotifications(newNotifications);
-				setUnreadCount(newNotifications.length);
+			const unsubscribe = setupNotificationListener(
+				user.uid,
+				(newNotifications) => {
+					setNotifications(newNotifications);
+					setUnreadCount(newNotifications.length);
 
-				// Play notification sound for new notifications (optional)
-				if (newNotifications.length > 0) {
-					// You can add a notification sound here
-					console.log(`${newNotifications.length} new notifications received`);
-				}
-			});
+					// Play notification sound for new notifications (optional)
+					if (newNotifications.length > 0) {
+						// You can add a notification sound here
+						console.log(
+							`${newNotifications.length} new notifications received`,
+						);
+					}
+				},
+			);
 
 			return () => {
 				if (unsubscribe) unsubscribe();
@@ -192,85 +251,83 @@ const NavigationView = ({ children }) => {
 		}
 	};
 
-	const menuItems = [
+	const mobileMenuItems = [
 		{
 			label: "Home",
 			href: "/home",
-			icon: (
-				<House
-					size={18}
-					className="me-2"
-				/>
-			),
+			icon: <GoHome size={20} />,
 		},
 		{
-			label: "Profile",
-			href: `/${user?.username}`,
-			icon: (
-				<Person
-					size={18}
-					className="me-2"
-				/>
-			),
-		},
-		{
-			label: "Settings",
-			href: "/settings/account",
-			icon: (
-				<Gear
-					size={18}
-					className="me-2"
-				/>
-			),
+			label: "Search",
+			href: "/search",
+			icon: <GoSearch size={20} />,
 		},
 		{
 			label: "Subscription",
 			href: "/subscription",
-			icon: (
-				<Star
-					size={18}
-					className="me-2"
-				/>
-			),
-		},
-		{
-			label: "My Subscriptions",
-			href: "/my-subscriptions",
-			icon: (
-				<Heart
-					size={18}
-					className="me-2"
-				/>
-			),
+			icon: <GoStar size={20} />,
 		},
 		{
 			label: "Analytics",
 			href: "/analytics",
-			icon: (
-				<BarChart
-					size={18}
-					className="me-2"
-				/>
-			),
+			icon: <TbBrandGoogleAnalytics size={20} />,
+		},
+		{
+			label: "Profile",
+			href: `/${user?.username}`,
+			icon: <GoPerson size={18} />,
+		},
+		{
+			label: "Settings",
+			href: "/settings/account",
+			icon: <GoGear size={18} />,
+		},
+	];
+
+	const menuItems = [
+		{
+			label: "Home",
+			href: "/home",
+			icon: <GoHome size={18} />,
+		},
+		{
+			label: "Profile",
+			href: `/${user?.username}`,
+			icon: <GoPerson size={18} />,
+		},
+		{
+			label: "Settings",
+			href: "/settings/account",
+			icon: <GoGear size={18} />,
+		},
+		{
+			label: "Subscription",
+			href: "/subscription",
+			icon: <GoStar size={18} />,
+		},
+		{
+			label: "My Subscriptions",
+			href: "/my-subscriptions",
+			icon: <GoHeart size={18} />,
+		},
+		{
+			label: "Analytics",
+			href: "/analytics",
+			icon: <TbBrandGoogleAnalytics size={18} />,
 		},
 		{
 			label: "Business",
 			href: "/business",
-			icon: (
-				<Briefcase
-					size={18}
-					className="me-2"
-				/>
-			),
+			icon: <GoBriefcase size={18} />,
 		},
 	];
 
-	const navItemClass = href => {
+	const navItemClass = (href) => {
 		const isActive = location.pathname === href;
-		return `nav-link px-3 py-2 rounded-end-5 ${isActive ? "bg-primary text-white" : "text-dark"}`;
+		return `nav-link px-3 py-2 rounded-5 ${isActive ? "bg-primary text-white" : "text-dark"}`;
 	};
 
-	const handleSearch = e => {
+	const handleSearch = (e) => {
 		e.preventDefault();
 		if (searchQuery.trim()) {
 			NProgress.start();
@@ -278,7 +335,7 @@ const NavigationView = ({ children }) => {
 		}
 	};
 
-	const handleNavigate = href => {
+	const handleNavigate = (href) => {
 		NProgress.start();
 		navigate(href);
 		setShowModal(false);
@@ -296,22 +353,12 @@ const NavigationView = ({ children }) => {
 		<>
 			{/* MobileNavbar */}
 			<div className="d-md-none">
-				<Navbar
-					expand={false}
-					className="bg-white border-bottom sticky-top">
+				<Navbar expand={false} className="bg-white border-bottom sticky-top">
 					<Container fluid>
-						<Navbar.Toggle
-							aria-controls="offcanvasNavbar"
-							className="shadow-none border-0 text-black"
-							onClick={() => setShowModal(true)}
-						/>
-						<Navbar.Brand
-							as={Link}
-							to="/home"
-							className="text-primary mx-auto">
+						<Navbar.Brand as={Link} to="/home" className="text-primary">
 							<div
 								style={{
-									width: "120px",
+									width: "50px",
 									height: "30px",
 									backgroundColor: "#0069B5",
 									WebkitMaskImage: `url(${logo})`,
@@ -322,127 +369,64 @@ const NavigationView = ({ children }) => {
 									maskRepeat: "no-repeat",
 									maskPosition: "center",
 									maskSize: "contain",
-								}}></div>
+								}}
+							></div>
 						</Navbar.Brand>
 
-						{/* Mobile Notification Icon */}
-						<NotificationsDropdown
-							notifications={notifications}
-							unreadCount={unreadCount}
-							user={user}
-						/>
+						<div className="d-none">Center</div>
 
-						{/* Mobile Search Icon */}
-						<Button
-							variant="link"
-							className="p-0 ms-2 me-2"
-							onClick={() => navigate("/search")}>
-							<Search
-								size={20}
-								className="text-black"
+						<div className="d-flex">
+							{/* Mobile Notification Icon */}
+							<NotificationsDropdown
+								notifications={notifications}
+								unreadCount={unreadCount}
+								user={user}
 							/>
-						</Button>
-
-						<Navbar.Offcanvas
-							id="offcanvasNavbar"
-							aria-labelledby="offcanvasNavbarLabel"
-							placement="start"
-							backdrop="static"
-							style={{ maxWidth: "260px" }}
-							show={showModal}
-							onHide={() => setShowModal(false)}>
-							<Offcanvas.Header closeButton>
-								<Offcanvas.Title id="offcanvasNavbarLabel">Menu</Offcanvas.Title>
-							</Offcanvas.Header>
-							<Offcanvas.Body className="ps-0 pe-3">
-								<div className="text-center mb-4">
-									<Image
-										src={user?.photoURL || "https://i.pravatar.cc/150?img=10"}
-										roundedCircle
-										width={70}
-										height={70}
-									/>
-									<h6 className="mt-2">{user?.name}</h6>
-									<small className="text-muted">
-										@{user?.username}
-										{(user?.membership?.subscription || user?.subscription) && (user?.membership?.subscription || user?.subscription) !== "free" && (
-											<span
-												className={`ms-1 badge ${
-													(user?.membership?.subscription || user?.subscription) === "premium"
-														? "bg-warning text-dark"
-														: (user?.membership?.subscription || user?.subscription) === "pro"
-														? "bg-primary"
-														: "bg-secondary"
-												}`}
-												style={{ fontSize: "0.7rem" }}>
-												{(user?.membership?.subscription || user?.subscription).toUpperCase()}
-											</span>
-										)}
-									</small>
-									<div className="mt-1">
-										<small className="text-success fw-bold d-flex align-items-center justify-content-center">
-												${centavosToPesos(credits?.creditsInCentavos || "0.00").toFixed(2)}
-										</small>
-									</div>
-								</div>
-								<Nav className="flex-column">
-									{menuItems.map((item, idx) => (
-										<Link
-											key={idx}
-											to={item.href}
-											className={navItemClass(item.href)}
-											style={{ textDecoration: "none" }}
-											onClick={() => handleNavigate(item.href)}>
-											{item.icon}
-											{item.label}
-										</Link>
-									))}
-									<Nav.Link
-										onClick={handleLogout}
-										className="nav-link px-3 text-danger"
-										style={{ cursor: "pointer" }}>
-										<BoxArrowRight
-											size={18}
-											className="me-2"
-										/>
-										Logout
-									</Nav.Link>
-								</Nav>
-							</Offcanvas.Body>
-						</Navbar.Offcanvas>
+						</div>
 					</Container>
 				</Navbar>
-				{children}
+				<div style={{ marginBottom: "60px" }}>{children}</div>
+				<div className="fixed-bottom d-flex justify-content-center border-top flex-grow-1 py-2 bg-white">
+					{mobileMenuItems.map((item, idx) => (
+						<Link
+							key={idx}
+							to={item.href}
+							className={navItemClass(item.href)}
+							style={{ textDecoration: "none" }}
+							onClick={() => handleNavigate(item.href)}
+						>
+							{item.icon}
+						</Link>
+					))}
+				</div>
 			</div>
 
 			{/* Desktop Sidebar */}
 			<div className="d-none d-md-block">
-				<Navbar
-					expand={false}
-					className="bg-white border-bottom sticky-top">
+				<Navbar expand={false} className="bg-white border-bottom sticky-top">
 					{/* Live Broadcasting Top Bar */}
-					{window.location.pathname === "/" && localStorage.getItem("isCurrentlyBroadcasting") === "true" && (
-						<div
-							className="w-100 bg-danger text-white text-center py-1"
-							style={{ fontSize: "0.875rem" }}>
-							<span
-								style={{
-									width: "8px",
-									height: "8px",
-									borderRadius: "50%",
-									backgroundColor: "#fff",
-									display: "inline-block",
-									marginRight: "6px",
-									animation: "pulse 1.5s infinite",
-								}}></span>
-							🔴 LIVE BROADCASTING IN PROGRESS
-						</div>
-					)}
+					{window.location.pathname === "/" &&
+						localStorage.getItem("isCurrentlyBroadcasting") === "true" && (
+							<div
+								className="w-100 bg-danger text-white text-center py-1"
+								style={{ fontSize: "0.875rem" }}
+							>
+								<span
+									style={{
+										width: "8px",
+										height: "8px",
+										borderRadius: "50%",
+										backgroundColor: "#fff",
+										display: "inline-block",
+										marginRight: "6px",
+										animation: "pulse 1.5s infinite",
+									}}
+								></span>
+								🔴 LIVE BROADCASTING IN PROGRESS
+							</div>
+						)}
 					<Container fluid>
-						<Navbar.Brand
-							as={Link}
-							to="/"
-							className="fw-bold fs-4">
+						<Navbar.Brand as={Link} to="/" className="fw-bold fs-4">
 							<div
 								style={{
 									width: "200px",
@@ -456,7 +440,8 @@ const NavigationView = ({ children }) => {
 									maskRepeat: "no-repeat",
 									maskPosition: "center",
 									maskSize: "contain",
-								}}></div>
+								}}
+							></div>
 						</Navbar.Brand>
 
 						{/* Search Bar */}
@@ -464,20 +449,22 @@ const NavigationView = ({ children }) => {
 							<Form
 								onSubmit={handleSearch}
 								className="w-100"
-								style={{ maxWidth: "400px" }}>
+								style={{ maxWidth: "400px" }}
+							>
 								<InputGroup>
 									<Form.Control
 										type="text"
 										placeholder="Search posts, users..."
 										value={searchQuery}
-										onChange={e => setSearchQuery(e.target.value)}
+										onChange={(e) => setSearchQuery(e.target.value)}
 										className="rounded-start-pill border-end-0 shadow-none"
 									/>
 									<Button
 										variant="outline-secondary"
 										type="submit"
 										className="rounded-end-pill border-start-0"
-										style={{ borderColor: "#ced4da" }}>
+										style={{ borderColor: "#ced4da" }}
+									>
 										<Search size={16} />
 									</Button>
 								</InputGroup>
@@ -496,7 +483,8 @@ const NavigationView = ({ children }) => {
 				</Navbar>
 				<div
 					className="bg-white border-end vh-100 shadow-sm desktop-nav-sidebar"
-					style={{ width: "250px", position: "fixed", overflowY: "auto" }}>
+					style={{ width: "250px", position: "fixed", overflowY: "auto" }}
+				>
 					<Container className="ps-0 pe-3 py-4">
 						<Row className="justify-content-center mb-3">
 							<Col xs="auto">
@@ -511,23 +499,39 @@ const NavigationView = ({ children }) => {
 						<h5 className="text-center">{user?.name}</h5>
 						<p className="text-center text-muted small">
 							{user?.username}{" "}
-							{(user?.membership?.subscription || user?.subscription) && (user?.membership?.subscription || user?.subscription) !== "free" && (
-								<span
-									className={`ms-1 badge ${
-										(user?.membership?.subscription || user?.subscription) === "premium"
-											? "bg-warning text-dark"
-											: (user?.membership?.subscription || user?.subscription) === "pro"
-											? "bg-primary"
-											: "bg-secondary"
-									}`}
-									style={{ fontSize: "0.7rem" }}>
-									{(user?.membership?.subscription || user?.subscription).toUpperCase()}
-								</span>
-							)}
+							{(user?.membership?.subscription || user?.subscription) &&
+								(user?.membership?.subscription || user?.subscription) !==
+									"free" && (
+									<span
+										className={`ms-1 badge ${
+											(user?.membership?.subscription || user?.subscription) ===
+											"premium"
+												? "bg-warning text-dark"
+												: (user?.membership?.subscription ||
+															user?.subscription) === "pro"
+													? "bg-primary"
+													: "bg-secondary"
+										}`}
+										style={{ fontSize: "0.7rem" }}
+									>
+										{(
+											user?.membership?.subscription || user?.subscription
+										).toUpperCase()}
+									</span>
+								)}
 						</p>
 						<p className="text-center">
 							<small className="text-success fw-bold d-flex align-items-center justify-content-center">
-								₱{centavosToPesos(credits?.creditsInCentavos || "0.00").toFixed(2)}
+								$$
+								{centavosToPesos(credits?.creditsInCentavos || "0.00").toFixed(
+									2,
+								)}{" "}
+								<span
+									className="bg-light px-1 py-2 ms-1"
+									style={{ fontSize: "12px" }}
+								>
+									Credits
+								</span>
 							</small>
 						</p>
 					</Container>
@@ -537,7 +541,8 @@ const NavigationView = ({ children }) => {
 								key={idx}
 								to={item.href}
 								className={navItemClass(item.href)}
-								style={{ textDecoration: "none" }}>
+								style={{ textDecoration: "none" }}
+							>
 								{item.icon}
 								{item.label}
 							</Link>
@@ -545,11 +550,9 @@ const NavigationView = ({ children }) => {
 						<Nav.Link
 							onClick={handleLogout}
 							className="nav-link text-danger px-3 py-2 rounded-pill"
-							style={{ cursor: "pointer" }}>
-							<BoxArrowRight
-								size={18}
-								className="me-2"
-							/>
+							style={{ cursor: "pointer" }}
+						>
+							<BoxArrowRight size={18} className="me-2" />
 							Logout
 						</Nav.Link>
 					</Nav>
