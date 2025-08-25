@@ -167,13 +167,6 @@ const PostCard = ({
 			return;
 		}
 
-		// Track view before navigating
-		try {
-			await postAPI.trackView(post.id);
-		} catch (viewError) {
-			console.error("Failed to track view:", viewError);
-		}
-
 		// Navigate directly instead of using utility function
 		navigate(`/post/${post.id}`);
 	}, [post.id, navigate]);
@@ -238,10 +231,6 @@ const PostCard = ({
 		
 		try {
 			const response = await postAPI.votePoll(post.id, optionIndex);
-			if (response.success) {
-				setPollVotes(response.poll.votes);
-				setUserVotedOption(optionIndex);
-			}
 		} catch (error) {
 			console.error('Failed to vote on poll:', error);
 		}
@@ -434,10 +423,9 @@ const PostCard = ({
 											<small className="text-muted">
 												{(() => {
 													const now = new Date();
-													const endTime = new Date(post.createdAt + (post.poll.duration || 24 * 60 * 60 * 1000));
-													const isExpired = now > endTime;
+													const endTime = new Date(post.createdAt + (post.poll?.expiresIn || 24 * 60 * 60 * 1000));
 													
-													if (isExpired) {
+													if (post.poll?.isExpired) {
 														return "Poll ended";
 													}
 													
@@ -454,13 +442,12 @@ const PostCard = ({
 											</small>
 										</div>
 										
-										{post.poll.options.map((option, index) => {
-											const votes = pollVotes[index]?.count || 0;
-											const totalVotes = pollVotes.reduce((sum, vote) => sum + (vote?.count || 0), 0);
-											const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
-											const isUserChoice = userVotedOption === index;
+										{post.poll?.options.map((option, index) => {
+											const totalVotes = post.poll?.totalVotes || 0;;
+											const percentage = post.poll?. percentage;
+											const isUserChoice = post.poll?.isUserChoice || false;
 											const canVote = currentUser && userVotedOption === null;
-											const isExpired = new Date() > new Date(post.createdAt + (post.poll.duration || 24 * 60 * 60 * 1000));
+											const isExpired = post.poll?.isExpired || false;
 											
 											return (
 												<div
@@ -488,11 +475,11 @@ const PostCard = ({
 													
 													<div className="position-relative d-flex justify-content-between align-items-center" style={{ zIndex: 2 }}>
 														<span className={`${isUserChoice ? "fw-bold text-primary" : ""}`}>
-															{option}
+															{option.text}
 															{isUserChoice && " ✓"}
 														</span>
 														<span className="text-muted small">
-															{percentage}% ({votes})
+															{percentage}% ({totalVotes})
 														</span>
 													</div>
 												</div>
@@ -500,7 +487,7 @@ const PostCard = ({
 										})}
 										
 										<div className="text-muted small mt-2">
-											{pollVotes.reduce((sum, vote) => sum + (vote?.count || 0), 0)} votes
+											{post.poll?.totalVotes} votes
 										</div>
 									</div>
 								</div>
