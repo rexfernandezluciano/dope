@@ -12,7 +12,7 @@ import {
 	Navbar,
 	Container,
 	Image,
-	Offcanvas,
+	Dropdown,
 	Nav,
 	Row,
 	Col,
@@ -20,30 +20,18 @@ import {
 	InputGroup,
 	Button,
 } from "react-bootstrap";
-import {
-	House,
-	Person,
-	Gear,
-	BoxArrowRight,
-	Search,
-	Star,
-	BarChart,
-	Briefcase,
-	Heart,
-} from "react-bootstrap-icons";
+import { BoxArrowRight, Search } from "react-bootstrap-icons";
 import {
 	GoHome,
 	GoSearch,
-	GoBell,
 	GoPerson,
 	GoStar,
 	GoBriefcase,
 	GoHeart,
-	GoGear,
-	GoBoxArrowRight,
+	GoGear
 } from "react-icons/go";
 import { TbBrandGoogleAnalytics } from "react-icons/tb";
-import { businessAPI, pollAPI } from "../../config/ApiConfig";
+import { businessAPI } from "../../config/ApiConfig";
 
 import {
 	initializeNotifications,
@@ -63,7 +51,7 @@ const NavigationView = ({ children }) => {
 	const location = useLocation();
 	const loaderData = useLoaderData() || {};
 	const { user: loaderUserData } = loaderData; // Renamed to avoid conflict
-	const [showModal, setShowModal] = useState(false);
+
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 	const [, setNotificationsEnabled] = useState(false);
@@ -275,12 +263,7 @@ const NavigationView = ({ children }) => {
 		{
 			label: "Profile",
 			href: `/${user?.username}`,
-			icon: <GoPerson size={18} />,
-		},
-		{
-			label: "Settings",
-			href: "/settings/account",
-			icon: <GoGear size={18} />,
+			icon: <GoPerson size={20} />,
 		},
 	];
 
@@ -338,7 +321,6 @@ const NavigationView = ({ children }) => {
 	const handleNavigate = (href) => {
 		NProgress.start();
 		navigate(href);
-		setShowModal(false);
 	};
 
 	if (!user) {
@@ -375,18 +357,65 @@ const NavigationView = ({ children }) => {
 
 						<div className="d-none">Center</div>
 
-						<div className="d-flex">
+						<div className="d-flex align-items-center justify-content-center">
 							{/* Mobile Notification Icon */}
 							<NotificationsDropdown
 								notifications={notifications}
 								unreadCount={unreadCount}
 								user={user}
 							/>
+
+							<Dropdown>
+								<Dropdown.Toggle variant="link" id="dropdown-profile">
+									<Image
+										width={30}
+										height={30}
+										src={user?.photoURL}
+										roundedCircle
+										className="border border-1"
+										style={{ objectFit: "cover" }}
+									/>
+								</Dropdown.Toggle>
+								<Dropdown.Menu align="end">
+									<span className="small fw-bold px-3 mb-2">Credits</span>
+									<p className="text-muted rounded-5 py-1 bg-light mt-2 mb-2 mx-3 px-3 fw-bold d-flex align-items-center justify-content-between gap-2">${credits.credits.toFixed(2)} <span className="text-primary fw-bold small">Buy Credits</span></p>
+									<span className="small fw-bold px-3 mt-2 mb-2">Billing</span>
+									<Dropdown.Item as={Link} to="/subscription">
+										<GoStar size={18} className="me-2" />
+										Subscription
+									</Dropdown.Item>
+									<span className="small fw-bold px-3 my-2">Membership</span>
+									<Dropdown.Item as={Link} to="/my-subscriptions">
+										<GoHeart size={18} className="me-2" />
+										My Subscriptions
+									</Dropdown.Item>
+									<Dropdown.Divider />
+									<span className="small fw-bold px-3 mb-2">Dashboard</span>
+									<Dropdown.Item as={Link} to="/analytics">
+										<TbBrandGoogleAnalytics size={18} className="me-2" />
+										Analytics
+									</Dropdown.Item>
+									<Dropdown.Item as={Link} to="/business">
+										<GoBriefcase size={18} className="me-2" />
+										Business
+									</Dropdown.Item>
+									<Dropdown.Divider />
+									<span className="small fw-bold px-3 mb-2">Account</span>
+									<Dropdown.Item as={Link} to="/settings/account">
+										<GoGear size={18} className="me-2" />
+										Settings & Privacy
+									</Dropdown.Item>
+									<Dropdown.Item onClick={handleLogout} className="text-danger">
+										<BoxArrowRight size={18} className="me-2"/>
+										Logout
+									</Dropdown.Item>
+								</Dropdown.Menu>
+							</Dropdown>
 						</div>
 					</Container>
 				</Navbar>
 				<div style={{ marginBottom: "60px" }}>{children}</div>
-				<div className="fixed-bottom d-flex justify-content-center border-top flex-grow-1 py-2 bg-white">
+				<div className="fixed-bottom d-flex justify-content-between border-top flex-grow-1 py-2 bg-white gap-3 px-2">
 					{mobileMenuItems.map((item, idx) => (
 						<Link
 							key={idx}
@@ -522,12 +551,12 @@ const NavigationView = ({ children }) => {
 						</p>
 						<p className="text-center">
 							<small className="text-success fw-bold d-flex align-items-center justify-content-center">
-								$$
+								$
 								{centavosToPesos(credits?.creditsInCentavos || "0.00").toFixed(
 									2,
 								)}{" "}
 								<span
-									className="bg-light px-1 py-2 ms-1"
+									className="bg-light px-1 py-2 me-2"
 									style={{ fontSize: "12px" }}
 								>
 									Credits
@@ -544,7 +573,7 @@ const NavigationView = ({ children }) => {
 								style={{ textDecoration: "none" }}
 							>
 								{item.icon}
-								{item.label}
+								<span className="ms-2">{item.label}</span>
 							</Link>
 						))}
 						<Nav.Link
@@ -559,6 +588,7 @@ const NavigationView = ({ children }) => {
 				</div>
 				<div style={{ marginLeft: "250px" }}>{children}</div>
 			</div>
+
 			{showLogoutDialog && (
 				<AlertDialog
 					show={showLogoutDialog}

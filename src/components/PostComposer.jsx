@@ -32,10 +32,7 @@ import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import heic2any from "heic2any";
 
-const PostComposer = ({
-	currentUser,
-	onPostCreated
-}) => {
+const PostComposer = ({ currentUser, onPostCreated }) => {
 	const [showComposerModal, setShowComposerModal] = useState(false);
 	const [content, setContent] = useState("");
 	const [images, setImages] = useState([]);
@@ -54,10 +51,9 @@ const PostComposer = ({
 	const [pollDuration, setPollDuration] = useState(24); // hours
 	const [pollAllowMultiple, setPollAllowMultiple] = useState(false);
 	const [placeholder, setPlaceholder] = useState("What's happening?");
-	const [mentionUsers, setMentionUsers] = useState([]);
-
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
+	const postClickRef = useRef(null);
 
 	const gf = new GiphyFetch("BXvRq8D03IHvybiQ6Fjls2pkPJLXjx9x");
 	const fetchGifs = (offset) =>
@@ -85,13 +81,13 @@ const PostComposer = ({
 
 		try {
 			const users = await userAPI.searchUsers(query);
-			
-			const mentionData = users.map(user => ({
+
+			const mentionData = users.map((user) => ({
 				id: user.uid,
 				display: user.username || user.name,
 			}));
 
-			console.log(`User: ${users}`)
+			console.log(`User: ${users}`);
 			callback(mentionData);
 		} catch (error) {
 			console.error("Error searching users:", error);
@@ -99,16 +95,19 @@ const PostComposer = ({
 		}
 	}, []);
 
-	const handleContentChange = useCallback((event, newValue, newPlainTextValue, mentions) => {
-		setContent(newValue);
-		
-		// Auto-resize textarea
-		const textarea = textareaRef.current?.querySelector('textarea');
-		if (textarea) {
-			textarea.style.height = "auto";
-			textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
-		}
-	}, []);
+	const handleContentChange = useCallback(
+		(event, newValue, newPlainTextValue, mentions) => {
+			setContent(newValue);
+
+			// Auto-resize textarea
+			const textarea = textareaRef.current?.querySelector("textarea");
+			if (textarea) {
+				textarea.style.height = "auto";
+				textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
+			}
+		},
+		[],
+	);
 
 	const uploadImage = async (file) => {
 		let finalFile = file;
@@ -216,6 +215,9 @@ const PostComposer = ({
 	const handleStartLiveStream = async (streamData) => {
 		try {
 			setIsStreaming(true);
+			setPostType("live_video");
+			setLiveVideoUrl(streamData.url);
+			postClickRef?.current.click();
 		} catch (error) {
 			console.error("Error starting live stream:", error);
 			setError("Failed to start live stream");
@@ -281,7 +283,7 @@ const PostComposer = ({
 							options: validOptions.map((option) => ({ text: option })),
 							expiresIn: pollDuration * 60,
 							allowMultiple: pollAllowMultiple,
-						}
+						},
 					};
 				} else if (postType === "live_video" && liveVideoUrl) {
 					postData = {
@@ -373,51 +375,51 @@ const PostComposer = ({
 	// Custom styles for react-mentions
 	const mentionsStyle = {
 		control: {
-			backgroundColor: 'transparent',
-			fontSize: '20px',
-			lineHeight: '24px',
-			minHeight: '120px',
-			border: 'none',
-			outline: 'none',
-			boxShadow: 'none',
+			backgroundColor: "transparent",
+			fontSize: "20px",
+			lineHeight: "24px",
+			minHeight: "120px",
+			border: "none",
+			outline: "none",
+			boxShadow: "none",
 		},
-		'&multiLine': {
+		"&multiLine": {
 			control: {
-				fontFamily: 'inherit',
-				minHeight: '120px',
-				border: 'none',
-				outline: 'none',
+				fontFamily: "inherit",
+				minHeight: "120px",
+				border: "none",
+				outline: "none",
 			},
 			highlighter: {
 				padding: 0,
-				border: 'none',
+				border: "none",
 			},
 			input: {
 				padding: 0,
-				border: 'none',
-				outline: 'none',
-				fontSize: '20px',
-				lineHeight: '24px',
-				resize: 'none',
-				maxHeight: '200px',
-				overflowY: 'auto',
+				border: "none",
+				outline: "none",
+				fontSize: "20px",
+				lineHeight: "24px",
+				resize: "none",
+				maxHeight: "200px",
+				overflowY: "auto",
 			},
 		},
 		suggestions: {
 			list: {
-				backgroundColor: 'white',
-				border: '1px solid #dee2e6',
-				borderRadius: '8px',
-				boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-				fontSize: '14px',
-				maxHeight: '200px',
-				overflowY: 'auto',
+				backgroundColor: "white",
+				border: "1px solid #dee2e6",
+				borderRadius: "8px",
+				boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+				fontSize: "14px",
+				maxHeight: "200px",
+				overflowY: "auto",
 			},
 			item: {
-				padding: '8px 12px',
-				borderBottom: '1px solid #f8f9fa',
-				'&focused': {
-					backgroundColor: '#e3f2fd',
+				padding: "8px 12px",
+				borderBottom: "1px solid #f8f9fa",
+				"&focused": {
+					backgroundColor: "#e3f2fd",
 				},
 			},
 		},
@@ -473,6 +475,7 @@ const PostComposer = ({
 						</Button>
 						<h5 className="mb-0 flex-grow-1">Create Post</h5>
 						<Button
+							ref={postClickRef}
 							onClick={handleSubmit}
 							disabled={isPostDisabled || isOverLimit}
 							className="rounded-pill px-4 fw-bold"
@@ -615,9 +618,9 @@ const PostComposer = ({
 											displayTransform={(id, display) => `@${display}`}
 											markup="@[__display__](__id__)"
 											style={{
-												backgroundColor: '#e3f2fd',
-												color: '#1976d2',
-												fontWeight: 'bold',
+												backgroundColor: "#e3f2fd",
+												color: "#1976d2",
+												fontWeight: "bold",
 											}}
 										/>
 									</MentionsInput>

@@ -675,7 +675,7 @@ const SubscriptionPage = () => {
 								{paymentMethods.map((method, idx) => (
 									<ListGroup.Item
 										key={idx}
-										className="d-flex justify-content-between align-items-center"
+										className="d-flex justify-content-between align-items-center gap-3"
 									>
 										<div className="d-flex align-items-center gap-3">
 											{method.type === 'paypal_wallet' ? (
@@ -708,7 +708,7 @@ const SubscriptionPage = () => {
 												)}
 											</div>
 										</div>
-										<div className="d-flex gap-2">
+										<div className="d-grid gap-2">
 											{method.isDefault && <Badge bg="success">Default</Badge>}
 											<Button 
 												variant="outline-danger" 

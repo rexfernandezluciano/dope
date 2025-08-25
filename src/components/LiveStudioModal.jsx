@@ -444,7 +444,7 @@ const LiveStudioModal = ({
 			show={show}
 			onHide={handleClose}
 			size="lg"
-			fullscreen="md-down"
+			fullscreen
 			centered
 			backdrop="static"
 			className="live-studio-modal"
