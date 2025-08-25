@@ -247,24 +247,6 @@ const PostCard = ({
 		setShowPostOptionsModal(false);
 	}, []);
 
-	const handlePollVote = useCallback(
-		async (optionId) => {
-			if (!currentUser || post.poll.hasUserVoted || post.poll.isExpired) return;
-
-			try {
-				const response = await pollAPI.vote(post.poll?.id, optionId);
-				if (response && response.poll) {
-					// Update the post poll data with the response
-					// This would typically be handled by a parent component or state management
-					console.log("Poll vote successful:", response);
-				}
-			} catch (error) {
-				console.error("Failed to vote on poll:", error);
-			}
-		},
-		[currentUser, post.poll?.hasUserVoted, post.poll?.isExpired, post.id],
-	);
-
 	return (
 		<>
 			<Card
@@ -444,7 +426,7 @@ const PostCard = ({
 							)}
 
 							{/* Poll Display */}
-							{post.poll && <PollView post={post} currentUser={currentUser} />}
+							{post.poll && <PollView post={post} currentUser={currentUser} onClick={(e) => e.stopPropagation()} />}
 
 							{post.postType === "live_video" && post.liveVideoUrl && (
 								<div className="mb-2">

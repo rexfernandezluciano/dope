@@ -730,7 +730,7 @@ export const userAPI = {
 	},
 
 	getUserById: async (userId) => {
-		return await apiRequest(`/users/id/${userId}`, {
+		return await apiRequest(`/users/${userId}`, {
 			method: "GET",
 		});
 	},
@@ -776,7 +776,8 @@ export const userAPI = {
 			search: query,
 			...params,
 		});
-		return await apiRequest(`/users?${searchParams.toString()}`);
+		const response = await apiRequest(`/users/search?query=${encodeURIComponent(query)}&limit=5`);
+		return response.users || [];
 	},
 
 	updateSettings: async (settings) => {

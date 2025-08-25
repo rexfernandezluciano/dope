@@ -35,7 +35,7 @@ const UserSubscriptionModal = ({ show, onHide, targetUser, currentUser }) => {
           {
             id: 'basic',
             name: 'Basic Support',
-            price: 100, // in PHP cents
+            price: 100, // in USD cents
             description: 'Show your support',
             benefits: ['Access to subscriber-only posts', 'Monthly thank you message']
           },
@@ -116,7 +116,7 @@ const UserSubscriptionModal = ({ show, onHide, targetUser, currentUser }) => {
   if (!targetUser) return null;
 
   return (
-    <Modal show={show} onHide={onHide} size="lg" centered>
+    <Modal show={show} onHide={onHide} size="lg" fullscreen="md-down" centered>
       <Modal.Header closeButton>
         <Modal.Title className="d-flex align-items-center gap-2">
           <Heart className="text-danger" />
@@ -155,7 +155,7 @@ const UserSubscriptionModal = ({ show, onHide, targetUser, currentUser }) => {
                           {tier.id === 'vip' && <Heart className="text-danger" size={24} />}
                         </div>
                         <h6>{tier.name}</h6>
-                        <h4 className="text-primary">₱{(tier.price / 100).toFixed(2)}</h4>
+                        <h4 className="text-primary">${(tier.price / 100).toFixed(2)}</h4>
                         <small className="text-muted">/month</small>
                         <p className="mt-2 small">{tier.description}</p>
                         <ul className="list-unstyled small text-start">
@@ -228,7 +228,7 @@ const UserSubscriptionModal = ({ show, onHide, targetUser, currentUser }) => {
               Subscribing...
             </>
           ) : (
-            `Subscribe for ₱${selectedTier ? (selectedTier.price / 100).toFixed(2) : '0.00'}/month`
+            `Subscribe for $${selectedTier ? (selectedTier.price / 100).toFixed(2) : '0.00'}/month`
           )}
         </Button>
       </Modal.Footer>

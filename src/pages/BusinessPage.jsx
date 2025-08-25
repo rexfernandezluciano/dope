@@ -20,10 +20,8 @@ import {
 	BarChart,
 	Plus,
 	Eye,
-	Calendar,
 	Bullseye,
 	CurrencyDollar,
-	Cursor,
 	Wallet,
 	ArrowUpCircle,
 } from "react-bootstrap-icons";
@@ -73,28 +71,30 @@ const BusinessPage = () => {
 
 		// Check for PayPal payment completion
 		const urlParams = new URLSearchParams(window.location.search);
-		const paymentStatus = urlParams.get('payment');
-		const paymentId = urlParams.get('paymentId');
-		
-		if (paymentStatus === 'success' && paymentId) {
-			setSuccess("Payment completed successfully! Your credits have been added to your account.");
+		const paymentStatus = urlParams.get("payment");
+		const paymentId = urlParams.get("paymentId");
+
+		if (paymentStatus === "success" && paymentId) {
+			setSuccess(
+				"Payment completed successfully! Your credits have been added to your account.",
+			);
 			loadCredits(); // Reload credits after successful payment
-			
+
 			// Clean up URL parameters
 			const newUrl = window.location.pathname;
-			window.history.replaceState({}, '', newUrl);
-		} else if (paymentStatus === 'cancelled') {
+			window.history.replaceState({}, "", newUrl);
+		} else if (paymentStatus === "cancelled") {
 			setError("Payment was cancelled. Your credits were not purchased.");
-			
+
 			// Clean up URL parameters
 			const newUrl = window.location.pathname;
-			window.history.replaceState({}, '', newUrl);
-		} else if (paymentStatus === 'failed') {
+			window.history.replaceState({}, "", newUrl);
+		} else if (paymentStatus === "failed") {
 			setError("Payment failed. Please try again or contact support.");
-			
+
 			// Clean up URL parameters
 			const newUrl = window.location.pathname;
-			window.history.replaceState({}, '', newUrl);
+			window.history.replaceState({}, "", newUrl);
 		}
 	}, []);
 
@@ -131,7 +131,9 @@ const BusinessPage = () => {
 			setPaymentMethods(response.paymentMethods || []);
 			// Set default payment method if available
 			if (response.paymentMethods && response.paymentMethods.length > 0) {
-				const defaultMethod = response.paymentMethods.find(method => method.isDefault);
+				const defaultMethod = response.paymentMethods.find(
+					(method) => method.isDefault,
+				);
 				if (defaultMethod) {
 					setPaymentMethodId(defaultMethod.id);
 				} else {
@@ -159,7 +161,7 @@ const BusinessPage = () => {
 			setPurchaseLoading(true);
 			setModalError("");
 			setModalSuccess("");
-			
+
 			// Send the purchase request
 			const response = await businessAPI.purchaseCredits({
 				amount: selectedPackage.credits,
@@ -169,14 +171,16 @@ const BusinessPage = () => {
 			// Check if response contains approveUrl for PayPal approval
 			if (response.approveUrl) {
 				setModalSuccess("Redirecting to PayPal for payment approval...");
-				
+
 				// Redirect to PayPal approval URL
 				setTimeout(() => {
 					window.location.href = response.approveUrl;
 				}, 1500);
 			} else {
 				// Payment was processed immediately (shouldn't happen with PayPal but just in case)
-				setModalSuccess(`Credits purchased successfully! You received ${selectedPackage.totalCredits} credits (${selectedPackage.credits} base + ${selectedPackage.bonus} bonus).`);
+				setModalSuccess(
+					`Credits purchased successfully! You received ${selectedPackage.totalCredits} credits (${selectedPackage.credits} base + ${selectedPackage.bonus} bonus).`,
+				);
 				setTimeout(() => {
 					setShowCreditsModal(false);
 					setPaymentMethodId("");
@@ -323,7 +327,7 @@ const BusinessPage = () => {
 													<Wallet size={24} className="me-2" />
 													<ArrowUpCircle size={16} className="opacity-75" />
 												</div>
-												<h4 className="mb-0">{credits.creditsDisplay || 0}</h4>
+												<h4 className="mb-0">{credits.credits || 0}</h4>
 												<small className="opacity-90">Available Credits</small>
 												<small className="d-block mt-1 opacity-75">
 													Click to add more
@@ -397,9 +401,7 @@ const BusinessPage = () => {
 												<div className="mb-3">
 													<div className="d-flex justify-content-between">
 														<span>Conversion Rate</span>
-														<span>
-															{analytics.conversionRate || 0}%
-														</span>
+														<span>{analytics.conversionRate || 0}%</span>
 													</div>
 													<ProgressBar
 														now={analytics.conversionRate || 0}
@@ -510,7 +512,7 @@ const BusinessPage = () => {
 																	? (
 																			(campaign.clicks / campaign.impressions) *
 																			100
-																	  ).toFixed(2)
+																		).toFixed(2)
 																	: 0}
 																%
 															</td>
@@ -585,148 +587,162 @@ const BusinessPage = () => {
 				show={showCreateModal}
 				onHide={() => setShowCreateModal(false)}
 				size="lg"
+				fullscreen="md-down"
+				scrollable
 			>
 				<Modal.Header closeButton>
 					<Modal.Title>Create Ad Campaign</Modal.Title>
 				</Modal.Header>
 				<Form onSubmit={handleCreateCampaign}>
-					<Modal.Body>
-						<Row>
-							<Col md={6}>
-								<Form.Group className="mb-3">
-									<Form.Label>Campaign Title *</Form.Label>
-									<Form.Control
-										type="text"
-										value={campaignForm.title}
-										onChange={(e) =>
-											setCampaignForm({
-												...campaignForm,
-												title: e.target.value,
-											})
-										}
-										required
-									/>
-								</Form.Group>
-							</Col>
-							<Col md={6}>
-								<Form.Group className="mb-3">
-									<Form.Label>Ad Type</Form.Label>
-									<Form.Select
-										value={campaignForm.adType}
-										onChange={(e) =>
-											setCampaignForm({
-												...campaignForm,
-												adType: e.target.value,
-											})
-										}
+					<Modal.Body className="overflow-y-auto vh-100">
+						<div style={{ marginBottom: "130px" }}>
+							<Row>
+								<Col md={6}>
+									<Form.Group
+										className="d-flex flex-column mb-3"
+										style={{ minHeight: "100%" }}
 									>
-										<option value="promotion">Promotion</option>
-										<option value="brand_awareness">Brand Awareness</option>
-										<option value="engagement">Engagement</option>
-									</Form.Select>
-								</Form.Group>
-							</Col>
-						</Row>
+										<Form.Label>Campaign Title *</Form.Label>
+										<Form.Control
+											type="text"
+											value={campaignForm.title}
+											onChange={(e) =>
+												setCampaignForm({
+													...campaignForm,
+													title: e.target.value,
+												})
+											}
+											required
+										/>
+									</Form.Group>
+								</Col>
+								<Col md={6}>
+									<Form.Group className="mb-3">
+										<Form.Label>Ad Type</Form.Label>
+										<Form.Select
+											value={campaignForm.adType}
+											onChange={(e) =>
+												setCampaignForm({
+													...campaignForm,
+													adType: e.target.value,
+												})
+											}
+										>
+											<option value="promotion">Promotion</option>
+											<option value="brand_awareness">Brand Awareness</option>
+											<option value="engagement">Engagement</option>
+										</Form.Select>
+									</Form.Group>
+								</Col>
+							</Row>
 
-						<Form.Group className="mb-3">
-							<Form.Label>Description</Form.Label>
-							<Form.Control
-								as="textarea"
-								rows={3}
-								value={campaignForm.description}
-								onChange={(e) =>
-									setCampaignForm({
-										...campaignForm,
-										description: e.target.value,
-									})
-								}
-							/>
-						</Form.Group>
+							<Form.Group className="mb-3">
+								<Form.Label>Description</Form.Label>
+								<Form.Control
+									as="textarea"
+									rows={3}
+									value={campaignForm.description}
+									onChange={(e) =>
+										setCampaignForm({
+											...campaignForm,
+											description: e.target.value,
+										})
+									}
+								/>
+							</Form.Group>
 
-						<Row>
-							<Col md={6}>
-								<Form.Group className="mb-3">
-									<Form.Label>Target Type</Form.Label>
-									<Form.Select
-										value={campaignForm.targetType}
-										onChange={(e) =>
-											setCampaignForm({
-												...campaignForm,
-												targetType: e.target.value,
-											})
-										}
-									>
-										<option value="post">Post</option>
-										<option value="profile">Profile</option>
-									</Form.Select>
-								</Form.Group>
-							</Col>
-							<Col md={6}>
-								<Form.Group className="mb-3">
-									<Form.Label>Target ID *</Form.Label>
-									<Form.Control
-										type="text"
-										value={campaignForm.targetId}
-										onChange={(e) =>
-											setCampaignForm({
-												...campaignForm,
-												targetId: e.target.value,
-											})
-										}
-										placeholder="Enter post or profile ID"
-										required
-									/>
-								</Form.Group>
-							</Col>
-						</Row>
+							<Row>
+								<Col md={6}>
+									<Form.Group className="mb-3">
+										<Form.Label>Target Type</Form.Label>
+										<Form.Select
+											value={campaignForm.targetType}
+											onChange={(e) =>
+												setCampaignForm({
+													...campaignForm,
+													targetType: e.target.value,
+												})
+											}
+										>
+											<option value="post">Post</option>
+											<option value="profile">Profile</option>
+										</Form.Select>
+									</Form.Group>
+								</Col>
+								<Col md={6}>
+									<Form.Group className="mb-3">
+										<Form.Label>Target ID *</Form.Label>
+										<Form.Control
+											type="text"
+											value={campaignForm.targetId}
+											onChange={(e) =>
+												setCampaignForm({
+													...campaignForm,
+													targetId: e.target.value,
+												})
+											}
+											placeholder="Enter post or profile ID"
+											required
+										/>
+									</Form.Group>
+								</Col>
+							</Row>
 
-						<Row>
-							<Col md={6}>
-								<Form.Group className="mb-3">
-									<Form.Label>Budget ($) *</Form.Label>
-									<Form.Control
-										type="number"
-										step="0.01"
-										min="5"
-										value={campaignForm.budget}
-										onChange={(e) =>
-											setCampaignForm({
-												...campaignForm,
-												budget: e.target.value,
-											})
-										}
-										required
-									/>
-								</Form.Group>
-							</Col>
-							<Col md={6}>
-								<Form.Group className="mb-3">
-									<Form.Label>Duration (days)</Form.Label>
-									<Form.Control
-										type="number"
-										min="1"
-										max="30"
-										value={campaignForm.duration}
-										onChange={(e) =>
-											setCampaignForm({
-												...campaignForm,
-												duration: parseInt(e.target.value),
-											})
-										}
-									/>
-								</Form.Group>
-							</Col>
-						</Row>
+							<Row>
+								<Col md={6}>
+									<Form.Group className="mb-3">
+										<Form.Label>Budget ($) *</Form.Label>
+										<Form.Control
+											type="number"
+											step="0.01"
+											min="5"
+											value={campaignForm.budget}
+											onChange={(e) =>
+												setCampaignForm({
+													...campaignForm,
+													budget: e.target.value,
+												})
+											}
+											required
+										/>
+									</Form.Group>
+								</Col>
+								<Col md={6}>
+									<Form.Group className="mb-3">
+										<Form.Label>Duration (days)</Form.Label>
+										<Form.Control
+											type="number"
+											min="1"
+											max="30"
+											value={campaignForm.duration}
+											onChange={(e) =>
+												setCampaignForm({
+													...campaignForm,
+													duration: parseInt(e.target.value),
+												})
+											}
+										/>
+									</Form.Group>
+								</Col>
+							</Row>
 
-						<Alert variant="info">
-							<small>
-								<strong>Note:</strong> Campaigns require manual approval before
-								going live. You'll be notified once your campaign is reviewed.
-							</small>
-						</Alert>
+							<Alert variant="info">
+								<small>
+									<strong>Note:</strong> Campaigns require manual approval
+									before going live. You'll be notified once your campaign is
+									reviewed.
+								</small>
+							</Alert>
+						</div>
 					</Modal.Body>
-					<Modal.Footer>
-						<Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+					<Modal.Footer
+						className="sticky-bottom bg-white border-top"
+						style={{ zIndex: 1050 }}
+					>
+						<Button
+							variant="secondary"
+							onClick={() => setShowCreateModal(false)}
+						>
 							Cancel
 						</Button>
 						<Button type="submit" variant="primary">
@@ -736,162 +752,203 @@ const BusinessPage = () => {
 				</Form>
 			</Modal>
 
-			{/* Credits Modal */}
+			{/* Credits Modal - Fixed with proper fullscreen and scrollable content */}
 			<Modal
 				show={showCreditsModal}
-				fullscreen="md-down"
 				onHide={() => {
 					setShowCreditsModal(false);
 					setModalError("");
 					setModalSuccess("");
 					setSelectedPackage(null);
 				}}
+				fullscreen="md-down"
 				size="lg"
+				scrollable
 			>
-				<Modal.Header closeButton>
+				<Modal.Header
+					closeButton
+					className="sticky-top bg-white"
+					style={{ zIndex: 1050 }}
+				>
 					<Modal.Title>Purchase Credits</Modal.Title>
 				</Modal.Header>
-				<Form onSubmit={handlePurchaseCredits}>
-					<Modal.Body className="overflow-y-auto">
-						{modalError && <Alert variant="danger" className="mb-3">{modalError}</Alert>}
-						{modalSuccess && <Alert variant="success" className="mb-3">{modalSuccess}</Alert>}
-						
-						<div className="mb-4">
-							<p className="mb-2">
-								Your current credits:{" "}
-								<strong className="text-primary">{credits.creditsDisplay || 0}</strong>
-							</p>
-							<small className="text-muted">
-								Raw credits: {credits.credits || 0}
-							</small>
-						</div>
+				<Modal.Body className="p-0">
+					<Form
+						onSubmit={handlePurchaseCredits}
+						className="d-flex flex-column"
+						style={{ minHeight: "100%" }}
+					>
+						<div
+							className="p-4"
+							style={{ flex: "1 1 auto", overflowY: "auto" }}
+						>
+							{modalError && (
+								<Alert variant="danger" className="mb-3">
+									{modalError}
+								</Alert>
+							)}
+							{modalSuccess && (
+								<Alert variant="success" className="mb-3">
+									{modalSuccess}
+								</Alert>
+							)}
 
-						<h6 className="mb-3">Choose a Credits Package</h6>
-						<Row className="g-3 mb-4">
-							{creditsPackages.map((pkg) => (
-								<Col key={pkg.amount} md={6}>
-									<Card 
-										className={`h-100 cursor-pointer ${selectedPackage?.amount === pkg.amount ? 'border-primary bg-light' : ''} ${pkg.popular ? 'border-warning' : ''}`}
-										onClick={() => setSelectedPackage(pkg)}
-										style={{ cursor: 'pointer', position: 'relative' }}
-									>
-										{pkg.popular && (
-											<Badge 
-												bg="warning" 
-												className="position-absolute top-0 start-50 translate-middle px-3 py-2"
-												style={{ fontSize: '0.75rem' }}
-											>
-												Most Popular
-											</Badge>
-										)}
-										<Card.Body className="text-center p-3">
-											<h5 className="mb-2">{pkg.priceDisplay}</h5>
-											<div className="mb-2">
-												<strong className="text-primary">{pkg.totalCredits.toLocaleString()}</strong>
-												<small className="text-muted d-block">
-													{pkg.credits.toLocaleString()} base
-													{pkg.bonus > 0 && (
-														<span className="text-success">
-															 + {pkg.bonus.toLocaleString()} bonus
-														</span>
-													)}
-												</small>
-											</div>
-											<small className="text-muted">{pkg.description}</small>
-											{pkg.bonus > 0 && (
-												<div className="mt-2">
-													<Badge bg="success" className="small">
-														+{((pkg.bonus / pkg.credits) * 100).toFixed(0)}% Bonus
-													</Badge>
-												</div>
+							<div className="mb-4">
+								<p className="mb-2">
+									Your current credits:{" "}
+									<strong className="text-primary">
+										{credits.credits || 0}
+									</strong>
+								</p>
+								<small className="text-muted">
+									Raw credits: {credits.creditsInCentavos || 0}
+								</small>
+							</div>
+
+							<h6 className="mb-3">Choose a Credits Package</h6>
+							<Row className="g-3 mb-4">
+								{creditsPackages.map((pkg) => (
+									<Col key={pkg.amount} md={6} lg={4}>
+										<Card
+											className={`h-100 cursor-pointer ${selectedPackage?.amount === pkg.amount ? "border-primary bg-light" : ""} ${pkg.popular ? "border-warning" : ""}`}
+											onClick={() => setSelectedPackage(pkg)}
+											style={{ cursor: "pointer", position: "relative" }}
+										>
+											{pkg.popular && (
+												<Badge
+													bg="warning"
+													className="position-absolute top-0 start-50 translate-middle px-3 py-2"
+													style={{ fontSize: "0.75rem" }}
+												>
+													Most Popular
+												</Badge>
 											)}
-										</Card.Body>
-									</Card>
-								</Col>
-							))}
-						</Row>
+											<Card.Body className="text-center p-3">
+												<h5 className="mb-2">{pkg.priceDisplay}</h5>
+												<div className="mb-2">
+													<strong className="text-primary">
+														{pkg.totalCredits.toLocaleString()}
+													</strong>
+													<small className="text-muted d-block">
+														{pkg.credits.toLocaleString()} base
+														{pkg.bonus > 0 && (
+															<span className="text-success">
+																+ {pkg.bonus.toLocaleString()} bonus
+															</span>
+														)}
+													</small>
+												</div>
+												<small className="text-muted">{pkg.description}</small>
+												{pkg.bonus > 0 && (
+													<div className="mt-2">
+														<Badge bg="success" className="small">
+															+{((pkg.bonus / pkg.credits) * 100).toFixed(0)}%
+															Bonus
+														</Badge>
+													</div>
+												)}
+											</Card.Body>
+										</Card>
+									</Col>
+								))}
+							</Row>
 
-						{selectedPackage && (
-							<Alert variant="info" className="mb-3">
-								<div className="d-flex justify-content-between align-items-center">
-									<div>
-										<strong>Selected: {selectedPackage.priceDisplay}</strong>
-										<div className="small text-muted">
-											{selectedPackage.totalCredits.toLocaleString()} credits total
+							{selectedPackage && (
+								<Alert variant="info" className="mb-3">
+									<div className="d-flex justify-content-between align-items-center">
+										<div>
+											<strong>Selected: {selectedPackage.priceDisplay}</strong>
+											<div className="small text-muted">
+												{selectedPackage.totalCredits.toLocaleString()} credits
+												total
+											</div>
+										</div>
+										<Button
+											variant="outline-secondary"
+											size="sm"
+											onClick={() => setSelectedPackage(null)}
+										>
+											Change
+										</Button>
+									</div>
+								</Alert>
+							)}
+
+							{selectedPackage && paymentMethods.length > 0 ? (
+								<Form.Group className="mb-3">
+									<Form.Label>Select Payment Method</Form.Label>
+									<Form.Select
+										value={paymentMethodId}
+										onChange={(e) => setPaymentMethodId(e.target.value)}
+										required
+									>
+										<option value="">Choose a payment method...</option>
+										{paymentMethods.map((method) => (
+											<option key={method.id} value={method.id}>
+												{method.type === "paypal_wallet"
+													? `PayPal Wallet - ${method.paypalEmail || "Connected Account"}`
+													: method.type === "paypal_card"
+														? `**** **** **** ${method.last4} (${method.provider || "PayPal"})`
+														: `**** **** **** ${method.last4} (${method.provider || "Unknown"})`}
+												{method.isDefault ? " (Default)" : ""}
+											</option>
+										))}
+									</Form.Select>
+								</Form.Group>
+							) : selectedPackage && paymentMethods.length === 0 ? (
+								<Alert variant="warning">
+									<div className="d-flex align-items-center">
+										<Wallet className="me-2" size={20} />
+										<div>
+											<strong>No Payment Methods</strong>
+											<p className="mb-0 small">
+												You need to add a payment method first. Go to Settings →
+												Subscription to add one.
+											</p>
 										</div>
 									</div>
-									<Button 
-										variant="outline-secondary" 
-										size="sm"
-										onClick={() => setSelectedPackage(null)}
-									>
-										Change
-									</Button>
-								</div>
-							</Alert>
-						)}
+								</Alert>
+							) : null}
 
-						{selectedPackage && paymentMethods.length > 0 ? (
-							<Form.Group className="mb-3">
-								<Form.Label>Select Payment Method</Form.Label>
-								<Form.Select
-									value={paymentMethodId}
-									onChange={(e) => setPaymentMethodId(e.target.value)}
-									required
-								>
-									<option value="">Choose a payment method...</option>
-									{paymentMethods.map((method) => (
-										<option key={method.id} value={method.id}>
-											{method.type === 'paypal_wallet' ? (
-												`PayPal Wallet - ${method.paypalEmail || 'Connected Account'}`
-											) : method.type === 'paypal_card' ? (
-												`**** **** **** ${method.last4} (${method.provider || 'PayPal'})`
-											) : (
-												`**** **** **** ${method.last4} (${method.provider || 'Unknown'})`
-											)}
-											{method.isDefault ? ' (Default)' : ''}
-										</option>
-									))}
-								</Form.Select>
-							</Form.Group>
-						) : selectedPackage && paymentMethods.length === 0 ? (
-							<Alert variant="warning">
-								<div className="d-flex align-items-center">
-									<Wallet className="me-2" size={20} />
-									<div>
-										<strong>No Payment Methods</strong>
-										<p className="mb-0 small">
-											You need to add a payment method first. Go to Settings → Subscription to add one.
-										</p>
-									</div>
-								</div>
+							<Alert variant="info">
+								<small>
+									<strong>Secure Payment:</strong> Credits are purchased
+									securely through PayPal and added instantly to your account.
+								</small>
 							</Alert>
-						) : null}
-
-						<Alert variant="info">
-							<small>
-								<strong>Secure Payment:</strong> Credits are purchased securely through PayPal and added instantly to your account.
-							</small>
-						</Alert>
-					</Modal.Body>
-					<Modal.Footer>
-						<Button variant="secondary" onClick={() => {
-							setShowCreditsModal(false);
-							setModalError("");
-							setModalSuccess("");
-							setSelectedPackage(null);
-						}}>
-							Close
-						</Button>
-						<Button 
-							type="submit" 
-							variant="primary" 
-							disabled={!selectedPackage || !paymentMethodId || paymentMethods.length === 0 || purchaseLoading}
+						</div>
+						<Modal.Footer
+							className="sticky-bottom bg-white border-top"
+							style={{ zIndex: 1050 }}
 						>
-							{purchaseLoading ? "Processing..." : `Purchase ${selectedPackage ? selectedPackage.priceDisplay : 'Package'}`}
-						</Button>
-					</Modal.Footer>
-				</Form>
+							<Button
+								variant="secondary"
+								onClick={() => {
+									setShowCreditsModal(false);
+									setModalError("");
+									setModalSuccess("");
+									setSelectedPackage(null);
+								}}
+							>
+								Close
+							</Button>
+							<Button
+								type="submit"
+								variant="primary"
+								disabled={
+									!selectedPackage ||
+									!paymentMethodId ||
+									paymentMethods.length === 0 ||
+									purchaseLoading
+								}
+							>
+								{purchaseLoading
+									? "Processing..."
+									: `Purchase ${selectedPackage ? selectedPackage.priceDisplay : "Package"}`}
+							</Button>
+						</Modal.Footer>
+					</Form>
+				</Modal.Body>
 			</Modal>
 		</Container>
 	);

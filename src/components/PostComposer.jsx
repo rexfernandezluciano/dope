@@ -25,8 +25,8 @@ import {
 	Type,
 	BarChart,
 } from "react-bootstrap-icons";
-import { postAPI, imageAPI } from "../config/ApiConfig";
-import MentionDropdown from "./MentionDropdown";
+import { MentionsInput, Mention } from "react-mentions";
+import { postAPI, imageAPI, userAPI } from "../config/ApiConfig";
 import LiveStudioModal from "./LiveStudioModal";
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
@@ -45,10 +45,6 @@ const PostComposer = ({
 	const [submitting, setSubmitting] = useState(false);
 	const [uploadingImages, setUploadingImages] = useState(false);
 	const [error, setError] = useState("");
-	const [showMentions, setShowMentions] = useState(false);
-	const [mentionQuery, setMentionQuery] = useState("");
-	const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
-	const [cursorPosition, setCursorPosition] = useState(0);
 	const [showStickerModal, setShowStickerModal] = useState(false);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [showLiveStudioModal, setShowLiveStudioModal] = useState(false);
@@ -58,6 +54,7 @@ const PostComposer = ({
 	const [pollDuration, setPollDuration] = useState(24); // hours
 	const [pollAllowMultiple, setPollAllowMultiple] = useState(false);
 	const [placeholder, setPlaceholder] = useState("What's happening?");
+	const [mentionUsers, setMentionUsers] = useState([]);
 
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
@@ -79,79 +76,39 @@ const PostComposer = ({
 		}
 	};
 
-	const handleContentChange = useCallback((e) => {
-		const value = e.target.value;
-		const position = e.target.selectionStart;
+	// Function to search for users for mentions
+	const searchMentionUsers = useCallback(async (query, callback) => {
+		if (!query) {
+			callback([]);
+			return;
+		}
 
-		setContent(value);
-		setCursorPosition(position);
+		try {
+			const users = await userAPI.searchUsers(query);
+			
+			const mentionData = users.map(user => ({
+				id: user.uid,
+				display: user.username || user.name,
+			}));
 
+			console.log(`User: ${users}`)
+			callback(mentionData);
+		} catch (error) {
+			console.error("Error searching users:", error);
+			callback([]);
+		}
+	}, []);
+
+	const handleContentChange = useCallback((event, newValue, newPlainTextValue, mentions) => {
+		setContent(newValue);
+		
 		// Auto-resize textarea
-		const textarea = textareaRef.current;
+		const textarea = textareaRef.current?.querySelector('textarea');
 		if (textarea) {
 			textarea.style.height = "auto";
 			textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
 		}
-
-		// Check for mention trigger
-		const textBeforeCursor = value.substring(0, position);
-		const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
-
-		if (mentionMatch) {
-			const query = mentionMatch[1];
-			setMentionQuery(query);
-
-			// Calculate position for dropdown
-			const textarea = textareaRef.current;
-			if (textarea) {
-				const rect = textarea.getBoundingClientRect();
-				const lines = textBeforeCursor.split("\n");
-				const currentLine = lines.length - 1;
-				const lineHeight = 20;
-
-				setMentionPosition({
-					top: rect.top + currentLine * lineHeight + 25,
-					left: rect.left + mentionMatch[0].length * 8,
-				});
-			}
-
-			setShowMentions(true);
-		} else {
-			setShowMentions(false);
-			setMentionQuery("");
-		}
 	}, []);
-
-	const handleMentionSelect = useCallback(
-		(user) => {
-			const textBeforeCursor = content.substring(0, cursorPosition);
-			const textAfterCursor = content.substring(cursorPosition);
-			const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
-
-			if (mentionMatch) {
-				const uid = user.username;
-				const newText =
-					textBeforeCursor.replace(mentionMatch[0], `@${uid} `) +
-					textAfterCursor;
-				setContent(newText);
-
-				const newCursorPos = textBeforeCursor.replace(
-					mentionMatch[0],
-					`@${uid} `,
-				).length;
-				setTimeout(() => {
-					if (textareaRef.current) {
-						textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
-						textareaRef.current.focus();
-					}
-				}, 0);
-			}
-
-			setShowMentions(false);
-			setMentionQuery("");
-		},
-		[content, cursorPosition],
-	);
 
 	const uploadImage = async (file) => {
 		let finalFile = file;
@@ -342,8 +299,6 @@ const PostComposer = ({
 					};
 				}
 
-				console.log("Post Data:", JSON.stringify(postData));
-
 				const response = await postAPI.createPost(postData);
 				// Reset form
 				setContent("");
@@ -415,6 +370,59 @@ const PostComposer = ({
 		setPollAllowMultiple(isChecked);
 	};
 
+	// Custom styles for react-mentions
+	const mentionsStyle = {
+		control: {
+			backgroundColor: 'transparent',
+			fontSize: '20px',
+			lineHeight: '24px',
+			minHeight: '120px',
+			border: 'none',
+			outline: 'none',
+			boxShadow: 'none',
+		},
+		'&multiLine': {
+			control: {
+				fontFamily: 'inherit',
+				minHeight: '120px',
+				border: 'none',
+				outline: 'none',
+			},
+			highlighter: {
+				padding: 0,
+				border: 'none',
+			},
+			input: {
+				padding: 0,
+				border: 'none',
+				outline: 'none',
+				fontSize: '20px',
+				lineHeight: '24px',
+				resize: 'none',
+				maxHeight: '200px',
+				overflowY: 'auto',
+			},
+		},
+		suggestions: {
+			list: {
+				backgroundColor: 'white',
+				border: '1px solid #dee2e6',
+				borderRadius: '8px',
+				boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+				fontSize: '14px',
+				maxHeight: '200px',
+				overflowY: 'auto',
+			},
+			item: {
+				padding: '8px 12px',
+				borderBottom: '1px solid #f8f9fa',
+				'&focused': {
+					backgroundColor: '#e3f2fd',
+				},
+			},
+		},
+	};
+
 	return (
 		<>
 			{/* Inline Post Composer */}
@@ -452,7 +460,7 @@ const PostComposer = ({
 				backdrop="static"
 				onHide={() => setShowComposerModal(false)}
 				centered
-				className="animate__animated animate__slideUp"
+				className="animate__animated animate__slideInUp"
 			>
 				<Modal.Header className="border-0 pb-0">
 					<div className="d-flex align-items-center w-100">
@@ -592,23 +600,28 @@ const PostComposer = ({
 									</Dropdown>
 								</div>
 
-								{/* Text Input */}
-								<Form.Control
-									ref={textareaRef}
-									as="textarea"
-									rows={3}
-									value={content}
-									onChange={handleContentChange}
-									placeholder={placeholder}
-									className="border-0 shadow-none resize-none"
-									style={{
-										fontSize: "20px",
-										lineHeight: "24px",
-										minHeight: "120px",
-										maxHeight: "200px",
-									}}
-									maxLength={characterLimit}
-								/>
+								{/* MentionsInput */}
+								<div ref={textareaRef}>
+									<MentionsInput
+										value={content}
+										onChange={handleContentChange}
+										placeholder={placeholder}
+										style={mentionsStyle}
+										allowSpaceInQuery={true}
+									>
+										<Mention
+											trigger="@"
+											data={searchMentionUsers}
+											displayTransform={(id, display) => `@${display}`}
+											markup="@[__display__](__id__)"
+											style={{
+												backgroundColor: '#e3f2fd',
+												color: '#1976d2',
+												fontWeight: 'bold',
+											}}
+										/>
+									</MentionsInput>
+								</div>
 
 								{/* Live Video URL Input */}
 								{postType === "live_video" && (
@@ -1014,14 +1027,6 @@ const PostComposer = ({
 					</div>
 				</Modal.Body>
 			</Modal>
-
-			<MentionDropdown
-				show={showMentions}
-				position={mentionPosition}
-				query={mentionQuery}
-				onSelect={handleMentionSelect}
-				onClose={() => setShowMentions(false)}
-			/>
 
 			{/* Live Studio Modal */}
 			<LiveStudioModal
