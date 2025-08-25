@@ -189,7 +189,7 @@ const CommentItem = ({
             <div className="mb-1">
               <Badge bg="warning" text="dark" className="small">
                 <Gift size={10} className="me-1" />
-                Tip: ₱{(comment.tip?.amount / 100).toFixed(2)}
+                Tip: ${(comment.tip?.amount / 100).toFixed(2)}
               </Badge>
             </div>
           )}
@@ -198,7 +198,7 @@ const CommentItem = ({
             <div className="mb-1">
               <Badge bg="info" className="small">
                 <CurrencyDollar size={10} className="me-1" />
-                Donation: ₱{(comment.donation?.amount / 100).toFixed(2)}
+                Donation: ${(comment.donation?.amount / 100).toFixed(2)}
               </Badge>
             </div>
           )}

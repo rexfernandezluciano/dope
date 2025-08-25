@@ -20,6 +20,13 @@ import {
 	Camera,
 	Heart,
 	Gift,
+	PersonAdd,
+	PersonCheckFill,
+	PersonFillCheck,
+	PersonSlash,
+	PersonFillSlash,
+	PersonHeart,
+	PersonFillHeart,
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI, blockAPI } from "../config/ApiConfig";
@@ -34,7 +41,7 @@ import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import {
 	discoverActor,
 	formatActivityPubHandle,
-	parseActivityPubNote
+	parseActivityPubNote,
 } from "../utils/activitypub-utils";
 import PostCard from "../components/PostCard";
 import AlertDialog from "../components/dialogs/AlertDialog";
@@ -86,20 +93,14 @@ const ProfilePage = () => {
 				setError("");
 
 				// Check if this is a federated profile (contains @)
-				const isFederated = username.includes('@');
+				const isFederated = username.includes("@");
 				setIsFederatedProfile(isFederated);
 
-				if (isFederated) {
-					// Handle federated profile
-					await loadFederatedProfile(username);
-				} else {
-					// Load local user profile
-					const userResponse = await userAPI.getUser(username);
-					if (!userResponse) {
-						throw new Error("User not found");
-					}
-					await loadLocalProfile(userResponse);
+				const userResponse = await userAPI.getUser(isFederated ? username.replace("@", "") : username);
+				if (!userResponse) {
+					throw new Error("User not found");
 				}
+				await loadLocalProfile(userResponse);
 			} catch (err) {
 				console.error("Error loading profile:", err);
 				setError(err.message || "Failed to load profile");
@@ -108,198 +109,8 @@ const ProfilePage = () => {
 			}
 		};
 
-		const loadFederatedProfile = async (handle) => {
-			try {
-				console.log(`🔍 Loading federated profile for: ${handle}`);
-
-				// Discover the ActivityPub actor
-				const webfingerResult = await discoverActor(handle);
-				console.log(`✅ WebFinger discovery successful:`, webfingerResult);
-
-				// Find the ActivityPub actor link
-				const actorLink = webfingerResult.links?.find(
-					link => link.rel === 'self' &&
-					(link.type === 'application/activity+json' || link.type === 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"')
-				);
-
-				if (!actorLink) {
-					console.error('No ActivityPub actor link found in WebFinger response:', webfingerResult);
-					throw new Error("ActivityPub profile not found in WebFinger response");
-				}
-
-				// Get the actor profile
-				const actorUrl = actorLink.href;
-				console.log(`🎭 Fetching ActivityPub actor from: ${actorUrl}`);
-
-				const actorResponse = await fetch(actorUrl, {
-					headers: {
-						'Accept': 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
-						'User-Agent': 'DOPE-Network-Client/1.0'
-					}
-				});
-
-				if (!actorResponse.ok) {
-					const errorText = await actorResponse.text();
-					console.error(`❌ Failed to fetch actor profile:`, {
-						status: actorResponse.status,
-						statusText: actorResponse.statusText,
-						url: actorUrl,
-						response: errorText
-					});
-					throw new Error(`Failed to fetch ActivityPub profile: ${actorResponse.status} ${actorResponse.statusText}`);
-				}
-
-				const actor = await actorResponse.json();
-				console.log(`✅ ActivityPub actor fetched successfully:`, actor);
-				setFederatedActor(actor);
-
-				// Handle different ActivityPub actor formats
-				const actorName = actor.name || actor.displayName || actor.preferredUsername;
-				const actorBio = actor.summary || actor.note || '';
-				const actorAvatar = actor.icon?.url || actor.image?.url || actor.avatar?.url;
-
-				// Convert ActivityPub actor to local profile format
-				const federatedProfile = {
-					uid: actor.id,
-					username: actor.preferredUsername || handle.split('@')[1],
-					name: actorName,
-					bio: actorBio.replace(/<[^>]*>/g, ''), // Strip HTML tags from bio
-					photoURL: actorAvatar,
-					createdAt: actor.published || new Date().toISOString(),
-					privacy: { profile: 'public' }, // Federated profiles are public
-					isFollowedByCurrentUser: false, // TODO: Check if following
-					hasBlueCheck: false, // Federated users don't have blue checks
-					membership: { subscription: 'free' },
-					url: actor.url || actor.id // Store original profile URL
-				};
-
-				console.log(`✅ Converted to local profile format:`, federatedProfile);
-				setProfileUser(federatedProfile);
-
-				// Load federated posts if outbox is available
-				if (actor.outbox) {
-					console.log(`📦 Loading posts from outbox: ${actor.outbox}`);
-					await loadFederatedPosts(actor.outbox);
-				} else {
-					console.log(`⚠️ No outbox found for actor`);
-					setPosts([]);
-				}
-
-				// Federated profiles can't be edited and don't have local followers/following
-				setFollowers([]);
-				setFollowing([]);
-				setIsFollowing(false);
-
-			} catch (err) {
-				console.error("Error loading federated profile:", err);
-				throw new Error(`Failed to load federated profile: ${err.message}`);
-			}
-		};
-
-		const loadFederatedPosts = async (outboxUrl) => {
-			try {
-				console.log(`📦 Fetching outbox from: ${outboxUrl}`);
-
-				const outboxResponse = await fetch(outboxUrl, {
-					headers: {
-						'Accept': 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
-						'User-Agent': 'DOPE-Network-Client/1.0'
-					}
-				});
-
-				if (!outboxResponse.ok) {
-					console.warn(`⚠️ Failed to fetch outbox: ${outboxResponse.status} ${outboxResponse.statusText}`);
-					setPosts([]);
-					return;
-				}
-
-				const outbox = await outboxResponse.json();
-				console.log(`📦 Outbox response:`, outbox);
-
-				// If it's a collection, get the first page
-				let items = [];
-				if (outbox.type === 'OrderedCollection' && outbox.first) {
-					console.log(`📑 Fetching first page: ${outbox.first}`);
-					try {
-						const firstPageResponse = await fetch(outbox.first, {
-							headers: {
-								'Accept': 'application/activity+json, application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
-								'User-Agent': 'DOPE-Network-Client/1.0'
-							}
-						});
-
-						if (firstPageResponse.ok) {
-							const firstPage = await firstPageResponse.json();
-							console.log(`📑 First page response:`, firstPage);
-							items = firstPage.orderedItems || firstPage.items || [];
-						}
-					} catch (pageErr) {
-						console.warn(`⚠️ Failed to fetch first page:`, pageErr);
-					}
-				} else if (outbox.orderedItems) {
-					items = outbox.orderedItems;
-				} else if (outbox.items) {
-					items = outbox.items;
-				}
-
-				console.log(`📝 Found ${items.length} items in outbox`);
-
-				// Convert ActivityPub activities to local post format
-				const federatedPosts = items
-					.filter(item => {
-						// Handle both Create activities and direct Note objects
-						const isCreateActivity = item.type === 'Create' && item.object?.type === 'Note';
-						const isNoteObject = item.type === 'Note';
-						return isCreateActivity || isNoteObject;
-					})
-					.slice(0, 20) // Limit to first 20 posts
-					.map(item => {
-						// Handle both Create activities and direct Note objects
-						const note = item.type === 'Create' ? item.object : item;
-						const activity = item.type === 'Create' ? item : null;
-
-						const parsedNote = parseActivityPubNote(note);
-
-						return {
-							id: note.id || activity?.id,
-							content: parsedNote.content.replace(/<[^>]*>/g, ''), // Strip HTML tags
-							createdAt: parsedNote.published || activity?.published,
-							author: federatedActor ? {
-								uid: federatedActor.id,
-								username: federatedActor.preferredUsername,
-								name: federatedActor.name || federatedActor.preferredUsername,
-								photoURL: federatedActor.icon?.url || federatedActor.image?.url
-							} : null,
-							imageUrls: (parsedNote.attachments || [])
-								.filter(att => att.type === 'Document' && att.mediaType?.startsWith('image/'))
-								.map(att => att.url),
-							likes: [],
-							comments: [],
-							shares: [],
-							stats: {
-								likes: note.likes?.totalItems || 0,
-								comments: note.replies?.totalItems || 0,
-								shares: note.shares?.totalItems || 0
-							},
-							privacy: 'public',
-							tags: parsedNote.hashtags,
-							mentions: parsedNote.mentions,
-							isFederated: true,
-							originalUrl: note.url || note.id
-						};
-					});
-
-				console.log(`✅ Converted ${federatedPosts.length} federated posts`);
-				setPosts(federatedPosts);
-			} catch (err) {
-				console.error("Error loading federated posts:", err);
-				setPosts([]);
-			}
-		};
-
 		const loadLocalProfile = async (userResponse) => {
 			try {
-
 				// Handle response structure - the API returns user data directly
 				const profileUserData = userResponse.user;
 				const profilePrivacy = profileUserData.privacy?.profile || "public";
@@ -362,7 +173,9 @@ const ProfilePage = () => {
 				} else {
 					// Fallback to separate posts API call
 					try {
-						const postsResponse = await postAPI.getPosts({ author: username });
+						const postsResponse = await postAPI.getPosts(1, 20, {
+							author: username,
+						});
 
 						// Filter posts based on profile privacy
 						const filteredPosts = (postsResponse.posts || []).filter((post) => {
@@ -428,6 +241,9 @@ const ProfilePage = () => {
 
 		if (username && currentUser) {
 			loadProfile();
+			return () => {
+				// Cleanup if needed
+			}
 		}
 	}, [username, currentUser]);
 
@@ -436,8 +252,8 @@ const ProfilePage = () => {
 		if (profileUser) {
 			updatePageMeta({
 				title: `${profileUser.name} (@${profileUser.username}) - DOPE Network`,
-				description: `View ${profileUser.name}'s profile on DOPE Network. ${profileUser.bio || 'See their posts, followers, and more.'}`,
-				keywords: `${profileUser.username}, ${profileUser.name}, profile, DOPE Network, social media`
+				description: `View ${profileUser.name}'s profile on DOPE Network. ${profileUser.bio || "See their posts, followers, and more."}`,
+				keywords: `${profileUser.username}, ${profileUser.name}, profile, DOPE Network, social media`,
 			});
 		}
 	}, [profileUser]);
@@ -509,11 +325,16 @@ const ProfilePage = () => {
 	const uploadProfileImageToCloudinary = async (file) => {
 		// Handle HEIC files
 		let finalFile = file;
-		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+		if (
+			file.type === "image/heic" ||
+			file.name.toLowerCase().endsWith(".heic")
+		) {
 			try {
 				const heic2any = (await import("heic2any")).default;
 				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+					type: "image/jpeg",
+				});
 			} catch (err) {
 				console.error("Error converting HEIC:", err);
 				throw new Error("Failed to convert HEIC image");
@@ -541,7 +362,9 @@ const ProfilePage = () => {
 			);
 
 			if (!response.ok) {
-				throw new Error(`Cloudinary upload failed: ${response.status} ${response.statusText}`);
+				throw new Error(
+					`Cloudinary upload failed: ${response.status} ${response.statusText}`,
+				);
 			}
 
 			const data = await response.json();
@@ -566,7 +389,9 @@ const ProfilePage = () => {
 			// Upload profile image if a new file was selected
 			if (editForm.profileImageFile) {
 				try {
-					const uploadedUrl = await uploadProfileImageToCloudinary(editForm.profileImageFile);
+					const uploadedUrl = await uploadProfileImageToCloudinary(
+						editForm.profileImageFile,
+					);
 					updateData.photoURL = uploadedUrl;
 				} catch (uploadError) {
 					setError(`Image upload failed: ${uploadError.message}`);
@@ -579,25 +404,25 @@ const ProfilePage = () => {
 			delete updateData.profileImageFile;
 
 			// Only send fields that can be updated
-			const allowedFields = ['name', 'bio', 'photoURL'];
+			const allowedFields = ["name", "bio", "photoURL"];
 			const filteredUpdateData = {};
-			allowedFields.forEach(field => {
+			allowedFields.forEach((field) => {
 				if (updateData[field] !== undefined) {
 					filteredUpdateData[field] = updateData[field];
 				}
 			});
 
-			console.log('Updating profile with data:', filteredUpdateData);
+			console.log("Updating profile with data:", filteredUpdateData);
 
 			const response = await userAPI.updateUser(username, filteredUpdateData);
-			console.log('Profile update response:', response);
+			console.log("Profile update response:", response);
 
 			setProfileUser((prev) => ({ ...prev, ...filteredUpdateData }));
 			setShowEditModal(false);
 			setProfileImagePreview("");
 		} catch (err) {
-			console.error('Profile update error:', err);
-			setError(err.message || 'Failed to update profile');
+			console.error("Profile update error:", err);
+			setError(err.message || "Failed to update profile");
 		} finally {
 			setUploadingProfileImage(false);
 		}
@@ -617,8 +442,6 @@ const ProfilePage = () => {
 			setEditForm((prev) => ({ ...prev, profileImageFile: file }));
 		}
 	};
-
-
 
 	const handleDeletePost = (postId) => {
 		setPostToDelete(postId);
@@ -660,17 +483,17 @@ const ProfilePage = () => {
 
 	const handleBlockUser = async (userId, action) => {
 		try {
-			if (action === 'blocked') {
+			if (action === "blocked") {
 				setIsBlocked(true);
 				// Optionally clear posts from blocked user
 				setPosts([]);
-			} else if (action === 'restricted') {
+			} else if (action === "restricted") {
 				// Handle restriction if needed
-				console.log('User restricted');
+				console.log("User restricted");
 			}
 		} catch (err) {
-			console.error('Error handling block action:', err);
-			setError('Failed to block user');
+			console.error("Error handling block action:", err);
+			setError("Failed to block user");
 		}
 	};
 
@@ -681,8 +504,8 @@ const ProfilePage = () => {
 			// Reload profile data
 			window.location.reload();
 		} catch (err) {
-			console.error('Error unblocking user:', err);
-			setError('Failed to unblock user');
+			console.error("Error unblocking user:", err);
+			setError("Failed to unblock user");
 		}
 	};
 
@@ -781,7 +604,9 @@ const ProfilePage = () => {
 								)}
 						</div>
 						<p className="text-muted mb-0">
-							{isFederatedProfile ? formatActivityPubHandle(username) : `@${profileUser.username}`}
+							{isFederatedProfile
+								? formatActivityPubHandle(username)
+								: `@${profileUser.username}`}
 						</p>
 					</div>
 
@@ -800,7 +625,7 @@ const ProfilePage = () => {
 								<Button
 									variant="outline-primary"
 									size="sm"
-									onClick={() => window.open(federatedActor.url, '_blank')}
+									onClick={() => window.open(federatedActor.url, "_blank")}
 								>
 									View Original
 								</Button>
@@ -809,28 +634,39 @@ const ProfilePage = () => {
 					) : (
 						<div className="d-flex gap-2">
 							<Button
-								variant={isFollowing ? "outline-primary" : "primary"}
+								variant="link"
 								size="sm"
 								onClick={handleFollow}
-								className="me-2"
+								className={`bg-light rounded-circle border fw-bold me-2 ${isFollowing ? "text-primary" : "text-muted"}`}
+								style={{ width: "35px", height: "35px" }}
 							>
-								{isFollowing ? "Following" : "Follow"}
+								{isFollowing ? (
+									<PersonFillCheck size={14} />
+								) : (
+									<PersonAdd size={14} />
+								)}
 							</Button>
 							<Button
-								variant="outline-danger"
+								variant="link"
 								size="sm"
 								onClick={() => setShowBlockModal(true)}
+								className={`bg-light rounded-circle border me-2 ${profileUser.isBlocked ? "text-danger" : "text-muted"} fw-bold`}
+								style={{ width: "35px", height: "35px" }}
 							>
-								Block
+								{profileUser.isBlocked ? (
+									<PersonFillSlash size={14} />
+								) : (
+									<PersonSlash size={14} />
+								)}
 							</Button>
 							<Button
-								variant="warning"
+								variant="link"
 								size="sm"
 								onClick={() => setShowSubscriptionModal(true)}
-								className="me-2"
+								className={`bg-light rounded-circle border me-2 text-muted fw-bold`}
+								style={{ width: "35px", height: "35px" }}
 							>
-								<Heart size={16} className="me-1" />
-								Subscribe
+								<PersonHeart size={14} />
 							</Button>
 						</div>
 					)}
@@ -841,7 +677,7 @@ const ProfilePage = () => {
 				<div className="d-flex flex-wrap gap-3 text-muted small mb-3">
 					<div className="d-flex align-items-center gap-1">
 						<Calendar size={14} />
-						Joined {formatJoinDate(profileUser.createdAt)}
+						Joined {formatJoinDate(profileUser?.createdAt)}
 					</div>
 				</div>
 
@@ -856,59 +692,32 @@ const ProfilePage = () => {
 					</span>
 				</div>
 
-				{/* Subscription and Membership Info */}
-				{profileUser.membership && (
-					<div className="mb-3">
-						<div className="d-flex align-items-center gap-2 mb-2">
-							<h6 className="mb-0">Membership</h6>
-							<span
-								className={`badge ${
-									profileUser.membership.subscription === "premium"
-										? "bg-warning text-dark"
-										: profileUser.membership.subscription === "pro"
-											? "bg-primary"
-											: "bg-secondary"
-								}`}
-							>
-								{profileUser.membership.subscription.toUpperCase()}
-							</span>
-						</div>
-
-						{profileUser.membership.subscription !== 'free' && profileUser.membership.nextBillingDate && (
-							<small className="text-muted">
-								Next billing: {new Date(profileUser.membership.nextBillingDate).toLocaleDateString()}
-							</small>
-						)}
-
-						{profileUser.membership.subscription === 'free' && (
-							<small className="text-muted">
-								Free account - upgrade to unlock premium features
-							</small>
-						)}
-					</div>
-				)}
-
 				{/* Creator Subscription Tiers (if not own profile) */}
-				{!isOwnProfile && !isFederatedProfile && profileUser.subscriptionTiers && (
-					<div className="mb-3">
-						<h6>Support {profileUser.name}</h6>
-						<div className="d-flex gap-2 flex-wrap">
-							{Object.entries(profileUser.subscriptionTiers).map(([tier, info]) => (
-								<Button
-									key={tier}
-									variant="outline-primary"
-									size="sm"
-									onClick={() => {
-										// Handle subscription logic
-										console.log(`Subscribe to ${tier} tier`);
-									}}
-								>
-									{tier.charAt(0).toUpperCase() + tier.slice(1)} - ₱{(info.price / 100).toFixed(2)}
-								</Button>
-							))}
+				{!isOwnProfile &&
+					!isFederatedProfile &&
+					profileUser.subscriptionTiers && (
+						<div className="mb-3">
+							<h6>Support {profileUser.name}</h6>
+							<div className="d-flex gap-2 flex-wrap">
+								{Object.entries(profileUser.subscriptionTiers).map(
+									([tier, info]) => (
+										<Button
+											key={tier}
+											variant="outline-primary"
+											size="sm"
+											onClick={() => {
+												// Handle subscription logic
+												console.log(`Subscribe to ${tier} tier`);
+											}}
+										>
+											{tier.charAt(0).toUpperCase() + tier.slice(1)} - ₱
+											{(info.price / 100).toFixed(2)}
+										</Button>
+									),
+								)}
+							</div>
 						</div>
-					</div>
-				)}
+					)}
 			</div>
 
 			{/* Tabs */}
@@ -959,8 +768,12 @@ const ProfilePage = () => {
 									currentUser={currentUser}
 									onLike={post.isFederated ? null : handleLikePost}
 									onShare={post.isFederated ? null : () => handleShare(post.id)}
-									onDeletePost={post.isFederated ? null : () => handleDeletePost(post.id)}
-									onPostClick={post.isFederated ? null : (e) => handlePostClick(post.id, e)}
+									onDeletePost={
+										post.isFederated ? null : () => handleDeletePost(post.id)
+									}
+									onPostClick={
+										post.isFederated ? null : (e) => handlePostClick(post.id, e)
+									}
 									onOpenOptions={post.isFederated ? null : handleOptionsClick}
 									disabled={post.isFederated}
 								/>
@@ -995,7 +808,9 @@ const ProfilePage = () => {
 												<div className="d-flex align-items-center gap-1">
 													<span className="fw-bold">{follower.name}</span>
 													{follower.hasBlueCheck && (
-														<span className="text-primary">✓</span>
+														<span className="text-primary">
+															<CheckCircleFill size={16} />
+														</span>
 													)}
 												</div>
 												<p className="text-muted mb-0">@{follower.username}</p>
@@ -1178,8 +993,6 @@ const ProfilePage = () => {
 					</Modal.Footer>
 				</Modal>
 			)}
-
-
 
 			{/* Post Options Modal */}
 			{showPostOptionsModal && selectedPostForOptions && (

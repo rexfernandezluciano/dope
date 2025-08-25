@@ -93,11 +93,11 @@ const PostDetailPage = () => {
 					const repliesData = {};
 					for (const comment of commentsResponse.comments) {
 						try {
-							const repliesResponse = await replyAPI.getCommentReplies(comment.id);
-							repliesData[comment.id] = repliesResponse.replies || [];
+							const repliesResponse = await replyAPI.getCommentReplies(comment?.id);
+							repliesData[comment?.id] = repliesResponse.replies || [];
 						} catch (replyError) {
-							console.error(`Failed to load replies for comment ${comment.id}:`, replyError);
-							repliesData[comment.id] = [];
+							console.error(`Failed to load replies for comment ${comment?.id}:`, replyError);
+							repliesData[comment?.id] = [];
 						}
 					}
 					setReplies(repliesData);
@@ -393,7 +393,7 @@ const PostDetailPage = () => {
 		if (!currentUser || userVotedOption !== null || !post) return;
 
 		try {
-			const response = await postAPI.votePoll(post.id, optionIndex);
+			const response = await postAPI.votePoll(post?.id, optionIndex);
 			if (response.success) {
 				setPollVotes(response.poll.votes);
 				setUserVotedOption(optionIndex);
@@ -451,8 +451,8 @@ const PostDetailPage = () => {
 				},
 				likes: commentData.likes || [],
 				replies: commentData.replies || [],
-				tipAmount: commentMode === "tip" && commentTipAmount ? parseInt(commentTipAmount) : undefined,
-				donationAmount: commentMode === "donation" && commentDonationAmount ? parseInt(commentDonationAmount) : undefined,
+				tip: { amount: commentMode === "tip" && commentTipAmount ? parseInt(commentTipAmount) : undefined},
+				donation: {amount: commentMode === "donation" && commentDonationAmount ? parseInt(commentDonationAmount) : undefined},
 			};
 
 			// Add to comments list
@@ -461,7 +461,7 @@ const PostDetailPage = () => {
 			// Initialize replies for the new comment
 			setReplies(prevReplies => ({
 				...prevReplies,
-				[newCommentObj.id]: [],
+				[newCommentObj?.id]: [],
 			}));
 
 			// Update post comment count
@@ -491,7 +491,7 @@ const PostDetailPage = () => {
 		} finally {
 			setSubmitting(false);
 		}
-	}, [newComment, post.id, post.author.uid, currentUser, postId, commentMode, commentTipAmount, post, handleCommentNotification]);
+	}, [newComment, post?.id, post?.author.uid, currentUser, postId, commentMode, commentTipAmount, post, handleCommentNotification]);
 
 	const handleLikeComment = async commentId => {
 		try {
@@ -717,7 +717,7 @@ const PostDetailPage = () => {
 				<Card.Body className="px-3 py-3">
 					<div className="d-flex gap-2">
 						<Image
-							src={post.author.photoURL || "https://i.pravatar.cc/150?img=10"}
+							src={post?.author.photoURL || "https://i.pravatar.cc/150?img=10"}
 							alt="avatar"
 							roundedCircle
 							width="40"
@@ -734,7 +734,7 @@ const PostDetailPage = () => {
 									<span
 										className="fw-bold"
 										style={{ cursor: "pointer", color: "inherit" }}
-										onClick={() => navigate(`/${post.author.username}`)}>
+										onClick={() => navigate(`/${post?.author.username}`)}>
 										{post.author.name}
 									</span>
 									{post.author.hasBlueCheck && (
@@ -1109,7 +1109,7 @@ const PostDetailPage = () => {
 													<div
 														className="input-group"
 														style={{ maxWidth: "120px" }}>
-														<span className="input-group-text">₱</span>
+														<span className="input-group-text">$</span>
 														<Form.Control
 															type="number"
 															min="1"
@@ -1131,7 +1131,7 @@ const PostDetailPage = () => {
 														/>
 													</div>
 												</div>
-												<small className="text-muted d-block mt-1">Range: ₱1.00 - ₱50.00</small>
+												<small className="text-muted d-block mt-1">Range: $1.00 - $50.00</small>
 											</Form.Group>
 										</div>
 									)}

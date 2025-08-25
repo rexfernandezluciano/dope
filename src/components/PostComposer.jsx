@@ -23,20 +23,18 @@ import {
 	Search,
 	CameraVideo,
 	Type,
-	BarChart
+	BarChart,
 } from "react-bootstrap-icons";
 import { postAPI, imageAPI } from "../config/ApiConfig";
 import MentionDropdown from "./MentionDropdown";
 import LiveStudioModal from "./LiveStudioModal";
-import { extractHashtags, extractMentions } from "../utils/dope-api-utils";
 import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import heic2any from "heic2any";
 
 const PostComposer = ({
 	currentUser,
-	onPostCreated,
-	placeholder = "What's happening?",
+	onPostCreated
 }) => {
 	const [showComposerModal, setShowComposerModal] = useState(false);
 	const [content, setContent] = useState("");
@@ -58,15 +56,19 @@ const PostComposer = ({
 	const [currentSelected, setCurrentSelected] = useState("text");
 	const [pollOptions, setPollOptions] = useState(["", ""]);
 	const [pollDuration, setPollDuration] = useState(24); // hours
+	const [pollAllowMultiple, setPollAllowMultiple] = useState(false);
+	const [placeholder, setPlaceholder] = useState("What's happening?");
 
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
 
 	const gf = new GiphyFetch("BXvRq8D03IHvybiQ6Fjls2pkPJLXjx9x");
-	const fetchGifs = offset =>
-		searchTerm ? gf.search(searchTerm, { offset, limit: 12 }) : gf.trending({ offset, limit: 12 });
+	const fetchGifs = (offset) =>
+		searchTerm
+			? gf.search(searchTerm, { offset, limit: 12 })
+			: gf.trending({ offset, limit: 12 });
 
-	const getImageUploadLimit = subscription => {
+	const getImageUploadLimit = (subscription) => {
 		switch (subscription) {
 			case "premium":
 				return 10;
@@ -77,7 +79,7 @@ const PostComposer = ({
 		}
 	};
 
-	const handleContentChange = useCallback(e => {
+	const handleContentChange = useCallback((e) => {
 		const value = e.target.value;
 		const position = e.target.selectionStart;
 
@@ -121,17 +123,22 @@ const PostComposer = ({
 	}, []);
 
 	const handleMentionSelect = useCallback(
-		user => {
+		(user) => {
 			const textBeforeCursor = content.substring(0, cursorPosition);
 			const textAfterCursor = content.substring(cursorPosition);
 			const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
 
 			if (mentionMatch) {
 				const uid = user.uid || user.username;
-				const newText = textBeforeCursor.replace(mentionMatch[0], `@${uid} `) + textAfterCursor;
+				const newText =
+					textBeforeCursor.replace(mentionMatch[0], `@${uid} `) +
+					textAfterCursor;
 				setContent(newText);
 
-				const newCursorPos = textBeforeCursor.replace(mentionMatch[0], `@${uid} `).length;
+				const newCursorPos = textBeforeCursor.replace(
+					mentionMatch[0],
+					`@${uid} `,
+				).length;
 				setTimeout(() => {
 					if (textareaRef.current) {
 						textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
@@ -146,9 +153,12 @@ const PostComposer = ({
 		[content, cursorPosition],
 	);
 
-	const uploadImage = async file => {
+	const uploadImage = async (file) => {
 		let finalFile = file;
-		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+		if (
+			file.type === "image/heic" ||
+			file.name.toLowerCase().endsWith(".heic")
+		) {
 			try {
 				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
 				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
@@ -176,7 +186,7 @@ const PostComposer = ({
 	};
 
 	const handleImageUpload = useCallback(
-		async e => {
+		async (e) => {
 			const files = Array.from(e.target.files);
 			if (files.length === 0) return;
 
@@ -187,7 +197,9 @@ const PostComposer = ({
 			if (files.length > remainingSlots) {
 				setError(
 					`You can only upload ${remainingSlots} more image(s). ${
-						imageLimit === 4 ? "Upgrade to Premium or Pro for more uploads." : ""
+						imageLimit === 4
+							? "Upgrade to Premium or Pro for more uploads."
+							: ""
 					}`,
 				);
 				e.target.value = "";
@@ -214,7 +226,7 @@ const PostComposer = ({
 					uploadedUrls.push(url);
 				}
 
-				setImages(prev => [...prev, ...uploadedUrls]);
+				setImages((prev) => [...prev, ...uploadedUrls]);
 			} catch (err) {
 				console.error("Error processing files:", err);
 				setError(err.message || "Failed to upload one or more images");
@@ -226,7 +238,7 @@ const PostComposer = ({
 		[images, currentUser],
 	);
 
-	const handleSelectGif = gif => {
+	const handleSelectGif = (gif) => {
 		const currentImages = images || [];
 		const imageLimit = getImageUploadLimit(currentUser?.subscription);
 
@@ -240,11 +252,11 @@ const PostComposer = ({
 		}
 
 		const imageUrl = gif.images.fixed_height.url;
-		setImages(prev => [...prev, imageUrl]);
+		setImages((prev) => [...prev, imageUrl]);
 		setShowStickerModal(false);
 	};
 
-	const handleStartLiveStream = async streamData => {
+	const handleStartLiveStream = async (streamData) => {
 		try {
 			setIsStreaming(true);
 		} catch (error) {
@@ -277,7 +289,7 @@ const PostComposer = ({
 	};
 
 	const handleSubmit = useCallback(
-		async e => {
+		async (e) => {
 			e.preventDefault();
 
 			const cleanContent = content.replace(/(\r\n|\n|\r){2,}/g, "$1$2").trim();
@@ -296,20 +308,24 @@ const PostComposer = ({
 					imageUrls: images,
 					privacy: privacy.toLowerCase(),
 					postType,
-					hashtags: extractHashtags(cleanContent),
-					mentions: extractMentions(cleanContent),
 				};
 
+				// Check if the post type is poll and set options accordingly
 				if (postType === "poll") {
-					const validOptions = pollOptions.filter(option => option.trim() !== "");
+					const validOptions = pollOptions.filter(
+						(option) => option.trim() !== "",
+					);
+
 					if (validOptions.length < 2) {
 						setError("Poll must have at least 2 options");
 						return;
 					}
+
 					postData.poll = {
-						options: validOptions,
-						duration: pollDuration * 60 * 60 * 1000, // Convert hours to milliseconds
-						votes: validOptions.map(() => ({ count: 0, voters: [] }))
+						questions: cleanContent,
+						options: validOptions.map((option) => ({ text: option })),
+						expiresIn: pollDuration * 60 * 60 * 1000, // Convert hours to milliseconds
+						allowMultiple: pollAllowMultiple,
 					};
 				}
 
@@ -317,8 +333,9 @@ const PostComposer = ({
 					postData.liveVideoUrl = liveVideoUrl;
 				}
 
-				const response = await postAPI.createPost(postData);
+				console.log("Post Data:", JSON.stringify(postData));
 
+				const response = await postAPI.createPost(postData);
 				// Reset form
 				setContent("");
 				setImages([]);
@@ -336,11 +353,21 @@ const PostComposer = ({
 				setSubmitting(false);
 			}
 		},
-		[content, images, privacy, postType, liveVideoUrl, onPostCreated],
+		[
+			content,
+			images,
+			privacy,
+			postType,
+			liveVideoUrl,
+			pollOptions,
+			pollDuration,
+			pollAllowMultiple,
+			onPostCreated,
+		],
 	);
 
-	const removeImage = useCallback(index => {
-		setImages(prev => prev.filter((_, i) => i !== index));
+	const removeImage = useCallback((index) => {
+		setImages((prev) => prev.filter((_, i) => i !== index));
 	}, []);
 
 	const getPrivacyIcon = () => {
@@ -356,19 +383,27 @@ const PostComposer = ({
 		}
 	};
 
-	const handleSearchChange = e => {
+	const handleSearchChange = (e) => {
 		setSearchTerm(e.target.value);
 	};
 
-	const isPostDisabled = submitting || uploadingImages || (!content.trim() && images.length === 0);
+	const isPostDisabled =
+		submitting || uploadingImages || (!content.trim() && images.length === 0);
 	const characterCount = content.length;
 	const characterLimit = 280;
 	const isOverLimit = characterCount > characterLimit;
 
-	const activeClassName = type => {
+	const activeClassName = (type) => {
 		return `btn-sm ${
-			currentSelected === type ? "btn-primary" : "border-1 text-muted bg-light"
+			currentSelected === type
+				? "btn-primary"
+				: "border border-1 text-muted bg-light"
 		} fw-bold p-2 rounded-4 d-flex align-items-center justify-content-center`;
+	};
+
+	const handlePollMultiple = (e) => {
+		const isChecked = e.target.checked;
+		setPollAllowMultiple(isChecked);
 	};
 
 	return (
@@ -383,12 +418,17 @@ const PostComposer = ({
 							roundedCircle
 							width="48"
 							height="48"
-							style={{ objectFit: "cover", minWidth: "48px", minHeight: "48px" }}
+							style={{
+								objectFit: "cover",
+								minWidth: "48px",
+								minHeight: "48px",
+							}}
 						/>
 						<div
 							className="flex-grow-1 d-flex align-items-center bg-light rounded-pill px-4 py-0 mb-3 fs-6 cursor-pointer border"
 							onClick={() => setShowComposerModal(true)}
-							style={{ cursor: "pointer", minHeight: "52px" }}>
+							style={{ cursor: "pointer", minHeight: "52px" }}
+						>
 							<span className="text-muted fs-6">{placeholder}</span>
 						</div>
 					</div>
@@ -402,13 +442,15 @@ const PostComposer = ({
 				fullscreen="md-down"
 				backdrop="static"
 				onHide={() => setShowComposerModal(false)}
-				centered>
+				centered
+			>
 				<Modal.Header className="border-0 pb-0">
 					<div className="d-flex align-items-center w-100">
 						<Button
 							variant="link"
 							className="p-0 me-3 text-dark"
-							onClick={() => setShowComposerModal(false)}>
+							onClick={() => setShowComposerModal(false)}
+						>
 							<X size={35} />
 						</Button>
 						<h5 className="mb-0 flex-grow-1">Create Post</h5>
@@ -417,27 +459,20 @@ const PostComposer = ({
 							disabled={isPostDisabled || isOverLimit}
 							className="rounded-pill px-4 fw-bold"
 							style={{
-								backgroundColor: isPostDisabled || isOverLimit ? "#ccc" : "#1DA1F2",
+								backgroundColor:
+									isPostDisabled || isOverLimit ? "#ccc" : "#1DA1F2",
 								border: "none",
 								opacity: isPostDisabled || isOverLimit ? 0.5 : 1,
-							}}>
-							{submitting ? (
-								<Spinner
-									size="sm"
-									animation="border"
-								/>
-							) : (
-								"Post"
-							)}
+							}}
+						>
+							{submitting ? <Spinner size="sm" animation="border" /> : "Post"}
 						</Button>
 					</div>
 				</Modal.Header>
 
 				<Modal.Body className="pt-2">
 					{error && (
-						<Alert
-							variant="danger"
-							className="mb-3">
+						<Alert variant="danger" className="mb-3">
 							{error}
 						</Alert>
 					)}
@@ -445,7 +480,9 @@ const PostComposer = ({
 					<Form onSubmit={handleSubmit}>
 						<div className="d-flex gap-3">
 							<Image
-								src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
+								src={
+									currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"
+								}
 								alt="avatar"
 								roundedCircle
 								width="48"
@@ -462,8 +499,13 @@ const PostComposer = ({
 									<Dropdown>
 										<Dropdown.Toggle
 											variant="link"
-											className="border-0 bg-light rounded-pill px-3 py-1 text-decoration-none text-start d-flex align-items-center gap-2"
-											style={{ fontSize: "14px", color: "#1DA1F2", width: "auto" }}>
+											className="border border-1 bg-light rounded-pill px-3 py-1 text-decoration-none text-start d-flex align-items-center gap-2"
+											style={{
+												fontSize: "14px",
+												color: "#1DA1F2",
+												width: "auto",
+											}}
+										>
 											{privacy === "public" && (
 												<>
 													<Globe size={14} />
@@ -486,12 +528,16 @@ const PostComposer = ({
 
 										<Dropdown.Menu
 											className="shadow-sm border"
-											style={{ minWidth: "200px" }}>
+											style={{ minWidth: "200px" }}
+										>
 											<Dropdown.Item
 												onClick={() => setPrivacy("public")}
 												className={`d-flex align-items-center gap-2 ${
-													privacy === "public" ? "bg-primary bg-opacity-10 text-primary" : ""
-												}`}>
+													privacy === "public"
+														? "bg-primary bg-opacity-10 text-primary"
+														: ""
+												}`}
+											>
 												<Globe size={16} />
 												<div>
 													<div className="fw-bold">Everyone</div>
@@ -502,24 +548,34 @@ const PostComposer = ({
 											<Dropdown.Item
 												onClick={() => setPrivacy("followers")}
 												className={`d-flex align-items-center gap-2 ${
-													privacy === "followers" ? "bg-primary bg-opacity-10 text-primary" : ""
-												}`}>
+													privacy === "followers"
+														? "bg-primary bg-opacity-10 text-primary"
+														: ""
+												}`}
+											>
 												<PersonFill size={16} />
 												<div>
 													<div className="fw-bold">Followers</div>
-													<small className="text-muted">Only followers can reply</small>
+													<small className="text-muted">
+														Only followers can reply
+													</small>
 												</div>
 											</Dropdown.Item>
 
 											<Dropdown.Item
 												onClick={() => setPrivacy("private")}
 												className={`d-flex align-items-center gap-2 ${
-													privacy === "private" ? "bg-primary bg-opacity-10 text-primary" : ""
-												}`}>
+													privacy === "private"
+														? "bg-primary bg-opacity-10 text-primary"
+														: ""
+												}`}
+											>
 												<Lock size={16} />
 												<div>
 													<div className="fw-bold">Only you</div>
-													<small className="text-muted">Only you can see this post</small>
+													<small className="text-muted">
+														Only you can see this post
+													</small>
 												</div>
 											</Dropdown.Item>
 										</Dropdown.Menu>
@@ -549,7 +605,7 @@ const PostComposer = ({
 									<Form.Control
 										type="url"
 										value={liveVideoUrl}
-										onChange={e => setLiveVideoUrl(e.target.value)}
+										onChange={(e) => setLiveVideoUrl(e.target.value)}
 										placeholder="Live video stream URL (optional)"
 										className="border-0 shadow-none mt-2"
 										style={{ fontSize: "16px" }}
@@ -557,14 +613,16 @@ const PostComposer = ({
 								)}
 
 								{/* Poll Options */}
-								{postType === "poll" && (
-									<div className="mt-3 p-3 border rounded-3" style={{ backgroundColor: "#f8f9fa" }}>
+								{postType === "poll" && currentSelected === "poll" && (
+									<div className="mt-3 p-3 border rounded-3 animate__animated animate__fadeIn">
 										<div className="d-flex align-items-center justify-content-between mb-3">
 											<h6 className="mb-0">Poll Options</h6>
 											<Form.Select
 												size="sm"
 												value={pollDuration}
-												onChange={e => setPollDuration(Number(e.target.value))}
+												onChange={(e) =>
+													setPollDuration(Number(e.target.value))
+												}
 												style={{ width: "auto" }}
 											>
 												<option value={1}>1 hour</option>
@@ -576,11 +634,16 @@ const PostComposer = ({
 											</Form.Select>
 										</div>
 										{pollOptions.map((option, index) => (
-											<div key={index} className="d-flex align-items-center gap-2 mb-2">
+											<div
+												key={index}
+												className="d-flex align-items-center gap-2 mb-2"
+											>
 												<Form.Control
 													type="text"
 													value={option}
-													onChange={e => handlePollOptionChange(index, e.target.value)}
+													onChange={(e) =>
+														handlePollOptionChange(index, e.target.value)
+													}
 													placeholder={`Option ${index + 1}`}
 													className="border-1"
 													maxLength={25}
@@ -596,6 +659,14 @@ const PostComposer = ({
 												)}
 											</div>
 										))}
+
+										<Form.Check
+											id="poll-allow-multiple"
+											type="switch"
+											label="Multiple Choices"
+											onChange={(e) => handlePollMultiple(e)}
+											className="shadow-none"
+										/>
 										{pollOptions.length < 4 && (
 											<Button
 												variant="outline-primary"
@@ -614,7 +685,8 @@ const PostComposer = ({
 									<div className="mt-3">
 										<div
 											className="border rounded-3 p-2"
-											style={{ backgroundColor: "#f8f9fa" }}>
+											style={{ backgroundColor: "#f8f9fa" }}
+										>
 											{images.length === 1 ? (
 												// Single image
 												<div className="position-relative">
@@ -631,8 +703,13 @@ const PostComposer = ({
 														variant="dark"
 														size="sm"
 														className="position-absolute top-0 end-0 m-2 rounded-circle d-flex align-items-center justify-content-center"
-														style={{ width: "32px", height: "32px", opacity: 0.8 }}
-														onClick={() => removeImage(0)}>
+														style={{
+															width: "32px",
+															height: "32px",
+															opacity: 0.8,
+														}}
+														onClick={() => removeImage(0)}
+													>
 														<X size={16} />
 													</Button>
 												</div>
@@ -640,9 +717,7 @@ const PostComposer = ({
 												// Two images side by side
 												<Row className="g-2">
 													{images.map((image, index) => (
-														<Col
-															key={index}
-															xs={6}>
+														<Col key={index} xs={6}>
 															<div className="position-relative">
 																<Image
 																	src={image}
@@ -657,8 +732,13 @@ const PostComposer = ({
 																	variant="dark"
 																	size="sm"
 																	className="position-absolute top-0 end-0 m-2 rounded-circle d-flex align-items-center justify-content-center"
-																	style={{ width: "28px", height: "28px", opacity: 0.8 }}
-																	onClick={() => removeImage(index)}>
+																	style={{
+																		width: "28px",
+																		height: "28px",
+																		opacity: 0.8,
+																	}}
+																	onClick={() => removeImage(index)}
+																>
 																	<X size={12} />
 																</Button>
 															</div>
@@ -675,7 +755,8 @@ const PostComposer = ({
 																alt="Upload 1"
 																className="rounded-3 w-100"
 																style={{
-																	height: images.length === 3 ? "260px" : "150px",
+																	height:
+																		images.length === 3 ? "260px" : "150px",
 																	objectFit: "cover",
 																}}
 															/>
@@ -683,8 +764,13 @@ const PostComposer = ({
 																variant="dark"
 																size="sm"
 																className="position-absolute top-0 end-0 m-2 rounded-circle d-flex align-items-center justify-content-center"
-																style={{ width: "28px", height: "28px", opacity: 0.8 }}
-																onClick={() => removeImage(0)}>
+																style={{
+																	width: "28px",
+																	height: "28px",
+																	opacity: 0.8,
+																}}
+																onClick={() => removeImage(0)}
+															>
 																<X size={12} />
 															</Button>
 														</div>
@@ -694,13 +780,19 @@ const PostComposer = ({
 															{images.slice(1).map((image, index) => (
 																<div
 																	key={index + 1}
-																	className="position-relative">
+																	className="position-relative"
+																>
 																	<Image
 																		src={image}
 																		alt={`Upload ${index + 2}`}
 																		className="rounded-3 w-100"
 																		style={{
-																			height: images.length === 3 ? (index === 0 ? "125px" : "125px") : "72px",
+																			height:
+																				images.length === 3
+																					? index === 0
+																						? "125px"
+																						: "125px"
+																					: "72px",
 																			objectFit: "cover",
 																		}}
 																	/>
@@ -708,8 +800,13 @@ const PostComposer = ({
 																		variant="dark"
 																		size="sm"
 																		className="position-absolute top-0 end-0 m-1 rounded-circle d-flex align-items-center justify-content-center"
-																		style={{ width: "24px", height: "24px", opacity: 0.8 }}
-																		onClick={() => removeImage(index + 1)}>
+																		style={{
+																			width: "24px",
+																			height: "24px",
+																			opacity: 0.8,
+																		}}
+																		onClick={() => removeImage(index + 1)}
+																	>
 																		<X size={10} />
 																	</Button>
 																</div>
@@ -725,11 +822,7 @@ const PostComposer = ({
 								{/* Upload Progress */}
 								{uploadingImages && (
 									<div className="mt-3 p-3 bg-light rounded-3 text-center">
-										<Spinner
-											size="sm"
-											animation="border"
-											className="me-2"
-										/>
+										<Spinner size="sm" animation="border" className="me-2" />
 										<span className="text-muted">Uploading images...</span>
 									</div>
 								)}
@@ -747,9 +840,16 @@ const PostComposer = ({
 								className={activeClassName("text")}
 								onClick={() => {
 									setCurrentSelected("text");
+									setPostType("text");
+									setPlaceholder("What's happening?");
 								}}
-								disabled={uploadingImages || images.length >= getImageUploadLimit(currentUser?.subscription)}
-								title="Text Post">
+								disabled={
+									uploadingImages ||
+									images.length >=
+										getImageUploadLimit(currentUser?.subscription)
+								}
+								title="Text Post"
+							>
 								<Type size={18} />
 							</Button>
 							<Button
@@ -758,10 +858,16 @@ const PostComposer = ({
 								className={activeClassName("image")}
 								onClick={() => {
 									setCurrentSelected("image");
+									setPlaceholder("What's happening?");
 									fileInputRef.current.click();
 								}}
-								disabled={uploadingImages || images.length >= getImageUploadLimit(currentUser?.subscription)}
-								title="Add Photos">
+								disabled={
+									uploadingImages ||
+									images.length >=
+										getImageUploadLimit(currentUser?.subscription)
+								}
+								title="Add Photos"
+							>
 								<Camera size={18} />
 							</Button>
 							<input
@@ -779,8 +885,10 @@ const PostComposer = ({
 								onClick={() => {
 									setCurrentSelected("gif");
 									setShowStickerModal(true);
+									setPlaceholder("What's happening?");
 								}}
-								title="Add GIF">
+								title="Add GIF"
+							>
 								<EmojiSmile size={18} />
 							</Button>
 							<Button
@@ -790,16 +898,22 @@ const PostComposer = ({
 								onClick={() => {
 									setCurrentSelected("poll");
 									setPostType("poll");
+									setPlaceholder("Ask a question...");
 								}}
-								title="Create Poll">
+								title="Create Poll"
+							>
 								<BarChart size={18} />
 							</Button>
 							<Button
 								variant="link"
 								size="sm"
 								className={`${activeClassName("live")} ${isStreaming ? "btn-danger" : ""}`}
-								onClick={() => setShowLiveStudioModal(true)}
-								title={isStreaming ? "Manage Live Stream" : "Go Live"}>
+								onClick={() => {
+									setPlaceholder("What's happening?");
+									setShowLiveStudioModal(true);
+								}}
+								title={isStreaming ? "Manage Live Stream" : "Go Live"}
+							>
 								<CameraVideo size={18} />
 							</Button>
 						</div>
@@ -808,16 +922,19 @@ const PostComposer = ({
 							{/* Character Count */}
 							{characterCount > 0 && (
 								<div className="d-flex align-items-center gap-2">
-									<svg
-										width="20"
-										height="20"
-										viewBox="0 0 20 20">
+									<svg width="20" height="20" viewBox="0 0 20 20">
 										<circle
 											cx="10"
 											cy="10"
 											r="8"
 											fill="none"
-											stroke={isOverLimit ? "#ff6b6b" : characterCount > characterLimit * 0.8 ? "#ffb347" : "#e1e8ed"}
+											stroke={
+												isOverLimit
+													? "#ff6b6b"
+													: characterCount > characterLimit * 0.8
+														? "#ffb347"
+														: "#e1e8ed"
+											}
 											strokeWidth="2"
 										/>
 										<circle
@@ -832,12 +949,18 @@ const PostComposer = ({
 											transform="rotate(-90 10 10)"
 										/>
 									</svg>
-									<small className={`fw-bold ${isOverLimit ? "text-danger" : "text-muted"}`}>{characterLimit - characterCount}</small>
+									<small
+										className={`fw-bold ${isOverLimit ? "text-danger" : "text-muted"}`}
+									>
+										{characterLimit - characterCount}
+									</small>
 								</div>
 							)}
 
 							{/* Privacy Indicator */}
-							<div className="d-flex align-items-center text-muted">{getPrivacyIcon()}</div>
+							<div className="d-flex align-items-center text-muted">
+								{getPrivacyIcon()}
+							</div>
 						</div>
 					</div>
 				</Modal.Footer>
@@ -849,10 +972,9 @@ const PostComposer = ({
 				onHide={() => setShowStickerModal(false)}
 				fullscreen="md-down"
 				centered
-				size="lg">
-				<Modal.Header
-					closeButton
-					className="border-0">
+				size="lg"
+			>
+				<Modal.Header closeButton className="border-0">
 					<Modal.Title>Choose a GIF</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
