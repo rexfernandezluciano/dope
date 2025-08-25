@@ -736,22 +736,53 @@ button, [role="button"] {
 	}
 }
 
-/* Custom scrollbar for better UX */
-::-webkit-scrollbar {
+/* Custom scrollbar for better UX - Global Default */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: #0069B5 #f1f1f1;
+}
+
+*::-webkit-scrollbar {
 	width: 8px;
+	height: 8px;
 }
 
-::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
 	background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-	background: #c1c1c1;
 	border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-	background: #a8a8a8;
+*::-webkit-scrollbar-thumb {
+	background: #0069B5;
+	border-radius: 4px;
+	transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+	background: #006c96;
+}
+
+*::-webkit-scrollbar-thumb:active {
+	background: #005580;
+}
+
+*::-webkit-scrollbar-corner {
+	background: #f1f1f1;
+}
+
+/* Dark mode scrollbar support */
+@media (prefers-color-scheme: dark) {
+	* {
+		scrollbar-color: #0069B5 #2d2d2d;
+	}
+	
+	*::-webkit-scrollbar-track {
+		background: #2d2d2d;
+	}
+	
+	*::-webkit-scrollbar-corner {
+		background: #2d2d2d;
+	}
 }
 
 /* Advertisement styles */
