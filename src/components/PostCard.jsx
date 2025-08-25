@@ -46,7 +46,6 @@ const PostCard = ({
 	const [viewTracked, setViewTracked] = useState(false);
 	const [showComments, setShowComments] = useState(false); // Local state for comments visibility
 	const [localComments, setLocalComments] = useState([]);
-	const [pollVotes, setPollVotes] = useState(post.poll?.votes || []);
 	const [userVotedOption, setUserVotedOption] = useState(null);
 
 	// Initialize local comments and showComments state based on props
@@ -57,10 +56,13 @@ const PostCard = ({
 		
 		// Initialize poll voting state
 		if (post.poll && currentUser) {
-			const userVote = post.poll.votes.findIndex(vote => 
-				vote.voters.some(voter => voter === currentUser.uid)
-			);
-			setUserVotedOption(userVote >= 0 ? userVote : null);
+			// Check if user has voted based on hasUserVoted flag or find user's choice
+			if (post.poll.hasUserVoted) {
+				const userChoice = post.poll.options.findIndex(option => option.isUserChoice);
+				setUserVotedOption(userChoice >= 0 ? userChoice : null);
+			} else {
+				setUserVotedOption(null);
+			}
 		}
 	}, [comments, propShowComments, post.poll, currentUser]);
 
@@ -227,14 +229,19 @@ const PostCard = ({
 	}, []);
 
 	const handlePollVote = useCallback(async (optionIndex) => {
-		if (!currentUser || userVotedOption !== null) return;
+		if (!currentUser || post.poll.hasUserVoted || post.poll.isExpired) return;
 		
 		try {
 			const response = await postAPI.votePoll(post.id, optionIndex);
+			if (response && response.success) {
+				// Update the post poll data with the response
+				// This would typically be handled by a parent component or state management
+				console.log('Poll vote successful:', response);
+			}
 		} catch (error) {
 			console.error('Failed to vote on poll:', error);
 		}
-	}, [currentUser, userVotedOption, post.id]);
+	}, [currentUser, post.poll.hasUserVoted, post.poll.isExpired, post.id]);
 
 	return (
 		<>
@@ -422,14 +429,18 @@ const PostCard = ({
 											<h6 className="mb-0">Poll</h6>
 											<small className="text-muted">
 												{(() => {
-													const now = new Date();
-													const endTime = new Date(post.createdAt + (post.poll?.expiresIn || 24 * 60 * 60 * 1000));
-													
-													if (post.poll?.isExpired) {
+													if (post.poll.isExpired) {
 														return "Poll ended";
 													}
 													
+													const now = new Date();
+													const endTime = new Date(post.poll.expiresAt);
 													const timeLeft = endTime - now;
+													
+													if (timeLeft <= 0) {
+														return "Poll ended";
+													}
+													
 													const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
 													const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
 													
@@ -442,44 +453,40 @@ const PostCard = ({
 											</small>
 										</div>
 										
-										{post.poll?.options.map((option, index) => {
-											const totalVotes = post.poll?.totalVotes || 0;;
-											const percentage = post.poll?. percentage;
-											const isUserChoice = post.poll?.isUserChoice || false;
-											const canVote = currentUser && userVotedOption === null;
-											const isExpired = post.poll?.isExpired || false;
+										{post.poll.options.map((option, index) => {
+											const canVote = currentUser && !post.poll.hasUserVoted && !post.poll.isExpired;
 											
 											return (
 												<div
-													key={index}
+													key={option.id || index}
 													className={`position-relative border rounded-3 p-2 mb-2 ${
-														canVote && !isExpired ? "cursor-pointer" : ""
+														canVote ? "cursor-pointer" : ""
 													} ${
-														isUserChoice ? "border-primary bg-primary bg-opacity-10" : "border-secondary"
+														option.isUserChoice ? "border-primary bg-primary bg-opacity-10" : "border-secondary"
 													}`}
 													style={{ 
-														cursor: canVote && !isExpired ? "pointer" : "default",
+														cursor: canVote ? "pointer" : "default",
 														overflow: "hidden"
 													}}
-													onClick={() => canVote && !isExpired && handlePollVote(index)}
+													onClick={() => canVote && handlePollVote(index)}
 												>
 													{/* Progress bar background */}
 													<div
 														className="position-absolute top-0 start-0 h-100 bg-light"
 														style={{
-															width: `${percentage}%`,
+															width: `${option.percentage}%`,
 															opacity: 0.3,
 															zIndex: 1,
 														}}
 													/>
 													
 													<div className="position-relative d-flex justify-content-between align-items-center" style={{ zIndex: 2 }}>
-														<span className={`${isUserChoice ? "fw-bold text-primary" : ""}`}>
+														<span className={`${option.isUserChoice ? "fw-bold text-primary" : ""}`}>
 															{option.text}
-															{isUserChoice && " ✓"}
+															{option.isUserChoice && " ✓"}
 														</span>
 														<span className="text-muted small">
-															{percentage}% ({totalVotes})
+															{option.percentage}% ({option.votes})
 														</span>
 													</div>
 												</div>
@@ -487,7 +494,7 @@ const PostCard = ({
 										})}
 										
 										<div className="text-muted small mt-2">
-											{post.poll?.totalVotes} votes
+											{post.poll.totalVotes} votes
 										</div>
 									</div>
 								</div>
