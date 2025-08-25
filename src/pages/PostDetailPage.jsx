@@ -390,7 +390,7 @@ const PostDetailPage = () => {
 	};
 
 	const handlePollVote = useCallback(async (optionIndex) => {
-		if (!currentUser || userVotedOption !== null) return;
+		if (!currentUser || userVotedOption !== null || !post) return;
 
 		try {
 			const response = await postAPI.votePoll(post.id, optionIndex);
@@ -402,7 +402,7 @@ const PostDetailPage = () => {
 			console.error('Failed to vote on poll:', error);
 			setError('Failed to vote on poll');
 		}
-	}, [currentUser, userVotedOption, post.id]);
+	}, [currentUser, userVotedOption, post]);
 
 	const handleSubmitComment = useCallback(async (e) => {
 		e.preventDefault();
