@@ -602,7 +602,7 @@ const AnalyticsPage = () => {
 				<Row className="g-3 mb-4">
 					<Col xs={6} lg={3}>
 						<StatCard
-							value={analytics?.revenue?.totalRevenueFormatted || "₱0.00"}
+							value={analytics?.revenue?.totalRevenue || "$0.00"}
 							label="Total Revenue"
 							subtitle={`${revenueGrowth >= 0 ? '+' : ''}${revenueGrowth.toFixed(1)}% vs last month`}
 							variant="success"
@@ -610,7 +610,7 @@ const AnalyticsPage = () => {
 					</Col>
 					<Col xs={6} lg={3}>
 						<StatCard
-							value={analytics?.revenue?.breakdown?.adRevenue?.formatted || "₱0.00"}
+							value={analytics?.revenue?.breakdown?.adRevenue?.formatted || "$0.00"}
 							label="Ad Revenue"
 							subtitle={`${analytics?.revenue?.breakdown?.adRevenue?.percentage || 0}% of total`}
 							variant="info"
@@ -618,7 +618,7 @@ const AnalyticsPage = () => {
 					</Col>
 					<Col xs={6} lg={3}>
 						<StatCard
-							value={analytics?.revenue?.breakdown?.subscriptionRevenue?.formatted || "₱0.00"}
+							value={analytics?.revenue?.breakdown?.subscriptionRevenue?.formatted || "$0.00"}
 							label="Subscriptions"
 							subtitle={`${analytics?.revenue?.breakdown?.subscriptionRevenue?.percentage || 0}% of total`}
 							variant="warning"
@@ -626,7 +626,7 @@ const AnalyticsPage = () => {
 					</Col>
 					<Col xs={6} lg={3}>
 						<StatCard
-							value={`${analytics?.revenue?.breakdown?.tipsEarned?.formatted || "₱0.00"} + ${analytics?.revenue?.breakdown?.donationsEarned?.formatted || "₱0.00"}`}
+							value={`${analytics?.revenue?.breakdown?.tipsEarned?.formatted || "$0.00"} + ${analytics?.revenue?.breakdown?.donationsEarned?.formatted || "$0.00"}`}
 							label="Tips & Donations"
 							subtitle={`${(analytics?.revenue?.breakdown?.tipsEarned?.percentage || 0) + (analytics?.revenue?.breakdown?.donationsEarned?.percentage || 0)}% of total`}
 							variant="danger"
