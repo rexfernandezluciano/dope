@@ -67,6 +67,8 @@ const PostDetailPage = () => {
 	const [commentIsAnonymous, setCommentIsAnonymous] = useState(false);
 	const [pollVotes, setPollVotes] = useState(post?.poll?.votes || []);
 	const [userVotedOption, setUserVotedOption] = useState(null);
+	const [liked, setLiked] = useState(false);
+	const [likeCount, setLikeCount] = useState(0);
 
 	const loadPost = useCallback(async () => {
 		try {
