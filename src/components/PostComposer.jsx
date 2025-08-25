@@ -22,9 +22,7 @@ import {
 	X,
 	Search,
 	CameraVideo,
-	GeoAlt,
-	Calendar3,
-	BarChart,
+	Type
 } from "react-bootstrap-icons";
 import { postAPI, imageAPI } from "../config/ApiConfig";
 import MentionDropdown from "./MentionDropdown";
@@ -663,7 +661,7 @@ const PostComposer = ({
 								}}
 								disabled={uploadingImages || images.length >= getImageUploadLimit(currentUser?.subscription)}
 								title="Text Post">
-								<i className="bi bi-fonts fs-5"></i>
+								<Type size={18} />
 							</Button>
 							<Button
 								variant="link"

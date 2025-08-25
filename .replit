@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web", "nodejs-22"]
+modules = ["web", "nodejs-22"]
 run = "npm run start"
 
 [nix]
@@ -20,28 +20,10 @@ externalPort = 5000
 runButton = "Development Server"
 
 [[workflows.workflow]]
-name = "Proxy Server"
-author = 17645371
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node proxy-server.js"
-
-[[workflows.workflow]]
-name = "SSR Server"
-author = 17645371
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node ssr-server.js"
-
-[[workflows.workflow]]
 name = "Development Server"
 author = 17645371
 mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "node ssr-server.js"
+args = "npm run dev"

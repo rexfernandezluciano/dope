@@ -381,7 +381,7 @@ const NavigationView = ({ children }) => {
 									</small>
 									<div className="mt-1">
 										<small className="text-success fw-bold d-flex align-items-center justify-content-center">
-												₱{centavosToPesos(credits?.creditsInCentavos || "0.00").toFixed(2)}
+												${centavosToPesos(credits?.creditsInCentavos || "0.00").toFixed(2)}
 										</small>
 									</div>
 								</div>
