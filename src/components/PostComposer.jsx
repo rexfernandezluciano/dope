@@ -303,14 +303,8 @@ const PostComposer = ({
 				setSubmitting(true);
 				setError("");
 
-				const postData = {
-					content: cleanContent,
-					imageUrls: images,
-					privacy: privacy.toLowerCase(),
-					postType,
-				};
+				let postData = {};
 
-				// Check if the post type is poll and set options accordingly
 				if (postType === "poll") {
 					const validOptions = pollOptions.filter(
 						(option) => option.trim() !== "",
@@ -321,16 +315,31 @@ const PostComposer = ({
 						return;
 					}
 
-					postData.poll = {
-						questions: cleanContent,
-						options: validOptions.map((option) => ({ text: option })),
-						expiresIn: pollDuration * 60 * 60 * 1000, // Convert hours to milliseconds
-						allowMultiple: pollAllowMultiple,
+					postData = {
+						content: cleanContent,
+						postType: "poll",
+						privacy: privacy.toLowerCase(),
+						poll: {
+							question: cleanContent,
+							options: validOptions.map((option) => ({ text: option })),
+							expiresIn: pollDuration * 60,
+							allowMultiple: pollAllowMultiple,
+						}
 					};
-				}
-
-				if (postType === "live_video" && liveVideoUrl) {
-					postData.liveVideoUrl = liveVideoUrl;
+				} else if (postType === "live_video" && liveVideoUrl) {
+					postData = {
+						liveVideoUrl: liveVideoUrl,
+						postType: "live_video",
+						privacy: privacy.toLowerCase(),
+					};
+				} else {
+					// Default text post with or without images
+					postData = {
+						content: cleanContent,
+						imageUrls: images,
+						postType: "text",
+						privacy: privacy.toLowerCase(),
+					};
 				}
 
 				console.log("Post Data:", JSON.stringify(postData));
