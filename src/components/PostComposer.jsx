@@ -1,8 +1,31 @@
 /** @format */
-
 import React, { useState, useRef, useCallback } from "react";
-import { Card, Form, Button, Image, Alert, Spinner, Modal, InputGroup, Row, Col, Dropdown } from "react-bootstrap";
-import { Camera, Globe, Lock, PersonFill, EmojiSmile, X, Search, CameraVideo, GeoAlt, Calendar3, BarChart } from "react-bootstrap-icons";
+import {
+	Card,
+	Form,
+	Button,
+	Image,
+	Alert,
+	Spinner,
+	Modal,
+	InputGroup,
+	Row,
+	Col,
+	Dropdown,
+} from "react-bootstrap";
+import {
+	Camera,
+	Globe,
+	Lock,
+	PersonFill,
+	EmojiSmile,
+	X,
+	Search,
+	CameraVideo,
+	GeoAlt,
+	Calendar3,
+	BarChart,
+} from "react-bootstrap-icons";
 import { postAPI, imageAPI } from "../config/ApiConfig";
 import MentionDropdown from "./MentionDropdown";
 import LiveStudioModal from "./LiveStudioModal";
@@ -11,7 +34,11 @@ import { Grid } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import heic2any from "heic2any";
 
-const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happening?" }) => {
+const PostComposer = ({
+	currentUser,
+	onPostCreated,
+	placeholder = "What's happening?",
+}) => {
 	const [showComposerModal, setShowComposerModal] = useState(false);
 	const [content, setContent] = useState("");
 	const [images, setImages] = useState([]);
@@ -35,7 +62,8 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 	const fileInputRef = useRef(null);
 
 	const gf = new GiphyFetch("BXvRq8D03IHvybiQ6Fjls2pkPJLXjx9x");
-	const fetchGifs = offset => (searchTerm ? gf.search(searchTerm, { offset, limit: 12 }) : gf.trending({ offset, limit: 12 }));
+	const fetchGifs = offset =>
+		searchTerm ? gf.search(searchTerm, { offset, limit: 12 }) : gf.trending({ offset, limit: 12 });
 
 	const getImageUploadLimit = subscription => {
 		switch (subscription) {
@@ -156,7 +184,11 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 			const remainingSlots = imageLimit - currentImages.length;
 
 			if (files.length > remainingSlots) {
-				setError(`You can only upload ${remainingSlots} more image(s). ${imageLimit === 4 ? "Upgrade to Premium or Pro for more uploads." : ""}`);
+				setError(
+					`You can only upload ${remainingSlots} more image(s). ${
+						imageLimit === 4 ? "Upgrade to Premium or Pro for more uploads." : ""
+					}`,
+				);
 				e.target.value = "";
 				return;
 			}
@@ -299,17 +331,9 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 	const characterLimit = 280;
 	const isOverLimit = characterCount > characterLimit;
 
-	const activeClassName = () => {
-		return `${
-			currentSelected === "text"
-				? "btn-primary"
-				: currentSelected === "image"
-				? "btn-primary"
-				: currentSelected === "poll"
-				? "btn-primary"
-				: currentSelected === "gif"
-				? "btn-primary"
-				: "border-1 text-muted bg-light"
+	const activeClassName = type => {
+		return `btn-sm ${
+			currentSelected === type ? "btn-primary" : "border-1 text-muted bg-light"
 		} fw-bold p-2 rounded-4 d-flex align-items-center justify-content-center`;
 	};
 
@@ -431,7 +455,9 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 											style={{ minWidth: "200px" }}>
 											<Dropdown.Item
 												onClick={() => setPrivacy("public")}
-												className={`d-flex align-items-center gap-2 ${privacy === "public" ? "bg-primary bg-opacity-10 text-primary" : ""}`}>
+												className={`d-flex align-items-center gap-2 ${
+													privacy === "public" ? "bg-primary bg-opacity-10 text-primary" : ""
+												}`}>
 												<Globe size={16} />
 												<div>
 													<div className="fw-bold">Everyone</div>
@@ -441,7 +467,9 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 
 											<Dropdown.Item
 												onClick={() => setPrivacy("followers")}
-												className={`d-flex align-items-center gap-2 ${privacy === "followers" ? "bg-primary bg-opacity-10 text-primary" : ""}`}>
+												className={`d-flex align-items-center gap-2 ${
+													privacy === "followers" ? "bg-primary bg-opacity-10 text-primary" : ""
+												}`}>
 												<PersonFill size={16} />
 												<div>
 													<div className="fw-bold">Followers</div>
@@ -451,7 +479,9 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 
 											<Dropdown.Item
 												onClick={() => setPrivacy("private")}
-												className={`d-flex align-items-center gap-2 ${privacy === "private" ? "bg-primary bg-opacity-10 text-primary" : ""}`}>
+												className={`d-flex align-items-center gap-2 ${
+													privacy === "private" ? "bg-primary bg-opacity-10 text-primary" : ""
+												}`}>
 												<Lock size={16} />
 												<div>
 													<div className="fw-bold">Only you</div>
@@ -627,28 +657,25 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 							<Button
 								variant="link"
 								size="sm"
-								className={activeClassName}
+								className={activeClassName("text")}
 								onClick={() => {
 									setCurrentSelected("text");
 								}}
 								disabled={uploadingImages || images.length >= getImageUploadLimit(currentUser?.subscription)}
-								title="Text Post"
-								style={{ width: "36px", height: "36px" }}>
-								<Camera size={18} />
-								Text Post
+								title="Text Post">
+								<i className="bi bi-fonts fs-5"></i>
 							</Button>
 							<Button
 								variant="link"
 								size="sm"
-								className={activeClassName}
+								className={activeClassName("image")}
 								onClick={() => {
 									setCurrentSelected("image");
+									fileInputRef.current.click();
 								}}
 								disabled={uploadingImages || images.length >= getImageUploadLimit(currentUser?.subscription)}
-								title="Add Photos"
-								style={{ width: "36px", height: "36px" }}>
+								title="Add Photos">
 								<Camera size={18} />
-								Add Photos
 							</Button>
 							<input
 								ref={fileInputRef}
@@ -661,25 +688,21 @@ const PostComposer = ({ currentUser, onPostCreated, placeholder = "What's happen
 							<Button
 								variant="link"
 								size="sm"
-								className={activeClassName}
+								className={activeClassName("gif")}
 								onClick={() => {
 									setCurrentSelected("gif");
 									setShowStickerModal(true);
 								}}
-								title="Add GIF"
-								style={{ width: "36px", height: "36px" }}>
+								title="Add GIF">
 								<EmojiSmile size={18} />
-								GIF/Emoji
 							</Button>
 							<Button
 								variant="link"
 								size="sm"
-								className={`${activeClassName} ${isStreaming ? "btn-danger" : ""}`}
+								className={`${activeClassName("live")} ${isStreaming ? "btn-danger" : ""}`}
 								onClick={() => setShowLiveStudioModal(true)}
-								title={isStreaming ? "Manage Live Stream" : "Go Live"}
-								style={{ width: "36px", height: "36px" }}>
+								title={isStreaming ? "Manage Live Stream" : "Go Live"}>
 								<CameraVideo size={18} />
-								Go Live
 							</Button>
 						</div>
 
