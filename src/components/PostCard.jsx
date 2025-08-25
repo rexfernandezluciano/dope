@@ -46,13 +46,23 @@ const PostCard = ({
 	const [viewTracked, setViewTracked] = useState(false);
 	const [showComments, setShowComments] = useState(false); // Local state for comments visibility
 	const [localComments, setLocalComments] = useState([]);
+	const [pollVotes, setPollVotes] = useState(post.poll?.votes || []);
+	const [userVotedOption, setUserVotedOption] = useState(null);
 
 	// Initialize local comments and showComments state based on props
 	useEffect(() => {
 		setLocalComments(comments);
 		// Set initial showComments state based on prop, but allow it to be toggled by user action
-		setShowComments(propShowComments); 
-	}, [comments, propShowComments]);
+		setShowComments(propShowComments);
+		
+		// Initialize poll voting state
+		if (post.poll && currentUser) {
+			const userVote = post.poll.votes.findIndex(vote => 
+				vote.voters.some(voter => voter === currentUser.uid)
+			);
+			setUserVotedOption(userVote >= 0 ? userVote : null);
+		}
+	}, [comments, propShowComments, post.poll, currentUser]);
 
 	// Track view when post comes into view
 	useEffect(() => {
@@ -222,6 +232,20 @@ const PostCard = ({
 	const closePostOptionsModal = useCallback(() => {
 		setShowPostOptionsModal(false);
 	}, []);
+
+	const handlePollVote = useCallback(async (optionIndex) => {
+		if (!currentUser || userVotedOption !== null) return;
+		
+		try {
+			const response = await postAPI.votePoll(post.id, optionIndex);
+			if (response.success) {
+				setPollVotes(response.poll.votes);
+				setUserVotedOption(optionIndex);
+			}
+		} catch (error) {
+			console.error('Failed to vote on poll:', error);
+		}
+	}, [currentUser, userVotedOption, post.id]);
 
 	return (
 		<>
@@ -398,6 +422,87 @@ const PostCard = ({
 											)}
 										</div>
 									)}
+								</div>
+							)}
+
+							{/* Poll Display */}
+							{post.poll && (
+								<div className="mb-2">
+									<div className="border rounded-3 p-3" style={{ backgroundColor: "#f8f9fa" }}>
+										<div className="d-flex align-items-center justify-content-between mb-3">
+											<h6 className="mb-0">Poll</h6>
+											<small className="text-muted">
+												{(() => {
+													const now = new Date();
+													const endTime = new Date(post.createdAt + (post.poll.duration || 24 * 60 * 60 * 1000));
+													const isExpired = now > endTime;
+													
+													if (isExpired) {
+														return "Poll ended";
+													}
+													
+													const timeLeft = endTime - now;
+													const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+													const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+													
+													if (hoursLeft > 0) {
+														return `${hoursLeft}h ${minutesLeft}m left`;
+													} else {
+														return `${minutesLeft}m left`;
+													}
+												})()}
+											</small>
+										</div>
+										
+										{post.poll.options.map((option, index) => {
+											const votes = pollVotes[index]?.count || 0;
+											const totalVotes = pollVotes.reduce((sum, vote) => sum + (vote?.count || 0), 0);
+											const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+											const isUserChoice = userVotedOption === index;
+											const canVote = currentUser && userVotedOption === null;
+											const isExpired = new Date() > new Date(post.createdAt + (post.poll.duration || 24 * 60 * 60 * 1000));
+											
+											return (
+												<div
+													key={index}
+													className={`position-relative border rounded-3 p-2 mb-2 ${
+														canVote && !isExpired ? "cursor-pointer" : ""
+													} ${
+														isUserChoice ? "border-primary bg-primary bg-opacity-10" : "border-secondary"
+													}`}
+													style={{ 
+														cursor: canVote && !isExpired ? "pointer" : "default",
+														overflow: "hidden"
+													}}
+													onClick={() => canVote && !isExpired && handlePollVote(index)}
+												>
+													{/* Progress bar background */}
+													<div
+														className="position-absolute top-0 start-0 h-100 bg-light"
+														style={{
+															width: `${percentage}%`,
+															opacity: 0.3,
+															zIndex: 1,
+														}}
+													/>
+													
+													<div className="position-relative d-flex justify-content-between align-items-center" style={{ zIndex: 2 }}>
+														<span className={`${isUserChoice ? "fw-bold text-primary" : ""}`}>
+															{option}
+															{isUserChoice && " ✓"}
+														</span>
+														<span className="text-muted small">
+															{percentage}% ({votes})
+														</span>
+													</div>
+												</div>
+											);
+										})}
+										
+										<div className="text-muted small mt-2">
+											{pollVotes.reduce((sum, vote) => sum + (vote?.count || 0), 0)} votes
+										</div>
+									</div>
 								</div>
 							)}
 

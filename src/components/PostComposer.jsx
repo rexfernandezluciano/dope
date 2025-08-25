@@ -22,7 +22,8 @@ import {
 	X,
 	Search,
 	CameraVideo,
-	Type
+	Type,
+	BarChart
 } from "react-bootstrap-icons";
 import { postAPI, imageAPI } from "../config/ApiConfig";
 import MentionDropdown from "./MentionDropdown";
@@ -55,6 +56,8 @@ const PostComposer = ({
 	const [showLiveStudioModal, setShowLiveStudioModal] = useState(false);
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [currentSelected, setCurrentSelected] = useState("text");
+	const [pollOptions, setPollOptions] = useState(["", ""]);
+	const [pollDuration, setPollDuration] = useState(24); // hours
 
 	const textareaRef = useRef(null);
 	const fileInputRef = useRef(null);
@@ -255,6 +258,24 @@ const PostComposer = ({
 		setIsStreaming(false);
 	};
 
+	const handlePollOptionChange = (index, value) => {
+		const newOptions = [...pollOptions];
+		newOptions[index] = value;
+		setPollOptions(newOptions);
+	};
+
+	const addPollOption = () => {
+		if (pollOptions.length < 4) {
+			setPollOptions([...pollOptions, ""]);
+		}
+	};
+
+	const removePollOption = (index) => {
+		if (pollOptions.length > 2) {
+			setPollOptions(pollOptions.filter((_, i) => i !== index));
+		}
+	};
+
 	const handleSubmit = useCallback(
 		async e => {
 			e.preventDefault();
@@ -279,6 +300,19 @@ const PostComposer = ({
 					mentions: extractMentions(cleanContent),
 				};
 
+				if (postType === "poll") {
+					const validOptions = pollOptions.filter(option => option.trim() !== "");
+					if (validOptions.length < 2) {
+						setError("Poll must have at least 2 options");
+						return;
+					}
+					postData.poll = {
+						options: validOptions,
+						duration: pollDuration * 60 * 60 * 1000, // Convert hours to milliseconds
+						votes: validOptions.map(() => ({ count: 0, voters: [] }))
+					};
+				}
+
 				if (postType === "live_video" && liveVideoUrl) {
 					postData.liveVideoUrl = liveVideoUrl;
 				}
@@ -291,6 +325,8 @@ const PostComposer = ({
 				setLiveVideoUrl("");
 				setPrivacy("public");
 				setPostType("text");
+				setPollOptions(["", ""]);
+				setPollDuration(24);
 				setShowComposerModal(false);
 
 				onPostCreated?.(response.post);
@@ -520,6 +556,59 @@ const PostComposer = ({
 									/>
 								)}
 
+								{/* Poll Options */}
+								{postType === "poll" && (
+									<div className="mt-3 p-3 border rounded-3" style={{ backgroundColor: "#f8f9fa" }}>
+										<div className="d-flex align-items-center justify-content-between mb-3">
+											<h6 className="mb-0">Poll Options</h6>
+											<Form.Select
+												size="sm"
+												value={pollDuration}
+												onChange={e => setPollDuration(Number(e.target.value))}
+												style={{ width: "auto" }}
+											>
+												<option value={1}>1 hour</option>
+												<option value={6}>6 hours</option>
+												<option value={12}>12 hours</option>
+												<option value={24}>1 day</option>
+												<option value={72}>3 days</option>
+												<option value={168}>1 week</option>
+											</Form.Select>
+										</div>
+										{pollOptions.map((option, index) => (
+											<div key={index} className="d-flex align-items-center gap-2 mb-2">
+												<Form.Control
+													type="text"
+													value={option}
+													onChange={e => handlePollOptionChange(index, e.target.value)}
+													placeholder={`Option ${index + 1}`}
+													className="border-1"
+													maxLength={25}
+												/>
+												{pollOptions.length > 2 && (
+													<Button
+														variant="outline-danger"
+														size="sm"
+														onClick={() => removePollOption(index)}
+													>
+														<X size={16} />
+													</Button>
+												)}
+											</div>
+										))}
+										{pollOptions.length < 4 && (
+											<Button
+												variant="outline-primary"
+												size="sm"
+												onClick={addPollOption}
+												className="mt-2"
+											>
+												Add Option
+											</Button>
+										)}
+									</div>
+								)}
+
 								{/* Image Previews */}
 								{images.length > 0 && (
 									<div className="mt-3">
@@ -693,6 +782,17 @@ const PostComposer = ({
 								}}
 								title="Add GIF">
 								<EmojiSmile size={18} />
+							</Button>
+							<Button
+								variant="link"
+								size="sm"
+								className={activeClassName("poll")}
+								onClick={() => {
+									setCurrentSelected("poll");
+									setPostType("poll");
+								}}
+								title="Create Poll">
+								<BarChart size={18} />
 							</Button>
 							<Button
 								variant="link"

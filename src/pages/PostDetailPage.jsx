@@ -65,6 +65,8 @@ const PostDetailPage = () => {
 	const [commentTipAmount, setCommentTipAmount] = useState("");
 	const [commentDonationAmount, setCommentDonationAmount] = useState("");
 	const [commentIsAnonymous, setCommentIsAnonymous] = useState(false);
+	const [pollVotes, setPollVotes] = useState(post?.poll?.votes || []);
+	const [userVotedOption, setUserVotedOption] = useState(null);
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -129,6 +131,27 @@ const PostDetailPage = () => {
 			loadPost();
 		}
 	}, [postId, loadPost]);
+
+	// Initialize state from loader data
+	useEffect(() => {
+		if (loaderData?.post) {
+			setPost(loaderData.post);
+			setLiked(loaderData.post.likes?.some(like => like.user?.uid === currentUser?.uid) || false);
+			setLikeCount(loaderData.post.likes?.length || 0);
+
+			// Initialize poll voting state
+			if (loaderData.post.poll && currentUser) {
+				const userVote = loaderData.post.poll.votes.findIndex(vote =>
+					vote.voters.some(voter => voter === currentUser.uid)
+				);
+				setUserVotedOption(userVote >= 0 ? userVote : null);
+				setPollVotes(loaderData.post.poll.votes);
+			}
+		}
+		if (loaderData?.comments) {
+			setComments(loaderData.comments);
+		}
+	}, [loaderData, currentUser?.uid]);
 
 	// Set default comment mode based on post ownership
 	useEffect(() => {
@@ -364,15 +387,32 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const handleSubmitComment = async e => {
+	const handlePollVote = useCallback(async (optionIndex) => {
+		if (!currentUser || userVotedOption !== null) return;
+
+		try {
+			const response = await postAPI.votePoll(post.id, optionIndex);
+			if (response.success) {
+				setPollVotes(response.poll.votes);
+				setUserVotedOption(optionIndex);
+			}
+		} catch (error) {
+			console.error('Failed to vote on poll:', error);
+			setError('Failed to vote on poll');
+		}
+	}, [currentUser, userVotedOption, post.id]);
+
+	const handleSubmitComment = useCallback(async (e) => {
 		e.preventDefault();
-		if (!newComment.trim()) return;
+
+		const trimmedContent = newComment.trim();
+		if (!trimmedContent) return;
 
 		try {
 			setSubmitting(true);
 
 			let requestBody = {
-				content: newComment.trim(),
+				content: trimmedContent,
 			};
 
 			// Add tip data if applicable
@@ -449,7 +489,7 @@ const PostDetailPage = () => {
 		} finally {
 			setSubmitting(false);
 		}
-	};
+	}, [newComment, post.id, post.author.uid, currentUser, postId, commentMode, commentTipAmount, post, handleCommentNotification]);
 
 	const handleLikeComment = async commentId => {
 		try {
@@ -727,6 +767,46 @@ const PostDetailPage = () => {
 										onHashtagClick: handleHashtagClick,
 										onMentionClick: handleMentionClick,
 										onLinkClick: handleLinkClick,
+									})}
+								</div>
+							)}
+
+							{/* Poll Display */}
+							{post.poll && (
+								<div className="my-3 p-3 border rounded bg-light">
+									<h5 className="mb-3">{post.poll.question}</h5>
+									{post.poll.options.map((option, index) => {
+										const totalVotes = pollVotes.reduce((sum, pv) => sum + pv.count, 0);
+										const optionVotes = pollVotes.find(pv => pv.optionIndex === index)?.count || 0;
+										const percentage = totalVotes > 0 ? (optionVotes / totalVotes) * 100 : 0;
+
+										return (
+											<div
+												key={index}
+												className={`poll-option mb-2 p-2 rounded ${userVotedOption === index ? "border border-primary" : "border"}`}
+												onClick={() => handlePollVote(index)}
+												style={{ cursor: userVotedOption === null ? "pointer" : "default", backgroundColor: userVotedOption === index ? "rgba(23, 162, 184, 0.1)" : "white" }}>
+												<div className="d-flex justify-content-between align-items-center">
+													<span className="fw-bold">{option}</span>
+													{userVotedOption !== null && (
+														<span className="text-muted small">{percentage.toFixed(1)}%</span>
+													)}
+												</div>
+												{userVotedOption !== null && (
+													<div
+														className="progress mt-1"
+														style={{ height: "8px" }}>
+														<div
+															className={`progress-bar ${userVotedOption === index ? "bg-primary" : "bg-secondary"}`}
+															role="progressbar"
+															style={{ width: `${percentage}%` }}
+															aria-valuenow={percentage}
+															aria-valuemin="0"
+															aria-valuemax="100"></div>
+													</div>
+												)}
+											</div>
+										);
 									})}
 								</div>
 							)}
@@ -1137,7 +1217,7 @@ const PostDetailPage = () => {
 					))}
 				</div>
 			)}
-			
+
 			{/* Image Viewer Modal */}
 			{showImageViewer && (
 				<Modal

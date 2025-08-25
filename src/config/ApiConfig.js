@@ -7,7 +7,7 @@ import axios from "axios";
 const isUsingProxy = true;
 
 // Define API endpoints based on environment
-const API_ENDPOINTS = 
+const API_ENDPOINTS =
 	window.location.hostname.includes("replit.dev") ||
 	window.location.hostname.includes("replit.co") ||
 	window.location.hostname.includes("replit.app") ||
@@ -91,7 +91,7 @@ class HttpClient {
 
 	async makeRequest(endpoint, options = {}) {
 		// Add /v1 prefix if not already present, except for WebFinger and ActivityPub endpoints
-		const isWebFingerOrActivityPub = endpoint.startsWith("/.well-known") || 
+		const isWebFingerOrActivityPub = endpoint.startsWith("/.well-known") ||
 			endpoint.startsWith("/activitypub");
 
 		const normalizedEndpoint = endpoint.startsWith("/v1") || isWebFingerOrActivityPub
@@ -313,7 +313,7 @@ export const apiRequest = async (endpoint, options = {}) => {
 		if (!response?.ok) {
 			throw new Error(
 				response?.data?.message ||
-					`HTTP ${response?.status}: ${response?.statusText}`,
+				`HTTP ${response?.status}: ${response?.statusText}`,
 			);
 		}
 
@@ -1201,7 +1201,7 @@ export const analyticsAPI = {
 			apiRequest(`/analytics/user?period=${period}`),
 			apiRequest("/auth/me").catch(() => ({ monetization: null }))
 		]);
-		
+
 		// Merge monetization eligibility data from /auth/me into analytics
 		return {
 			...analyticsData,
@@ -1642,6 +1642,9 @@ export const api = {
 	updatePost: postAPI.updatePost,
 	deletePost: postAPI.deletePost,
 	likePost: postAPI.likePost,
+
+	// Polls
+	votePoll: (postId, optionIndex) => apiRequest(`/posts/${postId}/vote`, "POST", { optionIndex }),
 
 	// Users
 	getUser: userAPI.getUser,
