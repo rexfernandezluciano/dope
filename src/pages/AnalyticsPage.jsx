@@ -1,4 +1,3 @@
-
 /** @format */
 
 import React, { useState, useEffect } from "react";
@@ -511,7 +510,7 @@ const AnalyticsPage = () => {
 								</div>
 							</div>
 						)}
-						
+
 						<Row className="g-3">
 							{/* Followers Requirement */}
 							<Col md={4}>
@@ -945,7 +944,7 @@ const AnalyticsPage = () => {
 				</Card>
 			)}
 
-			
+
 		</Container>
 	);
 };
