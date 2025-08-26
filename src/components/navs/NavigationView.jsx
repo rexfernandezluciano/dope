@@ -252,6 +252,7 @@ const NavigationView = ({ children }) => {
 				}
 				// Still redirect
 				window.location.href = "/";
+			}
 		}
 	};
 
