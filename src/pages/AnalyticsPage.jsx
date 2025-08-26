@@ -6,7 +6,7 @@ import { analyticsAPI, subscriptionAPI } from "../config/ApiConfig";
 import { formatTimeAgo, formatCurrency } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { CheckCircle, XCircle } from 'react-bootstrap-icons';
+import { CheckCircle, XCircle, BarChartFill, TrendingUp, CurrencyDollar, PeopleFill } from 'react-bootstrap-icons';
 
 const AnalyticsPage = () => {
 	const [analytics, setAnalytics] = useState(null);
@@ -900,7 +900,7 @@ const AnalyticsPage = () => {
 					<Tab eventKey="overview" title={
 						<>
 							<span className="d-none d-md-inline">Overview</span>
-							<span className="d-md-none">📊</span>
+							<span className="d-md-none"><BarChartFill size={16} /></span>
 						</>
 					}>
 						{renderOverviewTab()}
@@ -908,7 +908,7 @@ const AnalyticsPage = () => {
 					<Tab eventKey="growth" title={
 						<>
 							<span className="d-none d-md-inline">Growth</span>
-							<span className="d-md-none">📈</span>
+							<span className="d-md-none"><TrendingUp size={16} /></span>
 						</>
 					}>
 						{renderGrowthTab()}
@@ -916,7 +916,7 @@ const AnalyticsPage = () => {
 					<Tab eventKey="monetization" title={
 						<>
 							<span className="d-none d-md-inline">Monetization</span>
-							<span className="d-md-none">💰</span>
+							<span className="d-md-none"><CurrencyDollar size={16} /></span>
 						</>
 					}>
 						{renderMonetizationTab()}
@@ -924,7 +924,7 @@ const AnalyticsPage = () => {
 					<Tab eventKey="subscribers" title={
 						<>
 							<span className="d-none d-md-inline">Subscribers</span>
-							<span className="d-md-none">👥</span>
+							<span className="d-md-none"><PeopleFill size={16} /></span>
 						</>
 					}>
 						{renderSubscriberTab()}
