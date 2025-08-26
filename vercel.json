@@ -1,26 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "builds": [
-    {
-      "src": "ssr-server.js",
-      "use": "@vercel/node",
-      "config": {
-        "maxDuration": 10,
-        "runtime": "nodejs22.x",
-        "installCommand": "npm install --legacy-peer-deps",
-        "buildCommand": "npm run build",
-        "startCommand": "npm run start",
-        "postInstallCommand": "npm run prisma generate --no-engine"
-      }
-    }
-  ],
-  "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
+  "framework": null,
+  "functions": {
+    "api/index.js": {
+      "runtime": "nodejs22.x",
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "ssr-server.js"
-    },
     {
       "source": "/v1/(.*)",
       "destination": "https://api.dopp.eu.org/v1/$1"
@@ -32,6 +21,18 @@
     {
       "source": "/.well-known/(.*)",
       "destination": "https://api.dopp.eu.org/.well-known/$1"
+    },
+    {
+      "source": "/static/(.*)",
+      "destination": "/static/$1"
+    },
+    {
+      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot))",
+      "destination": "/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/index.js"
     }
   ],
   "headers": [
