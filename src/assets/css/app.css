@@ -141,8 +141,8 @@ a:focus {
 
 .nav-tabs .nav-link.active {
   border-bottom: 2px solid #0069B5 !important;
-  background: #0069B5 !important;
-  color: #ffffff !important;
+  background: transparent !important;
+  color: #0069B5 !important;
   font-weight: 600;
   border-radius: 0.375rem 0.375rem 0 0 !important;
 }
