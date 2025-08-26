@@ -24,6 +24,7 @@ import {
 	CurrencyDollar,
 	Wallet,
 	ArrowUpCircle,
+	GraphUp
 } from "react-bootstrap-icons";
 import { updatePageMeta } from "../utils/meta-utils";
 import { businessAPI, postAPI, authAPI } from "../config/ApiConfig";
@@ -312,7 +313,7 @@ const BusinessPage = () => {
 		<Container fluid className="py-4">
 			<Row>
 				<Col>
-					<div className="d-flex align-items-center px-4 mb-4">
+					<div className="d-flex align-items-center px-2 mb-4">
 						<Bullseye size={32} className="me-3 text-primary" />
 						<div>
 							<h2>Business Dashboard</h2>
@@ -341,7 +342,7 @@ const BusinessPage = () => {
 							</Nav.Item>
 							<Nav.Item>
 								<Nav.Link eventKey="analytics">
-									<Bullseye className="me-2" size={16} />
+									<GraphUp className="me-2" size={16} />
 									Analytics
 								</Nav.Link>
 							</Nav.Item>

@@ -21,12 +21,15 @@ import {
 	Calendar,
 	Star,
 	Image,
-	Paypal
+	Paypal,
 } from "react-bootstrap-icons";
 
 import { userAPI, paymentAPI } from "../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
-import { loadPayPalSDK, createPayPalPaymentMethod } from "../config/PayPalConfig";
+import {
+	loadPayPalSDK,
+	createPayPalPaymentMethod,
+} from "../config/PayPalConfig";
 
 const SubscriptionPage = () => {
 	const { user } = useLoaderData();
@@ -61,32 +64,32 @@ const SubscriptionPage = () => {
 		expiryDate: "",
 		cvc: "",
 		cardholderName: "",
-		isDefault: false
+		isDefault: false,
 	});
 
 	// Format expiry date as MM/YY
 	const formatExpiryDate = (value) => {
 		// Remove all non-digits
-		const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+		const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
 
 		// Add slash after MM
 		if (v.length >= 2) {
-			return v.slice(0, 2) + '/' + v.slice(2, 4);
+			return v.slice(0, 2) + "/" + v.slice(2, 4);
 		}
 		return v;
 	};
 
 	// Format card number with spaces
 	const formatCardNumber = (value) => {
-		const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+		const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
 		const matches = v.match(/\d{4,16}/g);
-		const match = matches && matches[0] || '';
+		const match = (matches && matches[0]) || "";
 		const parts = [];
 		for (let i = 0, len = match.length; i < len; i += 4) {
 			parts.push(match.substring(i, i + 4));
 		}
 		if (parts.length) {
-			return parts.join(' ');
+			return parts.join(" ");
 		} else {
 			return v;
 		}
@@ -99,7 +102,9 @@ const SubscriptionPage = () => {
 			await loadPayPalSDK();
 
 			// Create PayPal payment method
-			const paymentMethodId = await createPayPalPaymentMethod('#paypal-card-container');
+			const paymentMethodId = await createPayPalPaymentMethod(
+				"#paypal-card-container",
+			);
 			return paymentMethodId;
 		} catch (error) {
 			throw new Error(`PayPal setup failed: ${error.message}`);
@@ -117,13 +122,17 @@ const SubscriptionPage = () => {
 				try {
 					await loadPayPalSDK();
 				} catch (sdkError) {
-					throw new Error("Failed to load PayPal SDK. Please refresh and try again.");
+					throw new Error(
+						"Failed to load PayPal SDK. Please refresh and try again.",
+					);
 				}
 
 				// Create PayPal payment method
 				let paymentMethodId;
 				try {
-					paymentMethodId = await createPayPalPaymentMethod("#paypal-card-container");
+					paymentMethodId = await createPayPalPaymentMethod(
+						"#paypal-card-container",
+					);
 				} catch (paypalError) {
 					throw new Error("PayPal card setup failed. Please try again.");
 				}
@@ -131,8 +140,12 @@ const SubscriptionPage = () => {
 				// Add the payment method to the user's account
 				const response = await paymentAPI.addPaymentMethod({
 					type: "paypal_card",
-					paymentMethodId: paymentMethodId,
-					isDefault: cardForm.isDefault
+					paypalPaymentMethodId: paymentMethodId,
+					last4: cardForm.cardNumber.substr(-4),
+					expiryMonth: cardForm.expiryDate,
+					expiryYear: cardForm.expiryYear,
+					holderName: cardForm.cardholderName,
+					isDefault: cardForm.isDefault,
 				});
 
 				if (response.success) {
@@ -143,9 +156,10 @@ const SubscriptionPage = () => {
 					setCardForm({
 						cardNumber: "",
 						expiryDate: "",
+						expiryYear: "",
 						cvc: "",
 						cardholderName: "",
-						isDefault: false
+						isDefault: false,
 					});
 					loadPaymentMethods(); // Reload payment methods
 				}
@@ -153,15 +167,12 @@ const SubscriptionPage = () => {
 				// For PayPal wallet, redirect to PayPal for authorization
 				const response = await paymentAPI.addPaymentMethod({
 					type: "paypal_wallet",
-					isDefault: true
+					paypalEmail: user.email,
+					isDefault: true,
 				});
 
-				if (response.approveUrl) {
-					setMessage("Redirecting to PayPal...");
-					setMessageType("info");
-					setTimeout(() => {
-						window.location.href = response.approveUrl;
-					}, 1000);
+				if (response) {
+					setMessage("PayPal Wallet added.");
 					return;
 				}
 			}
@@ -228,7 +239,6 @@ const SubscriptionPage = () => {
 		// If there's a need to refresh user data independently, implement it here.
 	};
 
-
 	useEffect(() => {
 		updatePageMeta(pageMetaData.subscription);
 		loadData();
@@ -267,7 +277,9 @@ const SubscriptionPage = () => {
 					// PayPal SDK loaded successfully
 				} catch (error) {
 					console.error("Failed to load PayPal SDK:", error);
-					setMessage("Failed to load PayPal SDK. Please refresh and try again.");
+					setMessage(
+						"Failed to load PayPal SDK. Please refresh and try again.",
+					);
 					setMessageType("danger");
 				}
 			};
@@ -276,7 +288,6 @@ const SubscriptionPage = () => {
 			setTimeout(initializePayPal, 500);
 		}
 	}, [showAddPaymentModal, selectedPaymentType]);
-
 
 	if (!user || typeof user !== "object") {
 		return (
@@ -303,7 +314,7 @@ const SubscriptionPage = () => {
 			id: "premium",
 			name: "Premium",
 			// Updated price to reflect the new API documentation (PHP 560)
-			price: "₱560",
+			price: "$9.99",
 			period: "month",
 			features: [
 				"10 images per post",
@@ -317,7 +328,7 @@ const SubscriptionPage = () => {
 			id: "pro",
 			name: "Pro",
 			// Updated price to reflect the new API documentation (PHP 1120)
-			price: "₱1,120",
+			price: "$25",
 			period: "month",
 			features: [
 				"Unlimited images per post",
@@ -334,7 +345,9 @@ const SubscriptionPage = () => {
 	const handleUpgrade = async (planId) => {
 		// Check if user is trying to upgrade to a paid plan
 		if (planId !== "free" && (!paymentMethods || paymentMethods.length === 0)) {
-			setMessage("Please add a payment method before upgrading to a paid plan.");
+			setMessage(
+				"Please add a payment method before upgrading to a paid plan.",
+			);
 			setMessageType("warning");
 			setShowAddPaymentModal(true);
 			return;
@@ -345,10 +358,14 @@ const SubscriptionPage = () => {
 
 			if (planId !== "free") {
 				// Find default payment method
-				const defaultPaymentMethod = paymentMethods.find(method => method.isDefault) || paymentMethods[0];
+				const defaultPaymentMethod =
+					paymentMethods.find((method) => method.isDefault) ||
+					paymentMethods[0];
 
 				if (!defaultPaymentMethod) {
-					setMessage("Please add a payment method before upgrading to a paid plan.");
+					setMessage(
+						"Please add a payment method before upgrading to a paid plan.",
+					);
 					setMessageType("warning");
 					setShowAddPaymentModal(true);
 					return;
@@ -357,15 +374,17 @@ const SubscriptionPage = () => {
 				// Use payment API for membership purchase
 				const purchaseResponse = await paymentAPI.purchaseMembership({
 					subscription: planId,
-					paymentMethodId: defaultPaymentMethod.id
+					paymentMethodId: defaultPaymentMethod.id,
 				});
 
 				if (isSignupFlow) {
-					setMessage(`Account created successfully with ${planId} plan! Redirecting to email verification...`);
+					setMessage(
+						`Account created successfully with ${planId} plan! Redirecting to email verification...`,
+					);
 					setMessageType("success");
 
 					// Clear pending signup data
-					sessionStorage.removeItem('pendingSignupData');
+					sessionStorage.removeItem("pendingSignupData");
 
 					// Redirect to verification after payment success
 					setTimeout(() => {
@@ -385,7 +404,11 @@ const SubscriptionPage = () => {
 					...prev,
 					plan: planId,
 					// The API response does not directly provide nextBillingDate, so we estimate it
-					nextBilling: purchaseResponse.nextBilling || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+					nextBilling:
+						purchaseResponse.nextBilling ||
+						new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+							.toISOString()
+							.split("T")[0],
 					features: {
 						...prev.features,
 						blueCheck: getBlueCheckStatus(planId),
@@ -397,7 +420,7 @@ const SubscriptionPage = () => {
 				await userAPI.updateUser(user.username, {
 					membership: {
 						subscription: "free",
-						nextBillingDate: null
+						nextBillingDate: null,
 					},
 				});
 
@@ -431,7 +454,7 @@ const SubscriptionPage = () => {
 			await userAPI.updateUser(user.username, {
 				membership: {
 					subscription: "free",
-					nextBillingDate: null
+					nextBillingDate: null,
 				},
 			});
 			setMessage(
@@ -584,10 +607,15 @@ const SubscriptionPage = () => {
 													onClick={() => handleUpgrade(plan.id)}
 													disabled={loading || purchaseLoading}
 												>
-													{purchaseLoading ? "Processing..." :
-													 plan.id === "free" ? "Downgrade" : 
-													 (plan.id !== "free" && (!paymentMethods || paymentMethods.length === 0)) ? "Add Payment Method" : 
-													 "Upgrade"}
+													{purchaseLoading
+														? "Processing..."
+														: plan.id === "free"
+															? "Downgrade"
+															: plan.id !== "free" &&
+																  (!paymentMethods ||
+																		paymentMethods.length === 0)
+																? "Add Payment Method"
+																: "Upgrade"}
 												</Button>
 											)}
 										</Card.Footer>
@@ -690,31 +718,37 @@ const SubscriptionPage = () => {
 										className="d-flex justify-content-between align-items-center gap-3"
 									>
 										<div className="d-flex align-items-center gap-3">
-											{method.type === 'paypal_wallet' ? (
+											{method.type === "paypal_wallet" ? (
 												<Paypal size={24} className="text-primary" />
 											) : (
 												<CreditCard size={24} />
 											)}
 											<div>
-												{method.type === 'paypal_wallet' ? (
+												{method.type === "paypal_wallet" ? (
 													<>
 														<h6 className="mb-0">PayPal Wallet</h6>
 														<small className="text-muted">
-															{method.paypalEmail || 'Connected Account'}
+															{method.paypalEmail || "Connected Account"}
 														</small>
 													</>
-												) : method.type === 'paypal_card' ? (
+												) : method.type === "paypal_card" ? (
 													<>
-														<h6 className="mb-0">**** **** **** {method.last4}</h6>
+														<h6 className="mb-0">
+															**** **** **** {method.last4}
+														</h6>
 														<small className="text-muted">
-															PayPal Card • Expires {method.expiryMonth}/{method.expiryYear}
+															PayPal Card • Expires {method.expiryMonth}/
+															{method.expiryYear}
 														</small>
 													</>
 												) : (
 													<>
-														<h6 className="mb-0">**** **** **** {method.last4}</h6>
+														<h6 className="mb-0">
+															**** **** **** {method.last4}
+														</h6>
 														<small className="text-muted">
-															{method.provider} • Expires {method.expiryMonth}/{method.expiryYear}
+															{method.provider} • Expires {method.expiryMonth}/
+															{method.expiryYear}
 														</small>
 													</>
 												)}
@@ -722,8 +756,8 @@ const SubscriptionPage = () => {
 										</div>
 										<div className="d-grid gap-2">
 											{method.isDefault && <Badge bg="success">Default</Badge>}
-											<Button 
-												variant="outline-danger" 
+											<Button
+												variant="outline-danger"
 												size="sm"
 												onClick={() => handleRemovePaymentMethod(method.id)}
 											>
@@ -796,7 +830,7 @@ const SubscriptionPage = () => {
 						expiryDate: "",
 						cvc: "",
 						cardholderName: "",
-						isDefault: false
+						isDefault: false,
 					});
 				}}
 				fullscreen="md-down"
@@ -857,14 +891,20 @@ const SubscriptionPage = () => {
 								type="checkbox"
 								label="Set as default payment method"
 								checked={cardForm.isDefault}
-								onChange={(e) => setCardForm(prev => ({ ...prev, isDefault: e.target.checked }))}
+								onChange={(e) =>
+									setCardForm((prev) => ({
+										...prev,
+										isDefault: e.target.checked,
+									}))
+								}
 								className="mb-3"
 							/>
 
 							<div className="bg-light p-3 rounded">
 								<small className="text-muted">
-									<strong>Secure:</strong> Your card details are processed directly by PayPal. 
-									We never store your card information on our servers.
+									<strong>Secure:</strong> Your card details are processed
+									directly by PayPal. We never store your card information on
+									our servers.
 								</small>
 							</div>
 						</div>
@@ -893,15 +933,22 @@ const SubscriptionPage = () => {
 								expiryDate: "",
 								cvc: "",
 								cardholderName: "",
-								isDefault: false
+								isDefault: false,
 							});
 						}}
 					>
 						Cancel
 					</Button>
-					<Button variant="primary" onClick={handleAddPaymentMethod} disabled={loading}>
-						{loading ? "Processing..." : 
-						 selectedPaymentType === "card" ? "Link Card via PayPal" : "Connect PayPal"}
+					<Button
+						variant="primary"
+						onClick={handleAddPaymentMethod}
+						disabled={loading}
+					>
+						{loading
+							? "Processing..."
+							: selectedPaymentType === "card"
+								? "Link Card via PayPal"
+								: "Connect PayPal"}
 					</Button>
 				</Modal.Footer>
 			</Modal>
