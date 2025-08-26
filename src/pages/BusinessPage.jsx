@@ -401,10 +401,10 @@ const BusinessPage = () => {
 												<div className="mb-3">
 													<div className="d-flex justify-content-between">
 														<span>Conversion Rate</span>
-														<span>{analytics.conversionRate || 0}%</span>
+														<span>{analytics.conversions || 0}%</span>
 													</div>
 													<ProgressBar
-														now={analytics.conversionRate || 0}
+														now={analytics.conversions || 0}
 														max={5}
 														variant="success"
 														className="mt-1"
@@ -505,12 +505,12 @@ const BusinessPage = () => {
 															</td>
 															<td>${campaign.budget}</td>
 															<td>{getStatusBadge(campaign.status)}</td>
-															<td>{campaign.impressions || 0}</td>
-															<td>{campaign.clicks || 0}</td>
+															<td>{campaign.analytics.impressions || 0}</td>
+															<td>{campaign.analytics.clicks || 0}</td>
 															<td>
-																{campaign.impressions > 0
+																{campaign.analytics.impressions > 0
 																	? (
-																			(campaign.clicks / campaign.impressions) *
+																			(campaign.analytics.clicks / campaign.analytics.impressions) *
 																			100
 																		).toFixed(2)
 																	: 0}
