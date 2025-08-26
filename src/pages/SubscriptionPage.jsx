@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState, useEffect } from "react";
-import { useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
+import { useLoaderData } from "react-router-dom";
 import {
 	Container,
 	Card,
@@ -33,15 +33,30 @@ import {
 
 const SubscriptionPage = () => {
 	const { user } = useLoaderData();
-	const navigate = useNavigate();
+
+	// Helper functions
+	const getImageLimit = (plan) => {
+		switch (plan) {
+			case "premium":
+				return 10;
+			case "pro":
+				return "unlimited";
+			default:
+				return 3;
+		}
+	};
+
+	const getBlueCheckStatus = (plan) => {
+		return plan === "premium" || plan === "pro";
+	};
 
 	const [subscription, setSubscription] = useState({
-		plan: "free",
+		plan: user.membership.subscription,
 		status: "active",
-		nextBilling: null,
+		nextBilling: user.membership?.nextBillingDate,
 		features: {
-			blueCheck: false,
-			imageLimit: 3,
+			blueCheck: getBlueCheckStatus(user),
+			imageLimit: getImageLimit(user.membership.subscription),
 			nameChangeLimit: false,
 			lastNameChange: null,
 		},
@@ -65,50 +80,6 @@ const SubscriptionPage = () => {
 		cardholderName: "",
 		isDefault: false,
 	});
-
-	// Format expiry date as MM/YY
-	const formatExpiryDate = (value) => {
-		// Remove all non-digits
-		const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-
-		// Add slash after MM
-		if (v.length >= 2) {
-			return v.slice(0, 2) + "/" + v.slice(2, 4);
-		}
-		return v;
-	};
-
-	// Format card number with spaces
-	const formatCardNumber = (value) => {
-		const v = value.replace(/\s+/g, "").replace(/[^0-9]/gi, "");
-		const matches = v.match(/\d{4,16}/g);
-		const match = (matches && matches[0]) || "";
-		const parts = [];
-		for (let i = 0, len = match.length; i < len; i += 4) {
-			parts.push(match.substring(i, i + 4));
-		}
-		if (parts.length) {
-			return parts.join(" ");
-		} else {
-			return v;
-		}
-	};
-
-	// Handle PayPal card integration
-	const handlePayPalCardSetup = async () => {
-		try {
-			// Ensure PayPal SDK is loaded
-			await loadPayPalSDK();
-
-			// Create PayPal payment method
-			const paymentMethodId = await createPayPalPaymentMethod(
-				"#paypal-card-container",
-			);
-			return paymentMethodId;
-		} catch (error) {
-			throw new Error(`PayPal setup failed: ${error.message}`);
-		}
-	};
 
 	// Handle adding payment method
 	const handleAddPaymentMethod = async () => {
@@ -172,6 +143,7 @@ const SubscriptionPage = () => {
 
 				if (response) {
 					setMessage("PayPal Wallet added.");
+					setShowAddPaymentModal(false);
 					return;
 				}
 			}
@@ -204,22 +176,6 @@ const SubscriptionPage = () => {
 		}
 	};
 
-	// Helper functions
-	const getImageLimit = (plan) => {
-		switch (plan) {
-			case "premium":
-				return 10;
-			case "pro":
-				return "unlimited";
-			default:
-				return 3;
-		}
-	};
-
-	const getBlueCheckStatus = (plan) => {
-		return plan === "premium" || plan === "pro";
-	};
-
 	// Load payment methods from server
 	const loadPaymentMethods = async () => {
 		try {
@@ -236,31 +192,19 @@ const SubscriptionPage = () => {
 		try {
 			const response = await paymentAPI.getPaymentProviders();
 			const apiPlans = response.membershipPlans || [];
-			
+
 			// Transform API plans to match component format and add free plan
 			const formattedPlans = [
-				{
-					id: "free",
-					name: "Free",
-					price: "₱0",
-					period: "forever",
-					features: [
-						"3 images per post",
-						"Basic profile features",
-						"Standard support",
-					],
-					color: "secondary",
-				},
 				...apiPlans.map((plan) => ({
 					id: plan.type,
 					name: plan.name,
-					price: `₱${plan.price}`,
+					price: `$${plan.price}`,
 					period: plan.interval,
 					features: plan.features,
 					color: plan.type === "premium" ? "primary" : "warning",
-				}))
+				})),
 			];
-			
+
 			setSubscriptionPlans(formattedPlans);
 		} catch (error) {
 			console.error("Failed to load subscription plans:", error);
@@ -269,7 +213,7 @@ const SubscriptionPage = () => {
 				{
 					id: "free",
 					name: "Free",
-					price: "₱0",
+					price: "$0",
 					period: "forever",
 					features: [
 						"3 images per post",
@@ -281,7 +225,7 @@ const SubscriptionPage = () => {
 				{
 					id: "premium",
 					name: "Premium",
-					price: "₱560",
+					price: "$9.99",
 					period: "month",
 					features: [
 						"10 images per post",
@@ -294,7 +238,7 @@ const SubscriptionPage = () => {
 				{
 					id: "pro",
 					name: "Pro",
-					price: "₱1,120",
+					price: "$25",
 					period: "month",
 					features: [
 						"Unlimited images per post",
@@ -310,16 +254,8 @@ const SubscriptionPage = () => {
 		}
 	};
 
-	// Placeholder for loadData, assuming it fetches user details
-	const loadData = async () => {
-		// This function should ideally fetch user details to populate subscription state
-		// For now, we rely on useLoaderData for initial user data.
-		// If there's a need to refresh user data independently, implement it here.
-	};
-
 	useEffect(() => {
 		updatePageMeta(pageMetaData.subscription);
-		loadData();
 		loadPaymentMethods();
 		loadSubscriptionPlans();
 
@@ -332,7 +268,6 @@ const SubscriptionPage = () => {
 				"Payment completed successfully! Your subscription is now active.",
 			);
 			setMessageType("success");
-			loadData(); // Reload user data
 
 			// Clean up URL parameters
 			const newUrl = window.location.pathname;
@@ -376,8 +311,6 @@ const SubscriptionPage = () => {
 		);
 	}
 
-	
-
 	const handleUpgrade = async (planId) => {
 		// Check if user is trying to upgrade to a paid plan
 		if (planId !== "free" && (!paymentMethods || paymentMethods.length === 0)) {
@@ -413,44 +346,10 @@ const SubscriptionPage = () => {
 					paymentMethodId: defaultPaymentMethod.id,
 				});
 
-				if (isSignupFlow) {
-					setMessage(
-						`Account created successfully with ${planId} plan! Redirecting to email verification...`,
-					);
-					setMessageType("success");
-
-					// Clear pending signup data
-					sessionStorage.removeItem("pendingSignupData");
-
-					// Redirect to verification after payment success
-					setTimeout(() => {
-						if (pendingSignupData) {
-							navigate(
-								`/auth/verify/${pendingSignupData.verificationId}?email=${encodeURIComponent(pendingSignupData.email)}`,
-							);
-						}
-					}, 2000);
-				} else {
-					setMessage(`Successfully upgraded to ${planId} plan!`);
-					setMessageType("success");
+				if (purchaseResponse.approveUrl) {
+					// Redirect to PayPal for approval
+					window.location.href = purchaseResponse.approveUrl;
 				}
-
-				// Update local state with response data
-				setSubscription((prev) => ({
-					...prev,
-					plan: planId,
-					// The API response does not directly provide nextBillingDate, so we estimate it
-					nextBilling:
-						purchaseResponse.nextBilling ||
-						new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-							.toISOString()
-							.split("T")[0],
-					features: {
-						...prev.features,
-						blueCheck: getBlueCheckStatus(planId),
-						imageLimit: getImageLimit(planId),
-					},
-				}));
 			} else {
 				// Downgrade to free plan
 				await userAPI.updateUser(user.username, {
