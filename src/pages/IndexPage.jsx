@@ -18,7 +18,7 @@ const IndexPage = () => {
 	
 
 	// Check if it's subscription page
-	if (pathname === "/subscription") {
+	if (pathname === "/account/billing/subscription") {
 		return (
 			<NavigationView user={user}>
 				<SubscriptionPage />
@@ -27,7 +27,7 @@ const IndexPage = () => {
 	}
 
 	// Check if it's my subscriptions page
-	if (pathname === "/my-subscriptions") {
+	if (pathname === "/manage/creators/subscription") {
 		return (
 			<NavigationView user={user}>
 				<MySubscriptionsPage />
@@ -36,7 +36,7 @@ const IndexPage = () => {
 	}
 
 	// Check if it's analytics page
-	if (pathname === "/analytics") {
+	if (pathname === "/dashboard/analytics") {
 		return (
 			<NavigationView user={user}>
 				<AnalyticsPage />
@@ -45,7 +45,7 @@ const IndexPage = () => {
 	}
 
 	// For home page and post detail pages, use Outlet
-	if (pathname === "/home" || pathname.startsWith("/post/")) {
+	if (pathname === "/" || pathname === "/home" || pathname.startsWith("/post/")) {
 		return (
 			<NavigationView user={user}>
 				<Outlet />
@@ -54,7 +54,7 @@ const IndexPage = () => {
 	}
 
 	// Check if it's a profile page (username path)
-	if (pathname !== "/home" && pathname !== "/" && !pathname.startsWith("/post/")) {
+	if (pathname !== "/" && pathname !== "/home" && !pathname.startsWith("/post/") && !pathname.startsWith("/dashboard/") && !pathname.startsWith("/account/") && !pathname.startsWith("/manage/")) {
 		return (
 			<NavigationView user={user}>
 				<ProfilePage />

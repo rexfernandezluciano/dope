@@ -50,7 +50,7 @@ const BlockedUsersPage = lazy(() => import("../pages/settings/BlockedUsersPage")
 
 const router = createBrowserRouter([
 	{
-		path: "/",
+		path: "/start",
 		element: <StartPage />,
 		hydrateFallbackElement: <LoadingView />,
 	},
@@ -83,6 +83,24 @@ const router = createBrowserRouter([
 		path: "/auth/reset-password",
 		element: <ResetPasswordPage />,
 		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/",
+		element: (
+			<RequireAuth>
+				<IndexPage />
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
+		children: [
+			{
+				index: true,
+				element: <HomePage />,
+				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
+			},
+		],
 	},
 	{
 		path: "/home",
@@ -235,7 +253,7 @@ const router = createBrowserRouter([
 		hydrateFallbackElement: <LoadingView />,
 	},
 	{
-		path: "/analytics",
+		path: "/dashboard/analytics",
 		element: (
 			<RequireAuth>
 				<NavigationView>
@@ -247,39 +265,40 @@ const router = createBrowserRouter([
 		hydrateFallbackElement: <LoadingView />,
 	},
 	{
-		path: "/dashboard",
+		path: "/dashboard/business",
 		element: (
 			<RequireAuth>
 				<NavigationView>
-					<IndexPage />
+					<BusinessPage />
 				</NavigationView>
 			</RequireAuth>
 		),
 		loader: IndexPageLoader,
 		hydrateFallbackElement: <LoadingView />,
-		children: [
-			{
-				index: true,
-				element: <HomePage />,
-				loader: IndexPageLoader,
-				hydrateFallbackElement: <LoadingView />,
-			},
-			{
-				path: "subscription",
-				element: <SubscriptionPage />,
-				hydrateFallbackElement: <LoadingView />,
-			},
-			{
-				path: "analytics",
-				element: <AnalyticsPage />,
-				hydrateFallbackElement: <LoadingView />,
-			},
-			{
-				path: "settings",
-				element: <SettingsPage />,
-				hydrateFallbackElement: <LoadingView />,
-			},
-		],
+	},
+	{
+		path: "/account/billing/subscription",
+		element: (
+			<RequireAuth>
+				<NavigationView>
+					<SubscriptionPage />
+				</NavigationView>
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/manage/creators/subscription",
+		element: (
+			<RequireAuth>
+				<NavigationView>
+					<MySubscriptionsPage />
+				</NavigationView>
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
 	},
 	{
 		path: "/live/:streamKey",
@@ -313,30 +332,7 @@ const router = createBrowserRouter([
 		loader: IndexPageLoader,
 		hydrateFallbackElement: <LoadingView />,
 	},
-	{
-		path: "/business",
-		element: (
-			<RequireAuth>
-				<NavigationView>
-					<BusinessPage />
-				</NavigationView>
-			</RequireAuth>
-		),
-		loader: IndexPageLoader,
-		hydrateFallbackElement: <LoadingView />,
-	},
-	{
-		path: "/subscriptions",
-		element: (
-			<RequireAuth>
-				<NavigationView>
-					<MySubscriptionsPage />
-				</NavigationView>
-			</RequireAuth>
-		),
-		loader: IndexPageLoader,
-		hydrateFallbackElement: <LoadingView />,
-	},
+	
 	{
 		path: "/oauth/authorize",
 		element: (

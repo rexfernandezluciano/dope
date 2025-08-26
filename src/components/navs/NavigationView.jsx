@@ -250,7 +250,7 @@ const NavigationView = ({ children }) => {
 	const mobileMenuItems = [
 		{
 			label: "Home",
-			href: "/home",
+			href: "/",
 			icon: <GoHome size={20} />,
 		},
 		{
@@ -260,12 +260,12 @@ const NavigationView = ({ children }) => {
 		},
 		{
 			label: "Subscription",
-			href: "/subscription",
+			href: "/account/billing/subscription",
 			icon: <GoStar size={20} />,
 		},
 		{
 			label: "Analytics",
-			href: "/analytics",
+			href: "/dashboard/analytics",
 			icon: <TbBrandGoogleAnalytics size={20} />,
 		},
 		{
@@ -278,7 +278,7 @@ const NavigationView = ({ children }) => {
 	const menuItems = [
 		{
 			label: "Home",
-			href: "/home",
+			href: "/",
 			icon: <GoHome size={18} />,
 		},
 		{
@@ -293,22 +293,22 @@ const NavigationView = ({ children }) => {
 		},
 		{
 			label: "Subscription",
-			href: "/subscription",
+			href: "/account/billing/subscription",
 			icon: <GoStar size={18} />,
 		},
 		{
 			label: "My Subscriptions",
-			href: "/my-subscriptions",
+			href: "/manage/creators/subscription",
 			icon: <GoHeart size={18} />,
 		},
 		{
 			label: "Analytics",
-			href: "/analytics",
+			href: "/dashboard/analytics",
 			icon: <TbBrandGoogleAnalytics size={18} />,
 		},
 		{
 			label: "Business",
-			href: "/business",
+			href: "/dashboard/business",
 			icon: <GoBriefcase size={18} />,
 		},
 	];
@@ -345,7 +345,7 @@ const NavigationView = ({ children }) => {
 			<div className="d-md-none">
 				<Navbar expand={false} className="bg-white border-bottom sticky-top">
 					<Container fluid>
-						<Navbar.Brand as={Link} to="/home" className="text-primary">
+						<Navbar.Brand as={Link} to="/" className="text-primary">
 							<div
 								style={{
 									width: "50px",
@@ -388,22 +388,22 @@ const NavigationView = ({ children }) => {
 									<span className="small fw-bold px-3 mb-2">Credits</span>
 									<p className="text-muted rounded-5 py-1 bg-light mt-2 mb-2 mx-3 px-3 fw-bold d-flex align-items-center justify-content-between gap-2">${credits.credits.toFixed(2)} <span className="text-primary fw-bold small">Buy Credits</span></p>
 									<span className="small fw-bold px-3 mt-2 mb-2">Billing</span>
-									<Dropdown.Item as={Link} to="/subscription">
+									<Dropdown.Item as={Link} to="/account/billing/subscription">
 										<GoStar size={18} className="me-2" />
 										Subscription
 									</Dropdown.Item>
 									<span className="small fw-bold px-3 my-2">Membership</span>
-									<Dropdown.Item as={Link} to="/my-subscriptions">
+									<Dropdown.Item as={Link} to="/manage/creators/subscription">
 										<GoHeart size={18} className="me-2" />
 										My Subscriptions
 									</Dropdown.Item>
 									<Dropdown.Divider />
 									<span className="small fw-bold px-3 mb-2">Dashboard</span>
-									<Dropdown.Item as={Link} to="/analytics">
+									<Dropdown.Item as={Link} to="/dashboard/analytics">
 										<TbBrandGoogleAnalytics size={18} className="me-2" />
 										Analytics
 									</Dropdown.Item>
-									<Dropdown.Item as={Link} to="/business">
+									<Dropdown.Item as={Link} to="/dashboard/business">
 										<GoBriefcase size={18} className="me-2" />
 										Business
 									</Dropdown.Item>
