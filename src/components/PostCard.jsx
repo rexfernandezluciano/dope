@@ -651,18 +651,17 @@ const PostCard = ({
 								</div>
 							</div>
 
-							<div
-								className="d-flex justify-content-around text-muted mt-3 pt-2 border-top"
-								style={{ maxWidth: "400px" }}
-							>
+							<div className="d-flex justify-content-between text-muted mt-3 pt-2 border-top">
 								<Button
 									variant="link"
 									size="sm"
 									className={`p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn ${!canComment ? "opacity-50" : "text-muted"}`}
 									style={{
 										transition: "all 0.2s",
-										minWidth: "40px",
+										flex: "1",
+										maxWidth: "120px",
 										height: "36px",
+										justifyContent: "center",
 									}}
 									onClick={handleCommentToggle} // Use toggle handler
 									disabled={!canComment}
@@ -686,7 +685,7 @@ const PostCard = ({
 								>
 									<ChatDots size={20} style={{ flexShrink: 0 }} />
 									{post.stats?.comments > 0 && (
-										<span className="small">{post.stats?.comments}</span>
+										<span className="small d-none d-sm-inline">{post.stats?.comments}</span>
 									)}
 								</Button>
 
@@ -697,8 +696,10 @@ const PostCard = ({
 									style={{
 										color: currentUserLiked ? "#dc3545" : "#6c757d",
 										transition: "all 0.2s",
-										minWidth: "40px",
+										flex: "1",
+										maxWidth: "120px",
 										height: "36px",
+										justifyContent: "center",
 									}}
 									onClick={handleLike}
 									disabled={likingPost}
@@ -725,7 +726,7 @@ const PostCard = ({
 										<Heart size={20} style={{ flexShrink: 0 }} />
 									)}
 									{!likingPost && post.stats?.likes > 0 && (
-										<span className="small">{post.stats?.likes}</span>
+										<span className="small d-none d-sm-inline">{post.stats?.likes}</span>
 									)}
 								</Button>
 
@@ -735,8 +736,10 @@ const PostCard = ({
 									className="text-muted p-2 border-0 rounded-circle action-btn"
 									style={{
 										transition: "all 0.2s",
-										minWidth: "40px",
+										flex: "1",
+										maxWidth: "120px",
 										height: "36px",
+										justifyContent: "center",
 									}}
 									onClick={handleShare}
 									onMouseEnter={(e) => {

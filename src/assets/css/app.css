@@ -356,15 +356,35 @@ button,
 /* Action button enhancements */
 .action-btn {
   transition: all 0.2s ease;
-  width: 36px;
   height: 36px;
   display: flex !important;
   align-items: center;
   justify-content: center;
+  border-radius: 18px !important;
 }
 
 .action-btn:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
+}
+
+/* Responsive action buttons */
+@media (max-width: 576px) {
+  .action-btn {
+    height: 32px;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 16px !important;
+  }
+  
+  .action-btn svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+}
+
+@media (min-width: 577px) {
+  .action-btn {
+    min-width: 60px;
+  }
 }
 
 /* Settings page navigation */
