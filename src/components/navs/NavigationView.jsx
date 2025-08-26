@@ -71,7 +71,9 @@ const NavigationView = ({ children }) => {
 		// Add click listeners to all navigation links
 		const handleLinkClick = (e) => {
 			const target = e.target.closest('a');
-			if (target && target.href && !target.href.startsWith('mailto:') && !target.href.startsWith('tel:')) {
+			const isTabClick = target && (target.closest('.nav-tabs') || target.closest('.nav-pills') || target.hasAttribute('data-bs-toggle'));
+
+			if (target && target.href && !target.href.startsWith('mailto:') && !target.href.startsWith('tel:') && !isTabClick) {
 				NProgress.start();
 			}
 		};
@@ -544,8 +546,7 @@ const NavigationView = ({ children }) => {
 											(user?.membership?.subscription || user?.subscription) ===
 											"premium"
 												? "bg-warning text-dark"
-												: (user?.membership?.subscription ||
-															user?.subscription) === "pro"
+												: (user?.membership?.subscription || user?.subscription) === "pro"
 													? "bg-primary"
 													: "bg-secondary"
 										}`}
