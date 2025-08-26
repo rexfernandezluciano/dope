@@ -44,24 +44,24 @@ const SearchPage = () => {
 
 	// Update URL when search query changes
 	useEffect(() => {
-		if (searchQuery.trim()) {
-			setSearchParams({ q: searchQuery, tab: activeTab });
-		} else {
-			setSearchParams({});
-		}
+		const timeoutId = setTimeout(() => {
+			if (searchQuery.trim()) {
+				setSearchParams({ q: searchQuery, tab: activeTab });
+			} else {
+				setSearchParams({});
+			}
+		}, 300); // Debounce to avoid too many URL updates
+
+		return () => clearTimeout(timeoutId);
 	}, [searchQuery, setSearchParams, activeTab]);
 
 	// Listen for URL parameter changes (back/forward navigation)
 	useEffect(() => {
 		const urlQuery = searchParams.get('q') || "";
 		const urlTab = searchParams.get('tab') || "posts";
-		if (urlQuery !== searchQuery) {
-			setSearchQuery(urlQuery);
-		}
-		if (urlTab !== activeTab) {
-			setActiveTab(urlTab);
-		}
-	}, [searchParams, searchQuery, activeTab]);
+		setSearchQuery(urlQuery);
+		setActiveTab(urlTab);
+	}, [searchParams]);
 
 
 	const performSearch = useCallback(async (searchQueryParam, tab) => {
