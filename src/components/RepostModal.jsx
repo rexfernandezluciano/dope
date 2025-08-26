@@ -50,23 +50,7 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
   };
 
   return (
-    <Modal show={show} onHide={handleClose} centered size="lg" className="d-md-flex">
-      <style>
-        {`
-          @media (min-width: 768px) {
-            .modal.d-md-flex .modal-dialog {
-              max-width: 100% !important;
-              width: 100% !important;
-              height: 100vh !important;
-              margin: 0 !important;
-            }
-            .modal.d-md-flex .modal-content {
-              height: 100% !important;
-              border-radius: 0 !important;
-            }
-          }
-        `}
-      </style>
+    <Modal show={show} onHide={handleClose} centered fullscreen="md-down" size="lg" className="d-md-flex">
       <Modal.Header closeButton>
         <Modal.Title>Repost</Modal.Title>
       </Modal.Header>
