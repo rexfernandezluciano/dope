@@ -883,15 +883,7 @@ export const postAPI = {
 			method: "POST",
 		});
 	},
-
-	repostPost: async (postId, content = "") => {
-		return await apiRequest(`/posts/${postId}/repost`, {
-			method: "POST",
-			data: { content },
-		});
-	},
-
-	// Alias for repostPost for compatibility
+	
 	repost: async (postId, content = "") => {
 		return await apiRequest(`/posts/${postId}/repost`, {
 			method: "POST",
