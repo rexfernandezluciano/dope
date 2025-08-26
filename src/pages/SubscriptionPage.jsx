@@ -34,7 +34,6 @@ import {
 const SubscriptionPage = () => {
 	const { user } = useLoaderData();
 	const navigate = useNavigate();
-	const [searchParams] = useSearchParams();
 
 	const [subscription, setSubscription] = useState({
 		plan: "free",
