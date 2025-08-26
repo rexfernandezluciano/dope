@@ -238,10 +238,6 @@ const NavigationView = ({ children }) => {
 				removeAuthToken();
 
 				setShowLogoutDialog(false);
-
-				// Clear auth token
-				const { removeAuthToken } = await import("../../utils/app-utils");
-				removeAuthToken();
 				
 				// Redirect to start page
 				window.location.href = "/";
