@@ -1308,6 +1308,14 @@ export const businessAPI = {
 		);
 	},
 
+	// Ad Tracking
+	trackAdInteraction: async (interactionData) => {
+		return await apiRequest("/business/track", {
+			method: "POST",
+			data: interactionData,
+		});
+	},
+
 	// Credits
 	getCredits: async () => {
 		return await apiRequest("/credits", { method: "GET" });

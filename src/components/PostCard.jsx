@@ -24,7 +24,15 @@ import {
 	ChevronRight,
 } from "react-bootstrap-icons";
 
-import { postAPI, commentAPI, replyAPI } from "../config/ApiConfig";
+import {
+	postAPI,
+	userAPI,
+	commentAPI,
+	likeAPI,
+	replyAPI,
+	imageAPI,
+	businessAPI,
+} from "../config/ApiConfig";
 import {
 	formatTimeAgo,
 	deletePost as deletePostUtil,
@@ -59,6 +67,7 @@ const PostCard = ({
 	const [showComments, setShowComments] = useState(false); // Local state for comments visibility
 	const [localComments, setLocalComments] = useState([]);
 	const [likingPost, setLikingPost] = useState(false); // Loading state for like button
+	const hasTrackedView = useRef(false); // Ref to track if view has been tracked
 
 	// Initialize local comments and showComments state based on props
 	useEffect(() => {
@@ -66,37 +75,47 @@ const PostCard = ({
 		setShowComments(propShowComments);
 	}, [comments, propShowComments, post.poll, currentUser]);
 
-	// Track view when post comes into view
+	// Track post view for analytics and ad impressions
 	useEffect(() => {
-		if (viewTracked) return;
-
-		let timeoutId;
-		const trackView = async () => {
-			try {
-				if (postAPI.trackView) {
-					await postAPI.trackView(post.id);
-					setViewTracked(true);
-				}
-			} catch (error) {
-				console.error("Failed to track view for post:", post.id, error);
-				// Set viewTracked to true even on error to prevent spam
-				setViewTracked(true);
-			}
-		};
+		if (viewTracked && hasTrackedView.current) return;
 
 		const observer = new IntersectionObserver(
 			(entries) => {
 				entries.forEach((entry) => {
-					if (entry.isIntersecting && !viewTracked) {
-						// Debounce the view tracking to prevent rapid calls
-						clearTimeout(timeoutId);
-						timeoutId = setTimeout(() => {
-							trackView();
-						}, 1000); // Wait 1 second before tracking
+					if (entry.isIntersecting && !viewTracked && !hasTrackedView.current) {
+						setViewTracked(true); // Mark as viewed to prevent re-triggering
+						hasTrackedView.current = true; // Mark as tracked
+
+						// Track view
+						const trackView = async () => {
+							try {
+								await postAPI.trackView(post.id);
+
+								// Also track ad impression if this is an ad post
+								if (isAdPost && post.adCampaign) {
+									await businessAPI.trackAdInteraction({
+										campaignId: post.adCampaign.id,
+										action: 'impression',
+										userId: currentUser?.uid || 'anonymous'
+									});
+									console.log('Advertisement impression tracked');
+								}
+							} catch (error) {
+								console.error('Failed to track post view or ad impression:', error);
+							}
+						};
+
+						// Delay tracking slightly to ensure genuine view
+						const timer = setTimeout(trackView, 1000); // Wait 1 second before tracking
+						return () => {
+							clearTimeout(timer);
+							// Reset viewTracked when component unmounts or before next observation if needed
+							// setViewTracked(false); // Re-evaluate if this reset is necessary based on component lifecycle
+						};
 					}
 				});
 			},
-			{ threshold: 0.5 },
+			{ threshold: 0.5 }, // Trigger when at least 50% of the element is visible
 		);
 
 		if (cardRef.current) {
@@ -105,9 +124,9 @@ const PostCard = ({
 
 		return () => {
 			observer.disconnect();
-			clearTimeout(timeoutId);
 		};
-	}, [post.id, viewTracked]);
+	}, [post.id, viewTracked, isAdPost, post.adCampaign, currentUser]);
+
 
 	const canComment = useMemo(() => {
 		if (!currentUser) return false;
@@ -284,15 +303,17 @@ const PostCard = ({
 	}, [post.id]);
 
 	const handleAdClick = useCallback(async () => {
-		if (!isAdPost) return;
+		if (!isAdPost || !post.adCampaign) return;
 
 		try {
-			// Track ad click
-			console.log('Ad click tracked:', {
+			// Track ad click using actual API
+			await businessAPI.trackAdInteraction({
 				campaignId: post.adCampaign.id,
 				action: 'click',
 				userId: currentUser?.uid || 'anonymous'
 			});
+
+			console.log('Advertisement click tracked successfully');
 
 			// Navigate based on ad target type
 			if (post.adCampaign.targetType === 'profile') {
@@ -705,8 +726,8 @@ const PostCard = ({
 											{post.adCampaign.targetType === 'profile' ? 'Visit Profile' : 'Learn More'}
 										</Button>
 										<small className="text-muted">
-											<a 
-												href="/privacy" 
+											<a
+												href="/privacy"
 												className="text-decoration-none text-muted"
 												target="_blank"
 												rel="noopener noreferrer"
