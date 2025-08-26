@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback } from 'react';
-import { Modal, Form, Button, Spinner } from 'react-bootstrap';
+import { Modal, Form, Button, Spinner, Image } from 'react-bootstrap';
 import { MentionsInput, Mention } from "react-mentions";
 import { userAPI } from "../config/ApiConfig";
 
@@ -20,6 +20,9 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
       const mentionData = users.map((user) => ({
         id: user.uid,
         display: user.username || user.name,
+        name: user.name,
+        username: user.username,
+        photoURL: user.photoURL,
       }));
 
       callback(mentionData);
@@ -47,7 +50,23 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
   };
 
   return (
-    <Modal show={show} onHide={handleClose} centered>
+    <Modal show={show} onHide={handleClose} centered size="lg" className="d-md-flex">
+      <style>
+        {`
+          @media (min-width: 768px) {
+            .modal.d-md-flex .modal-dialog {
+              max-width: 100% !important;
+              width: 100% !important;
+              height: 100vh !important;
+              margin: 0 !important;
+            }
+            .modal.d-md-flex .modal-content {
+              height: 100% !important;
+              border-radius: 0 !important;
+            }
+          }
+        `}
+      </style>
       <Modal.Header closeButton>
         <Modal.Title>Repost</Modal.Title>
       </Modal.Header>
@@ -105,6 +124,9 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
                     item: {
                       padding: "8px 12px",
                       borderBottom: "1px solid #f8f9fa",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
                       "&focused": {
                         backgroundColor: "#e3f2fd",
                       },
@@ -118,6 +140,22 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
                   data={searchMentionUsers}
                   displayTransform={(id, display) => `@${display}`}
                   markup="@[__display__](__id__)"
+                  renderSuggestion={(entry, search, highlightedDisplay, index, focused) => (
+                    <div className="d-flex align-items-center gap-2">
+                      <Image
+                        src={entry.photoURL || "https://i.pravatar.cc/150?img=10"}
+                        alt="avatar"
+                        roundedCircle
+                        width="24"
+                        height="24"
+                        style={{ objectFit: "cover" }}
+                      />
+                      <div className="flex-grow-1">
+                        <div className="fw-bold small">{entry.name}</div>
+                        <small className="text-muted">@{entry.username}</small>
+                      </div>
+                    </div>
+                  )}
                   style={{
                     backgroundColor: "#e3f2fd",
                     color: "#1976d2",
