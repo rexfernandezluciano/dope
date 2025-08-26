@@ -3,6 +3,17 @@
 import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import { db } from "../config/FirebaseConfig";
 
+/**
+ * Check if Firestore database is available
+ * @returns {boolean} true if database is available, false otherwise
+ */
+const isDatabaseAvailable = () => {
+	if (!db) {
+		console.error('❌ Firestore database not initialized. Check Firebase configuration.');
+		return false;
+	}
+	return true;
+};
 
 /**
  * Check if email already exists in waiting list
@@ -11,6 +22,10 @@ import { db } from "../config/FirebaseConfig";
  */
 export const isEmailInWaitingList = async (email) => {
 	try {
+		if (!isDatabaseAvailable()) {
+			throw new Error('Database not available');
+		}
+
 		const waitingListRef = collection(db, 'waitingList');
 		const q = query(waitingListRef, where('email', '==', email.toLowerCase().trim()));
 		const querySnapshot = await getDocs(q);
@@ -31,6 +46,10 @@ export const isEmailInWaitingList = async (email) => {
  */
 export const addToWaitingList = async (userData) => {
 	try {
+		if (!isDatabaseAvailable()) {
+			throw new Error('Database not available');
+		}
+
 		const { name, email } = userData;
 
 		// Check if email already exists
@@ -61,6 +80,10 @@ export const addToWaitingList = async (userData) => {
  */
 export const getWaitingListStats = async () => {
 	try {
+		if (!isDatabaseAvailable()) {
+			throw new Error('Database not available');
+		}
+
 		const waitingListRef = collection(db, 'waitingList');
 		const querySnapshot = await getDocs(waitingListRef);
 
@@ -80,6 +103,10 @@ export const getWaitingListStats = async () => {
  */
 export const getAllWaitingListEntries = async () => {
 	try {
+		if (!isDatabaseAvailable()) {
+			throw new Error('Database not available');
+		}
+
 		const waitingListRef = collection(db, 'waitingList');
 		const querySnapshot = await getDocs(waitingListRef);
 

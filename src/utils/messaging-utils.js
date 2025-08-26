@@ -223,6 +223,11 @@ export const markNotificationAsRead = async (notificationId) => {
  */
 export const getUnreadNotificationCount = async (userId) => {
 	try {
+		if (!db) {
+			console.warn("Firestore not available, returning 0 notifications");
+			return 0;
+		}
+
 		const q = query(
 			collection(db, "notifications"),
 			where("userId", "==", userId),
@@ -245,6 +250,11 @@ export const getUnreadNotificationCount = async (userId) => {
  */
 export const setupNotificationListener = (userId, callback) => {
 	try {
+		if (!db) {
+			console.warn("Firestore not available, notification listener disabled");
+			return () => {}; // Return empty function as fallback
+		}
+
 		const q = query(
 			collection(db, "notifications"),
 			where("userId", "==", userId),

@@ -23,28 +23,44 @@ let db;
 let messaging; // Declare messaging
 
 try {
+	// Check if required config values are present
+	const requiredKeys = ['apiKey', 'authDomain', 'projectId'];
+	const missingKeys = requiredKeys.filter(key => !firebaseConfig[key] || firebaseConfig[key].includes('your-'));
+	
+	if (missingKeys.length > 0) {
+		throw new Error(`Missing Firebase configuration for: ${missingKeys.join(', ')}`);
+	}
+
 	app = initializeApp(firebaseConfig);
 	db = getFirestore(app);
 
 	// Initialize Firebase Cloud Messaging
 	if (typeof window !== "undefined") {
-		messaging = getMessaging(app);
+		try {
+			messaging = getMessaging(app);
+		} catch (messagingError) {
+			console.warn('Firebase messaging initialization failed:', messagingError);
+			messaging = null;
+		}
 	}
+
+	console.log('✅ Firebase initialized successfully');
 } catch (error) {
-	console.error("Firebase initialization error:", error);
-	// Create a mock database object to prevent crashes
+	console.error("❌ Firebase initialization error:", error);
+	console.error("Please check your Firebase configuration in environment variables");
+	
+	// Create mock objects to prevent crashes
 	db = null;
-	messaging = null; // Ensure messaging is also null in case of error
+	messaging = null;
 }
 
 // Add connection state monitoring to reduce console errors
 if (db) {
-	// Enable offline persistence to reduce connection errors
 	try {
-		// Note: This is for web, not needed for newer versions but helps with connection stability
-		console.log('Firebase initialized successfully');
+		// Test Firestore connection
+		console.log('📊 Firestore database ready');
 	} catch (persistenceError) {
-		console.warn('Firebase persistence setup failed:', persistenceError);
+		console.warn('⚠️ Firebase persistence setup failed:', persistenceError);
 	}
 }
 
