@@ -25,6 +25,7 @@ const OAuthAuthorizePage = lazy(() => import("../pages/auth/OAuthAuthorizePage")
 const IndexPage = lazy(() => import("../pages/IndexPage"));
 const HomePage = lazy(() => import("../pages/HomePage"));
 const PostDetailPage = lazy(() => import("../pages/PostDetailPage"));
+const RepostsPage = lazy(() => import("../pages/RepostsPage"));
 const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 const SettingsPage = lazy(() => import("../pages/SettingsPage"));
 const SubscriptionPage = lazy(() => import("../pages/SubscriptionPage"));
@@ -114,6 +115,24 @@ const router = createBrowserRouter([
 			{
 				index: true,
 				element: <PostDetailPage />,
+				loader: IndexPageLoader,
+				hydrateFallbackElement: <LoadingView />,
+			},
+		],
+	},
+	{
+		path: "/post/:postId/reposts",
+		element: (
+			<RequireAuth>
+				<IndexPage />
+			</RequireAuth>
+		),
+		loader: IndexPageLoader,
+		hydrateFallbackElement: <LoadingView />,
+		children: [
+			{
+				index: true,
+				element: <RepostsPage />,
 				loader: IndexPageLoader,
 				hydrateFallbackElement: <LoadingView />,
 			},

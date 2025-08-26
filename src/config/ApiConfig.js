@@ -891,6 +891,12 @@ export const postAPI = {
 		});
 	},
 
+	// Get reposts for a post
+	getReposts: (postId) =>
+		apiRequest(`/posts/${postId}/reposts`, {
+			method: "GET",
+		}),
+
 	trackView: async (postId) => {
 		return await apiRequest(`/posts/${postId}/view`, {
 			method: "POST",

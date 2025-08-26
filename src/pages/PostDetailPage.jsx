@@ -857,11 +857,26 @@ const PostDetailPage = () => {
 							{post.reposts && post.reposts.length > 0 && (
 								<div className="mb-2">
 									<div className="border rounded-3 p-3">
-										<h6 className="mb-2 text-muted">
-											<Share size={16} className="me-2" />
-											Reposts ({post.reposts.length})
-										</h6>
-										{post.reposts.map((repost, index) => (
+										<div className="d-flex align-items-center justify-content-between mb-2">
+											<h6 className="mb-0 text-muted">
+												<Share size={16} className="me-2" />
+												Reposts ({post.reposts.length})
+											</h6>
+											{post.reposts.length > 3 && (
+												<Button
+													variant="link"
+													size="sm"
+													className="p-0 text-primary"
+													onClick={(e) => {
+														e.stopPropagation();
+														navigate(`/post/${post.id}/reposts`);
+													}}
+												>
+													View all
+												</Button>
+											)}
+										</div>
+										{post.reposts.slice(0, 3).map((repost, index) => (
 											<div key={repost.id} className={`d-flex gap-2 ${index > 0 ? 'mt-3 pt-2 border-top' : ''}`}>
 												<Image
 													src={repost.user.photoURL || "https://i.pravatar.cc/150?img=10"}
@@ -904,6 +919,21 @@ const PostDetailPage = () => {
 												</div>
 											</div>
 										))}
+										{post.reposts.length <= 3 && post.reposts.length > 0 && (
+											<div className="mt-2 pt-2 border-top">
+												<Button
+													variant="link"
+													size="sm"
+													className="p-0 text-primary w-100"
+													onClick={(e) => {
+														e.stopPropagation();
+														navigate(`/post/${post.id}/reposts`);
+													}}
+												>
+													View all reposts
+												</Button>
+											</div>
+										)}
 									</div>
 								</div>
 							)}

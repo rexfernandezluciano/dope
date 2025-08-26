@@ -447,10 +447,25 @@ const PostCard = ({
 							{post.reposts && post.reposts.length > 0 && (
 								<div className="mb-2">
 									<div className="border rounded-3 p-3">
-										<h6 className="mb-2 text-muted">
-											<Share size={16} className="me-2" />
-											Reposts ({post.reposts.length})
-										</h6>
+										<div className="d-flex align-items-center justify-content-between mb-2">
+											<h6 className="mb-0 text-muted">
+												<Share size={16} className="me-2" />
+												Reposts ({post.reposts.length})
+											</h6>
+											{post.reposts.length > 3 && (
+												<Button
+													variant="link"
+													size="sm"
+													className="p-0 text-primary"
+													onClick={(e) => {
+														e.stopPropagation();
+														navigate(`/post/${post.id}/reposts`);
+													}}
+												>
+													View all
+												</Button>
+											)}
+										</div>
 										{post.reposts.slice(0, 3).map((repost, index) => (
 											<div key={repost.id} className={`d-flex gap-2 ${index > 0 ? 'mt-2' : ''}`}>
 												<Image
@@ -499,9 +514,17 @@ const PostCard = ({
 										))}
 										{post.reposts.length > 3 && (
 											<div className="text-center mt-2">
-												<small className="text-muted">
+												<Button
+													variant="link"
+													size="sm"
+													className="p-0 text-primary"
+													onClick={(e) => {
+														e.stopPropagation();
+														navigate(`/post/${post.id}/reposts`);
+													}}
+												>
 													+{post.reposts.length - 3} more reposts
-												</small>
+												</Button>
 											</div>
 										)}
 									</div>
