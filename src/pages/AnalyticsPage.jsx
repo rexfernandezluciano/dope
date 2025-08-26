@@ -6,7 +6,7 @@ import { analyticsAPI, subscriptionAPI } from "../config/ApiConfig";
 import { formatTimeAgo, formatCurrency } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { CheckCircle, XCircle, GraphUp, TrendingUp, CurrencyDollar, PeopleFill } from 'react-bootstrap-icons';
+import { CheckCircle, XCircle, GraphUp, GraphUpArrow, CurrencyDollar, PeopleFill } from 'react-bootstrap-icons';
 
 const AnalyticsPage = () => {
 	const [analytics, setAnalytics] = useState(null);
@@ -908,7 +908,7 @@ const AnalyticsPage = () => {
 					<Tab eventKey="growth" title={
 						<>
 							<span className="d-none d-md-inline">Growth</span>
-							<span className="d-md-none"><TrendingUp size={16} /></span>
+							<span className="d-md-none"><GraphUpArrow size={16} /></span>
 						</>
 					}>
 						{renderGrowthTab()}
