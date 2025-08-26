@@ -563,8 +563,6 @@ const AnalyticsPage = () => {
 	);
 
 	const renderMonetizationTab = () => {
-		const totalRevenue = analytics?.revenue?.totalRevenue || 0;
-		const totalSubscriptions = analytics?.overview?.totalSubscriptions || 0;
 		const revenueGrowth = analytics?.overview?.revenueGrowth || 0;
 
 		// Get monetization eligibility from analytics
@@ -575,7 +573,7 @@ const AnalyticsPage = () => {
 		return (
 			<>
 				{/* Monetization Eligibility Card */}
-				{monetization &&
+				{monetization && (
 				<Card className="border-0 shadow-sm mb-4">
 					<Card.Header>
 						<div className="d-flex justify-content-between align-items-center">
@@ -607,20 +605,20 @@ const AnalyticsPage = () => {
 										</Badge>
 									</div>
 									<div className="mb-2">
-										<strong>{monetization?.requirements?.followers?.current}</strong>
-										<span className="text-muted"> / {monetization?.requirements?.followers?.required}</span>
+										<strong>{monetization?.requirements?.followers?.current || 0}</strong>
+										<span className="text-muted"> / {monetization?.requirements?.followers?.required || 0}</span>
 									</div>
 									<div className="progress" style={{ height: '4px' }}>
 										<div 
-											className={`progress-bar ${monetization?.requirements?.follower?.met ? 'bg-success' : 'bg-primary'}`}
+											className={`progress-bar ${monetization?.requirements?.followers?.met ? 'bg-success' : 'bg-primary'}`}
 											style={{ 
-												width: `${Math.min((monetization?.requirements?.followers?.current / monetization?.requirements?.followers?.required) * 100, 100)}%` 
+												width: `${Math.min(((monetization?.requirements?.followers?.current || 0) / (monetization?.requirements?.followers?.required || 1)) * 100, 100)}%` 
 											}}
 										></div>
 									</div>
 									{!monetization?.requirements?.followers?.met && (
 										<small className="text-muted">
-											{monetization?.requirements?.followers?.required - monetization?.requirements?.followers?.current} more needed
+											{(monetization?.requirements?.followers?.required || 0) - (monetization?.requirements?.followers?.current || 0)} more needed
 										</small>
 									)}
 								</div>
@@ -636,14 +634,14 @@ const AnalyticsPage = () => {
 										</Badge>
 									</div>
 									<div className="mb-2">
-										<strong>{monetization?.requirements?.recentActivity?.postsLast24h}</strong>
-										<span className="text-muted"> / {monetization?.requirements?.recentActivity?.required} posts</span>
+										<strong>{monetization?.requirements?.recentActivity?.postsLast24h || 0}</strong>
+										<span className="text-muted"> / {monetization?.requirements?.recentActivity?.required || 0} posts</span>
 									</div>
 									<div className="progress" style={{ height: '4px' }}>
 										<div 
 											className={`progress-bar ${monetization?.requirements?.recentActivity?.met ? 'bg-success' : 'bg-primary'}`}
 											style={{ 
-												width: `${Math.min((monetization.requirements.recentActivity.postsLast24h / monetization.requirements.recentActivity.required) * 100, 100)}%` 
+												width: `${Math.min(((monetization?.requirements?.recentActivity?.postsLast24h || 0) / (monetization?.requirements?.recentActivity?.required || 1)) * 100, 100)}%` 
 											}}
 										></div>
 									</div>
@@ -656,32 +654,33 @@ const AnalyticsPage = () => {
 								<div className="p-3 border rounded">
 									<div className="d-flex justify-content-between align-items-center mb-2">
 										<small className="text-muted">Account Status</small>
-										<Badge bg={monetization.requirements.accountStatus.goodStanding ? 'success' : 'danger'}>
-											{monetization.requirements.accountStatus.goodStanding ? <CheckCircle size={12} /> : <XCircle size={12} />}
+										<Badge bg={monetization?.requirements?.accountStatus?.goodStanding ? 'success' : 'danger'}>
+											{monetization?.requirements?.accountStatus?.goodStanding ? <CheckCircle size={12} /> : <XCircle size={12} />}
 										</Badge>
 									</div>
 									<div className="mb-2">
 										<div className="d-flex justify-content-between">
 											<small>Good Standing</small>
-											<small className={monetization.requirements.accountStatus.goodStanding ? 'text-success' : 'text-danger'}>
-												{monetization.requirements.accountStatus.goodStanding ? 'Yes' : 'No'}
+											<small className={monetization?.requirements?.accountStatus?.goodStanding ? 'text-success' : 'text-danger'}>
+												{monetization?.requirements?.accountStatus?.goodStanding ? 'Yes' : 'No'}
 											</small>
 										</div>
 										<div className="d-flex justify-content-between">
 											<small>Violations</small>
-											<small className={monetization.requirements.accountStatus.violations === 0 ? 'text-success' : 'text-warning'}>
-												{monetization.requirements.accountStatus.violations}
+											<small className={(monetization?.requirements?.accountStatus?.violations || 0) === 0 ? 'text-success' : 'text-warning'}>
+												{monetization?.requirements?.accountStatus?.violations || 0}
 											</small>
 										</div>
 									</div>
-									{(monetization.requirements.accountStatus.blocked || monetization.requirements.accountStatus.restricted) && (
+									{(monetization?.requirements?.accountStatus?.blocked || monetization?.requirements?.accountStatus?.restricted) && (
 										<small className="text-danger">Account restricted</small>
 									)}
 								</div>
 							</Col>
 						</Row>
 					</Card.Body>
-				</Card>}
+				</Card>
+				)}
 
 				<Row className="g-3 mb-4">
 					<Col xs={6} lg={3}>
