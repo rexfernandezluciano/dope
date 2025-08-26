@@ -111,7 +111,9 @@ const PollView = ({ post, currentUser, ...props }) => {
             >
               {/* Progress bar background */}
               <div
-                className="position-absolute top-0 start-0 h-100 bg-success text-white bg-opacity-25"
+                className={`position-absolute top-0 start-0 h-100 ${
+                  option.isUserChoice ? "bg-success" : "bg-secondary"
+                } bg-opacity-25`}
                 style={{
                   width: `${option.percentage}%`,
                   zIndex: 1,
