@@ -59,7 +59,8 @@ const HomePage = () => {
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
 	const [showAds, setShowAds] = useState(true);
-	const [adInterval, setAdInterval] = useState(5); // Show ad every 5 posts
+	const [adInterval, setAdInterval] = useState(3); // Show ad every 3 posts
+	const [dismissedAds, setDismissedAds] = useState(new Set());
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -696,11 +697,13 @@ const HomePage = () => {
 									)}
 
 									{/* Show advertisement every few posts */}
-									{showAds && index > 0 && index % adInterval === 0 && (
+									{showAds && index > 0 && index % adInterval === 0 && !dismissedAds.has(`ad-${Math.floor(index / adInterval)}`) && (
 										<Advertisement 
-											key={`ad-${index}`}
+											key={`ad-${Math.floor(index / adInterval)}`}
 											currentUser={user}
-											onClose={() => setShowAds(false)}
+											onClose={() => {
+												setDismissedAds(prev => new Set([...prev, `ad-${Math.floor(index / adInterval)}`]));
+											}}
 										/>
 									)}
 
