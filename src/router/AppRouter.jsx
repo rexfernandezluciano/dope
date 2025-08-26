@@ -353,8 +353,9 @@ const AppRouter = () => {
 		// Configure NProgress
 		NProgress.configure({
 			showSpinner: false,
-			speed: 500,
-			minimum: 0.3,
+			minimum: 0.1,
+			easing: "ease",
+			speed: 200,
 		});
 
 		// Handle browser navigation (back/forward buttons)
@@ -366,8 +367,22 @@ const AppRouter = () => {
 		// Add event listener for browser navigation
 		window.addEventListener("popstate", handlePopState);
 
+		// Listen for route changes by monitoring URL changes
+		let currentUrl = window.location.href;
+		const urlObserver = new MutationObserver(() => {
+			if (window.location.href !== currentUrl) {
+				currentUrl = window.location.href;
+				NProgress.start();
+				setTimeout(() => NProgress.done(), 100);
+			}
+		});
+
+		// Observe URL changes
+		urlObserver.observe(document, { subtree: true, childList: true });
+
 		return () => {
 			window.removeEventListener("popstate", handlePopState);
+			urlObserver.disconnect();
 		};
 	}, []);
 

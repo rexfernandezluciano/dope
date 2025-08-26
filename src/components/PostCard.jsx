@@ -8,7 +8,7 @@ import React, {
 	useMemo,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Image, Button, Modal } from "react-bootstrap";
+import { Card, Image, Button, Modal, Spinner } from "react-bootstrap";
 import {
 	Heart,
 	HeartFill,
@@ -35,6 +35,7 @@ import { handleLikeNotification } from "../utils/notification-helpers";
 import CommentItem from "./CommentItem";
 import PollView from "./PollView";
 import RepostModal from "./RepostModal";
+import NProgress from "nprogress";
 
 const PostCard = ({
 	post,
@@ -55,6 +56,7 @@ const PostCard = ({
 	const [viewTracked, setViewTracked] = useState(false);
 	const [showComments, setShowComments] = useState(false); // Local state for comments visibility
 	const [localComments, setLocalComments] = useState([]);
+	const [likingPost, setLikingPost] = useState(false); // Loading state for like button
 
 	// Initialize local comments and showComments state based on props
 	useEffect(() => {
@@ -174,7 +176,8 @@ const PostCard = ({
 				return;
 			}
 
-			// Navigate directly instead of using utility function
+			// Start NProgress and navigate
+			NProgress.start();
 			navigate(`/post/${post.id}`);
 		},
 		[post.id, navigate],
@@ -183,23 +186,30 @@ const PostCard = ({
 	const handleLike = useCallback(
 		async (e) => {
 			e.stopPropagation();
-			if (onLike && currentUser) {
-				const wasLiked = post.likes.some(
-					(like) => like.user?.uid === currentUser.uid,
-				);
-				const response = await onLike(post.id);
+			if (onLike && currentUser && !likingPost) {
+				setLikingPost(true);
+				try {
+					const wasLiked = post.likes.some(
+						(like) => like.user?.uid === currentUser.uid,
+					);
+					const response = await onLike(post.id);
 
-				// Send like notification to post owner only when user actually likes (not unlikes)
-				if (response && response.liked && !wasLiked) {
-					try {
-						await handleLikeNotification(post.id, post, currentUser);
-					} catch (error) {
-						console.error("Failed to send like notification:", error);
+					// Send like notification to post owner only when user actually likes (not unlikes)
+					if (response && response.liked && !wasLiked) {
+						try {
+							await handleLikeNotification(post.id, post, currentUser);
+						} catch (error) {
+							console.error("Failed to send like notification:", error);
+						}
 					}
+				} catch (error) {
+					console.error("Failed to like post:", error);
+				} finally {
+					setLikingPost(false);
 				}
 			}
 		},
-		[onLike, post, currentUser],
+		[onLike, post, currentUser, likingPost],
 	);
 
 	const handleShare = useCallback(
@@ -682,27 +692,30 @@ const PostCard = ({
 										height: "36px",
 									}}
 									onClick={handleLike}
+									disabled={likingPost}
 									onMouseEnter={(e) => {
-										if (!currentUserLiked) {
+										if (!currentUserLiked && !likingPost) {
 											e.target.closest(".action-btn").style.backgroundColor =
 												"rgba(220, 53, 69, 0.1)";
 											e.target.closest(".action-btn").style.color = "#dc3545";
 										}
 									}}
 									onMouseLeave={(e) => {
-										if (!currentUserLiked) {
+										if (!currentUserLiked && !likingPost) {
 											e.target.closest(".action-btn").style.backgroundColor =
 												"transparent";
 											e.target.closest(".action-btn").style.color = "#6c757d";
 										}
 									}}
 								>
-									{currentUserLiked ? (
+									{likingPost ? (
+										<Spinner size="sm" animation="border" style={{ width: "20px", height: "20px" }} />
+									) : currentUserLiked ? (
 										<HeartFill size={20} style={{ flexShrink: 0 }} />
 									) : (
 										<Heart size={20} style={{ flexShrink: 0 }} />
 									)}
-									{post.stats?.likes > 0 && (
+									{!likingPost && post.stats?.likes > 0 && (
 										<span className="small">{post.stats?.likes}</span>
 									)}
 								</Button>

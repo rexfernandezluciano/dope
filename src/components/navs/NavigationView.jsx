@@ -68,6 +68,17 @@ const NavigationView = ({ children }) => {
 		// Ensure NProgress completes when component mounts
 		NProgress.done();
 
+		// Add click listeners to all navigation links
+		const handleLinkClick = (e) => {
+			const target = e.target.closest('a');
+			if (target && target.href && !target.href.startsWith('mailto:') && !target.href.startsWith('tel:')) {
+				NProgress.start();
+			}
+		};
+
+		// Add event listener to document for all link clicks
+		document.addEventListener('click', handleLinkClick);
+
 		// Initialize user and notifications
 		if (loaderUserData && loaderUserData.uid) {
 			setUser(loaderUserData);
@@ -131,8 +142,10 @@ const NavigationView = ({ children }) => {
 		};
 		loadCredits();
 
-		// Cleanup function - no specific cleanup needed for NProgress
-		return () => {};
+		// Cleanup function
+		return () => {
+			document.removeEventListener('click', handleLinkClick);
+		};
 	}, [location, loaderUserData]); // Dependency on loaderUserData
 
 	// Effect to setup notification listener if user is available from loader

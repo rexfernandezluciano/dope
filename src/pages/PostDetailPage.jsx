@@ -88,6 +88,7 @@ const PostDetailPage = () => {
 	const [likeCount, setLikeCount] = useState(0);
 	const [showRepostModal, setShowRepostModal] = useState(false);
 	const [reposting, setReposting] = useState(false);
+	const [likingPost, setLikingPost] = useState(false);
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -199,7 +200,10 @@ const PostDetailPage = () => {
 	}, [post]);
 
 	const handleLikePost = async () => {
+		if (likingPost) return;
+		
 		try {
+			setLikingPost(true);
 			const response = await postAPI.likePost(postId);
 
 			// Update post state locally based on the liked response
@@ -250,6 +254,8 @@ const PostDetailPage = () => {
 			}
 		} catch (error) {
 			console.error("Failed to like post:", error);
+		} finally {
+			setLikingPost(false);
 		}
 	};
 
@@ -1145,11 +1151,12 @@ const PostDetailPage = () => {
 										height: "36px",
 									}}
 									onClick={handleLikePost}
+									disabled={likingPost}
 									onMouseEnter={(e) => {
 										if (
 											!(post.likes || []).some(
 												(like) => like.user?.uid === currentUser.uid,
-											)
+											) && !likingPost
 										) {
 											e.target.closest(".action-btn").style.backgroundColor =
 												"rgba(220, 53, 69, 0.1)";
@@ -1160,7 +1167,7 @@ const PostDetailPage = () => {
 										if (
 											!(post.likes || []).some(
 												(like) => like.user?.uid === currentUser.uid,
-											)
+											) && !likingPost
 										) {
 											e.target.closest(".action-btn").style.backgroundColor =
 												"transparent";
@@ -1168,14 +1175,16 @@ const PostDetailPage = () => {
 										}
 									}}
 								>
-									{(post.likes || []).some(
+									{likingPost ? (
+										<Spinner size="sm" animation="border" style={{ width: "24px", height: "24px" }} />
+									) : (post.likes || []).some(
 										(like) => like.user?.uid === currentUser.uid,
 									) ? (
 										<HeartFill size={24} style={{ flexShrink: 0 }} />
 									) : (
 										<Heart size={24} style={{ flexShrink: 0 }} />
 									)}
-									{post.stats.likes > 0 && (
+									{!likingPost && post.stats.likes > 0 && (
 										<span className="small">{post.stats.likes}</span>
 									)}
 								</Button>
