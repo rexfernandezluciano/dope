@@ -26,7 +26,7 @@ import {
 	ArrowUpCircle,
 } from "react-bootstrap-icons";
 import { updatePageMeta } from "../utils/meta-utils";
-import { businessAPI, postAPI, authAPI, apiRequest } from "../config/ApiConfig";
+import { businessAPI, postAPI, authAPI } from "../config/ApiConfig";
 
 const BusinessPage = () => {
 	const [activeTab, setActiveTab] = useState("overview");
@@ -349,7 +349,7 @@ const BusinessPage = () => {
 										<Card className="border-0 bg-success text-white">
 											<Card.Body className="text-center">
 												<CurrencyDollar size={24} className="mb-2" />
-												<h4>${overview.totalSpent || 0}</h4>
+												<h4>{overview.totalSpent || 0}</h4>
 												<small>Total Spent</small>
 											</Card.Body>
 										</Card>
