@@ -131,10 +131,8 @@ const NavigationView = ({ children }) => {
 		};
 		loadCredits();
 
-		return () => {
-			window.removeEventListener("beforeunload", handleStart);
-			handleComplete();
-		};
+		// Cleanup function - no specific cleanup needed for NProgress
+		return () => {};
 	}, [location, loaderUserData]); // Dependency on loaderUserData
 
 	// Effect to setup notification listener if user is available from loader

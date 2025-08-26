@@ -1,6 +1,6 @@
 /** @format */
 
-import { createBrowserRouter, RouterProvider, Route } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
@@ -360,44 +360,14 @@ const AppRouter = () => {
 		// Handle browser navigation (back/forward buttons)
 		const handlePopState = () => {
 			NProgress.start();
-		};
-
-		// Handle all navigation events
-		const handleNavigationStart = () => {
-			NProgress.start();
-		};
-
-		const handleNavigationEnd = () => {
-			NProgress.done();
+			setTimeout(() => NProgress.done(), 100);
 		};
 
 		// Add event listener for browser navigation
 		window.addEventListener("popstate", handlePopState);
-		
-		// Listen for React Router navigation events
-		window.addEventListener("beforeunload", handleNavigationStart);
-		
-		// Custom events for React Router navigation
-		const originalPushState = history.pushState;
-		const originalReplaceState = history.replaceState;
-		
-		history.pushState = function(...args) {
-			NProgress.start();
-			originalPushState.apply(history, args);
-			setTimeout(() => NProgress.done(), 100);
-		};
-		
-		history.replaceState = function(...args) {
-			NProgress.start();
-			originalReplaceState.apply(history, args);
-			setTimeout(() => NProgress.done(), 100);
-		};
 
 		return () => {
 			window.removeEventListener("popstate", handlePopState);
-			window.removeEventListener("beforeunload", handleNavigationStart);
-			history.pushState = originalPushState;
-			history.replaceState = originalReplaceState;
 		};
 	}, []);
 
