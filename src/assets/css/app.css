@@ -260,6 +260,35 @@ a:focus {
     padding: 0.75rem;
   }
 
+  /* Search page mobile optimizations */
+  .nav-tabs {
+    border-bottom: none !important;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-tabs .nav-item {
+    flex-shrink: 0;
+  }
+
+  .nav-tabs .nav-link {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    white-space: nowrap;
+  }
+
+  /* Responsive text truncation */
+  .min-width-0 {
+    min-width: 0;
+  }
+
+  .text-truncate-mobile {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
 }
 
 /* Touch improvements */
