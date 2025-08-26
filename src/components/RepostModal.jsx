@@ -1,9 +1,40 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Modal, Form, Button, Spinner } from 'react-bootstrap';
+import { MentionsInput, Mention } from "react-mentions";
+import { userAPI } from "../config/ApiConfig";
 
 const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = false }) => {
   const [content, setContent] = useState('');
+
+  // Function to search for users for mentions
+  const searchMentionUsers = useCallback(async (query, callback) => {
+    if (!query) {
+      callback([]);
+      return;
+    }
+
+    try {
+      const users = await userAPI.searchUsers(query);
+
+      const mentionData = users.map((user) => ({
+        id: user.uid,
+        display: user.username || user.name,
+      }));
+
+      callback(mentionData);
+    } catch (error) {
+      console.error("Error searching users:", error);
+      callback([]);
+    }
+  }, []);
+
+  const handleContentChange = useCallback(
+    (event, newValue, newPlainTextValue, mentions) => {
+      setContent(newValue);
+    },
+    [],
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -24,16 +55,82 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Add a comment <span className="text-danger">*</span></Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="What do you think about this? (Required)"
-              maxLength={280}
-            />
+            <div style={{ border: '1px solid #ced4da', borderRadius: '0.375rem', padding: '0.375rem 0.75rem', minHeight: '76px' }}>
+              <MentionsInput
+                value={content}
+                onChange={handleContentChange}
+                placeholder="What do you think about this? (Required)"
+                style={{
+                  control: {
+                    backgroundColor: "transparent",
+                    fontSize: "14px",
+                    lineHeight: "20px",
+                    minHeight: "60px",
+                    border: "none",
+                    outline: "none",
+                    boxShadow: "none",
+                  },
+                  "&multiLine": {
+                    control: {
+                      fontFamily: "inherit",
+                      minHeight: "60px",
+                      border: "none",
+                      outline: "none",
+                    },
+                    highlighter: {
+                      padding: 0,
+                      border: "none",
+                    },
+                    input: {
+                      padding: 0,
+                      border: "none",
+                      outline: "none",
+                      fontSize: "14px",
+                      lineHeight: "20px",
+                      resize: "none",
+                      maxHeight: "100px",
+                      overflowY: "auto",
+                    },
+                  },
+                  suggestions: {
+                    list: {
+                      backgroundColor: "white",
+                      border: "1px solid #dee2e6",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                      fontSize: "14px",
+                      maxHeight: "200px",
+                      overflowY: "auto",
+                    },
+                    item: {
+                      padding: "8px 12px",
+                      borderBottom: "1px solid #f8f9fa",
+                      "&focused": {
+                        backgroundColor: "#e3f2fd",
+                      },
+                    },
+                  },
+                }}
+                allowSpaceInQuery={true}
+              >
+                <Mention
+                  trigger="@"
+                  data={searchMentionUsers}
+                  displayTransform={(id, display) => `@${display}`}
+                  markup="@[__display__](__id__)"
+                  style={{
+                    backgroundColor: "#e3f2fd",
+                    color: "#1976d2",
+                    fontWeight: "bold",
+                  }}
+                />
+              </MentionsInput>
+            </div>
             <Form.Text className="text-muted">
-              {content.length}/280 characters
+              {content.replace(/@\[[^\]]+\]\([^)]+\)/g, (match) => {
+                const display = match.match(/@\[([^\]]+)\]/)?.[1];
+                return `@${display}`;
+              }).length}/280 characters
             </Form.Text>
           </Form.Group>
           
@@ -65,7 +162,7 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
             <Button 
               variant="primary" 
               type="submit" 
-              disabled={loading || !content.trim()}
+              disabled={loading || !content.trim() || content.replace(/@\[[^\]]+\]\([^)]+\)/g, '').trim().length === 0}
             >
               {loading ? (
                 <>
