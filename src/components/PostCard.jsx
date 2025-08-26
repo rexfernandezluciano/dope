@@ -34,6 +34,7 @@ import { parseTextContent } from "../utils/text-utils";
 import { handleLikeNotification } from "../utils/notification-helpers";
 import CommentItem from "./CommentItem";
 import PollView from "./PollView";
+import RepostModal from "./RepostModal";
 
 const PostCard = ({
 	post,
@@ -897,26 +898,14 @@ const PostCard = ({
 			</Modal>
 
 			{/* Repost Modal */}
-			<Modal
+			<RepostModal
 				show={showRepostModal}
 				onHide={() => setShowRepostModal(false)}
-				centered
-			>
-				<Modal.Header closeButton>
-					<Modal.Title>Repost Post</Modal.Title>
-				</Modal.Header>
-				<Modal.Body>
-					<textarea
-						className="form-control mb-3"
-						placeholder="Add your thoughts (optional)..."
-						rows="3"
-						onChange={(e) => handleRepost(e.target.value)}
-					></textarea>
-					<Button variant="primary" onClick={() => handleRepost()}>
-						Repost
-					</Button>
-				</Modal.Body>
-			</Modal>
+				onRepost={handleRepost}
+				post={post}
+				currentUser={currentUser}
+				loading={false}
+			/>
 		</>
 	);
 };
