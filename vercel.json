@@ -16,7 +16,6 @@
   ],
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
-  "startCommand": "npm run start",
   "rewrites": [
     {
       "source": "/(.*)",

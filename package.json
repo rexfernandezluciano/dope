@@ -2,6 +2,8 @@
 	"name": "dope-social-network",
 	"version": "2.0.0",
 	"private": true,
+	"main": "ssr-server.js",
+	"description": "DOPE Network is a comprehensive social media platform built-in using Node.js, Express.js with Prisma + PostgreSQL",
 	"authors": [
 		{
 			"name": "Rex Luciano",
