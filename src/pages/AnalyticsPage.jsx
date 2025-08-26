@@ -899,26 +899,34 @@ const AnalyticsPage = () => {
 					className="mb-4 analytics-tabs"
 				>
 					<Tab eventKey="overview" title={
-						<span className="d-none d-md-inline">Overview</span>
-						<span className="d-md-none">📊</span>
+						<>
+							<span className="d-none d-md-inline">Overview</span>
+							<span className="d-md-none">📊</span>
+						</>
 					}>
 						{renderOverviewTab()}
 					</Tab>
 					<Tab eventKey="growth" title={
-						<span className="d-none d-md-inline">Growth</span>
-						<span className="d-md-none">📈</span>
+						<>
+							<span className="d-none d-md-inline">Growth</span>
+							<span className="d-md-none">📈</span>
+						</>
 					}>
 						{renderGrowthTab()}
 					</Tab>
 					<Tab eventKey="monetization" title={
-						<span className="d-none d-md-inline">Monetization</span>
-						<span className="d-md-none">💰</span>
+						<>
+							<span className="d-none d-md-inline">Monetization</span>
+							<span className="d-md-none">💰</span>
+						</>
 					}>
 						{renderMonetizationTab()}
 					</Tab>
 					<Tab eventKey="subscribers" title={
-						<span className="d-none d-md-inline">Subscribers</span>
-						<span className="d-md-none">👥</span>
+						<>
+							<span className="d-none d-md-inline">Subscribers</span>
+							<span className="d-md-none">👥</span>
+						</>
 					}>
 						{renderSubscriberTab()}
 					</Tab>
