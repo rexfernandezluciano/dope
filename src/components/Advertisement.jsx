@@ -102,7 +102,7 @@ const Advertisement = ({ onClose, currentUser }) => {
   }
 
   return (
-    <Card className="border-0 border-bottom rounded-0 mb-0 bg-light">
+    <Card className="border-0 border-bottom rounded-0 mb-0">
       <Card.Body className="px-3">
         <div className="d-flex justify-content-between align-items-start mb-2">
           <div className="d-flex align-items-center gap-2">

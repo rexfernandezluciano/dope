@@ -334,7 +334,7 @@ const PostCard = ({
 		<>
 			<Card
 				ref={cardRef}
-				className={`border-0 border-bottom rounded-0 mb-0 ${isAdPost ? 'bg-light' : ''}`}
+				className={`border-0 border-bottom rounded-0 mb-0 ${isAdPost ? 'bg-white' : ''}`}
 				style={{ cursor: "pointer" }}
 				onClick={isAdPost ? handleAdClick : handlePostClickView}
 			>
@@ -713,7 +713,7 @@ const PostCard = ({
 
 							{/* Ad Call-to-Action */}
 							{isAdPost && (
-								<div className="mt-2 pt-2 border-top">
+								<div className="mt-2 pt-2 border-top bg-white">
 									<div className="d-flex justify-content-between align-items-center">
 										<Button
 											variant="outline-primary"
@@ -727,7 +727,7 @@ const PostCard = ({
 										</Button>
 										<small className="text-muted">
 											<a
-												href="/privacy"
+												href="/policies/privacy"
 												className="text-decoration-none text-muted"
 												target="_blank"
 												rel="noopener noreferrer"
