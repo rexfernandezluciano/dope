@@ -417,24 +417,6 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const handlePollVote = useCallback(
-		async (optionIndex) => {
-			if (!currentUser || userVotedOption !== null || !post) return;
-
-			try {
-				const response = await postAPI.votePoll(post?.id, optionIndex);
-				if (response.success) {
-					setPollVotes(response.poll.votes);
-					setUserVotedOption(optionIndex);
-				}
-			} catch (error) {
-				console.error("Failed to vote on poll:", error);
-				setError("Failed to vote on poll");
-			}
-		},
-		[currentUser, userVotedOption, post],
-	);
-
 	const handleSubmitComment = useCallback(
 		async (e) => {
 			e.preventDefault();
@@ -874,9 +856,9 @@ const PostDetailPage = () => {
 							{/* Reposts Display */}
 							{post.reposts && post.reposts.length > 0 && (
 								<div className="mb-2">
-									<div className="border rounded-3 p-3 bg-light">
+									<div className="border rounded-3 p-3">
 										<h6 className="mb-2 text-muted">
-											<Share size={16} className="me-1" />
+											<Share size={16} className="me-2" />
 											Reposts ({post.reposts.length})
 										</h6>
 										{post.reposts.map((repost, index) => (
@@ -1501,7 +1483,7 @@ const PostDetailPage = () => {
 					<Modal.Header closeButton>
 						<Modal.Title>Post Options</Modal.Title>
 					</Modal.Header>
-					<Modal.Body className="p-0">
+					<Modal.Body className="p-0 pb-2">
 						<div className="list-group list-group-flush">
 							<button
 								className="list-group-item list-group-item-action border-0"
