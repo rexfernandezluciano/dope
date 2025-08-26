@@ -883,7 +883,7 @@ export const postAPI = {
 			method: "POST",
 		});
 	},
-	
+
 	repost: async (postId, content = "") => {
 		return await apiRequest(`/posts/${postId}/repost`, {
 			method: "POST",
@@ -1353,11 +1353,11 @@ export const paymentAPI = {
 		});
 	},
 
-	getPaymentMethods: async () => {
-		return await apiRequest("/payments/methods", {
-			method: "GET",
-		});
-	},
+	// Get payment methods
+	getPaymentMethods: () => apiRequest('/payments/methods', { method: 'GET' }),
+
+	// Get payment providers and membership plans
+	getPaymentProviders: () => apiRequest('/payments/providers', { method: 'GET' }),
 
 	deletePaymentMethod: async (paymentMethodId) => {
 		return await apiRequest(`/payments/methods/${paymentMethodId}`, {

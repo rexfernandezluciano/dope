@@ -48,16 +48,14 @@ const SubscriptionPage = () => {
 	});
 
 	const [paymentMethods, setPaymentMethods] = useState([]);
+	const [subscriptionPlans, setSubscriptionPlans] = useState([]);
 	const [loading, setLoading] = useState(false);
-	const [purchaseLoading, setPurchaseLoading] = useState(false); // State for purchase loading
+	const [purchaseLoading, setPurchaseLoading] = useState(false);
 	const [message, setMessage] = useState("");
 	const [messageType, setMessageType] = useState("success");
 	const [showCancelModal, setShowCancelModal] = useState(false);
 	const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
 	const [selectedPaymentType, setSelectedPaymentType] = useState("card");
-	const [isSignupFlow, setIsSignupFlow] = useState(false);
-	const [pendingSignupData, setPendingSignupData] = useState(null);
-	const [selectedSubscription, setSelectedSubscription] = useState("free");
 	const [cardForm, setCardForm] = useState({
 		cardNumber: "",
 		expiryDate: "",
@@ -231,6 +229,85 @@ const SubscriptionPage = () => {
 		}
 	};
 
+	// Load subscription plans from API
+	const loadSubscriptionPlans = async () => {
+		try {
+			const response = await paymentAPI.getPaymentProviders();
+			const apiPlans = response.membershipPlans || [];
+			
+			// Transform API plans to match component format and add free plan
+			const formattedPlans = [
+				{
+					id: "free",
+					name: "Free",
+					price: "₱0",
+					period: "forever",
+					features: [
+						"3 images per post",
+						"Basic profile features",
+						"Standard support",
+					],
+					color: "secondary",
+				},
+				...apiPlans.map((plan) => ({
+					id: plan.type,
+					name: plan.name,
+					price: `₱${plan.price}`,
+					period: plan.interval,
+					features: plan.features,
+					color: plan.type === "premium" ? "primary" : "warning",
+				}))
+			];
+			
+			setSubscriptionPlans(formattedPlans);
+		} catch (error) {
+			console.error("Failed to load subscription plans:", error);
+			// Fallback to static plans if API fails
+			setSubscriptionPlans([
+				{
+					id: "free",
+					name: "Free",
+					price: "₱0",
+					period: "forever",
+					features: [
+						"3 images per post",
+						"Basic profile features",
+						"Standard support",
+					],
+					color: "secondary",
+				},
+				{
+					id: "premium",
+					name: "Premium",
+					price: "₱560",
+					period: "month",
+					features: [
+						"10 images per post",
+						"Blue check verification",
+						"Priority support",
+						"Advanced privacy settings",
+					],
+					color: "primary",
+				},
+				{
+					id: "pro",
+					name: "Pro",
+					price: "₱1,120",
+					period: "month",
+					features: [
+						"Unlimited images per post",
+						"Blue check verification",
+						"Priority support",
+						"Advanced analytics",
+						"Custom themes",
+						"Early access to features",
+					],
+					color: "warning",
+				},
+			]);
+		}
+	};
+
 	// Placeholder for loadData, assuming it fetches user details
 	const loadData = async () => {
 		// This function should ideally fetch user details to populate subscription state
@@ -242,6 +319,7 @@ const SubscriptionPage = () => {
 		updatePageMeta(pageMetaData.subscription);
 		loadData();
 		loadPaymentMethods();
+		loadSubscriptionPlans();
 
 		// Check for payment completion
 		const urlParams = new URLSearchParams(window.location.search);
@@ -296,50 +374,7 @@ const SubscriptionPage = () => {
 		);
 	}
 
-	const subscriptionPlans = [
-		{
-			id: "free",
-			name: "Free",
-			price: "$0",
-			period: "forever",
-			features: [
-				"3 images per post",
-				"Basic profile features",
-				"Standard support",
-			],
-			color: "secondary",
-		},
-		{
-			id: "premium",
-			name: "Premium",
-			// Updated price to reflect the new API documentation (PHP 560)
-			price: "$9.99",
-			period: "month",
-			features: [
-				"10 images per post",
-				"Blue check verification",
-				"Priority support",
-				"Advanced privacy settings",
-			],
-			color: "primary",
-		},
-		{
-			id: "pro",
-			name: "Pro",
-			// Updated price to reflect the new API documentation (PHP 1120)
-			price: "$25",
-			period: "month",
-			features: [
-				"Unlimited images per post",
-				"Blue check verification",
-				"Priority support",
-				"Advanced analytics",
-				"Custom themes",
-				"Early access to features",
-			],
-			color: "warning",
-		},
-	];
+	
 
 	const handleUpgrade = async (planId) => {
 		// Check if user is trying to upgrade to a paid plan
