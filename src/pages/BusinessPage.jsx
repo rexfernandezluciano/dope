@@ -26,7 +26,7 @@ import {
 	ArrowUpCircle,
 } from "react-bootstrap-icons";
 import { updatePageMeta } from "../utils/meta-utils";
-import { businessAPI } from "../config/ApiConfig";
+import { businessAPI, postAPI, apiRequest } from "../config/ApiConfig";
 
 const BusinessPage = () => {
 	const [activeTab, setActiveTab] = useState("overview");
@@ -58,6 +58,9 @@ const BusinessPage = () => {
 			interests: [],
 		},
 	});
+	const [availablePosts, setAvailablePosts] = useState([]);
+	const [availableProfiles, setAvailableProfiles] = useState([]);
+	const [loadingTargets, setLoadingTargets] = useState(false);
 
 	useEffect(() => {
 		updatePageMeta({
@@ -155,6 +158,45 @@ const BusinessPage = () => {
 		}
 	};
 
+	const loadPosts = async () => {
+		try {
+			setLoadingTargets(true);
+			const response = await postAPI.getPosts(1, 50, { sortBy: "recent" });
+			setAvailablePosts(response.posts || []);
+		} catch (error) {
+			console.error("Failed to load posts:", error);
+		} finally {
+			setLoadingTargets(false);
+		}
+	};
+
+	const loadProfiles = async () => {
+		try {
+			setLoadingTargets(true);
+			const response = await apiRequest("/users");
+			setAvailableProfiles(response.users || []);
+		} catch (error) {
+			console.error("Failed to load profiles:", error);
+		} finally {
+			setLoadingTargets(false);
+		}
+	};
+
+	const handleTargetTypeChange = (targetType) => {
+		setCampaignForm({
+			...campaignForm,
+			targetType,
+			targetId: "", // Reset target ID when type changes
+		});
+
+		// Load appropriate data based on target type
+		if (targetType === "post" && availablePosts.length === 0) {
+			loadPosts();
+		} else if (targetType === "profile" && availableProfiles.length === 0) {
+			loadProfiles();
+		}
+	};
+
 	const handlePurchaseCredits = async (e) => {
 		e.preventDefault();
 		try {
@@ -223,6 +265,9 @@ const BusinessPage = () => {
 					interests: [],
 				},
 			});
+			// Clear loaded data when closing
+			setAvailablePosts([]);
+			setAvailableProfiles([]);
 			loadBusinessData();
 		} catch (error) {
 			setError(error.message || "Failed to create campaign");
@@ -426,7 +471,15 @@ const BusinessPage = () => {
 											<Card.Body className="d-grid gap-2">
 												<Button
 													variant="primary"
-													onClick={() => setShowCreateModal(true)}
+													onClick={() => {
+														setShowCreateModal(true);
+														// Load initial data based on current target type
+														if (campaignForm.targetType === "post" && availablePosts.length === 0) {
+															loadPosts();
+														} else if (campaignForm.targetType === "profile" && availableProfiles.length === 0) {
+															loadProfiles();
+														}
+													}}
 												>
 													<Plus className="me-2" size={16} />
 													Create Campaign
@@ -449,7 +502,15 @@ const BusinessPage = () => {
 									<h4>Ad Campaigns</h4>
 									<Button
 										variant="primary"
-										onClick={() => setShowCreateModal(true)}
+										onClick={() => {
+											setShowCreateModal(true);
+											// Load initial data based on current target type
+											if (campaignForm.targetType === "post" && availablePosts.length === 0) {
+												loadPosts();
+											} else if (campaignForm.targetType === "profile" && availableProfiles.length === 0) {
+												loadProfiles();
+											}
+										}}
 									>
 										<Plus className="me-2" />
 										Create Campaign
@@ -467,7 +528,15 @@ const BusinessPage = () => {
 											</p>
 											<Button
 												variant="primary"
-												onClick={() => setShowCreateModal(true)}
+												onClick={() => {
+													setShowCreateModal(true);
+													// Load initial data based on current target type
+													if (campaignForm.targetType === "post" && availablePosts.length === 0) {
+														loadPosts();
+													} else if (campaignForm.targetType === "profile" && availableProfiles.length === 0) {
+														loadProfiles();
+													}
+												}}
 											>
 												Create Campaign
 											</Button>
@@ -657,12 +726,7 @@ const BusinessPage = () => {
 										<Form.Label>Target Type</Form.Label>
 										<Form.Select
 											value={campaignForm.targetType}
-											onChange={(e) =>
-												setCampaignForm({
-													...campaignForm,
-													targetType: e.target.value,
-												})
-											}
+											onChange={(e) => handleTargetTypeChange(e.target.value)}
 										>
 											<option value="post">Post</option>
 											<option value="profile">Profile</option>
@@ -671,19 +735,61 @@ const BusinessPage = () => {
 								</Col>
 								<Col md={6}>
 									<Form.Group className="mb-3">
-										<Form.Label>Target ID *</Form.Label>
-										<Form.Control
-											type="text"
-											value={campaignForm.targetId}
-											onChange={(e) =>
-												setCampaignForm({
-													...campaignForm,
-													targetId: e.target.value,
-												})
-											}
-											placeholder="Enter post or profile ID"
-											required
-										/>
+										<Form.Label>
+											Select {campaignForm.targetType === "post" ? "Post" : "Profile"} *
+										</Form.Label>
+										{loadingTargets ? (
+											<Form.Control
+												type="text"
+												placeholder={`Loading ${campaignForm.targetType}s...`}
+												disabled
+											/>
+										) : (
+											<Form.Select
+												value={campaignForm.targetId}
+												onChange={(e) =>
+													setCampaignForm({
+														...campaignForm,
+														targetId: e.target.value,
+													})
+												}
+												required
+											>
+												<option value="">
+													Choose a {campaignForm.targetType}...
+												</option>
+												{campaignForm.targetType === "post"
+													? availablePosts.map((post) => (
+															<option key={post.id} value={post.id}>
+																{post.content
+																	? `${post.content.substring(0, 60)}${
+																			post.content.length > 60 ? "..." : ""
+																		}`
+																	: `Post by ${post.author.name}`}
+																{post.author.name && ` - by ${post.author.name}`}
+															</option>
+														))
+													: availableProfiles.map((profile) => (
+															<option key={profile.uid} value={profile.uid}>
+																{profile.name} (@{profile.username})
+															</option>
+														))}
+											</Form.Select>
+										)}
+										{campaignForm.targetType === "post" &&
+											availablePosts.length === 0 &&
+											!loadingTargets && (
+												<Form.Text className="text-muted">
+													No posts available. Create some posts first to promote them.
+												</Form.Text>
+											)}
+										{campaignForm.targetType === "profile" &&
+											availableProfiles.length === 0 &&
+											!loadingTargets && (
+												<Form.Text className="text-muted">
+													No profiles available to promote.
+												</Form.Text>
+											)}
 									</Form.Group>
 								</Col>
 							</Row>
