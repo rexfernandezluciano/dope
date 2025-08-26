@@ -89,6 +89,7 @@ const PostDetailPage = () => {
 	const [showRepostModal, setShowRepostModal] = useState(false);
 	const [reposting, setReposting] = useState(false);
 	const [likingPost, setLikingPost] = useState(false);
+	const [viewTracked, setViewTracked] = useState(false);
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -99,6 +100,14 @@ const PostDetailPage = () => {
 			const postResponse = await postAPI.getPost(postId);
 			if (postResponse && postResponse.post) {
 				setPost(postResponse.post);
+				
+				// Initialize like state from post data
+				setLiked(
+					postResponse.post.likes?.some(
+						(like) => like.user?.uid === currentUser?.uid,
+					) || false,
+				);
+				setLikeCount(postResponse.post.likes?.length || 0);
 			} else {
 				throw new Error("Post not found");
 			}
@@ -109,9 +118,10 @@ const PostDetailPage = () => {
 				if (commentsResponse && Array.isArray(commentsResponse.comments)) {
 					setComments(commentsResponse.comments);
 
-					// Load replies for each comment
+					// Load replies for each comment (limit to prevent excessive calls)
 					const repliesData = {};
-					for (const comment of commentsResponse.comments) {
+					const commentsBatch = commentsResponse.comments.slice(0, 10); // Limit to first 10 comments
+					for (const comment of commentsBatch) {
 						try {
 							const repliesResponse = await replyAPI.getCommentReplies(
 								comment?.id,
@@ -136,10 +146,17 @@ const PostDetailPage = () => {
 				setComments([]); // Set empty comments on error
 			}
 
-			// Track view after successfully loading the post
+			// Track view after successfully loading the post (debounced)
 			try {
-				if (postAPI.trackView) {
-					await postAPI.trackView(postId);
+				if (postAPI.trackView && !viewTracked) {
+					setTimeout(async () => {
+						try {
+							await postAPI.trackView(postId);
+							setViewTracked(true);
+						} catch (viewError) {
+							console.error("Failed to track view:", viewError);
+						}
+					}, 2000); // Wait 2 seconds before tracking
 				}
 			} catch (viewError) {
 				console.error("Failed to track view:", viewError);
@@ -151,7 +168,7 @@ const PostDetailPage = () => {
 		} finally {
 			setLoading(false);
 		}
-	}, [postId]);
+	}, [postId, currentUser?.uid, viewTracked]);
 
 	useEffect(() => {
 		if (postId) {

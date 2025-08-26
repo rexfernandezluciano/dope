@@ -68,6 +68,7 @@ const PostCard = ({
 	useEffect(() => {
 		if (viewTracked) return;
 
+		let timeoutId;
 		const trackView = async () => {
 			try {
 				if (postAPI.trackView) {
@@ -76,7 +77,8 @@ const PostCard = ({
 				}
 			} catch (error) {
 				console.error("Failed to track view for post:", post.id, error);
-				// Don't set viewTracked to true on error to allow retry
+				// Set viewTracked to true even on error to prevent spam
+				setViewTracked(true);
 			}
 		};
 
@@ -84,7 +86,11 @@ const PostCard = ({
 			(entries) => {
 				entries.forEach((entry) => {
 					if (entry.isIntersecting && !viewTracked) {
-						trackView();
+						// Debounce the view tracking to prevent rapid calls
+						clearTimeout(timeoutId);
+						timeoutId = setTimeout(() => {
+							trackView();
+						}, 1000); // Wait 1 second before tracking
 					}
 				});
 			},
@@ -95,7 +101,10 @@ const PostCard = ({
 			observer.observe(cardRef.current);
 		}
 
-		return () => observer.disconnect();
+		return () => {
+			observer.disconnect();
+			clearTimeout(timeoutId);
+		};
 	}, [post.id, viewTracked]);
 
 	const canComment = useMemo(() => {

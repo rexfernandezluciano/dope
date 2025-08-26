@@ -3,7 +3,7 @@ import { Image, Button, Form, Collapse, Badge, InputGroup } from 'react-bootstra
 import { Heart, HeartFill, ChatDots, CheckCircleFill, PencilSquare, Trash, Gift, CurrencyDollar } from 'react-bootstrap-icons';
 import { formatTimeAgo } from '../utils/common-utils';
 import { parseTextContent } from '../utils/text-utils';
-import { commentAPI } from '../config/ApiConfig';
+import { commentAPI, userAPI } from '../config/ApiConfig'; // Assuming userAPI is imported here
 
 const CommentItem = ({
   comment,
@@ -72,6 +72,28 @@ const CommentItem = ({
 
   // Calculate total tips received for this comment author
   const totalTipsReceived = comment.tipsReceived || 0;
+
+  // Fetch user data with caching
+  const userCache = new Map();
+
+	const fetchUserData = async (uid) => {
+		// Check cache first
+		if (userCache.has(uid)) {
+			return userCache.get(uid);
+		}
+
+		try {
+			const userData = await userAPI.getUserById(uid);
+			// Cache successful results
+			userCache.set(uid, userData);
+			return userData;
+		} catch (error) {
+			console.error(`Failed to fetch user data for ${uid}:`, error);
+			// Cache null result to prevent repeated failed requests
+			userCache.set(uid, null);
+			return null;
+		}
+	};
 
   return (
     <div className={`comment-item ${isLast && level === 0 ? "mb-0" : "mb-2"} ${level > 0 ? "ms-3 ps-3 border-start" : ""}`}>
