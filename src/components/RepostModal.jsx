@@ -23,13 +23,13 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
       <Modal.Body>
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label>Add a comment (optional)</Form.Label>
+            <Form.Label>Add a comment <span className="text-danger">*</span></Form.Label>
             <Form.Control
               as="textarea"
               rows={3}
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="What do you think about this?"
+              placeholder="What do you think about this? (Required)"
               maxLength={280}
             />
             <Form.Text className="text-muted">
@@ -62,7 +62,11 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
             <Button variant="secondary" onClick={handleClose} disabled={loading}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" disabled={loading}>
+            <Button 
+              variant="primary" 
+              type="submit" 
+              disabled={loading || !content.trim()}
+            >
               {loading ? (
                 <>
                   <Spinner size="sm" className="me-2" />
