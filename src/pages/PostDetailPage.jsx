@@ -334,7 +334,7 @@ const PostDetailPage = () => {
 	const handleRepost = useCallback(async (content = "") => {
 		try {
 			setReposting(true);
-			const response = await postAPI.repost(postId, { content });
+			const response = await postAPI.repost(postId, content);
 			console.log("Reposted successfully:", response);
 			setShowRepostModal(false);
 

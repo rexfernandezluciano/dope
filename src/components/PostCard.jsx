@@ -261,7 +261,7 @@ const PostCard = ({
 
 	const handleRepost = useCallback(async (content = "") => {
 		try {
-			const response = await postAPI.repost(post.id, { content });
+			const response = await postAPI.repost(post.id, content);
 			console.log("Reposted successfully:", response);
 			setShowRepostModal(false);
 			return response;
