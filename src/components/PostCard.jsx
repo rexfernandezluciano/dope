@@ -252,13 +252,13 @@ const PostCard = ({
 	const handleRepost = useCallback(async (content = "") => {
 		try {
 			const response = await postAPI.repost(post.id, { content });
-			// Optionally update UI or show a success message
 			console.log("Reposted successfully:", response);
-			setShowRepostModal(false); // Close the modal after reposting
+			setShowRepostModal(false);
 			return response;
 		} catch (error) {
 			console.error("Failed to repost:", error);
-			// Handle error display to user
+			// Let the modal handle the error display
+			throw error;
 		}
 	}, [post.id]);
 

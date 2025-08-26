@@ -207,7 +207,7 @@ const PostDetailPage = () => {
 				if (!prevPost) return prevPost;
 
 				const isCurrentlyLiked = prevPost.likes.some(
-					(like) => like.user.uid === currentUser.uid,
+					(like) => like.user?.uid === currentUser.uid,
 				);
 
 				if (response.liked && !isCurrentlyLiked) {
@@ -225,7 +225,7 @@ const PostDetailPage = () => {
 					return {
 						...prevPost,
 						likes: prevPost.likes.filter(
-							(like) => like.user.uid !== currentUser.uid,
+							(like) => like.user?.uid !== currentUser.uid,
 						),
 						stats: {
 							...prevPost.stats,
@@ -239,7 +239,7 @@ const PostDetailPage = () => {
 
 			// Send like notification to post owner only when user actually likes (not unlikes)
 			const wasLiked = post.likes.some(
-				(like) => like.user.uid === currentUser.uid,
+				(like) => like.user?.uid === currentUser.uid,
 			);
 			if (response.liked && !wasLiked) {
 				try {
@@ -328,21 +328,21 @@ const PostDetailPage = () => {
 	const handleRepost = useCallback(async (content = "") => {
 		try {
 			setReposting(true);
-			const response = await postAPI.repostPost(post.id, content);
-			
-			// Close modal
+			const response = await postAPI.repost(postId, { content });
+			console.log("Reposted successfully:", response);
 			setShowRepostModal(false);
-			
-			// Optionally show success message or redirect
-			console.log("Repost successful:", response);
-			
+
+			// Reload the post to show the new repost
+			await loadPost();
 		} catch (error) {
 			console.error("Failed to repost:", error);
-			setError("Failed to repost");
+			setReposting(false);
+			// Let the modal handle the error display
+			throw error;
 		} finally {
 			setReposting(false);
 		}
-	}, [post?.id]);
+	}, [postId, loadPost]);
 
 	// Replaced deleteFromCloudinary with the reusable deletePostUtil
 	const confirmDeletePost = async () => {
@@ -549,7 +549,7 @@ const PostDetailPage = () => {
 				prevComments.map((comment) => {
 					if (comment.id === commentId) {
 						const isCurrentlyLiked = comment.likes?.some(
-							(like) => like.user.uid === currentUser.uid,
+							(like) => like.user?.uid === currentUser.uid,
 						);
 
 						if (response.liked && !isCurrentlyLiked) {
@@ -568,7 +568,7 @@ const PostDetailPage = () => {
 							return {
 								...comment,
 								likes: (comment.likes || []).filter(
-									(like) => like.user.uid !== currentUser.uid,
+									(like) => like.user?.uid !== currentUser.uid,
 								),
 								stats: {
 									...comment.stats,
@@ -670,7 +670,7 @@ const PostDetailPage = () => {
 				[commentId]: (prev[commentId] || []).map((reply) => {
 					if (reply.id === replyId) {
 						const isCurrentlyLiked = reply.likes?.some(
-							(like) => like.user.uid === currentUser.uid,
+							(like) => like.user?.uid === currentUser.uid,
 						);
 
 						if (response.liked && !isCurrentlyLiked) {
@@ -689,7 +689,7 @@ const PostDetailPage = () => {
 							return {
 								...reply,
 								likes: (reply.likes || []).filter(
-									(like) => like.user.uid !== currentUser.uid,
+									(like) => like.user?.uid !== currentUser.uid,
 								),
 								stats: {
 									...reply.stats,
@@ -1009,7 +1009,7 @@ const PostDetailPage = () => {
 									{post.likes.length > 0 &&
 										(() => {
 											const currentUserLiked = post.likes.some(
-												(like) => like.user.uid === currentUser.uid,
+												(like) => like.user?.uid === currentUser.uid,
 											);
 											const otherLikesCount = currentUserLiked
 												? post.likes.length - 1
@@ -1106,7 +1106,7 @@ const PostDetailPage = () => {
 									className="p-2 border-0 d-flex align-items-center gap-1 rounded-circle action-btn"
 									style={{
 										color: (post.likes || []).some(
-											(like) => like.user.uid === currentUser.uid,
+											(like) => like.user?.uid === currentUser.uid,
 										)
 											? "#dc3545"
 											: "#6c757d",
@@ -1118,7 +1118,7 @@ const PostDetailPage = () => {
 									onMouseEnter={(e) => {
 										if (
 											!(post.likes || []).some(
-												(like) => like.user.uid === currentUser.uid,
+												(like) => like.user?.uid === currentUser.uid,
 											)
 										) {
 											e.target.closest(".action-btn").style.backgroundColor =
@@ -1129,7 +1129,7 @@ const PostDetailPage = () => {
 									onMouseLeave={(e) => {
 										if (
 											!(post.likes || []).some(
-												(like) => like.user.uid === currentUser.uid,
+												(like) => like.user?.uid === currentUser.uid,
 											)
 										) {
 											e.target.closest(".action-btn").style.backgroundColor =
@@ -1139,7 +1139,7 @@ const PostDetailPage = () => {
 									}}
 								>
 									{(post.likes || []).some(
-										(like) => like.user.uid === currentUser.uid,
+										(like) => like.user?.uid === currentUser.uid,
 									) ? (
 										<HeartFill size={24} style={{ flexShrink: 0 }} />
 									) : (
@@ -1505,7 +1505,7 @@ const PostDetailPage = () => {
 							>
 								Repost
 							</button>
-							{post.author.id !== currentUser.uid && (
+							{post.author.uid !== currentUser.uid && (
 								<button
 									className="list-group-item list-group-item-action border-0 text-danger"
 									onClick={() => setShowPostOptionsModal(false)}

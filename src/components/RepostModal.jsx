@@ -1,11 +1,13 @@
 
 import React, { useState, useCallback } from 'react';
-import { Modal, Form, Button, Spinner, Image } from 'react-bootstrap';
+import { Modal, Form, Button, Spinner, Image, Alert } from 'react-bootstrap';
 import { MentionsInput, Mention } from "react-mentions";
 import { userAPI } from "../config/ApiConfig";
 
 const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = false }) => {
   const [content, setContent] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Function to search for users for mentions
   const searchMentionUsers = useCallback(async (query, callback) => {
@@ -39,13 +41,30 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
     [],
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onRepost(content);
+    if (!content.trim() || content.replace(/@\[[^\]]+\]\([^)]+\)/g, '').trim().length === 0) {
+      setError('Content is required to repost');
+      return;
+    }
+
+    try {
+      setError('');
+      setSubmitting(true);
+      await onRepost(content);
+      handleClose();
+    } catch (err) {
+      console.error('Repost failed:', err);
+      setError(err.message || 'Failed to repost. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
     setContent('');
+    setError('');
+    setSubmitting(false);
     onHide();
   };
 
@@ -55,6 +74,11 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
         <Modal.Title>Repost</Modal.Title>
       </Modal.Header>
       <Modal.Body>
+        {error && (
+          <Alert variant="danger" dismissible onClose={() => setError('')}>
+            {error}
+          </Alert>
+        )}
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Add a comment <span className="text-danger">*</span></Form.Label>
@@ -178,15 +202,15 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
           </div>
 
           <div className="d-flex justify-content-end gap-2">
-            <Button variant="secondary" onClick={handleClose} disabled={loading}>
+            <Button variant="secondary" onClick={handleClose} disabled={submitting || loading}>
               Cancel
             </Button>
             <Button 
               variant="primary" 
               type="submit" 
-              disabled={loading || !content.trim() || content.replace(/@\[[^\]]+\]\([^)]+\)/g, '').trim().length === 0}
+              disabled={submitting || loading || !content.trim() || content.replace(/@\[[^\]]+\]\([^)]+\)/g, '').trim().length === 0}
             >
-              {loading ? (
+              {(submitting || loading) ? (
                 <>
                   <Spinner size="sm" className="me-2" />
                   Reposting...
