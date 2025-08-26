@@ -170,11 +170,11 @@ const AnalyticsPage = () => {
 
 	const StatCard = ({ icon = null, value, label, subtitle, variant = "primary" }) => (
 		<Card className="h-100 border-0 shadow-sm">
-			<Card.Body className="text-center p-3">
+			<Card.Body className="text-center p-2 p-md-3">
 				{icon && <div className={`text-${variant} mb-2`}>{icon}</div>}
-				<h4 className="mb-1">{value}</h4>
+				<h5 className="mb-1 fs-6 fs-md-4">{value}</h5>
 				<p className="text-muted mb-0 small">{label}</p>
-				{subtitle && <small className={`text-${variant === 'success' ? 'success' : 'muted'}`}>{subtitle}</small>}
+				{subtitle && <small className={`text-${variant === 'success' ? 'success' : 'muted'} d-block text-truncate`}>{subtitle}</small>}
 			</Card.Body>
 		</Card>
 	);
@@ -219,33 +219,33 @@ const AnalyticsPage = () => {
 
 			{/* Charts Row - Stack on mobile */}
 			<Row className="g-3 mb-4">
-				<Col lg={8} className="order-1 order-lg-0">
+				<Col xl={8} className="order-1 order-xl-0">
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Header>
-							<h6 className="mb-0">Top Posts Performance</h6>
+							<h6 className="mb-0 small">Top Posts Performance</h6>
 						</Card.Header>
-						<Card.Body>
+						<Card.Body className="p-2 p-md-3">
 							{chartData.length > 0 ? (
-								<ResponsiveContainer width="100%" height={250}>
+								<ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 200 : 250}>
 									<BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
 										<CartesianGrid strokeDasharray="3 3" />
 										<XAxis 
 											dataKey="name" 
-											fontSize={12}
+											fontSize={10}
 											interval={0}
 											angle={-45}
 											textAnchor="end"
 											height={60}
 										/>
-										<YAxis fontSize={12} />
+										<YAxis fontSize={10} />
 										<Tooltip />
 										<Bar dataKey="views" fill="#8884d8" name="Views" />
 										<Bar dataKey="likes" fill="#82ca9d" name="Likes" />
 									</BarChart>
 								</ResponsiveContainer>
 							) : (
-								<div className="text-center py-5 text-muted">
-									<p>No data available</p>
+								<div className="text-center py-4 py-md-5 text-muted">
+									<p className="small">No data available</p>
 									<small>Start creating content to see performance charts!</small>
 								</div>
 							)}
@@ -253,20 +253,20 @@ const AnalyticsPage = () => {
 					</Card>
 				</Col>
 
-				<Col lg={4} className="order-0 order-lg-1">
+				<Col xl={4} className="order-0 order-xl-1">
 					<Card className="h-100 border-0 shadow-sm">
 						<Card.Header>
-							<h6 className="mb-0">Engagement Breakdown</h6>
+							<h6 className="mb-0 small">Engagement Breakdown</h6>
 						</Card.Header>
-						<Card.Body>
-							<ResponsiveContainer width="100%" height={200}>
+						<Card.Body className="p-2 p-md-3">
+							<ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 150 : 200}>
 								<PieChart>
 									<Pie
 										data={engagementData.filter(item => item.value > 0)}
 										cx="50%"
 										cy="50%"
-										innerRadius={30}
-										outerRadius={70}
+										innerRadius={window.innerWidth < 768 ? 20 : 30}
+										outerRadius={window.innerWidth < 768 ? 50 : 70}
 										paddingAngle={5}
 										dataKey="value"
 									>
@@ -282,17 +282,17 @@ const AnalyticsPage = () => {
 									<div key={index} className="d-flex justify-content-between align-items-center small mb-1">
 										<span className="d-flex align-items-center">
 											<span
-												className="d-inline-block me-2"
+												className="d-inline-block me-2 flex-shrink-0"
 												style={{
-													width: 10,
-													height: 10,
+													width: 8,
+													height: 8,
 													backgroundColor: item.color,
 													borderRadius: 2
 												}}
 											></span>
 											<span className="text-truncate">{item.name}</span>
 										</span>
-										<span className="fw-bold">{formatNumber(item.value)}</span>
+										<span className="fw-bold text-nowrap">{formatNumber(item.value)}</span>
 									</div>
 								))}
 							</div>
@@ -867,10 +867,10 @@ const AnalyticsPage = () => {
 	);
 
 	return (
-		<Container className="py-3 py-md-4">
-			<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center px-4 mb-4">
+		<Container fluid className="py-3 py-md-4 px-2 px-md-3">
+			<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
 				<div className="mb-3 mb-md-0">
-					<h2 className="mb-1">Analytics Dashboard</h2>
+					<h2 className="mb-1 fs-4 fs-md-2">Analytics Dashboard</h2>
 					<p className="text-muted mb-0 small">Track your performance and insights</p>
 				</div>
 				<div className="d-flex flex-wrap gap-2">
@@ -881,7 +881,12 @@ const AnalyticsPage = () => {
 							size="sm"
 							onClick={() => setSelectedPeriod(period)}
 						>
-							{period === '7d' ? '7 Days' : period === '30d' ? '30 Days' : '90 Days'}
+							<span className="d-none d-sm-inline">
+								{period === '7d' ? '7 Days' : period === '30d' ? '30 Days' : '90 Days'}
+							</span>
+							<span className="d-sm-none">
+								{period}
+							</span>
 						</Button>
 					))}
 				</div>
@@ -891,23 +896,29 @@ const AnalyticsPage = () => {
 				<Tabs
 					activeKey={activeTab}
 					onSelect={(tab) => setActiveTab(tab)}
-					className="mb-4"
+					className="mb-4 analytics-tabs"
 				>
-					<Tab eventKey="overview" title="Overview">
+					<Tab eventKey="overview" title={
+						<span className="d-none d-md-inline">Overview</span>
+						<span className="d-md-none">📊</span>
+					}>
 						{renderOverviewTab()}
 					</Tab>
 					<Tab eventKey="growth" title={
-						<span className="d-inline">Growth</span>
+						<span className="d-none d-md-inline">Growth</span>
+						<span className="d-md-none">📈</span>
 					}>
 						{renderGrowthTab()}
 					</Tab>
 					<Tab eventKey="monetization" title={
-						<span className="d-inline">Monetization</span>
+						<span className="d-none d-md-inline">Monetization</span>
+						<span className="d-md-none">💰</span>
 					}>
 						{renderMonetizationTab()}
 					</Tab>
 					<Tab eventKey="subscribers" title={
-						<span className="d-inline">Subscribers</span>
+						<span className="d-none d-md-inline">Subscribers</span>
+						<span className="d-md-none">👥</span>
 					}>
 						{renderSubscriberTab()}
 					</Tab>
