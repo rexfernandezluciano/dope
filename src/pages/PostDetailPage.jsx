@@ -488,18 +488,16 @@ const PostDetailPage = () => {
 					},
 					likes: commentData.likes || [],
 					replies: commentData.replies || [],
-					tip: {
-						amount:
-							commentMode === "tip" && commentTipAmount
-								? parseInt(commentTipAmount)
-								: undefined,
-					},
-					donation: {
-						amount:
-							commentMode === "donation" && commentDonationAmount
-								? parseInt(commentDonationAmount)
-								: undefined,
-					},
+					...(commentMode === "tip" && commentTipAmount && parseInt(commentTipAmount) > 0 ? {
+						tip: {
+							amount: parseInt(commentTipAmount)
+						}
+					} : {}),
+					...(commentMode === "donation" && commentDonationAmount && parseInt(commentDonationAmount) > 0 ? {
+						donation: {
+							amount: parseInt(commentDonationAmount)
+						}
+					} : {}),
 				};
 
 				// Add to comments list
