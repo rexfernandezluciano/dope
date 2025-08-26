@@ -7,6 +7,7 @@ import { formatTimeAgo, formatCurrency } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { CheckCircle, XCircle, GraphUp, GraphUpArrow, CurrencyDollar, PeopleFill } from 'react-bootstrap-icons';
+import { TbBrandGoogleAnalytics } from "react-icons/tb";
 
 const AnalyticsPage = () => {
 	const [analytics, setAnalytics] = useState(null);
@@ -900,7 +901,7 @@ const AnalyticsPage = () => {
 					<Tab eventKey="overview" title={
 						<>
 							<span className="d-none d-md-inline">Overview</span>
-							<span className="d-md-none"><GraphUp size={16} /></span>
+							<span className="d-md-none"><TbBrandGoogleAnalytics size={16} /></span>
 						</>
 					}>
 						{renderOverviewTab()}
