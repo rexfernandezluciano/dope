@@ -63,13 +63,10 @@ const NavigationView = ({ children }) => {
 		creditsDisplay: "₱0.00",
 	});
 
-	// Handle NProgress for all navigation including browser back/forward
+	// Handle NProgress completion for navigation
 	useEffect(() => {
-		const handleStart = () => NProgress.start();
-		const handleComplete = () => NProgress.done();
-
-		// Listen to React Router navigation events
-		window.addEventListener("beforeunload", handleStart);
+		// Ensure NProgress completes when component mounts
+		NProgress.done();
 
 		// Initialize user and notifications
 		if (loaderUserData && loaderUserData.uid) {
