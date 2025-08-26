@@ -49,6 +49,7 @@ const PostCard = ({
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
 	const [showPostOptionsModal, setShowPostOptionsModal] = useState(false);
+	const [showRepostModal, setShowRepostModal] = useState(false); // State for repost modal
 	const cardRef = useRef(null);
 	const [viewTracked, setViewTracked] = useState(false);
 	const [showComments, setShowComments] = useState(false); // Local state for comments visibility
@@ -246,6 +247,19 @@ const PostCard = ({
 	const closePostOptionsModal = useCallback(() => {
 		setShowPostOptionsModal(false);
 	}, []);
+
+	const handleRepost = useCallback(async (content = "") => {
+		try {
+			const response = await postAPI.repost(post.id, { content });
+			// Optionally update UI or show a success message
+			console.log("Reposted successfully:", response);
+			setShowRepostModal(false); // Close the modal after reposting
+			return response;
+		} catch (error) {
+			console.error("Failed to repost:", error);
+			// Handle error display to user
+		}
+	}, [post.id]);
 
 	return (
 		<>
@@ -855,7 +869,10 @@ const PostCard = ({
 						</button>
 						<button
 							className="list-group-item list-group-item-action border-0"
-							onClick={closePostOptionsModal}
+							onClick={() => {
+								setShowRepostModal(true);
+								closePostOptionsModal();
+							}}
 						>
 							Repost
 						</button>
@@ -876,6 +893,28 @@ const PostCard = ({
 							</button>
 						)}
 					</div>
+				</Modal.Body>
+			</Modal>
+
+			{/* Repost Modal */}
+			<Modal
+				show={showRepostModal}
+				onHide={() => setShowRepostModal(false)}
+				centered
+			>
+				<Modal.Header closeButton>
+					<Modal.Title>Repost Post</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<textarea
+						className="form-control mb-3"
+						placeholder="Add your thoughts (optional)..."
+						rows="3"
+						onChange={(e) => handleRepost(e.target.value)}
+					></textarea>
+					<Button variant="primary" onClick={() => handleRepost()}>
+						Repost
+					</Button>
 				</Modal.Body>
 			</Modal>
 		</>

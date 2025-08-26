@@ -884,6 +884,13 @@ export const postAPI = {
 		});
 	},
 
+	repostPost: async (postId, content = "") => {
+		return await apiRequest(`/posts/${postId}/repost`, {
+			method: "POST",
+			data: { content },
+		});
+	},
+
 	trackView: async (postId) => {
 		return await apiRequest(`/posts/${postId}/view`, {
 			method: "POST",

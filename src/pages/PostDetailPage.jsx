@@ -32,6 +32,7 @@ import { postAPI, commentAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import CommentItem from "../components/CommentItem";
 import PollView from "../components/PollView";
+import RepostModal from "../components/RepostModal";
 import {
 	formatTimeAgo,
 	deletePost as deletePostUtil,
@@ -85,6 +86,8 @@ const PostDetailPage = () => {
 	const [userVotedOption, setUserVotedOption] = useState(null);
 	const [liked, setLiked] = useState(false);
 	const [likeCount, setLikeCount] = useState(0);
+	const [showRepostModal, setShowRepostModal] = useState(false);
+	const [reposting, setReposting] = useState(false);
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -321,6 +324,25 @@ const PostDetailPage = () => {
 		setPostToDelete(postId);
 		setShowDeleteDialog(true);
 	};
+
+	const handleRepost = useCallback(async (content = "") => {
+		try {
+			setReposting(true);
+			const response = await postAPI.repostPost(post.id, content);
+			
+			// Close modal
+			setShowRepostModal(false);
+			
+			// Optionally show success message or redirect
+			console.log("Repost successful:", response);
+			
+		} catch (error) {
+			console.error("Failed to repost:", error);
+			setError("Failed to repost");
+		} finally {
+			setReposting(false);
+		}
+	}, [post?.id]);
 
 	// Replaced deleteFromCloudinary with the reusable deletePostUtil
 	const confirmDeletePost = async () => {
@@ -1459,6 +1481,16 @@ const PostDetailPage = () => {
 				</Modal>
 			)}
 
+			{/* Repost Modal */}
+			<RepostModal
+				show={showRepostModal}
+				onHide={() => setShowRepostModal(false)}
+				onRepost={handleRepost}
+				post={post}
+				currentUser={currentUser}
+				loading={reposting}
+			/>
+
 			{/* Post Options Modal */}
 			{setShowPostOptionsModal && (
 				<Modal
@@ -1484,7 +1516,10 @@ const PostDetailPage = () => {
 							</button>
 							<button
 								className="list-group-item list-group-item-action border-0"
-								onClick={() => setShowPostOptionsModal(false)}
+								onClick={() => {
+									setShowPostOptionsModal(false);
+									setShowRepostModal(true);
+								}}
 							>
 								Repost
 							</button>
