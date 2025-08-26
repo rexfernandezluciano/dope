@@ -95,13 +95,16 @@ const PostCard = ({
 								if (isAdPost && post.adCampaign) {
 									await businessAPI.trackAdInteraction({
 										campaignId: post.adCampaign.id,
-										action: 'impression',
-										userId: currentUser?.uid || 'anonymous'
+										action: "impression",
+										userId: currentUser?.uid || "anonymous",
 									});
-									console.log('Advertisement impression tracked');
+									console.log("Advertisement impression tracked");
 								}
 							} catch (error) {
-								console.error('Failed to track post view or ad impression:', error);
+								console.error(
+									"Failed to track post view or ad impression:",
+									error,
+								);
 							}
 						};
 
@@ -126,7 +129,6 @@ const PostCard = ({
 			observer.disconnect();
 		};
 	}, [post.id, viewTracked, isAdPost, post.adCampaign, currentUser]);
-
 
 	const canComment = useMemo(() => {
 		if (!currentUser) return false;
@@ -289,18 +291,21 @@ const PostCard = ({
 		setShowPostOptionsModal(false);
 	}, []);
 
-	const handleRepost = useCallback(async (content = "") => {
-		try {
-			const response = await postAPI.repost(post.id, content);
-			console.log("Reposted successfully:", response);
-			setShowRepostModal(false);
-			return response;
-		} catch (error) {
-			console.error("Failed to repost:", error);
-			// Let the modal handle the error display
-			throw error;
-		}
-	}, [post.id]);
+	const handleRepost = useCallback(
+		async (content = "") => {
+			try {
+				const response = await postAPI.repost(post.id, content);
+				console.log("Reposted successfully:", response);
+				setShowRepostModal(false);
+				return response;
+			} catch (error) {
+				console.error("Failed to repost:", error);
+				// Let the modal handle the error display
+				throw error;
+			}
+		},
+		[post.id],
+	);
 
 	const handleAdClick = useCallback(async () => {
 		if (!isAdPost || !post.adCampaign) return;
@@ -309,24 +314,28 @@ const PostCard = ({
 			// Track ad click using actual API
 			await businessAPI.trackAdInteraction({
 				campaignId: post.adCampaign.id,
-				action: 'click',
-				userId: currentUser?.uid || 'anonymous'
+				action: "click",
+				userId: currentUser?.uid || "anonymous",
 			});
 
-			console.log('Advertisement click tracked successfully');
+			console.log("Advertisement click tracked successfully");
 
 			// Navigate based on ad target type
-			if (post.adCampaign.targetType === 'profile') {
+			if (post.adCampaign.targetType === "profile") {
 				navigate(`/${post.adCampaign.targetId}`);
-			} else if (post.adCampaign.targetType === 'url') {
-				if (post.adCampaign.targetId.startsWith('http')) {
-					window.open(post.adCampaign.targetId, '_blank', 'noopener,noreferrer');
+			} else if (post.adCampaign.targetType === "url") {
+				if (post.adCampaign.targetId.startsWith("http")) {
+					window.open(
+						post.adCampaign.targetId,
+						"_blank",
+						"noopener,noreferrer",
+					);
 				} else {
 					navigate(post.adCampaign.targetId);
 				}
 			}
 		} catch (error) {
-			console.error('Failed to track ad click:', error);
+			console.error("Failed to track ad click:", error);
 		}
 	}, [isAdPost, post.adCampaign, currentUser, navigate]);
 
@@ -334,7 +343,7 @@ const PostCard = ({
 		<>
 			<Card
 				ref={cardRef}
-				className={`border-0 border-bottom rounded-0 mb-0 ${isAdPost ? 'bg-white' : ''}`}
+				className={`border-0 border-bottom rounded-0 mb-0 ${isAdPost ? "bg-white" : ""}`}
 				style={{ cursor: "pointer" }}
 				onClick={isAdPost ? handleAdClick : handlePostClickView}
 			>
@@ -346,7 +355,9 @@ const PostCard = ({
 								<Badge bg="secondary" className="small">
 									Sponsored
 								</Badge>
-								<small className="text-muted">Advertisement • {post.adCampaign.title}</small>
+								<small className="text-muted">
+									Advertisement • {post.adCampaign.title}
+								</small>
 							</div>
 						</div>
 					)}
@@ -520,7 +531,13 @@ const PostCard = ({
 							)}
 
 							{/* Poll Display */}
-							{post.poll && <PollView post={post} currentUser={currentUser} onClick={(e) => e.stopPropagation()} />}
+							{post.poll && (
+								<PollView
+									post={post}
+									currentUser={currentUser}
+									onClick={(e) => e.stopPropagation()}
+								/>
+							)}
 
 							{/* Reposts Display */}
 							{post.reposts && post.reposts.length > 0 && (
@@ -546,9 +563,15 @@ const PostCard = ({
 											)}
 										</div>
 										{post.reposts.slice(0, 3).map((repost, index) => (
-											<div key={repost.id} className={`d-flex gap-2 ${index > 0 ? 'mt-2' : ''}`}>
+											<div
+												key={repost.id}
+												className={`d-flex gap-2 ${index > 0 ? "mt-2" : ""}`}
+											>
 												<Image
-													src={repost.user.photoURL || "https://i.pravatar.cc/150?img=10"}
+													src={
+														repost.user.photoURL ||
+														"https://i.pravatar.cc/150?img=10"
+													}
 													alt="repost avatar"
 													roundedCircle
 													width="24"
@@ -572,7 +595,10 @@ const PostCard = ({
 															{repost.user.name}
 														</span>
 														{repost.user.hasBlueCheck && (
-															<CheckCircleFill className="text-primary" size={12} />
+															<CheckCircleFill
+																className="text-primary"
+																size={12}
+															/>
 														)}
 														<span className="text-muted small">·</span>
 														<span className="text-muted small">
@@ -701,7 +727,7 @@ const PostCard = ({
 										</span>
 									)}
 								</div>
-								<div className="d-flex flex-wrap gap-3 small text-muted">
+								<div className="d-flex flex-wrap gap-2 small text-muted">
 									{post.stats?.views > 0 && (
 										<span>{post.stats.views} views</span>
 									)}
@@ -723,7 +749,9 @@ const PostCard = ({
 												handleAdClick();
 											}}
 										>
-											{post.adCampaign.targetType === 'profile' ? 'Visit Profile' : 'Learn More'}
+											{post.adCampaign.targetType === "profile"
+												? "Visit Profile"
+												: "Learn More"}
 										</Button>
 										<small className="text-muted">
 											<a
@@ -774,7 +802,9 @@ const PostCard = ({
 								>
 									<ChatDots size={20} style={{ flexShrink: 0 }} />
 									{post.stats?.comments > 0 && (
-										<span className="small d-none d-sm-inline">{post.stats?.comments}</span>
+										<span className="small d-none d-sm-inline">
+											{post.stats?.comments}
+										</span>
 									)}
 								</Button>
 
@@ -790,7 +820,10 @@ const PostCard = ({
 										height: "36px",
 										justifyContent: "center",
 									}}
-									onClick={handleLike}
+									onClick={(e) => {
+										e.stopPropagation();
+										handleLike();
+									}}
 									disabled={likingPost}
 									onMouseEnter={(e) => {
 										if (!currentUserLiked && !likingPost) {
@@ -808,14 +841,20 @@ const PostCard = ({
 									}}
 								>
 									{likingPost ? (
-										<Spinner size="sm" animation="border" style={{ width: "20px", height: "20px" }} />
+										<Spinner
+											size="sm"
+											animation="border"
+											style={{ width: "20px", height: "20px" }}
+										/>
 									) : currentUserLiked ? (
 										<HeartFill size={20} style={{ flexShrink: 0 }} />
 									) : (
 										<Heart size={20} style={{ flexShrink: 0 }} />
 									)}
 									{!likingPost && post.stats?.likes > 0 && (
-										<span className="small d-none d-sm-inline">{post.stats?.likes}</span>
+										<span className="small d-none d-sm-inline">
+											{post.stats?.likes}
+										</span>
 									)}
 								</Button>
 
