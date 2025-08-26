@@ -173,10 +173,16 @@ const BusinessPage = () => {
 	const loadProfiles = async () => {
 		try {
 			setLoadingTargets(true);
-			const response = await apiRequest("/users");
-			setAvailableProfiles(response.users || []);
+			// Get current user's profile only
+			const response = await authAPI.me();
+			if (response) {
+				setAvailableProfiles([response]);
+			} else {
+				setAvailableProfiles([]);
+			}
 		} catch (error) {
-			console.error("Failed to load profiles:", error);
+			console.error("Failed to load user profile:", error);
+			setAvailableProfiles([]);
 		} finally {
 			setLoadingTargets(false);
 		}
@@ -771,7 +777,7 @@ const BusinessPage = () => {
 														))
 													: availableProfiles.map((profile) => (
 															<option key={profile.uid} value={profile.uid}>
-																{profile.name} (@{profile.username})
+																My Profile - {profile.name} (@{profile.username})
 															</option>
 														))}
 											</Form.Select>
@@ -787,7 +793,7 @@ const BusinessPage = () => {
 											availableProfiles.length === 0 &&
 											!loadingTargets && (
 												<Form.Text className="text-muted">
-													No profiles available to promote.
+													Unable to load your profile for promotion.
 												</Form.Text>
 											)}
 									</Form.Group>
