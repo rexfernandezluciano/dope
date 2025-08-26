@@ -239,13 +239,23 @@ const NavigationView = ({ children }) => {
 
 				setShowLogoutDialog(false);
 
+				// Clear auth token
+				const { removeAuthToken } = await import("../../utils/app-utils");
+				removeAuthToken();
+				
 				// Redirect to start page
 				window.location.href = "/";
 			} catch (error) {
 				console.error("Local logout error:", error);
-				// Even if there's an error, still redirect
+				// Clear auth token even if there's an error
+				try {
+					const { removeAuthToken } = await import("../../utils/app-utils");
+					removeAuthToken();
+				} catch (tokenError) {
+					console.error("Failed to remove auth token:", tokenError);
+				}
+				// Still redirect
 				window.location.href = "/";
-			}
 		}
 	};
 

@@ -86,21 +86,8 @@ const router = createBrowserRouter([
 	},
 	{
 		path: "/",
-		element: (
-			<RequireAuth>
-				<IndexPage />
-			</RequireAuth>
-		),
-		loader: IndexPageLoader,
+		element: <StartPage />,
 		hydrateFallbackElement: <LoadingView />,
-		children: [
-			{
-				index: true,
-				element: <HomePage />,
-				loader: IndexPageLoader,
-				hydrateFallbackElement: <LoadingView />,
-			},
-		],
 	},
 	{
 		path: "/home",
