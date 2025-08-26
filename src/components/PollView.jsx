@@ -96,8 +96,10 @@ const PollView = ({ post, currentUser, ...props }) => {
               className={`position-relative border rounded-3 p-2 mb-2 ${
                 canVote ? "cursor-pointer hover-effect" : ""
               } ${
-                selected || option.isUserChoice
+                selected
                   ? "border-primary bg-primary bg-opacity-10"
+                  : option.isUserChoice
+                  ? "border-success bg-success bg-opacity-10"
                   : "border-secondary"
               }`}
               style={{
@@ -121,11 +123,11 @@ const PollView = ({ post, currentUser, ...props }) => {
                 style={{ zIndex: 2 }}
               >
                 <span
-                  className={`${selected || option.isUserChoice ? "fw-bold text-white" : ""}`}
+                  className={`${selected ? "fw-bold text-primary" : option.isUserChoice ? "fw-bold text-success" : ""}`}
                 >
                   {option.text}
                 </span>
-                <span className={`small ${option.isUserChoice ? "text-white" : "text-muted"}`}>
+                <span className={`small ${selected ? "text-primary" : option.isUserChoice ? "text-success" : "text-muted"}`}>
                   {option.percentage}% ({option.votes})
                 </span>
               </div>
