@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Tab, Tabs } from "react-bootstrap";
 import { analyticsAPI, subscriptionAPI } from "../config/ApiConfig";
-import { formatTimeAgo, formatCurrency } from "../utils/common-utils";
+import { formatTimeAgo } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { CheckCircle, XCircle, GraphUp, GraphUpArrow, CurrencyDollar, PeopleFill } from 'react-bootstrap-icons';
+import { CheckCircle, XCircle, GraphUpArrow, CurrencyDollar, PeopleFill } from 'react-bootstrap-icons';
 import { TbBrandGoogleAnalytics } from "react-icons/tb";
 
 const AnalyticsPage = () => {
@@ -41,6 +41,8 @@ const AnalyticsPage = () => {
 			]);
 
 			setAnalytics(userAnalytics);
+
+			console.log("User Analytics:", JSON.stringify(userAnalytics, null, 2));
 			setSubscribers(subscriberData.subscribers || []);
 			setSubscriberStats(subscriberData.stats || {});
 		} catch (err) {
@@ -279,7 +281,7 @@ const AnalyticsPage = () => {
 				</Col>
 				<Col xs={6} lg={3}>
 					<StatCard
-						value={analytics?.revenue?.totalRevenueFormatted || "₱0.00"}
+						value={analytics?.revenue?.totalRevenueFormatted || "$0.00"}
 						label="Total Earnings"
 						subtitle={analytics?.period || '30 days'}
 						variant="success"
@@ -566,29 +568,23 @@ const AnalyticsPage = () => {
 		const revenueGrowth = analytics?.overview?.revenueGrowth || 0;
 
 		// Get monetization eligibility from analytics
-		const monetization = analytics?.monetization || {
-			isEligible: false,
-			requirements: {
-				followers: { current: 0, required: 500, met: false },
-				recentActivity: { postsLast24h: 0, required: 1, met: false },
-				accountStatus: { blocked: false, restricted: false, violations: 0, goodStanding: true }
-			}
-		};
+		const monetization = analytics?.monetization;
 
 		return (
 			<>
 				{/* Monetization Eligibility Card */}
+				{monetization &&
 				<Card className="border-0 shadow-sm mb-4">
 					<Card.Header>
 						<div className="d-flex justify-content-between align-items-center">
 							<h6 className="mb-0">Monetization Eligibility</h6>
-							<Badge bg={monetization.isEligible ? 'success' : 'warning'}>
-								{monetization.isEligible ? 'Eligible' : 'Not Eligible'}
+							<Badge bg={monetization?.isEligible ? 'success' : 'warning'}>
+								{monetization?.isEligible ? 'Eligible' : 'Not Eligible'}
 							</Badge>
 						</div>
 					</Card.Header>
 					<Card.Body>
-						{!monetization.isEligible && (
+						{!monetization?.isEligible && (
 							<div className="mb-3">
 								<div className="alert alert-info mb-3">
 									<small>
@@ -604,25 +600,25 @@ const AnalyticsPage = () => {
 								<div className="p-3 border rounded">
 									<div className="d-flex justify-content-between align-items-center mb-2">
 										<small className="text-muted">Followers</small>
-										<Badge bg={monetization.requirements.followers.met ? 'success' : 'secondary'}>
-											{monetization.requirements.followers.met ? <CheckCircle size={12} /> : <XCircle size={12} />}
+										<Badge bg={monetization?.requirements?.followers?.met ? 'success' : 'secondary'}>
+											{monetization?.requirements?.followers?.met ? <CheckCircle size={12} /> : <XCircle size={12} />}
 										</Badge>
 									</div>
 									<div className="mb-2">
-										<strong>{monetization.requirements.followers.current}</strong>
-										<span className="text-muted"> / {monetization.requirements.followers.required}</span>
+										<strong>{monetization?.requirements?.followers?.current}</strong>
+										<span className="text-muted"> / {monetization?.requirements?.followers?.required}</span>
 									</div>
 									<div className="progress" style={{ height: '4px' }}>
 										<div 
-											className={`progress-bar ${monetization.requirements.followers.met ? 'bg-success' : 'bg-primary'}`}
+											className={`progress-bar ${monetization?.requirements?.follower?.met ? 'bg-success' : 'bg-primary'}`}
 											style={{ 
-												width: `${Math.min((monetization.requirements.followers.current / monetization.requirements.followers.required) * 100, 100)}%` 
+												width: `${Math.min((monetization?.requirements?.followers?.current / monetization?.requirements?.followers?.required) * 100, 100)}%` 
 											}}
 										></div>
 									</div>
-									{!monetization.requirements.followers.met && (
+									{!monetization?.requirements?.followers?.met && (
 										<small className="text-muted">
-											{monetization.requirements.followers.required - monetization.requirements.followers.current} more needed
+											{monetization?.requirements?.followers?.required - monetization?.requirements?.followers?.current} more needed
 										</small>
 									)}
 								</div>
@@ -633,17 +629,17 @@ const AnalyticsPage = () => {
 								<div className="p-3 border rounded">
 									<div className="d-flex justify-content-between align-items-center mb-2">
 										<small className="text-muted">Daily Activity</small>
-										<Badge bg={monetization.requirements.recentActivity.met ? 'success' : 'secondary'}>
-											{monetization.requirements.recentActivity.met ? <CheckCircle size={12} /> : <XCircle size={12} />}
+										<Badge bg={monetization?.requirements?.recentActivity?.met ? 'success' : 'secondary'}>
+											{monetization?.requirements?.recentActivity?.met ? <CheckCircle size={12} /> : <XCircle size={12} />}
 										</Badge>
 									</div>
 									<div className="mb-2">
-										<strong>{monetization.requirements.recentActivity.postsLast24h}</strong>
-										<span className="text-muted"> / {monetization.requirements.recentActivity.required} posts</span>
+										<strong>{monetization?.requirements?.recentActivity?.postsLast24h}</strong>
+										<span className="text-muted"> / {monetization?.requirements?.recentActivity?.required} posts</span>
 									</div>
 									<div className="progress" style={{ height: '4px' }}>
 										<div 
-											className={`progress-bar ${monetization.requirements.recentActivity.met ? 'bg-success' : 'bg-primary'}`}
+											className={`progress-bar ${monetization?.requirements?.recentActivity?.met ? 'bg-success' : 'bg-primary'}`}
 											style={{ 
 												width: `${Math.min((monetization.requirements.recentActivity.postsLast24h / monetization.requirements.recentActivity.required) * 100, 100)}%` 
 											}}
@@ -683,7 +679,7 @@ const AnalyticsPage = () => {
 							</Col>
 						</Row>
 					</Card.Body>
-				</Card>
+				</Card>}
 
 				<Row className="g-3 mb-4">
 					<Col xs={6} lg={3}>
