@@ -570,6 +570,8 @@ const AnalyticsPage = () => {
 		// Get monetization eligibility from analytics
 		const monetization = analytics?.monetization;
 
+		console.log("Monetization Data:", JSON.stringify(monetization, null, 2));
+
 		return (
 			<>
 				{/* Monetization Eligibility Card */}
