@@ -1,14 +1,12 @@
 
 /** @format */
 
-import { createProxyMiddleware } from "http-proxy-middleware";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+const { createProxyMiddleware } = require("http-proxy-middleware");
+const fs = require("fs");
+const path = require("path");
 
-// Get the directory name from the file URL
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// __dirname is available by default in CommonJS
+// No need to derive it from import.meta.url
 
 // Force production mode for SSR
 process.env.NODE_ENV = "production";
@@ -177,7 +175,7 @@ const injectMetaTags = (html, metaData, url) => {
 	return updatedHtml;
 };
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
 	const url = req.url;
 
 	// Set CORS headers
