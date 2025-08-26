@@ -1,6 +1,27 @@
-
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "builds": [
+    {
+      "src": "ssr-server.js",
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 10,
+        "runtime": "nodejs22.x",
+        "installCommand": "npm install --legacy-peer-deps",
+        "buildCommand": "npm run build",
+        "startCommand": "npm run start",
+        "postInstallCommand": "npm run prisma generate --no-engine"
+      }
+    }
+  ],
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "npm run build",
+  "startCommand": "npm run start",
   "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "ssr-server.js"
+    },
     {
       "source": "/v1/(.*)",
       "destination": "https://api.dopp.eu.org/v1/$1"
