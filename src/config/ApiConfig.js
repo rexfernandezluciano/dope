@@ -891,6 +891,14 @@ export const postAPI = {
 		});
 	},
 
+	// Alias for repostPost for compatibility
+	repost: async (postId, content = "") => {
+		return await apiRequest(`/posts/${postId}/repost`, {
+			method: "POST",
+			data: { content },
+		});
+	},
+
 	// Get reposts for a post
 	getReposts: (postId) =>
 		apiRequest(`/posts/${postId}/reposts`, {
