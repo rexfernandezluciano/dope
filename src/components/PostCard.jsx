@@ -428,6 +428,71 @@ const PostCard = ({
 							{/* Poll Display */}
 							{post.poll && <PollView post={post} currentUser={currentUser} onClick={(e) => e.stopPropagation()} />}
 
+							{/* Reposts Display */}
+							{post.reposts && post.reposts.length > 0 && (
+								<div className="mb-2">
+									<div className="border rounded-3 p-3 bg-light">
+										<h6 className="mb-2 text-muted">
+											<Share size={16} className="me-1" />
+											Reposts ({post.reposts.length})
+										</h6>
+										{post.reposts.slice(0, 3).map((repost, index) => (
+											<div key={repost.id} className={`d-flex gap-2 ${index > 0 ? 'mt-2' : ''}`}>
+												<Image
+													src={repost.user.photoURL || "https://i.pravatar.cc/150?img=10"}
+													alt="repost avatar"
+													roundedCircle
+													width="24"
+													height="24"
+													style={{
+														objectFit: "cover",
+														minWidth: "24px",
+														minHeight: "24px",
+													}}
+												/>
+												<div className="flex-grow-1">
+													<div className="d-flex align-items-center gap-1">
+														<span
+															className="fw-bold small"
+															style={{ cursor: "pointer", color: "inherit" }}
+															onClick={(e) => {
+																e.stopPropagation();
+																navigate(`/${repost.user.username}`);
+															}}
+														>
+															{repost.user.name}
+														</span>
+														{repost.user.hasBlueCheck && (
+															<CheckCircleFill className="text-primary" size={12} />
+														)}
+														<span className="text-muted small">·</span>
+														<span className="text-muted small">
+															{formatTimeAgo(repost.createdAt)}
+														</span>
+													</div>
+													{repost.content && (
+														<div className="small text-muted">
+															{parseTextContent(repost.content, {
+																onHashtagClick: handleHashtagClick,
+																onMentionClick: handleMentionClick,
+																onLinkClick: handleLinkClick,
+															})}
+														</div>
+													)}
+												</div>
+											</div>
+										))}
+										{post.reposts.length > 3 && (
+											<div className="text-center mt-2">
+												<small className="text-muted">
+													+{post.reposts.length - 3} more reposts
+												</small>
+											</div>
+										)}
+									</div>
+								</div>
+							)}
+
 							{post.postType === "live_video" && post.liveVideoUrl && (
 								<div className="mb-2">
 									<div className="position-relative rounded overflow-hidden bg-dark">

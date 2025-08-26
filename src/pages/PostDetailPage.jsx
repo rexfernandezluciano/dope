@@ -849,6 +849,61 @@ const PostDetailPage = () => {
 								/>
 							)}
 
+							{/* Reposts Display */}
+							{post.reposts && post.reposts.length > 0 && (
+								<div className="mb-2">
+									<div className="border rounded-3 p-3 bg-light">
+										<h6 className="mb-2 text-muted">
+											<Share size={16} className="me-1" />
+											Reposts ({post.reposts.length})
+										</h6>
+										{post.reposts.map((repost, index) => (
+											<div key={repost.id} className={`d-flex gap-2 ${index > 0 ? 'mt-3 pt-2 border-top' : ''}`}>
+												<Image
+													src={repost.user.photoURL || "https://i.pravatar.cc/150?img=10"}
+													alt="repost avatar"
+													roundedCircle
+													width="32"
+													height="32"
+													style={{
+														objectFit: "cover",
+														minWidth: "32px",
+														minHeight: "32px",
+													}}
+												/>
+												<div className="flex-grow-1">
+													<div className="d-flex align-items-center gap-1">
+														<span
+															className="fw-bold"
+															style={{ cursor: "pointer", color: "inherit" }}
+															onClick={() => navigate(`/${repost.user.username}`)}
+														>
+															{repost.user.name}
+														</span>
+														{repost.user.hasBlueCheck && (
+															<CheckCircleFill className="text-primary" size={14} />
+														)}
+														<span className="text-muted">·</span>
+														<span className="text-muted small">
+															{formatTimeAgo(repost.createdAt)}
+														</span>
+													</div>
+													{repost.content && (
+														<div className="mt-1">
+															{parseTextContent(repost.content, {
+																onHashtagClick: handleHashtagClick,
+																onMentionClick: handleMentionClick,
+																onLinkClick: handleLinkClick,
+															})}
+														</div>
+													)}
+												</div>
+											</div>
+										))}
+									</div>
+								</div>
+							)}
+
 							{post.imageUrls && post.imageUrls.length > 0 && (
 								<div className="mb-2">
 									{post.imageUrls.length === 1 ? (
