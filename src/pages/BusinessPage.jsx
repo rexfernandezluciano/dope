@@ -33,7 +33,6 @@ const BusinessPage = () => {
 	const [dashboard, setDashboard] = useState({});
 	const [campaigns, setCampaigns] = useState([]);
 	const [credits, setCredits] = useState({ credits: 0, creditsDisplay: 0 });
-	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
 	const [showCreateModal, setShowCreateModal] = useState(false);
@@ -103,7 +102,6 @@ const BusinessPage = () => {
 
 	const loadBusinessData = async () => {
 		try {
-			setLoading(true);
 			const [dashboardResponse, campaignsResponse] = await Promise.all([
 				businessAPI.getDashboard(),
 				businessAPI.getCampaigns(),
@@ -113,8 +111,6 @@ const BusinessPage = () => {
 		} catch (error) {
 			setError("Failed to load business data");
 			console.error(error);
-		} finally {
-			setLoading(false);
 		}
 	};
 

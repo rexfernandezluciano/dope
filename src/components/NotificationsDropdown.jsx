@@ -44,9 +44,11 @@ const NotificationsDropdown = ({ notifications = [], unreadCount = 0, user }) =>
 		setLoading(true);
 		try {
 			const allNotifs = await getUserNotifications(user.uid, 50);
-			setAllNotifications(allNotifs);
+			setAllNotifications(allNotifs || []);
 		} catch (error) {
 			console.error('Error loading notifications:', error);
+			// Set empty array on error to prevent infinite loading
+			setAllNotifications([]);
 		} finally {
 			setLoading(false);
 		}

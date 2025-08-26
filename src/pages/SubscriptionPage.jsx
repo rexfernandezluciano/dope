@@ -110,61 +110,63 @@ const SubscriptionPage = () => {
 	const handleAddPaymentMethod = async () => {
 		try {
 			setLoading(true);
+			setMessage("");
 
-			let paymentData;
 			if (selectedPaymentType === "card") {
-				// For card payments, redirect to PayPal to get paymentMethodId
+				// Load PayPal SDK first
 				try {
-					const paypalPaymentMethodId = await handlePayPalCardSetup();
+					await loadPayPalSDK();
+				} catch (sdkError) {
+					throw new Error("Failed to load PayPal SDK. Please refresh and try again.");
+				}
 
-					paymentData = {
-						type: "paypal_card",
-						paypalPaymentMethodId: paypalPaymentMethodId,
-						isDefault: cardForm.isDefault || paymentMethods.length === 0
-					};
+				// Create PayPal payment method
+				let paymentMethodId;
+				try {
+					paymentMethodId = await createPayPalPaymentMethod("#paypal-card-container");
 				} catch (paypalError) {
-					setMessage(paypalError.message || "Failed to set up PayPal payment method");
-					setMessageType("danger");
-					setLoading(false);
+					throw new Error("PayPal card setup failed. Please try again.");
+				}
+
+				// Add the payment method to the user's account
+				const response = await paymentAPI.addPaymentMethod({
+					type: "paypal_card",
+					paymentMethodId: paymentMethodId,
+					isDefault: cardForm.isDefault
+				});
+
+				if (response.success) {
+					setMessage("Card linked successfully via PayPal!");
+					setMessageType("success");
+					setShowAddPaymentModal(false);
+					setSelectedPaymentType("card");
+					setCardForm({
+						cardNumber: "",
+						expiryDate: "",
+						cvc: "",
+						cardholderName: "",
+						isDefault: false
+					});
+					loadPaymentMethods(); // Reload payment methods
+				}
+			} else {
+				// For PayPal wallet, redirect to PayPal for authorization
+				const response = await paymentAPI.addPaymentMethod({
+					type: "paypal_wallet",
+					isDefault: true
+				});
+
+				if (response.approveUrl) {
+					setMessage("Redirecting to PayPal...");
+					setMessageType("info");
+					setTimeout(() => {
+						window.location.href = response.approveUrl;
+					}, 1000);
 					return;
 				}
-			} else if (selectedPaymentType === "paypal") {
-				// For PayPal wallet, use different flow
-				paymentData = {
-					type: "paypal_wallet",
-					paypalEmail: user.email,
-					isDefault: paymentMethods.length === 0
-				};
 			}
-
-			if (paymentData) {
-				const response = await paymentAPI.addPaymentMethod(paymentData);
-
-				if (selectedPaymentType === "card") {
-					setMessage("Credit card linked through PayPal successfully!");
-				} else {
-					setMessage("PayPal connected successfully!");
-				}
-				setMessageType("success");
-
-				console.log("Payment method added:", response);
-			}
-
-			// Reload payment methods from server to ensure consistency
-			await loadPaymentMethods();
-
-			// Close modal and reset form
-			setShowAddPaymentModal(false);
-			setSelectedPaymentType("card");
-			setCardForm({
-				cardNumber: "",
-				expiryDate: "",
-				cvc: "",
-				cardholderName: "",
-				isDefault: false
-			});
 		} catch (error) {
-			console.error("Error adding payment method:", error);
+			console.error("Payment method error:", error);
 			setMessage(error.message || "Failed to add payment method");
 			setMessageType("danger");
 		} finally {
@@ -219,52 +221,62 @@ const SubscriptionPage = () => {
 		}
 	};
 
+	// Placeholder for loadData, assuming it fetches user details
+	const loadData = async () => {
+		// This function should ideally fetch user details to populate subscription state
+		// For now, we rely on useLoaderData for initial user data.
+		// If there's a need to refresh user data independently, implement it here.
+	};
+
+
 	useEffect(() => {
 		updatePageMeta(pageMetaData.subscription);
+		loadData();
+		loadPaymentMethods();
 
-		// Check if this is part of signup flow
-		const isPayment = searchParams.get('payment') === 'true';
-		const isSignup = searchParams.get('signup') === 'true';
-		const planParam = searchParams.get('plan');
+		// Check for payment completion
+		const urlParams = new URLSearchParams(window.location.search);
+		const paymentStatus = urlParams.get("payment");
 
-		if (isPayment && isSignup) {
-			setIsSignupFlow(true);
-			const storedData = sessionStorage.getItem('pendingSignupData');
-			if (storedData) {
+		if (paymentStatus === "success") {
+			setMessage(
+				"Payment completed successfully! Your subscription is now active.",
+			);
+			setMessageType("success");
+			loadData(); // Reload user data
+
+			// Clean up URL parameters
+			const newUrl = window.location.pathname;
+			window.history.replaceState({}, "", newUrl);
+		} else if (paymentStatus === "cancelled") {
+			setMessage("Payment was cancelled. Your subscription was not activated.");
+			setMessageType("warning");
+
+			// Clean up URL parameters
+			const newUrl = window.location.pathname;
+			window.history.replaceState({}, "", newUrl);
+		}
+	}, []);
+
+	// Initialize PayPal SDK when modal opens for card payments
+	useEffect(() => {
+		if (showAddPaymentModal && selectedPaymentType === "card") {
+			const initializePayPal = async () => {
 				try {
-					const data = JSON.parse(storedData);
-					setPendingSignupData(data);
-					if (planParam) {
-						setSelectedSubscription(planParam);
-					}
+					await loadPayPalSDK();
+					// PayPal SDK loaded successfully
 				} catch (error) {
-					console.error('Failed to parse signup data:', error);
+					console.error("Failed to load PayPal SDK:", error);
+					setMessage("Failed to load PayPal SDK. Please refresh and try again.");
+					setMessageType("danger");
 				}
-			}
-			setShowAddPaymentModal(true);
+			};
+
+			// Small delay to ensure modal DOM is ready
+			setTimeout(initializePayPal, 500);
 		}
+	}, [showAddPaymentModal, selectedPaymentType]);
 
-		if (user && typeof user === "object") {
-			// Handle both old and new API structures
-			const userSubscription = user.membership?.subscription || user.subscription || "free";
-			const nextBillingDate = user.membership?.nextBillingDate || null;
-			setSubscription({
-				plan: userSubscription,
-				status: "active",
-				nextBilling: nextBillingDate,
-				features: {
-					blueCheck: getBlueCheckStatus(userSubscription),
-					imageLimit: getImageLimit(userSubscription),
-					nameChangeLimit: false, // Simplified - no name change tracking
-					lastNameChange: null,
-				},
-			});
-
-
-			// Load payment methods
-			loadPaymentMethods();
-		}
-	}, [user]);
 
 	if (!user || typeof user !== "object") {
 		return (
