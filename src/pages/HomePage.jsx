@@ -24,7 +24,7 @@ import PostCard from "../components/PostCard";
 import PostComposer from "../components/PostComposer";
 import LiveStudioModal from "../components/LiveStudioModal";
 import UserRecommendation from "../components/UserRecommendation";
-import Advertisement from "../components/Advertisement";
+
 import { deletePost as deletePostUtil, sharePost } from "../utils/common-utils";
 import {
 	initializeNotifications,
@@ -58,9 +58,7 @@ const HomePage = () => {
 	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
-	const [showAds, setShowAds] = useState(true);
-	const [adInterval, setAdInterval] = useState(3); // Show ad every 3 posts
-	const [dismissedAds, setDismissedAds] = useState(new Set());
+	
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -692,17 +690,6 @@ const HomePage = () => {
 											currentUser={user} 
 											onClose={() => {
 												// Could hide recommendations if user dismisses
-											}}
-										/>
-									)}
-
-									{/* Show advertisement every few posts */}
-									{showAds && index > 0 && index % adInterval === 0 && !dismissedAds.has(`ad-${Math.floor(index / adInterval)}`) && (
-										<Advertisement 
-											key={`ad-${Math.floor(index / adInterval)}`}
-											currentUser={user}
-											onClose={() => {
-												setDismissedAds(prev => new Set([...prev, `ad-${Math.floor(index / adInterval)}`]));
 											}}
 										/>
 									)}

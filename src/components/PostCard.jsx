@@ -8,7 +8,7 @@ import React, {
 	useMemo,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Image, Button, Modal, Spinner } from "react-bootstrap";
+import { Card, Image, Button, Modal, Spinner, Badge } from "react-bootstrap";
 import {
 	Heart,
 	HeartFill,
@@ -46,6 +46,8 @@ const PostCard = ({
 	showComments: propShowComments = false, // Renamed prop to avoid conflict
 	comments = [],
 }) => {
+	// Check if this is an ad post
+	const isAdPost = post.isAd && post.adCampaign;
 	const navigate = useNavigate();
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -281,15 +283,52 @@ const PostCard = ({
 		}
 	}, [post.id]);
 
+	const handleAdClick = useCallback(async () => {
+		if (!isAdPost) return;
+
+		try {
+			// Track ad click
+			console.log('Ad click tracked:', {
+				campaignId: post.adCampaign.id,
+				action: 'click',
+				userId: currentUser?.uid || 'anonymous'
+			});
+
+			// Navigate based on ad target type
+			if (post.adCampaign.targetType === 'profile') {
+				navigate(`/${post.adCampaign.targetId}`);
+			} else if (post.adCampaign.targetType === 'url') {
+				if (post.adCampaign.targetId.startsWith('http')) {
+					window.open(post.adCampaign.targetId, '_blank', 'noopener,noreferrer');
+				} else {
+					navigate(post.adCampaign.targetId);
+				}
+			}
+		} catch (error) {
+			console.error('Failed to track ad click:', error);
+		}
+	}, [isAdPost, post.adCampaign, currentUser, navigate]);
+
 	return (
 		<>
 			<Card
 				ref={cardRef}
-				className="border-0 border-bottom rounded-0 mb-0"
+				className={`border-0 border-bottom rounded-0 mb-0 ${isAdPost ? 'bg-light' : ''}`}
 				style={{ cursor: "pointer" }}
-				onClick={handlePostClickView}
+				onClick={isAdPost ? handleAdClick : handlePostClickView}
 			>
 				<Card.Body className="px-3">
+					{/* Ad Banner */}
+					{isAdPost && (
+						<div className="d-flex justify-content-between align-items-center mb-2">
+							<div className="d-flex align-items-center gap-2">
+								<Badge bg="secondary" className="small">
+									Sponsored
+								</Badge>
+								<small className="text-muted">Advertisement • {post.adCampaign.title}</small>
+							</div>
+						</div>
+					)}
 					<div className="d-flex gap-2">
 						<Image
 							src={post.author.photoURL || "https://i.pravatar.cc/150?img=10"}
@@ -650,6 +689,35 @@ const PostCard = ({
 									)}
 								</div>
 							</div>
+
+							{/* Ad Call-to-Action */}
+							{isAdPost && (
+								<div className="mt-2 pt-2 border-top">
+									<div className="d-flex justify-content-between align-items-center">
+										<Button
+											variant="outline-primary"
+											size="sm"
+											onClick={(e) => {
+												e.stopPropagation();
+												handleAdClick();
+											}}
+										>
+											{post.adCampaign.targetType === 'profile' ? 'Visit Profile' : 'Learn More'}
+										</Button>
+										<small className="text-muted">
+											<a 
+												href="/privacy" 
+												className="text-decoration-none text-muted"
+												target="_blank"
+												rel="noopener noreferrer"
+												onClick={(e) => e.stopPropagation()}
+											>
+												Why am I seeing this?
+											</a>
+										</small>
+									</div>
+								</div>
+							)}
 
 							<div className="d-flex justify-content-between text-muted mt-3 pt-2 border-top">
 								<Button
