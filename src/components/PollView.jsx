@@ -99,7 +99,7 @@ const PollView = ({ post, currentUser, ...props }) => {
                 selected
                   ? "border-primary bg-primary bg-opacity-10"
                   : option.isUserChoice
-                  ? "border-success bg-success bg-opacity-10"
+                  ? "border-success bg-success text-white bg-opacity-10"
                   : "border-secondary"
               }`}
               style={{
@@ -111,7 +111,7 @@ const PollView = ({ post, currentUser, ...props }) => {
             >
               {/* Progress bar background */}
               <div
-                className="position-absolute top-0 start-0 h-100 bg-primary bg-opacity-25"
+                className="position-absolute top-0 start-0 h-100 bg-success text-white bg-opacity-25"
                 style={{
                   width: `${option.percentage}%`,
                   zIndex: 1,
