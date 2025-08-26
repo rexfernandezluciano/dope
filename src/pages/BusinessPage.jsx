@@ -26,7 +26,7 @@ import {
 	ArrowUpCircle,
 } from "react-bootstrap-icons";
 import { updatePageMeta } from "../utils/meta-utils";
-import { businessAPI, postAPI, apiRequest } from "../config/ApiConfig";
+import { businessAPI, postAPI, authAPI, apiRequest } from "../config/ApiConfig";
 
 const BusinessPage = () => {
 	const [activeTab, setActiveTab] = useState("overview");
