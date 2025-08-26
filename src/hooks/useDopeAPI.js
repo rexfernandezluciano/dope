@@ -150,7 +150,7 @@ export const usePosts = (initialParams = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [initialParams, cursor]);
+  }, []); // Remove dependencies that cause loops
 
   const createPost = useCallback(async (postData) => {
     try {
@@ -364,7 +364,7 @@ export const useNotifications = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Empty dependency array since it doesn't depend on external values
 
   const markAsRead = useCallback(async (notificationId) => {
     try {
@@ -390,9 +390,14 @@ export const useNotifications = () => {
     }
   }, []);
 
+  const [hasInitialized, setHasInitialized] = useState(false);
+
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    if (!hasInitialized) {
+      fetchNotifications();
+      setHasInitialized(true);
+    }
+  }, []); // Only run once on mount
 
   return {
     notifications,
@@ -446,8 +451,10 @@ export const useUser = (username) => {
   }, [username]);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    if (username) {
+      fetchUser();
+    }
+  }, [username]); // Only depend on username, not fetchUser
 
   return {
     user,

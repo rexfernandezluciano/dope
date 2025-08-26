@@ -61,44 +61,62 @@ const BusinessPage = () => {
 	const [availableProfiles, setAvailableProfiles] = useState([]);
 	const [loadingTargets, setLoadingTargets] = useState(false);
 
+	const [hasInitialized, setHasInitialized] = useState(false);
+
 	useEffect(() => {
-		updatePageMeta({
-			title: "Business Dashboard - DOPE Network",
-			description: "Manage your ad campaigns and business analytics",
-		});
-		loadBusinessData();
-		loadCredits();
-		loadPaymentMethods();
-		loadCreditsPackages();
+		if (!hasInitialized) {
+			updatePageMeta({
+				title: "Business Dashboard - DOPE Network",
+				description: "Manage your ad campaigns and business analytics",
+			});
+			
+			// Prevent multiple calls by batching them
+			const initializeData = async () => {
+				try {
+					await Promise.all([
+						loadBusinessData(),
+						loadCredits(),
+						loadPaymentMethods(),
+						loadCreditsPackages()
+					]);
+				} catch (error) {
+					console.error('Failed to initialize business data:', error);
+				}
+			};
+			
+			initializeData();
+			setHasInitialized(true);
 
-		// Check for PayPal payment completion
-		const urlParams = new URLSearchParams(window.location.search);
-		const paymentStatus = urlParams.get("payment");
-		const paymentId = urlParams.get("paymentId");
+			// Check for PayPal payment completion
+			const urlParams = new URLSearchParams(window.location.search);
+			const paymentStatus = urlParams.get("payment");
+			const paymentId = urlParams.get("paymentId");
 
-		if (paymentStatus === "success" && paymentId) {
-			setSuccess(
-				"Payment completed successfully! Your credits have been added to your account.",
-			);
-			loadCredits(); // Reload credits after successful payment
+			if (paymentStatus === "success" && paymentId) {
+				setSuccess(
+					"Payment completed successfully! Your credits have been added to your account.",
+				);
+				// Reload credits after successful payment
+				setTimeout(() => loadCredits(), 1000);
 
-			// Clean up URL parameters
-			const newUrl = window.location.pathname;
-			window.history.replaceState({}, "", newUrl);
-		} else if (paymentStatus === "cancelled") {
-			setError("Payment was cancelled. Your credits were not purchased.");
+				// Clean up URL parameters
+				const newUrl = window.location.pathname;
+				window.history.replaceState({}, "", newUrl);
+			} else if (paymentStatus === "cancelled") {
+				setError("Payment was cancelled. Your credits were not purchased.");
 
-			// Clean up URL parameters
-			const newUrl = window.location.pathname;
-			window.history.replaceState({}, "", newUrl);
-		} else if (paymentStatus === "failed") {
-			setError("Payment failed. Please try again or contact support.");
+				// Clean up URL parameters
+				const newUrl = window.location.pathname;
+				window.history.replaceState({}, "", newUrl);
+			} else if (paymentStatus === "failed") {
+				setError("Payment failed. Please try again or contact support.");
 
-			// Clean up URL parameters
-			const newUrl = window.location.pathname;
-			window.history.replaceState({}, "", newUrl);
+				// Clean up URL parameters
+				const newUrl = window.location.pathname;
+				window.history.replaceState({}, "", newUrl);
+			}
 		}
-	}, []);
+	}, [hasInitialized]);
 
 	const loadBusinessData = async () => {
 		try {
