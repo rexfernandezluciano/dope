@@ -176,10 +176,10 @@ const SettingsPage = () => {
 				</div>
 			</div>
 
-			<div className="row g-0">
+			<div className="d-flex">
 				{/* Sidebar Navigation */}
-				<div className="bg-white border-end d-none d-md-block" style={{ width: "280px", minHeight: "100vh" }}>
-					<Nav variant="pills" className="flex-column p-3">
+				<div className="bg-white border-end d-none d-md-flex flex-column" style={{ width: "280px", minHeight: "calc(100vh - 73px)" }}>
+					<Nav variant="pills" className="flex-column p-3 flex-grow-1">
 						{/* Group settings by category */}
 						{["Personal", "Privacy & Security", "Preferences", "Developer"].map((category) => {
 							const categoryTabs = settingsTabs.filter(tab => tab.category === category);
@@ -219,7 +219,7 @@ const SettingsPage = () => {
 					</Nav>
 
 					{/* Logout Button */}
-					<div className="p-3 border-top mt-auto">
+					<div className="p-3 border-top">
 						<Button
 							variant="outline-danger"
 							className="w-100"
@@ -231,7 +231,7 @@ const SettingsPage = () => {
 				</div>
 
 				{/* Main Content */}
-				<div className="col-md-8 col-lg-9">
+				<div className="flex-grow-1">
 					<Tab.Container activeKey={activeTab}>
 						<div className="p-4">
 							<div className="d-flex align-items-center gap-2 mb-4">
