@@ -1,12 +1,44 @@
 /** @format */
 
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Spinner, Alert, Button, Badge, Tab, Tabs } from "react-bootstrap";
+import {
+	Container,
+	Row,
+	Col,
+	Card,
+	Spinner,
+	Alert,
+	Button,
+	Badge,
+	Tab,
+	Tabs,
+} from "react-bootstrap";
 import { analyticsAPI, subscriptionAPI } from "../config/ApiConfig";
 import { formatTimeAgo } from "../utils/common-utils";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { CheckCircle, XCircle, GraphUpArrow, CurrencyDollar, PeopleFill } from 'react-bootstrap-icons';
+import {
+	BarChart,
+	Bar,
+	XAxis,
+	YAxis,
+	CartesianGrid,
+	Tooltip,
+	ResponsiveContainer,
+	LineChart,
+	Line,
+	PieChart,
+	Pie,
+	Cell,
+	AreaChart,
+	Area,
+} from "recharts";
+import {
+	CheckCircle,
+	XCircle,
+	GraphUpArrow,
+	CurrencyDollar,
+	PeopleFill,
+} from "react-bootstrap-icons";
 import { TbBrandGoogleAnalytics } from "react-icons/tb";
 
 const AnalyticsPage = () => {
@@ -37,7 +69,9 @@ const AnalyticsPage = () => {
 			setLoading(true);
 			const [userAnalytics, subscriberData] = await Promise.all([
 				analyticsAPI.getUserAnalytics(selectedPeriod),
-				subscriptionAPI.getSubscribers().catch(() => ({ subscribers: [], stats: {} }))
+				subscriptionAPI
+					.getSubscribers()
+					.catch(() => ({ subscribers: [], stats: {} })),
 			]);
 
 			setAnalytics(userAnalytics);
@@ -53,9 +87,9 @@ const AnalyticsPage = () => {
 	};
 
 	const formatNumber = (num) => {
-		if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-		if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-		return num?.toString() || '0';
+		if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+		if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+		return num?.toString() || "0";
 	};
 
 	const fetchGrowthData = async () => {
@@ -66,15 +100,15 @@ const AnalyticsPage = () => {
 			const generateDateRange = (period) => {
 				const endDate = new Date();
 				const startDate = new Date();
-				
+
 				switch (period) {
-					case '7d':
+					case "7d":
 						startDate.setDate(endDate.getDate() - 7);
 						break;
-					case '30d':
+					case "30d":
 						startDate.setDate(endDate.getDate() - 30);
 						break;
-					case '90d':
+					case "90d":
 						startDate.setDate(endDate.getDate() - 90);
 						break;
 					default:
@@ -84,7 +118,7 @@ const AnalyticsPage = () => {
 				const dates = [];
 				const currentDate = new Date(startDate);
 				while (currentDate <= endDate) {
-					dates.push(currentDate.toISOString().split('T')[0]);
+					dates.push(currentDate.toISOString().split("T")[0]);
 					currentDate.setDate(currentDate.getDate() + 1);
 				}
 				return dates;
@@ -101,46 +135,49 @@ const AnalyticsPage = () => {
 					// Calculate followers for each day working backwards from current
 					const daysFromEnd = dateRange.length - 1 - index;
 					const progressRatio = daysFromEnd / dateRange.length;
-					const followerCount = Math.max(0, currentFollowers - Math.floor(followersGained * progressRatio));
-					
+					const followerCount = Math.max(
+						0,
+						currentFollowers - Math.floor(followersGained * progressRatio),
+					);
+
 					return {
 						date: date,
-						value: followerCount
+						value: followerCount,
 					};
 				}),
 				engagement: dateRange.map((date, index) => {
 					// Simulate engagement rate fluctuation around current rate
 					const variance = (Math.random() - 0.5) * 2; // ±1% variance
 					const engagementValue = Math.max(0, currentEngagement + variance);
-					
+
 					return {
 						date: date,
-						value: parseFloat(engagementValue.toFixed(2))
+						value: parseFloat(engagementValue.toFixed(2)),
 					};
-				})
+				}),
 			};
 
 			setGrowthData(growthData);
 		} catch (error) {
-			console.error('Error fetching growth data:', error);
-			
+			console.error("Error fetching growth data:", error);
+
 			// Fallback with current dates
 			const today = new Date();
-			const fallbackDates = Array.from({length: 5}, (_, i) => {
+			const fallbackDates = Array.from({ length: 5 }, (_, i) => {
 				const date = new Date(today);
 				date.setDate(date.getDate() - (4 - i));
-				return date.toISOString().split('T')[0];
+				return date.toISOString().split("T")[0];
 			});
 
 			const fallbackGrowthData = {
 				followers: fallbackDates.map((date, index) => ({
 					date: date,
-					value: 1000 + (index * 50)
+					value: 1000 + index * 50,
 				})),
 				engagement: fallbackDates.map((date, index) => ({
 					date: date,
-					value: parseFloat((5.0 + (index * 0.5)).toFixed(1))
-				}))
+					value: parseFloat((5.0 + index * 0.5).toFixed(1)),
+				})),
 			};
 			setGrowthData(fallbackGrowthData);
 		}
@@ -154,10 +191,16 @@ const AnalyticsPage = () => {
 			const generateMonthlyData = () => {
 				const months = [];
 				const currentDate = new Date();
-				
+
 				for (let i = 4; i >= 0; i--) {
-					const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
-					const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+					const date = new Date(
+						currentDate.getFullYear(),
+						currentDate.getMonth() - i,
+						1,
+					);
+					const monthName = date.toLocaleDateString("en-US", {
+						month: "short",
+					});
 					months.push(monthName);
 				}
 				return months;
@@ -171,56 +214,68 @@ const AnalyticsPage = () => {
 			const monetizationData = {
 				revenue: monthLabels.map((month, index) => {
 					const progressRatio = (index + 1) / monthLabels.length;
-					const earnings = Math.floor(totalEarnings * progressRatio * (0.8 + Math.random() * 0.4));
-					const views = Math.floor(totalViews * progressRatio * (0.7 + Math.random() * 0.6));
-					
+					const earnings = Math.floor(
+						totalEarnings * progressRatio * (0.8 + Math.random() * 0.4),
+					);
+					const views = Math.floor(
+						totalViews * progressRatio * (0.7 + Math.random() * 0.6),
+					);
+
 					return {
 						month: month,
 						earnings: earnings,
-						views: views
+						views: views,
 					};
 				}),
 				sources: [
-					{ 
-						name: 'Ad Revenue', 
-						value: response.revenue?.breakdown?.adRevenue?.percentage || 60, 
-						color: '#17a2b8' 
+					{
+						name: "Ad Revenue",
+						value: response.revenue?.breakdown?.adRevenue?.percentage || 60,
+						color: "#17a2b8",
 					},
-					{ 
-						name: 'Subscriptions', 
-						value: response.revenue?.breakdown?.subscriptionRevenue?.percentage || 25, 
-						color: '#28a745' 
+					{
+						name: "Subscriptions",
+						value:
+							response.revenue?.breakdown?.subscriptionRevenue?.percentage ||
+							25,
+						color: "#28a745",
 					},
-					{ 
-						name: 'Tips', 
-						value: (response.revenue?.breakdown?.tipsEarned?.percentage || 0) + 
-							   (response.revenue?.breakdown?.donationsEarned?.percentage || 0) || 15, 
-						color: '#ffc107' 
-					}
-				]
+					{
+						name: "Tips",
+						value:
+							(response.revenue?.breakdown?.tipsEarned?.percentage || 0) +
+								(response.revenue?.breakdown?.donationsEarned?.percentage ||
+									0) || 15,
+						color: "#ffc107",
+					},
+				],
 			};
 			setMonetizationData(monetizationData);
 		} catch (error) {
-			console.error('Error fetching monetization data:', error);
-			
+			console.error("Error fetching monetization data:", error);
+
 			// Fallback with current month names
 			const currentDate = new Date();
-			const fallbackMonths = Array.from({length: 5}, (_, i) => {
-				const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - (4 - i), 1);
-				return date.toLocaleDateString('en-US', { month: 'short' });
+			const fallbackMonths = Array.from({ length: 5 }, (_, i) => {
+				const date = new Date(
+					currentDate.getFullYear(),
+					currentDate.getMonth() - (4 - i),
+					1,
+				);
+				return date.toLocaleDateString("en-US", { month: "short" });
 			});
 
 			const fallbackMonetizationData = {
 				revenue: fallbackMonths.map((month, index) => ({
 					month: month,
-					earnings: 150 + (index * 50),
-					views: 12000 + (index * 4000)
+					earnings: 150 + index * 50,
+					views: 12000 + index * 4000,
 				})),
 				sources: [
-					{ name: 'Ad Revenue', value: 60, color: '#17a2b8' },
-					{ name: 'Subscriptions', value: 25, color: '#28a745' },
-					{ name: 'Tips', value: 15, color: '#ffc107' }
-				]
+					{ name: "Ad Revenue", value: 60, color: "#17a2b8" },
+					{ name: "Subscriptions", value: 25, color: "#28a745" },
+					{ name: "Tips", value: 15, color: "#ffc107" },
+				],
 			};
 			setMonetizationData(fallbackMonetizationData);
 		}
@@ -242,27 +297,56 @@ const AnalyticsPage = () => {
 		);
 	}
 
-	const chartData = analytics?.topPosts?.slice(0, 5).map(post => ({
-		name: post.content?.substring(0, 15) + '...' || 'Post',
-		views: post.views,
-		likes: post.likes,
-		earnings: post.earnings
-	})) || [];
+	const chartData =
+		analytics?.topPosts?.slice(0, 5).map((post) => ({
+			name: post.content?.substring(0, 15) + "..." || "Post",
+			views: post.views,
+			likes: post.likes,
+			earnings: post.earnings,
+		})) || [];
 
 	const engagementData = [
-		{ name: 'Views', value: analytics?.overview?.totalViews || 0, color: '#8884d8' },
-		{ name: 'Likes', value: analytics?.overview?.totalLikes || 0, color: '#82ca9d' },
-		{ name: 'Comments', value: analytics?.overview?.totalComments || 0, color: '#ffc658' },
-		{ name: 'Shares', value: analytics?.overview?.totalShares || 0, color: '#ff7300' }
+		{
+			name: "Views",
+			value: analytics?.overview?.totalViews || 0,
+			color: "#8884d8",
+		},
+		{
+			name: "Likes",
+			value: analytics?.overview?.totalLikes || 0,
+			color: "#82ca9d",
+		},
+		{
+			name: "Comments",
+			value: analytics?.overview?.totalComments || 0,
+			color: "#ffc658",
+		},
+		{
+			name: "Shares",
+			value: analytics?.overview?.totalShares || 0,
+			color: "#ff7300",
+		},
 	];
 
-	const StatCard = ({ icon = null, value, label, subtitle, variant = "primary" }) => (
+	const StatCard = ({
+		icon = null,
+		value,
+		label,
+		subtitle,
+		variant = "primary",
+	}) => (
 		<Card className="h-100 border-0 shadow-sm">
 			<Card.Body className="text-center p-2 p-md-3">
 				{icon && <div className={`text-${variant} mb-2`}>{icon}</div>}
 				<h5 className="mb-1 fs-6 fs-md-4">{value}</h5>
 				<p className="text-muted mb-0 small">{label}</p>
-				{subtitle && <small className={`text-${variant === 'success' ? 'success' : 'muted'} d-block text-truncate`}>{subtitle}</small>}
+				{subtitle && (
+					<small
+						className={`text-${variant === "success" ? "success" : "muted"} d-block text-truncate`}
+					>
+						{subtitle}
+					</small>
+				)}
 			</Card.Body>
 		</Card>
 	);
@@ -283,7 +367,7 @@ const AnalyticsPage = () => {
 					<StatCard
 						value={analytics?.revenue?.totalRevenueFormatted || "$0.00"}
 						label="Total Earnings"
-						subtitle={analytics?.period || '30 days'}
+						subtitle={analytics?.period || "30 days"}
 						variant="success"
 					/>
 				</Col>
@@ -314,11 +398,17 @@ const AnalyticsPage = () => {
 						</Card.Header>
 						<Card.Body className="p-2 p-md-3">
 							{chartData.length > 0 ? (
-								<ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 200 : 250}>
-									<BarChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+								<ResponsiveContainer
+									width="100%"
+									height={window.innerWidth < 768 ? 200 : 250}
+								>
+									<BarChart
+										data={chartData}
+										margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+									>
 										<CartesianGrid strokeDasharray="3 3" />
-										<XAxis 
-											dataKey="name" 
+										<XAxis
+											dataKey="name"
 											fontSize={10}
 											interval={0}
 											angle={-45}
@@ -334,7 +424,9 @@ const AnalyticsPage = () => {
 							) : (
 								<div className="text-center py-4 py-md-5 text-muted">
 									<p className="small">No data available</p>
-									<small>Start creating content to see performance charts!</small>
+									<small>
+										Start creating content to see performance charts!
+									</small>
 								</div>
 							)}
 						</Card.Body>
@@ -347,10 +439,13 @@ const AnalyticsPage = () => {
 							<h6 className="mb-0 small">Engagement Breakdown</h6>
 						</Card.Header>
 						<Card.Body className="p-2 p-md-3">
-							<ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 150 : 200}>
+							<ResponsiveContainer
+								width="100%"
+								height={window.innerWidth < 768 ? 150 : 200}
+							>
 								<PieChart>
 									<Pie
-										data={engagementData.filter(item => item.value > 0)}
+										data={engagementData.filter((item) => item.value > 0)}
 										cx="50%"
 										cy="50%"
 										innerRadius={window.innerWidth < 768 ? 20 : 30}
@@ -367,7 +462,10 @@ const AnalyticsPage = () => {
 							</ResponsiveContainer>
 							<div className="mt-2">
 								{engagementData.map((item, index) => (
-									<div key={index} className="d-flex justify-content-between align-items-center small mb-1">
+									<div
+										key={index}
+										className="d-flex justify-content-between align-items-center small mb-1"
+									>
 										<span className="d-flex align-items-center">
 											<span
 												className="d-inline-block me-2 flex-shrink-0"
@@ -375,12 +473,14 @@ const AnalyticsPage = () => {
 													width: 8,
 													height: 8,
 													backgroundColor: item.color,
-													borderRadius: 2
+													borderRadius: 2,
 												}}
 											></span>
 											<span className="text-truncate">{item.name}</span>
 										</span>
-										<span className="fw-bold text-nowrap">{formatNumber(item.value)}</span>
+										<span className="fw-bold text-nowrap">
+											{formatNumber(item.value)}
+										</span>
 									</div>
 								))}
 							</div>
@@ -407,7 +507,9 @@ const AnalyticsPage = () => {
 											</small>
 										</div>
 										<p className="mb-2 small">
-											{post.content?.substring(0, 80) + (post.content?.length > 80 ? '...' : '') || 'No content'}
+											{post.content?.substring(0, 80) +
+												(post.content?.length > 80 ? "..." : "") ||
+												"No content"}
 										</p>
 										<div className="row g-2 small text-muted">
 											<div className="col-6">
@@ -420,7 +522,8 @@ const AnalyticsPage = () => {
 												<strong>{formatNumber(post.comments)}</strong> comments
 											</div>
 											<div className="col-6">
-												<strong>${post.earnings?.toFixed(2) || '0.00'}</strong> earned
+												<strong>${post.earnings?.toFixed(2) || "0.00"}</strong>{" "}
+												earned
 											</div>
 										</div>
 									</div>
@@ -430,7 +533,9 @@ const AnalyticsPage = () => {
 					) : (
 						<div className="text-center py-4 text-muted">
 							<p>No top posts data available yet.</p>
-							<small>Create more content to see your best performing posts!</small>
+							<small>
+								Create more content to see your best performing posts!
+							</small>
 						</div>
 					)}
 				</Card.Body>
@@ -450,22 +555,28 @@ const AnalyticsPage = () => {
 							<ResponsiveContainer width="100%" height={300}>
 								<AreaChart data={growthData.followers || []}>
 									<defs>
-										<linearGradient id="colorFollowers" x1="0" y1="0" x2="0" y2="1">
-											<stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-											<stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+										<linearGradient
+											id="colorFollowers"
+											x1="0"
+											y1="0"
+											x2="0"
+											y2="1"
+										>
+											<stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+											<stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
 										</linearGradient>
 									</defs>
 									<XAxis dataKey="date" fontSize={12} />
 									<YAxis fontSize={12} />
 									<CartesianGrid strokeDasharray="3 3" />
 									<Tooltip />
-									<Area 
-										type="monotone" 
-										dataKey="value" 
-										stroke="#8884d8" 
-										fillOpacity={1} 
-										fill="url(#colorFollowers)" 
-										name="Followers" 
+									<Area
+										type="monotone"
+										dataKey="value"
+										stroke="#8884d8"
+										fillOpacity={1}
+										fill="url(#colorFollowers)"
+										name="Followers"
 									/>
 								</AreaChart>
 							</ResponsiveContainer>
@@ -487,9 +598,16 @@ const AnalyticsPage = () => {
 										</div>
 										<div className="text-end">
 											<h6 className="mb-0 text-success">
-												{analytics?.overview?.followerGrowthRate >= 0 ? '+' : ''}{analytics?.overview?.followerGrowthRate?.toFixed(1) || '0.0'}%
+												{analytics?.overview?.followerGrowthRate >= 0
+													? "+"
+													: ""}
+												{analytics?.overview?.followerGrowthRate?.toFixed(1) ||
+													"0.0"}
+												%
 											</h6>
-											<small className="text-muted">+{analytics?.overview?.followersGained || 0}</small>
+											<small className="text-muted">
+												+{analytics?.overview?.followersGained || 0}
+											</small>
 										</div>
 									</div>
 								</div>
@@ -501,10 +619,15 @@ const AnalyticsPage = () => {
 										</div>
 										<div className="text-end">
 											<h6 className="mb-0 text-info">
-												{analytics?.overview?.viewsGrowthRate >= 0 ? '+' : ''}{analytics?.overview?.viewsGrowthRate?.toFixed(1) || '0.0'}%
+												{analytics?.overview?.viewsGrowthRate >= 0 ? "+" : ""}
+												{analytics?.overview?.viewsGrowthRate?.toFixed(1) ||
+													"0.0"}
+												%
 											</h6>
 											<small className="text-muted">
-												{analytics?.overview?.viewsGrowthRate >= 0 ? 'Trending up' : 'Declining'}
+												{analytics?.overview?.viewsGrowthRate >= 0
+													? "Trending up"
+													: "Declining"}
 											</small>
 										</div>
 									</div>
@@ -516,7 +639,9 @@ const AnalyticsPage = () => {
 											<small className="text-muted">Average</small>
 										</div>
 										<div className="text-end">
-											<h6 className="mb-0 text-warning">{analytics?.overview?.engagementRate || 0}%</h6>
+											<h6 className="mb-0 text-warning">
+												{analytics?.overview?.engagementRate || 0}%
+											</h6>
 											<small className="text-muted">Above average</small>
 										</div>
 									</div>
@@ -528,7 +653,9 @@ const AnalyticsPage = () => {
 											<small className="text-muted">Posts this period</small>
 										</div>
 										<div className="text-end">
-											<h6 className="mb-0 text-primary">{analytics?.overview?.totalPosts || 0}</h6>
+											<h6 className="mb-0 text-primary">
+												{analytics?.overview?.totalPosts || 0}
+											</h6>
 											<small className="text-muted">Consistent</small>
 										</div>
 									</div>
@@ -551,8 +678,14 @@ const AnalyticsPage = () => {
 									<XAxis dataKey="date" fontSize={12} />
 									<YAxis fontSize={12} />
 									<CartesianGrid strokeDasharray="3 3" />
-									<Tooltip formatter={(value) => [value.toFixed(2), '']} />
-									<Line type="monotone" dataKey="value" stroke="#82ca9d" name="Engagement Rate" strokeWidth={2} />
+									<Tooltip formatter={(value) => [value.toFixed(2), ""]} />
+									<Line
+										type="monotone"
+										dataKey="value"
+										stroke="#82ca9d"
+										name="Engagement Rate"
+										strokeWidth={2}
+									/>
 								</LineChart>
 							</ResponsiveContainer>
 						</Card.Body>
@@ -570,9 +703,13 @@ const AnalyticsPage = () => {
 
 		console.log("Monetization Data:", JSON.stringify(monetization, null, 2));
 
-		console.log("Requirements:", JSON.stringify(monetization?. requirements, null, 2));
-		
-		const postLast24h = monetization?.requirements?.recentActivity?.postsLast24h;
+		console.log(
+			"Requirements:",
+			JSON.stringify(monetization?.requirements, null, 2),
+		);
+
+		const postLast24h =
+			monetization?.requirements?.recentActivity?.postsLast24h;
 
 		const followerMet = monetization?.requirements?.followers?.met;
 
@@ -582,120 +719,183 @@ const AnalyticsPage = () => {
 
 		const recentActivityMet = monetization?.requirements?.recentActivity?.met;
 
-		if (!monetization?. requirements && !postLast24h && !followerMet && !followerRequired && !recentActivityMet && !currentFollower) {
-			return <Spinner size="sm"  animation="border" variant="primary" />
+		if (
+			!monetization?.requirements &&
+			!postLast24h &&
+			!followerMet &&
+			!followerRequired &&
+			!recentActivityMet &&
+			!currentFollower
+		) {
+			return <div></div>;
 		}
 
 		return (
 			<>
 				{/* Monetization Eligibility Card */}
 				{monetization && (
-				<Card className="border-0 shadow-sm mb-4">
-					<Card.Header>
-						<div className="d-flex justify-content-between align-items-center">
-							<h6 className="mb-0">Monetization Eligibility</h6>
-							<Badge bg={monetization?.isEligible ? 'success' : 'warning'}>
-								{monetization?.isEligible ? 'Eligible' : 'Not Eligible'}
-							</Badge>
-						</div>
-					</Card.Header>
-					<Card.Body>
-						{!monetization?.isEligible && (
-							<div className="mb-3">
-								<div className="alert alert-info mb-3">
-									<small>
-										<strong>Complete the requirements below to start monetizing your content!</strong>
-									</small>
-								</div>
+					<Card className="border-0 shadow-sm mb-4">
+						<Card.Header>
+							<div className="d-flex justify-content-between align-items-center">
+								<h6 className="mb-0">Monetization Eligibility</h6>
+								<Badge bg={monetization?.isEligible ? "success" : "warning"}>
+									{monetization?.isEligible ? "Eligible" : "Not Eligible"}
+								</Badge>
 							</div>
-						)}
-
-						<Row className="g-3">
-							{/* Followers Requirement */}
-							<Col md={4}>
-								<div className="p-3 border rounded">
-									<div className="d-flex justify-content-between align-items-center mb-2">
-										<small className="text-muted">Followers</small>
-										<Badge bg={followerMet ? 'success' : 'secondary'}>
-											{followerMet ? <CheckCircle size={12} /> : <XCircle size={12} />}
-										</Badge>
-									</div>
-									<div className="mb-2">
-										<strong>{currentFollower || 0}</strong>
-										<span className="text-muted"> / {followerRequired || 0}</span>
-									</div>
-									<div className="progress" style={{ height: '4px' }}>
-										<div 
-											className={`progress-bar ${followerMet ? 'bg-success' : 'bg-primary'}`}
-											style={{ 
-												width: `${Math.min(((currentFollower || 0) / (followerRequired || 1)) * 100, 100)}%` 
-											}}
-										></div>
-									</div>
-									{!followerMet && (
-										<small className="text-muted">
-											{(followerRequired || 0) - (currentFollower || 0)} more needed
+						</Card.Header>
+						<Card.Body>
+							{!monetization?.isEligible && (
+								<div className="mb-3">
+									<div className="alert alert-info mb-3">
+										<small>
+											<strong>
+												Complete the requirements below to start monetizing your
+												content!
+											</strong>
 										</small>
-									)}
+									</div>
 								</div>
-							</Col>
+							)}
 
-							{/* Recent Activity Requirement */}
-							<Col md={4}>
-								<div className="p-3 border rounded">
-									<div className="d-flex justify-content-between align-items-center mb-2">
-										<small className="text-muted">Daily Activity</small>
-										<Badge bg={monetization?.requirements?.recentActivity?.met ? 'success' : 'secondary'}>
-											{recentActivityMet ? <CheckCircle size={12} /> : <XCircle size={12} />}
-										</Badge>
+							<Row className="g-3">
+								{/* Followers Requirement */}
+								<Col md={4}>
+									<div className="p-3 border rounded">
+										<div className="d-flex justify-content-between align-items-center mb-2">
+											<small className="text-muted">Followers</small>
+											<Badge bg={followerMet ? "success" : "secondary"}>
+												{followerMet ? (
+													<CheckCircle size={12} />
+												) : (
+													<XCircle size={12} />
+												)}
+											</Badge>
+										</div>
+										<div className="mb-2">
+											<strong>{currentFollower || 0}</strong>
+											<span className="text-muted">
+												{" "}
+												/ {followerRequired || 0}
+											</span>
+										</div>
+										<div className="progress" style={{ height: "4px" }}>
+											<div
+												className={`progress-bar ${followerMet ? "bg-success" : "bg-primary"}`}
+												style={{
+													width: `${Math.min(((currentFollower || 0) / (followerRequired || 1)) * 100, 100)}%`,
+												}}
+											></div>
+										</div>
+										{!followerMet && (
+											<small className="text-muted">
+												{(followerRequired || 0) - (currentFollower || 0)} more
+												needed
+											</small>
+										)}
 									</div>
-									<div className="mb-2">
-										<strong>{postLast24h || 0}</strong>
-										<span className="text-muted"> / {recentActivityMet || 0} posts</span>
-									</div>
-									<div className="progress" style={{ height: '4px' }}>
-										<div 
-											className={`progress-bar ${recentActivityMet ? 'bg-success' : 'bg-primary'}`}
-											style={{ 
-												width: `${Math.min(((postLast24h || 0) / (recentActivityMet || 1)) * 100, 100)}%` 
-											}}
-										></div>
-									</div>
-									<small className="text-muted">Posts in last 24h</small>
-								</div>
-							</Col>
+								</Col>
 
-							{/* Account Status Requirement */}
-							<Col md={4}>
-								<div className="p-3 border rounded">
-									<div className="d-flex justify-content-between align-items-center mb-2">
-										<small className="text-muted">Account Status</small>
-										<Badge bg={monetization?.requirements?.accountStatus?.goodStanding ? 'success' : 'danger'}>
-											{monetization?.requirements?.accountStatus?.goodStanding ? <CheckCircle size={12} /> : <XCircle size={12} />}
-										</Badge>
-									</div>
-									<div className="mb-2">
-										<div className="d-flex justify-content-between">
-											<small>Good Standing</small>
-											<small className={monetization?.requirements?.accountStatus?.goodStanding ? 'text-success' : 'text-danger'}>
-												{monetization?.requirements?.accountStatus?.goodStanding ? 'Yes' : 'No'}
-											</small>
+								{/* Recent Activity Requirement */}
+								<Col md={4}>
+									<div className="p-3 border rounded">
+										<div className="d-flex justify-content-between align-items-center mb-2">
+											<small className="text-muted">Daily Activity</small>
+											<Badge
+												bg={
+													monetization?.requirements?.recentActivity?.met
+														? "success"
+														: "secondary"
+												}
+											>
+												{recentActivityMet ? (
+													<CheckCircle size={12} />
+												) : (
+													<XCircle size={12} />
+												)}
+											</Badge>
 										</div>
-										<div className="d-flex justify-content-between">
-											<small>Violations</small>
-											<small className={(monetization?.requirements?.accountStatus?.violations || 0) === 0 ? 'text-success' : 'text-warning'}>
-												{monetization?.requirements?.accountStatus?.violations || 0}
-											</small>
+										<div className="mb-2">
+											<strong>{postLast24h || 0}</strong>
+											<span className="text-muted">
+												{" "}
+												/ {recentActivityMet || 0} posts
+											</span>
 										</div>
+										<div className="progress" style={{ height: "4px" }}>
+											<div
+												className={`progress-bar ${recentActivityMet ? "bg-success" : "bg-primary"}`}
+												style={{
+													width: `${Math.min(((postLast24h || 0) / (recentActivityMet || 1)) * 100, 100)}%`,
+												}}
+											></div>
+										</div>
+										<small className="text-muted">Posts in last 24h</small>
 									</div>
-									{(monetization?.requirements?.accountStatus?.blocked || monetization?.requirements?.accountStatus?.restricted) && (
-										<small className="text-danger">Account restricted</small>
-									)}
-								</div>
-							</Col>
-						</Row>
-					</Card.Body>
-				</Card>
+								</Col>
+
+								{/* Account Status Requirement */}
+								<Col md={4}>
+									<div className="p-3 border rounded">
+										<div className="d-flex justify-content-between align-items-center mb-2">
+											<small className="text-muted">Account Status</small>
+											<Badge
+												bg={
+													monetization?.requirements?.accountStatus
+														?.goodStanding
+														? "success"
+														: "danger"
+												}
+											>
+												{monetization?.requirements?.accountStatus
+													?.goodStanding ? (
+													<CheckCircle size={12} />
+												) : (
+													<XCircle size={12} />
+												)}
+											</Badge>
+										</div>
+										<div className="mb-2">
+											<div className="d-flex justify-content-between">
+												<small>Good Standing</small>
+												<small
+													className={
+														monetization?.requirements?.accountStatus
+															?.goodStanding
+															? "text-success"
+															: "text-danger"
+													}
+												>
+													{monetization?.requirements?.accountStatus
+														?.goodStanding
+														? "Yes"
+														: "No"}
+												</small>
+											</div>
+											<div className="d-flex justify-content-between">
+												<small>Violations</small>
+												<small
+													className={
+														(monetization?.requirements?.accountStatus
+															?.violations || 0) === 0
+															? "text-success"
+															: "text-warning"
+													}
+												>
+													{monetization?.requirements?.accountStatus
+														?.violations || 0}
+												</small>
+											</div>
+										</div>
+										{(monetization?.requirements?.accountStatus?.blocked ||
+											monetization?.requirements?.accountStatus
+												?.restricted) && (
+											<small className="text-danger">Account restricted</small>
+										)}
+									</div>
+								</Col>
+							</Row>
+						</Card.Body>
+					</Card>
 				)}
 
 				<Row className="g-3 mb-4">
@@ -703,13 +903,15 @@ const AnalyticsPage = () => {
 						<StatCard
 							value={analytics?.revenue?.totalRevenue || "$0.00"}
 							label="Total Revenue"
-							subtitle={`${revenueGrowth >= 0 ? '+' : ''}${revenueGrowth.toFixed(1)}% vs last month`}
+							subtitle={`${revenueGrowth >= 0 ? "+" : ""}${revenueGrowth.toFixed(1)}% vs last month`}
 							variant="success"
 						/>
 					</Col>
 					<Col xs={6} lg={3}>
 						<StatCard
-							value={analytics?.revenue?.breakdown?.adRevenue?.formatted || "$0.00"}
+							value={
+								analytics?.revenue?.breakdown?.adRevenue?.formatted || "$0.00"
+							}
 							label="Ad Revenue"
 							subtitle={`${analytics?.revenue?.breakdown?.adRevenue?.percentage || 0}% of total`}
 							variant="info"
@@ -717,7 +919,10 @@ const AnalyticsPage = () => {
 					</Col>
 					<Col xs={6} lg={3}>
 						<StatCard
-							value={analytics?.revenue?.breakdown?.subscriptionRevenue?.formatted || "$0.00"}
+							value={
+								analytics?.revenue?.breakdown?.subscriptionRevenue?.formatted ||
+								"$0.00"
+							}
 							label="Subscriptions"
 							subtitle={`${analytics?.revenue?.breakdown?.subscriptionRevenue?.percentage || 0}% of total`}
 							variant="warning"
@@ -743,22 +948,36 @@ const AnalyticsPage = () => {
 								<ResponsiveContainer width="100%" height={300}>
 									<AreaChart data={monetizationData.revenue || []}>
 										<defs>
-											<linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-												<stop offset="5%" stopColor="#28a745" stopOpacity={0.8}/>
-												<stop offset="95%" stopColor="#28a745" stopOpacity={0}/>
+											<linearGradient
+												id="colorRevenue"
+												x1="0"
+												y1="0"
+												x2="0"
+												y2="1"
+											>
+												<stop
+													offset="5%"
+													stopColor="#28a745"
+													stopOpacity={0.8}
+												/>
+												<stop
+													offset="95%"
+													stopColor="#28a745"
+													stopOpacity={0}
+												/>
 											</linearGradient>
 										</defs>
 										<XAxis dataKey="month" fontSize={12} />
 										<YAxis fontSize={12} />
 										<CartesianGrid strokeDasharray="3 3" />
-										<Tooltip formatter={(value) => [`$${value}`, '']} />
-										<Area 
-											type="monotone" 
-											dataKey="earnings" 
-											stroke="#28a745" 
-											fillOpacity={1} 
-											fill="url(#colorRevenue)" 
-											name="Total Revenue" 
+										<Tooltip formatter={(value) => [`$${value}`, ""]} />
+										<Area
+											type="monotone"
+											dataKey="earnings"
+											stroke="#28a745"
+											fillOpacity={1}
+											fill="url(#colorRevenue)"
+											name="Total Revenue"
 										/>
 									</AreaChart>
 								</ResponsiveContainer>
@@ -775,54 +994,82 @@ const AnalyticsPage = () => {
 									<div>
 										<div className="d-flex justify-content-between mb-1">
 											<small>Ad Revenue</small>
-											<small className="fw-bold">{analytics?.revenue?.breakdown?.adRevenue?.percentage || 0}%</small>
+											<small className="fw-bold">
+												{analytics?.revenue?.breakdown?.adRevenue?.percentage ||
+													0}
+												%
+											</small>
 										</div>
-										<div className="progress" style={{ height: '6px' }}>
-											<div 
-												className="progress-bar bg-info" 
-												style={{ width: `${analytics?.revenue?.breakdown?.adRevenue?.percentage || 0}%` }}
+										<div className="progress" style={{ height: "6px" }}>
+											<div
+												className="progress-bar bg-info"
+												style={{
+													width: `${analytics?.revenue?.breakdown?.adRevenue?.percentage || 0}%`,
+												}}
 											></div>
 										</div>
 									</div>
 									<div>
 										<div className="d-flex justify-content-between mb-1">
 											<small>Subscriptions</small>
-											<small className="fw-bold">{analytics?.revenue?.breakdown?.subscriptionRevenue?.percentage || 0}%</small>
+											<small className="fw-bold">
+												{analytics?.revenue?.breakdown?.subscriptionRevenue
+													?.percentage || 0}
+												%
+											</small>
 										</div>
-										<div className="progress" style={{ height: '6px' }}>
-											<div 
-												className="progress-bar bg-warning" 
-												style={{ width: `${analytics?.revenue?.breakdown?.subscriptionRevenue?.percentage || 0}%` }}
+										<div className="progress" style={{ height: "6px" }}>
+											<div
+												className="progress-bar bg-warning"
+												style={{
+													width: `${analytics?.revenue?.breakdown?.subscriptionRevenue?.percentage || 0}%`,
+												}}
 											></div>
 										</div>
 									</div>
 									<div>
 										<div className="d-flex justify-content-between mb-1">
 											<small>Tips & Donations</small>
-											<small className="fw-bold">{(analytics?.revenue?.breakdown?.tipsEarned?.percentage || 0) + (analytics?.revenue?.breakdown?.donationsEarned?.percentage || 0)}%</small>
+											<small className="fw-bold">
+												{(analytics?.revenue?.breakdown?.tipsEarned
+													?.percentage || 0) +
+													(analytics?.revenue?.breakdown?.donationsEarned
+														?.percentage || 0)}
+												%
+											</small>
 										</div>
-										<div className="progress" style={{ height: '6px' }}>
-											<div 
-												className="progress-bar bg-success" 
-												style={{ width: `${(analytics?.revenue?.breakdown?.tipsEarned?.percentage || 0) + (analytics?.revenue?.breakdown?.donationsEarned?.percentage || 0)}%` }}
+										<div className="progress" style={{ height: "6px" }}>
+											<div
+												className="progress-bar bg-success"
+												style={{
+													width: `${(analytics?.revenue?.breakdown?.tipsEarned?.percentage || 0) + (analytics?.revenue?.breakdown?.donationsEarned?.percentage || 0)}%`,
+												}}
 											></div>
 										</div>
 									</div>
 									<div>
 										<div className="d-flex justify-content-between mb-1">
 											<small>Content Earnings</small>
-											<small className="fw-bold">{analytics?.revenue?.breakdown?.contentEarnings?.percentage || 0}%</small>
+											<small className="fw-bold">
+												{analytics?.revenue?.breakdown?.contentEarnings
+													?.percentage || 0}
+												%
+											</small>
 										</div>
-										<div className="progress" style={{ height: '6px' }}>
-											<div 
-												className="progress-bar bg-primary" 
-												style={{ width: `${analytics?.revenue?.breakdown?.contentEarnings?.percentage || 0}%` }}
+										<div className="progress" style={{ height: "6px" }}>
+											<div
+												className="progress-bar bg-primary"
+												style={{
+													width: `${analytics?.revenue?.breakdown?.contentEarnings?.percentage || 0}%`,
+												}}
 											></div>
 										</div>
 									</div>
 									<hr />
 									<div className="text-center">
-										<h6 className="text-success mb-1">{analytics?.revenue?.totalRevenueFormatted || "₱0.00"}</h6>
+										<h6 className="text-success mb-1">
+											{analytics?.revenue?.totalRevenueFormatted || "₱0.00"}
+										</h6>
 										<small className="text-muted">Total this period</small>
 									</div>
 								</div>
@@ -846,7 +1093,9 @@ const AnalyticsPage = () => {
 							{subscribers.length === 0 ? (
 								<div className="text-center py-4">
 									<h5>No subscribers yet</h5>
-									<p className="text-muted">Share your profile to start getting supporters!</p>
+									<p className="text-muted">
+										Share your profile to start getting supporters!
+									</p>
 								</div>
 							) : (
 								<Row className="g-3">
@@ -856,28 +1105,58 @@ const AnalyticsPage = () => {
 												<Card.Body>
 													<div className="d-flex align-items-center gap-3 mb-3">
 														<img
-															src={subscriber.subscriber?.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(subscriber.subscriber?.name || 'User')}&size=40`}
-															alt={subscriber.subscriber?.name || 'User'}
+															src={
+																subscriber.subscriber?.photoURL ||
+																`https://ui-avatars.com/api/?name=${encodeURIComponent(subscriber.subscriber?.name || "User")}&size=40`
+															}
+															alt={subscriber.subscriber?.name || "User"}
 															className="rounded-circle"
 															width="40"
 															height="40"
-															style={{ objectFit: 'cover' }}
+															style={{ objectFit: "cover" }}
 														/>
 														<div>
-															<h6 className="mb-1">{subscriber.subscriber?.name || 'Anonymous'}</h6>
-															<small className="text-muted">@{subscriber.subscriber?.username || 'user'}</small>
+															<h6 className="mb-1">
+																{subscriber.subscriber?.name || "Anonymous"}
+															</h6>
+															<small className="text-muted">
+																@{subscriber.subscriber?.username || "user"}
+															</small>
 														</div>
 													</div>
 													<div className="d-flex justify-content-between align-items-center mb-2">
-														<Badge bg={subscriber.tier === 'premium' ? 'success' : subscriber.tier === 'vip' ? 'warning' : 'primary'}>
-															{subscriber.tier?.charAt(0).toUpperCase() + subscriber.tier?.slice(1) || 'Basic'}
+														<Badge
+															bg={
+																subscriber.tier === "premium"
+																	? "success"
+																	: subscriber.tier === "vip"
+																		? "warning"
+																		: "primary"
+															}
+														>
+															{subscriber.tier?.charAt(0).toUpperCase() +
+																subscriber.tier?.slice(1) || "Basic"}
 														</Badge>
-														<Badge bg={subscriber.status === 'active' ? 'success' : 'secondary'}>
-															{subscriber.status?.charAt(0).toUpperCase() + subscriber.status?.slice(1) || 'Unknown'}
+														<Badge
+															bg={
+																subscriber.status === "active"
+																	? "success"
+																	: "secondary"
+															}
+														>
+															{subscriber.status?.charAt(0).toUpperCase() +
+																subscriber.status?.slice(1) || "Unknown"}
 														</Badge>
 													</div>
 													<div className="d-flex align-items-center gap-2 text-muted">
-														<small>Since {subscriber.createdAt ? new Date(subscriber.createdAt).toLocaleDateString() : 'Unknown'}</small>
+														<small>
+															Since{" "}
+															{subscriber.createdAt
+																? new Date(
+																		subscriber.createdAt,
+																	).toLocaleDateString()
+																: "Unknown"}
+														</small>
 													</div>
 												</Card.Body>
 											</Card>
@@ -899,8 +1178,11 @@ const AnalyticsPage = () => {
 									<small className="text-muted">Total Subscribers</small>
 									<strong>{subscriberStats.totalSubscribers || 0}</strong>
 								</div>
-								<div className="progress" style={{ height: '6px' }}>
-									<div className="progress-bar bg-primary" style={{ width: '100%' }}></div>
+								<div className="progress" style={{ height: "6px" }}>
+									<div
+										className="progress-bar bg-primary"
+										style={{ width: "100%" }}
+									></div>
 								</div>
 							</div>
 							<div className="mb-3">
@@ -908,15 +1190,16 @@ const AnalyticsPage = () => {
 									<small className="text-muted">Basic Tier</small>
 									<strong>{subscriberStats.basicSubscribers || 0}</strong>
 								</div>
-								<div className="progress" style={{ height: '6px' }}>
-									<div 
-										className="progress-bar bg-primary" 
-										style={{ 
-											width: subscriberStats.totalSubscribers > 0 ? 
-												`${(subscriberStats.basicSubscribers || 0) / subscriberStats.totalSubscribers * 100}%` : 
-												'0%'
-										}}>
-									</div>
+								<div className="progress" style={{ height: "6px" }}>
+									<div
+										className="progress-bar bg-primary"
+										style={{
+											width:
+												subscriberStats.totalSubscribers > 0
+													? `${((subscriberStats.basicSubscribers || 0) / subscriberStats.totalSubscribers) * 100}%`
+													: "0%",
+										}}
+									></div>
 								</div>
 							</div>
 							<div className="mb-3">
@@ -924,15 +1207,16 @@ const AnalyticsPage = () => {
 									<small className="text-muted">Premium Tier</small>
 									<strong>{subscriberStats.premiumSubscribers || 0}</strong>
 								</div>
-								<div className="progress" style={{ height: '6px' }}>
-									<div 
-										className="progress-bar bg-success" 
-										style={{ 
-											width: subscriberStats.totalSubscribers > 0 ? 
-												`${(subscriberStats.premiumSubscribers || 0) / subscriberStats.totalSubscribers * 100}%` : 
-												'0%'
-										}}>
-									</div>
+								<div className="progress" style={{ height: "6px" }}>
+									<div
+										className="progress-bar bg-success"
+										style={{
+											width:
+												subscriberStats.totalSubscribers > 0
+													? `${((subscriberStats.premiumSubscribers || 0) / subscriberStats.totalSubscribers) * 100}%`
+													: "0%",
+										}}
+									></div>
 								</div>
 							</div>
 							<div className="mb-3">
@@ -940,21 +1224,25 @@ const AnalyticsPage = () => {
 									<small className="text-muted">VIP Tier</small>
 									<strong>{subscriberStats.vipSubscribers || 0}</strong>
 								</div>
-								<div className="progress" style={{ height: '6px' }}>
-									<div 
-										className="progress-bar bg-warning" 
-										style={{ 
-											width: subscriberStats.totalSubscribers > 0 ? 
-												`${(subscriberStats.vipSubscribers || 0) / subscriberStats.totalSubscribers * 100}%` : 
-												'0%'
-										}}>
-									</div>
+								<div className="progress" style={{ height: "6px" }}>
+									<div
+										className="progress-bar bg-warning"
+										style={{
+											width:
+												subscriberStats.totalSubscribers > 0
+													? `${((subscriberStats.vipSubscribers || 0) / subscriberStats.totalSubscribers) * 100}%`
+													: "0%",
+										}}
+									></div>
 								</div>
 							</div>
 							<hr />
 							<div className="text-center">
 								<h4 className="text-success mb-1">
-									${subscriberStats.monthlyRevenue ? (subscriberStats.monthlyRevenue / 100).toFixed(2) : '0.00'}
+									$
+									{subscriberStats.monthlyRevenue
+										? (subscriberStats.monthlyRevenue / 100).toFixed(2)
+										: "0.00"}
 								</h4>
 								<small className="text-muted">Monthly Revenue</small>
 							</div>
@@ -970,22 +1258,28 @@ const AnalyticsPage = () => {
 			<div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
 				<div className="mb-3 mb-md-0">
 					<h2 className="mb-1 fs-4 fs-md-2">Analytics Dashboard</h2>
-					<p className="text-muted mb-0 small">Track your performance and insights</p>
+					<p className="text-muted mb-0 small">
+						Track your performance and insights
+					</p>
 				</div>
 				<div className="d-flex flex-wrap gap-2">
-					{['7d', '30d', '90d'].map(period => (
+					{["7d", "30d", "90d"].map((period) => (
 						<Button
 							key={period}
-							variant={selectedPeriod === period ? 'primary' : 'outline-primary'}
+							variant={
+								selectedPeriod === period ? "primary" : "outline-primary"
+							}
 							size="sm"
 							onClick={() => setSelectedPeriod(period)}
 						>
 							<span className="d-none d-sm-inline">
-								{period === '7d' ? '7 Days' : period === '30d' ? '30 Days' : '90 Days'}
+								{period === "7d"
+									? "7 Days"
+									: period === "30d"
+										? "30 Days"
+										: "90 Days"}
 							</span>
-							<span className="d-sm-none">
-								{period}
-							</span>
+							<span className="d-sm-none">{period}</span>
 						</Button>
 					))}
 				</div>
@@ -997,36 +1291,56 @@ const AnalyticsPage = () => {
 					onSelect={(tab) => setActiveTab(tab)}
 					className="mb-4 analytics-tabs"
 				>
-					<Tab eventKey="overview" title={
-						<>
-							<span className="d-none d-md-inline">Overview</span>
-							<span className="d-md-none"><TbBrandGoogleAnalytics size={16} /></span>
-						</>
-					}>
+					<Tab
+						eventKey="overview"
+						title={
+							<>
+								<span className="d-none d-md-inline">Overview</span>
+								<span className="d-md-none">
+									<TbBrandGoogleAnalytics size={16} />
+								</span>
+							</>
+						}
+					>
 						{renderOverviewTab()}
 					</Tab>
-					<Tab eventKey="growth" title={
-						<>
-							<span className="d-none d-md-inline">Growth</span>
-							<span className="d-md-none"><GraphUpArrow size={16} /></span>
-						</>
-					}>
+					<Tab
+						eventKey="growth"
+						title={
+							<>
+								<span className="d-none d-md-inline">Growth</span>
+								<span className="d-md-none">
+									<GraphUpArrow size={16} />
+								</span>
+							</>
+						}
+					>
 						{renderGrowthTab()}
 					</Tab>
-					<Tab eventKey="monetization" title={
-						<>
-							<span className="d-none d-md-inline">Monetization</span>
-							<span className="d-md-none"><CurrencyDollar size={16} /></span>
-						</>
-					}>
+					<Tab
+						eventKey="monetization"
+						title={
+							<>
+								<span className="d-none d-md-inline">Monetization</span>
+								<span className="d-md-none">
+									<CurrencyDollar size={16} />
+								</span>
+							</>
+						}
+					>
 						{renderMonetizationTab()}
 					</Tab>
-					<Tab eventKey="subscribers" title={
-						<>
-							<span className="d-none d-md-inline">Subscribers</span>
-							<span className="d-md-none"><PeopleFill size={16} /></span>
-						</>
-					}>
+					<Tab
+						eventKey="subscribers"
+						title={
+							<>
+								<span className="d-none d-md-inline">Subscribers</span>
+								<span className="d-md-none">
+									<PeopleFill size={16} />
+								</span>
+							</>
+						}
+					>
 						{renderSubscriberTab()}
 					</Tab>
 				</Tabs>
@@ -1043,8 +1357,6 @@ const AnalyticsPage = () => {
 					</Card.Body>
 				</Card>
 			)}
-
-
 		</Container>
 	);
 };

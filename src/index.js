@@ -2,8 +2,8 @@
 
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from "@vercel/speed-insights/react"
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import AppRouter from "./router/AppRouter.jsx";
 
@@ -20,25 +20,27 @@ import "./assets/css/app.css";
 setupCSP();
 
 // Test API connectivity on startup (only in production and only once)
-if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined' && !window.__API_TESTED__) {
+if (
+  process.env.NODE_ENV === "production" &&
+  typeof window !== "undefined" &&
+  !window.__API_TESTED__
+) {
   window.__API_TESTED__ = true;
-  import('./config/ApiConfig.js').then(({ testApiConnection }) => {
-    testApiConnection().then(isConnected => {
+  import("./config/ApiConfig.js").then(({ testApiConnection }) => {
+    testApiConnection().then((isConnected) => {
       if (!isConnected) {
-        console.warn('⚠️ API connectivity test failed. Network requests may fail.');
+        console.warn(
+          "⚠️ API connectivity test failed. Network requests may fail.",
+        );
       } else {
-        console.log('✅ API connectivity verified');
+        console.log("✅ API connectivity verified");
       }
     });
   });
 }
 
-// Disable console in production based on hostname
-const isProduction = window.location.hostname !== 'localhost' && 
-                     window.location.hostname !== '127.0.0.1' &&
-                     !window.location.hostname.includes('replit.dev') &&
-                     !window.location.hostname.includes('replit.co') &&
-                     !window.location.hostname.includes('replit.app') && !process.env.NODE_ENV === "development";
+// Disable console in production
+const isProduction = process.env.NODE_ENV === "production";
 
 if (isProduction) {
   console.log = () => {};
@@ -50,9 +52,9 @@ if (isProduction) {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-	<React.StrictMode>
-		<AppRouter />
-		<Analytics />
-		<SpeedInsights />
-	</React.StrictMode>,
+  <React.StrictMode>
+    <AppRouter />
+    <Analytics />
+    <SpeedInsights />
+  </React.StrictMode>,
 );
