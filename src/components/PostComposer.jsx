@@ -462,8 +462,8 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				backdrop="static"
 				onHide={() => setShowComposerModal(false)}
 				centered
-				scrollable
-				className="animate__animated animate__slideInUp animate__faster"
+				className="animate__animated animate__slideInUp animate__faster d-flex flex-column"
+				style={{ height: '100vh' }}
 			>
 				<Modal.Header className="border-0 pb-0">
 					<div className="d-flex align-items-center w-100">
@@ -492,7 +492,14 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 					</div>
 				</Modal.Header>
 
-				<Modal.Body className="pt-2">
+				<Modal.Body 
+					className="pt-2 flex-grow-1" 
+					style={{ 
+						overflowY: 'auto',
+						maxHeight: 'calc(100vh - 140px)',
+						minHeight: '300px'
+					}}
+				>
 					{error && (
 						<Alert variant="danger" className="mb-3">
 							{error}
@@ -858,7 +865,15 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 					</Form>
 				</Modal.Body>
 
-				<Modal.Footer className="border-0 pt-0 fixed-bottom">
+				<Modal.Footer 
+					className="border-0 pt-0 position-sticky bg-white" 
+					style={{ 
+						bottom: 0, 
+						zIndex: 1050,
+						marginTop: 'auto',
+						boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
+					}}
+				>
 					<div className="d-flex justify-content-between align-items-center w-100">
 						<div className="d-flex gap-1">
 							<Button
