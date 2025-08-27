@@ -463,14 +463,13 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				onHide={() => setShowComposerModal(false)}
 				centered
 				className="animate__animated animate__slideInUp animate__faster d-flex flex-column"
-				style={{ height: '100vh' }}
+				style={{ height: '100vh', backgroundColor: '#ffffff' }}
 			>
 				<Modal.Header 
 					className="border-0 pb-0 position-sticky bg-white" 
 					style={{ 
 						top: 0, 
-						zIndex: 1051,
-						boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+						zIndex: 1051
 					}}
 				>
 					<div className="d-flex align-items-center w-100">
@@ -500,7 +499,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				</Modal.Header>
 
 				<Modal.Body 
-					className="pt-3 flex-grow-1" 
+					className="pt-3 flex-grow-1 bg-white" 
 					style={{ 
 						overflowY: 'auto',
 						maxHeight: 'calc(100vh - 160px)',
@@ -879,8 +878,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 					style={{ 
 						bottom: 0, 
 						zIndex: 1050,
-						marginTop: 'auto',
-						boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
+						marginTop: 'auto'
 					}}
 				>
 					<div className="d-flex justify-content-between align-items-center w-100">
