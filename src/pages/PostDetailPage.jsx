@@ -217,7 +217,7 @@ const PostDetailPage = () => {
 	}, [post]);
 
 	const handleLikePost = async () => {
-		if (likingPost) return;
+		if (likingPost || !currentUser) return;
 		
 		try {
 			setLikingPost(true);
@@ -231,31 +231,27 @@ const PostDetailPage = () => {
 					(like) => like.user?.uid === currentUser.uid,
 				);
 
+				let updatedPost = { ...prevPost };
+
 				if (response.liked && !isCurrentlyLiked) {
 					// Add like
-					return {
-						...prevPost,
-						likes: [...prevPost.likes, { user: { uid: currentUser.uid } }],
-						stats: {
-							...prevPost.stats,
-							likes: prevPost.stats.likes + 1,
-						},
+					updatedPost.likes = [...prevPost.likes, { user: { uid: currentUser.uid, name: currentUser.displayName } }];
+					updatedPost.stats = {
+						...prevPost.stats,
+						likes: (prevPost.stats?.likes || 0) + 1,
 					};
 				} else if (!response.liked && isCurrentlyLiked) {
 					// Remove like
-					return {
-						...prevPost,
-						likes: prevPost.likes.filter(
-							(like) => like.user?.uid !== currentUser.uid,
-						),
-						stats: {
-							...prevPost.stats,
-							likes: prevPost.stats.likes - 1,
-						},
+					updatedPost.likes = prevPost.likes.filter(
+						(like) => like.user?.uid !== currentUser.uid,
+					);
+					updatedPost.stats = {
+						...prevPost.stats,
+						likes: Math.max(0, (prevPost.stats?.likes || 0) - 1),
 					};
 				}
 
-				return prevPost;
+				return updatedPost;
 			});
 
 			// Send like notification to post owner only when user actually likes (not unlikes)

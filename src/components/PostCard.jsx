@@ -227,7 +227,7 @@ const PostCard = ({
 					const response = await onLike(post.id);
 
 					// Send like notification to post owner only when user actually likes (not unlikes)
-					if (response && response.liked && !wasLiked) {
+					if (response && response.liked && !wasLiked && post.author.uid !== currentUser.uid) {
 						try {
 							await handleLikeNotification(post.id, post, currentUser);
 						} catch (error) {
@@ -241,7 +241,7 @@ const PostCard = ({
 				}
 			}
 		},
-		[onLike, post, currentUser, likingPost],
+		[onLike, post.id, post.likes, post.author.uid, currentUser, likingPost],
 	);
 
 	const handleShare = useCallback(
@@ -820,20 +820,17 @@ const PostCard = ({
 										height: "36px",
 										justifyContent: "center",
 									}}
-									onClick={(e) => {
-										e.stopPropagation();
-										handleLike();
-									}}
-									disabled={likingPost}
+									onClick={handleLike}
+									disabled={likingPost || !currentUser}
 									onMouseEnter={(e) => {
-										if (!currentUserLiked && !likingPost) {
+										if (!currentUserLiked && !likingPost && currentUser) {
 											e.target.closest(".action-btn").style.backgroundColor =
 												"rgba(220, 53, 69, 0.1)";
 											e.target.closest(".action-btn").style.color = "#dc3545";
 										}
 									}}
 									onMouseLeave={(e) => {
-										if (!currentUserLiked && !likingPost) {
+										if (!currentUserLiked && !likingPost && currentUser) {
 											e.target.closest(".action-btn").style.backgroundColor =
 												"transparent";
 											e.target.closest(".action-btn").style.color = "#6c757d";

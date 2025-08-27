@@ -58,7 +58,7 @@ const HomePage = () => {
 	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
-	
+
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -522,24 +522,26 @@ const HomePage = () => {
 	};
 
 	const handleLikePost = async (postId) => {
+		if (!currentUser) {
+			console.error("User not logged in");
+			return null;
+		}
+
 		try {
 			const response = await postAPI.likePost(postId);
 			setPosts((prevPosts) =>
 				prevPosts.map((post) => {
 					if (post.id === postId) {
-						// Only update the likes array based on the response
 						const updatedPost = { ...post };
+						const currentUserLiked = post.likes.some(like => like.user?.uid === currentUser.uid);
 
 						// Update likes based on response
-						if (response.liked) {
-							// Add current user to likes if not already there
-							const userAlreadyLiked = post.likes.some(like => like.user.uid === currentUser.uid);
-							if (!userAlreadyLiked) {
-								updatedPost.likes = [...post.likes, { user: currentUser }];
-							}
-						} else {
+						if (response.liked && !currentUserLiked) {
+							// Add current user to likes
+							updatedPost.likes = [...post.likes, { user: { uid: currentUser.uid, name: currentUser.displayName } }];
+						} else if (!response.liked && currentUserLiked) {
 							// Remove current user from likes
-							updatedPost.likes = post.likes.filter(like => like.user.uid !== currentUser.uid);
+							updatedPost.likes = post.likes.filter(like => like.user?.uid !== currentUser.uid);
 						}
 
 						// Update stats if available
@@ -555,7 +557,7 @@ const HomePage = () => {
 					return post;
 				}),
 			);
-			return response; // Return the response so PostCard can check if liked
+			return response;
 		} catch (err) {
 			console.error("Error liking post:", err);
 			return null;
