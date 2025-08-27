@@ -571,8 +571,18 @@ const AnalyticsPage = () => {
 		console.log("Monetization Data:", JSON.stringify(monetization, null, 2));
 
 		console.log("Requirements:", JSON.stringify(monetization?. requirements, null, 2));
+		
+		const postLast24h = monetization?.requirements?.recentActivity?.postsLast24h;
 
-		if (!monetization?. requirements) {
+		const followerMet = monetization?.requirements?.followers?.met;
+
+		const currentFollower = monetization?.requirements?.followers?.current;
+
+		const followerRequired = monetization?.requirements?.followers?.required;
+
+		const recentActivityMet = monetization?.requirements?.recentActivity?.met;
+
+		if (!monetization?. requirements && !postLast24h && !followerMet && !followerRequired && !recentActivityMet && !currentFollower) {
 			return <Spinner size="sm"  animation="border" variant="primary" />
 		}
 
@@ -606,25 +616,25 @@ const AnalyticsPage = () => {
 								<div className="p-3 border rounded">
 									<div className="d-flex justify-content-between align-items-center mb-2">
 										<small className="text-muted">Followers</small>
-										<Badge bg={monetization?.requirements?.followers?.met ? 'success' : 'secondary'}>
-											{monetization?.requirements?.followers?.met ? <CheckCircle size={12} /> : <XCircle size={12} />}
+										<Badge bg={followerMet ? 'success' : 'secondary'}>
+											{followerMet ? <CheckCircle size={12} /> : <XCircle size={12} />}
 										</Badge>
 									</div>
 									<div className="mb-2">
-										<strong>{monetization?.requirements?.followers?.current || 0}</strong>
-										<span className="text-muted"> / {monetization?.requirements?.followers?.required || 0}</span>
+										<strong>{currentFollower || 0}</strong>
+										<span className="text-muted"> / {followerRequired || 0}</span>
 									</div>
 									<div className="progress" style={{ height: '4px' }}>
 										<div 
-											className={`progress-bar ${monetization?.requirements?.followers?.met ? 'bg-success' : 'bg-primary'}`}
+											className={`progress-bar ${followerMet ? 'bg-success' : 'bg-primary'}`}
 											style={{ 
-												width: `${Math.min(((monetization?.requirements?.followers?.current || 0) / (monetization?.requirements?.followers?.required || 1)) * 100, 100)}%` 
+												width: `${Math.min(((currentFollower || 0) / (followerRequired || 1)) * 100, 100)}%` 
 											}}
 										></div>
 									</div>
-									{!monetization?.requirements?.followers?.met && (
+									{!followerMet && (
 										<small className="text-muted">
-											{(monetization?.requirements?.followers?.required || 0) - (monetization?.requirements?.followers?.current || 0)} more needed
+											{(followerRequired || 0) - (currentFollower || 0)} more needed
 										</small>
 									)}
 								</div>
@@ -636,18 +646,18 @@ const AnalyticsPage = () => {
 									<div className="d-flex justify-content-between align-items-center mb-2">
 										<small className="text-muted">Daily Activity</small>
 										<Badge bg={monetization?.requirements?.recentActivity?.met ? 'success' : 'secondary'}>
-											{monetization?.requirements?.recentActivity?.met ? <CheckCircle size={12} /> : <XCircle size={12} />}
+											{recentActivityMet ? <CheckCircle size={12} /> : <XCircle size={12} />}
 										</Badge>
 									</div>
 									<div className="mb-2">
-										<strong>{monetization?.requirements?.recentActivity?.postsLast24h || 0}</strong>
-										<span className="text-muted"> / {monetization?.requirements?.recentActivity?.required || 0} posts</span>
+										<strong>{postLast24h || 0}</strong>
+										<span className="text-muted"> / {recentActivityMet || 0} posts</span>
 									</div>
 									<div className="progress" style={{ height: '4px' }}>
 										<div 
-											className={`progress-bar ${monetization?.requirements?.recentActivity?.met ? 'bg-success' : 'bg-primary'}`}
+											className={`progress-bar ${recentActivityMet ? 'bg-success' : 'bg-primary'}`}
 											style={{ 
-												width: `${Math.min(((monetization?.requirements?.recentActivity?.postsLast24h || 0) / (monetization?.requirements?.recentActivity?.required || 1)) * 100, 100)}%` 
+												width: `${Math.min(((postLast24h || 0) / (recentActivityMet || 1)) * 100, 100)}%` 
 											}}
 										></div>
 									</div>

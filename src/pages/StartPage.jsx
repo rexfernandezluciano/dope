@@ -1,18 +1,24 @@
 /** @format */
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container, Row, Col, Button, Card, Image, Spinner } from "react-bootstrap";
+import { useLoaderData } from "react-router-dom";
+import { Container, Row, Col, Button, Card, Image } from "react-bootstrap";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
-import { getUser } from "../utils/app-utils";
+import HomePage from "./HomePage";
 import socialNetIllustration from "../assets/images/undraw_social-networking_v4z1.svg";
 
 const StartPage = () => {
 	const navigate = useNavigate();
+	const { user } = useLoaderData();
 
 	useEffect(() => {
 		updatePageMeta(pageMetaData.home);
 	}, []);
+
+	if (user) {
+		return (<HomePage />);
+	}
 
 	return (
 		<Container fluid className="min-vh-100 p-0 d-flex align-items-center justify-content-center bg-white">

@@ -462,7 +462,8 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				backdrop="static"
 				onHide={() => setShowComposerModal(false)}
 				centered
-				className="animate__animated animate__slideInUp"
+				scrollable
+				className="animate__animated animate__slideInUp animate__faster"
 			>
 				<Modal.Header className="border-0 pb-0">
 					<div className="d-flex align-items-center w-100">
@@ -857,7 +858,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 					</Form>
 				</Modal.Body>
 
-				<Modal.Footer className="border-0 pt-0">
+				<Modal.Footer className="border-0 pt-0 fixed-bottom">
 					<div className="d-flex justify-content-between align-items-center w-100">
 						<div className="d-flex gap-1">
 							<Button
