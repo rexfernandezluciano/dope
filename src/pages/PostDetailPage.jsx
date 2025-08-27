@@ -28,7 +28,7 @@ import {
 	ChevronRight,
 	Gift,
 } from "react-bootstrap-icons";
-import { postAPI, commentAPI } from "../config/ApiConfig";
+import { postAPI, commentAPI, likeAPI } from "../config/ApiConfig";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import CommentItem from "../components/CommentItem";
 import PollView from "../components/PollView";
