@@ -4,7 +4,6 @@ import { Outlet, useLoaderData, useLocation } from "react-router-dom";
 
 import NavigationView from "../components/navs/NavigationView";
 import ProfilePage from "./ProfilePage";
-import SettingsPage from "./SettingsPage";
 import SubscriptionPage from "./SubscriptionPage";
 import AnalyticsPage from "./AnalyticsPage";
 import MySubscriptionsPage from "./MySubscriptionsPage";
