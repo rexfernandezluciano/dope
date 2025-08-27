@@ -52,18 +52,6 @@ const AnalyticsPage = () => {
 	const [subscribers, setSubscribers] = useState([]);
 	const [subscriberStats, setSubscriberStats] = useState({});
 
-	useEffect(() => {
-		updatePageMeta(pageMetaData.analytics);
-		loadAnalytics();
-	}, [selectedPeriod]);
-
-	useEffect(() => {
-		if (analytics) {
-			fetchGrowthData();
-			fetchMonetizationData();
-		}
-	}, [analytics]);
-
 	const loadAnalytics = async () => {
 		try {
 			setLoading(true);
@@ -85,6 +73,19 @@ const AnalyticsPage = () => {
 			setLoading(false);
 		}
 	};
+	
+
+	useEffect(() => {
+		updatePageMeta(pageMetaData.analytics);
+		loadAnalytics();
+	}, [selectedPeriod]);
+
+	useEffect(() => {
+		if (analytics) {
+			fetchGrowthData();
+			fetchMonetizationData();
+		}
+	}, [analytics]);
 
 	const formatNumber = (num) => {
 		if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
