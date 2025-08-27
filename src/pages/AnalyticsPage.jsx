@@ -244,8 +244,7 @@ const AnalyticsPage = () => {
 						name: "Tips",
 						value:
 							(response.revenue?.breakdown?.tipsEarned?.percentage || 0) +
-								(response.revenue?.breakdown?.donationsEarned?.percentage ||
-									0) || 15,
+								(response.revenue?.breakdown?.donationsEarned?.percentage || 0) || 15,
 						color: "#ffc107",
 					},
 				],
@@ -733,7 +732,7 @@ const AnalyticsPage = () => {
 		return (
 			<>
 				{/* Monetization Eligibility Card */}
-				{monetization && (
+				{monetization?.requirements ? (
 					<Card className="border-0 shadow-sm mb-4">
 						<Card.Header>
 							<div className="d-flex justify-content-between align-items-center">
@@ -896,7 +895,7 @@ const AnalyticsPage = () => {
 							</Row>
 						</Card.Body>
 					</Card>
-				)}
+				) : null}
 
 				<Row className="g-3 mb-4">
 					<Col xs={6} lg={3}>
