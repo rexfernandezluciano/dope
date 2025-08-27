@@ -430,9 +430,9 @@ const BusinessPage = () => {
 															</div>
 														</div>
 														<div className="text-end">
-															{getStatusBadge(campaign.status)}
+															{getStatusBadge(campaign?.status)}
 															<div className="text-muted small">
-																{campaign.impressions} impressions
+																{campaign.analytics?.impressions} impressions
 															</div>
 														</div>
 													</div>
