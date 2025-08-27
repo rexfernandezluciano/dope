@@ -44,7 +44,7 @@ import {
 	handleLikeNotification,
 	handleCommentNotification,
 } from "../utils/notification-helpers";
-import { replyAPI, likeAPI } from "../config/ApiConfig";
+import { replyAPI } from "../config/ApiConfig";
 
 const PostDetailPage = () => {
 	const { postId } = useParams();
@@ -77,6 +77,10 @@ const PostDetailPage = () => {
 	const [reposting, setReposting] = useState(false);
 	const [likingPost, setLikingPost] = useState(false);
 	const [viewTracked, setViewTracked] = useState(false);
+	const [liked, setLiked] = useState(false);
+	const [likeCount, setLikeCount] = useState(0);
+	const [replies, setReplies] = useState({});
+	const [commentDonationAmount, setCommentDonationAmount] = useState("");
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -474,11 +478,6 @@ const PostDetailPage = () => {
 					...(commentMode === "tip" && commentTipAmount && parseInt(commentTipAmount) > 0 ? {
 						tip: {
 							amount: parseInt(commentTipAmount)
-						}
-					} : {}),
-					...(commentMode === "donation" && commentDonationAmount && parseInt(commentDonationAmount) > 0 ? {
-						donation: {
-							amount: parseInt(commentDonationAmount)
 						}
 					} : {}),
 				};
