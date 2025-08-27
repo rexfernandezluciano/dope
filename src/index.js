@@ -16,7 +16,7 @@ import { setupCSP } from "./utils/security-utils.js";
 import "animate.css";
 import "./assets/css/app.css";
 
-process.env.NODE_ENV =  window.location.hostname === "localhost" ? "development" : window.location.hostname.contains(".replit.dev") ? "development" : "production";
+// Environment is automatically set by the build process
 
 // Setup Content Security Policy
 setupCSP();
