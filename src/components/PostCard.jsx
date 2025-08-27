@@ -26,11 +26,8 @@ import {
 
 import {
 	postAPI,
-	userAPI,
 	commentAPI,
-	likeAPI,
 	replyAPI,
-	imageAPI,
 	businessAPI,
 } from "../config/ApiConfig";
 import {
@@ -241,7 +238,7 @@ const PostCard = ({
 				}
 			}
 		},
-		[onLike, post.id, post.likes, post.author.uid, currentUser, likingPost],
+		[onLike, post.id, post.likes, post.author.uid, currentUser, likingPost, post],
 	);
 
 	const handleShare = useCallback(

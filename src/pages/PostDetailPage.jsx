@@ -70,22 +70,9 @@ const PostDetailPage = () => {
 	const [selectedComment, setSelectedComment] = useState(null);
 	const [deletingPost, setDeletingPost] = useState(false);
 	const [deletingComment, setDeletingComment] = useState(false);
-	const [showReplyForms, setShowReplyForms] = useState({});
-	const [replyTexts, setReplyTexts] = useState({});
-	const [submittingReply, setSubmittingReply] = useState({});
-	const [replies, setReplies] = useState({});
-	// State for comment editing
-	const [editingCommentId, setEditingCommentId] = useState(null);
-	const [editingCommentText, setEditingCommentText] = useState("");
 	// State for comment tip/donation
 	const [commentMode, setCommentMode] = useState("comment"); // 'comment', 'tip', 'donation'
 	const [commentTipAmount, setCommentTipAmount] = useState("");
-	const [commentDonationAmount, setCommentDonationAmount] = useState("");
-	const [commentIsAnonymous, setCommentIsAnonymous] = useState(false);
-	const [pollVotes, setPollVotes] = useState(post?.poll?.votes || []);
-	const [userVotedOption, setUserVotedOption] = useState(null);
-	const [liked, setLiked] = useState(false);
-	const [likeCount, setLikeCount] = useState(0);
 	const [showRepostModal, setShowRepostModal] = useState(false);
 	const [reposting, setReposting] = useState(false);
 	const [likingPost, setLikingPost] = useState(false);
@@ -554,7 +541,6 @@ const PostDetailPage = () => {
 			commentMode,
 			commentTipAmount,
 			post,
-			handleCommentNotification,
 		],
 	);
 
@@ -602,26 +588,12 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const toggleReplyForm = (commentId) => {
-		setShowReplyForms((prev) => ({
-			...prev,
-			[commentId]: !prev[commentId],
-		}));
-	};
-
-	const handleReplyTextChange = (commentId, text) => {
-		setReplyTexts((prev) => ({
-			...prev,
-			[commentId]: text,
-		}));
-	};
+	
 
 	const handleSubmitReply = async (commentId, replyText, type = "reply") => {
 		if (!replyText?.trim()) return;
 
 		try {
-			let response;
-
 			if (type === "tip" || type === "donation") {
 				// For tips and donations, the comment has already been created
 				// Just refresh the comments
@@ -630,7 +602,7 @@ const PostDetailPage = () => {
 			}
 
 			// Regular reply
-			response = await replyAPI.createReply(commentId, {
+			const response = await replyAPI.createReply(commentId, {
 				content: replyText.trim(),
 			});
 
@@ -678,50 +650,7 @@ const PostDetailPage = () => {
 		}
 	};
 
-	const handleLikeReply = async (replyId, commentId) => {
-		try {
-			const response = await likeAPI.likeReply(replyId);
-
-			setReplies((prev) => ({
-				...prev,
-				[commentId]: (prev[commentId] || []).map((reply) => {
-					if (reply.id === replyId) {
-						const isCurrentlyLiked = reply.likes?.some(
-							(like) => like.user?.uid === currentUser.uid,
-						);
-
-						if (response.liked && !isCurrentlyLiked) {
-							return {
-								...reply,
-								likes: [
-									...(reply.likes || []),
-									{ user: { uid: currentUser.uid } },
-								],
-								stats: {
-									...reply.stats,
-									likes: (reply.stats?.likes || 0) + 1,
-								},
-							};
-						} else if (!response.liked && isCurrentlyLiked) {
-							return {
-								...reply,
-								likes: (reply.likes || []).filter(
-									(like) => like.user?.uid !== currentUser.uid,
-								),
-								stats: {
-									...reply.stats,
-									likes: Math.max(0, (reply.stats?.likes || 0) - 1),
-								},
-							};
-						}
-					}
-					return reply;
-				}),
-			}));
-		} catch (error) {
-			console.error("Failed to like reply:", error);
-		}
-	};
+	
 
 	// Handle comment updates
 	const handleUpdateComment = async (commentId, newContent) => {
