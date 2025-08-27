@@ -570,6 +570,12 @@ const AnalyticsPage = () => {
 
 		console.log("Monetization Data:", JSON.stringify(monetization, null, 2));
 
+		console.log("Requirements:", JSON.stringify(monetization?. requirements, null, 2));
+
+		if (!monetization?. requirements) {
+			return <Spinner size="sm"  animation="border" variant="primary" />
+		}
+
 		return (
 			<>
 				{/* Monetization Eligibility Card */}

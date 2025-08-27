@@ -38,7 +38,7 @@ const isProduction = window.location.hostname !== 'localhost' &&
                      window.location.hostname !== '127.0.0.1' &&
                      !window.location.hostname.includes('replit.dev') &&
                      !window.location.hostname.includes('replit.co') &&
-                     !window.location.hostname.includes('replit.app');
+                     !window.location.hostname.includes('replit.app') && !process.env.NODE_ENV === "development";
 
 if (isProduction) {
   console.log = () => {};
