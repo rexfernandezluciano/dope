@@ -6,6 +6,7 @@ import { useLoaderData } from "react-router-dom";
 import { Container, Row, Col, Button, Card, Image } from "react-bootstrap";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 import HomePage from "./HomePage";
+import NavigationView from "../components/navs/NavigationView";
 import socialNetIllustration from "../assets/images/undraw_social-networking_v4z1.svg";
 
 const StartPage = () => {
@@ -17,11 +18,18 @@ const StartPage = () => {
 	}, []);
 
 	if (user) {
-		return (<HomePage />);
+		return (
+			<NavigationView>
+				<HomePage />
+			</NavigationView>
+		);
 	}
 
 	return (
-		<Container fluid className="min-vh-100 p-0 d-flex align-items-center justify-content-center bg-white">
+		<Container
+			fluid
+			className="min-vh-100 p-0 d-flex align-items-center justify-content-center bg-white"
+		>
 			<Row className="w-100 justify-content-center">
 				<Col xs={12} md={8} lg={6} xl={4}>
 					<Card className="shadow-none border-0">
@@ -42,7 +50,7 @@ const StartPage = () => {
 								<Button
 									variant="primary"
 									size="md"
-									onClick={() => navigate('/auth/signup')}
+									onClick={() => navigate("/auth/signup")}
 									className="me-md-2 px-4 py-2"
 								>
 									Create Account
@@ -50,34 +58,34 @@ const StartPage = () => {
 								<Button
 									variant="outline-primary"
 									size="md"
-									onClick={() => navigate('/auth/login')}
+									onClick={() => navigate("/auth/login")}
 									className="px-4 py-2"
 								>
 									Sign In
 								</Button>
 							</div>
-							
+
 							{/* Privacy Policy and Terms of Service Links */}
 							<div className="text-center mt-4 pt-3 border-top">
 								<small className="text-muted">
-									By continuing, you agree to our{' '}
-									<a 
-										href="/policies/terms" 
+									By continuing, you agree to our{" "}
+									<a
+										href="/policies/terms"
 										className="text-primary text-decoration-none"
 										onClick={(e) => {
 											e.preventDefault();
-											navigate('/policies/terms');
+											navigate("/policies/terms");
 										}}
 									>
 										Terms of Service
-									</a>
-									{' '}and{' '}
-									<a 
-										href="/policies/privacy" 
+									</a>{" "}
+									and{" "}
+									<a
+										href="/policies/privacy"
 										className="text-primary text-decoration-none"
 										onClick={(e) => {
 											e.preventDefault();
-											navigate('/policies/privacy');
+											navigate("/policies/privacy");
 										}}
 									>
 										Privacy Policy
