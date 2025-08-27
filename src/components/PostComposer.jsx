@@ -465,7 +465,14 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				className="animate__animated animate__slideInUp animate__faster d-flex flex-column"
 				style={{ height: '100vh' }}
 			>
-				<Modal.Header className="border-0 pb-0">
+				<Modal.Header 
+					className="border-0 pb-0 position-sticky bg-white" 
+					style={{ 
+						top: 0, 
+						zIndex: 1051,
+						boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+					}}
+				>
 					<div className="d-flex align-items-center w-100">
 						<Button
 							variant="link"
@@ -493,11 +500,13 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				</Modal.Header>
 
 				<Modal.Body 
-					className="pt-2 flex-grow-1" 
+					className="pt-3 flex-grow-1" 
 					style={{ 
 						overflowY: 'auto',
-						maxHeight: 'calc(100vh - 140px)',
-						minHeight: '300px'
+						maxHeight: 'calc(100vh - 160px)',
+						minHeight: '300px',
+						paddingTop: '1rem',
+						paddingBottom: '1rem'
 					}}
 				>
 					{error && (
