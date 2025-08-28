@@ -798,6 +798,150 @@ const PostDetailPage = () => {
 								/>
 							)}
 
+							{/* Original Post Display for Reposts */}
+							{post.isRepost && post.originalPost && (
+								<div className="mb-2">
+									<div className="border rounded-3 p-3 bg-light">
+										<div className="d-flex gap-2">
+											<Image
+												src={
+													post.originalPost.author.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
+												alt="original author avatar"
+												roundedCircle
+												width="32"
+												height="32"
+												style={{
+													objectFit: "cover",
+													minWidth: "32px",
+													minHeight: "32px",
+												}}
+											/>
+											<div className="flex-grow-1">
+												<div className="d-flex align-items-center gap-1 mb-2">
+													<span
+														className="fw-bold"
+														style={{ cursor: "pointer", color: "inherit" }}
+														onClick={() => navigate(`/${post.originalPost.author.username}`)}
+													>
+														{post.originalPost.author.name}
+													</span>
+													{post.originalPost.author.hasBlueCheck && (
+														<CheckCircleFill className="text-primary" size={16} />
+													)}
+													<span className="text-muted">·</span>
+													<span className="text-muted small">
+														{formatTimeAgo(post.originalPost.createdAt)}
+													</span>
+													<span className="text-muted">·</span>
+													{post.originalPost.privacy === "public" ? (
+														<Globe size={14} className="text-muted" />
+													) : post.originalPost.privacy === "private" ? (
+														<Lock size={14} className="text-muted" />
+													) : (
+														<PersonFill size={14} className="text-muted" />
+													)}
+												</div>
+
+												{post.originalPost.content && (
+													<div className="mb-2">
+														{parseTextContent(post.originalPost.content, {
+															onHashtagClick: handleHashtagClick,
+															onMentionClick: handleMentionClick,
+															onLinkClick: handleLinkClick,
+														})}
+													</div>
+												)}
+
+												{post.originalPost.imageUrls && post.originalPost.imageUrls.length > 0 && (
+													<div className="mb-2">
+														{post.originalPost.imageUrls.length === 1 ? (
+															<Image
+																src={post.originalPost.imageUrls[0]}
+																className="rounded w-100"
+																style={{
+																	height: "200px",
+																	objectFit: "cover",
+																	cursor: "pointer",
+																}}
+																onClick={() => openImageViewer(post.originalPost.imageUrls, 0)}
+															/>
+														) : (
+															<div className="d-flex gap-2" style={{ height: "200px" }}>
+																<div style={{ flex: "2" }}>
+																	<Image
+																		src={post.originalPost.imageUrls[0]}
+																		className="rounded w-100 h-100"
+																		style={{
+																			objectFit: "cover",
+																			cursor: "pointer",
+																		}}
+																		onClick={() => openImageViewer(post.originalPost.imageUrls, 0)}
+																	/>
+																</div>
+																{post.originalPost.imageUrls.length > 1 && (
+																	<div className="d-flex flex-column gap-2" style={{ flex: "1" }}>
+																		<div style={{ height: post.originalPost.imageUrls.length > 2 ? "calc(50% - 4px)" : "100%" }}>
+																			<Image
+																				src={post.originalPost.imageUrls[1]}
+																				className="rounded w-100 h-100"
+																				style={{
+																					objectFit: "cover",
+																					cursor: "pointer",
+																				}}
+																				onClick={() => openImageViewer(post.originalPost.imageUrls, 1)}
+																			/>
+																		</div>
+																		{post.originalPost.imageUrls.length > 2 && (
+																			<div style={{ height: "calc(50% - 4px)" }} className="position-relative">
+																				<Image
+																					src={post.originalPost.imageUrls[2]}
+																					className="rounded w-100 h-100"
+																					style={{
+																						objectFit: "cover",
+																						cursor: "pointer",
+																					}}
+																					onClick={() => openImageViewer(post.originalPost.imageUrls, 2)}
+																				/>
+																				{post.originalPost.imageUrls.length > 3 && (
+																					<div
+																						className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
+																						style={{
+																							backgroundColor: "rgba(0, 0, 0, 0.7)",
+																							cursor: "pointer",
+																							color: "white",
+																							fontWeight: "bold",
+																							fontSize: "1rem",
+																						}}
+																						onClick={() => openImageViewer(post.originalPost.imageUrls, 2)}
+																					>
+																						+{post.originalPost.imageUrls.length - 3}
+																					</div>
+																				)}
+																			</div>
+																		)}
+																	</div>
+																)}
+															</div>
+														)}
+													</div>
+												)}
+
+												{/* Original post poll display */}
+												{post.originalPost.poll && (
+													<PollView
+														post={post.originalPost}
+														currentUser={currentUser}
+														onClick={(e) => e.stopPropagation()}
+													/>
+												)}
+											</div>
+										</div>
+									</div>
+								</div>
+							)}
+
 							{/* Reposts Display */}
 							{post.reposts && post.reposts.length > 0 && (
 								<div className="mb-2">
