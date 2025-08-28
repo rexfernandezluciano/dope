@@ -364,7 +364,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 			currentSelected === type
 				? "btn-primary"
 				: "border border-1 text-muted bg-light"
-		} fw-bold p-2 rounded-4 d-flex align-items-center justify-content-center`;
+		} fw-bold p-2 rounded-3 d-flex align-items-center justify-content-center`;
 	};
 
 	const handlePollMultiple = (e) => {
@@ -462,52 +462,56 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				backdrop="static"
 				onHide={() => setShowComposerModal(false)}
 				centered
-				className="animate__animated animate__slideInUp animate__faster d-flex flex-column"
-				style={{ height: '100vh', backgroundColor: '#ffffff' }}
+				className="post-composer-modal"
+				dialogClassName="h-100 mw-100"
 			>
-				<Modal.Header 
-					className="border-0 pb-0 position-sticky bg-white" 
-					style={{ 
-						top: 0, 
-						zIndex: 1051
-					}}
-				>
-					<div className="d-flex align-items-center w-100">
-						<Button
-							variant="link"
-							className="p-0 me-3 text-dark"
-							onClick={() => setShowComposerModal(false)}
-						>
-							<X size={35} />
-						</Button>
-						<h5 className="mb-0 flex-grow-1">Create Post</h5>
-						<Button
-							ref={postClickRef}
-							onClick={handleSubmit}
-							disabled={isPostDisabled || isOverLimit}
-							className="rounded-pill px-4 fw-bold"
-							style={{
-								backgroundColor:
-									isPostDisabled || isOverLimit ? "#ccc" : "#1DA1F2",
-								border: "none",
-								opacity: isPostDisabled || isOverLimit ? 0.5 : 1,
-							}}
-						>
-							{submitting ? <Spinner size="sm" animation="border" /> : "Post"}
-						</Button>
-					</div>
-				</Modal.Header>
+				<div className="modal-content h-100 d-flex flex-column">
+					<Modal.Header 
+						className="border-0 pb-2 flex-shrink-0 bg-white" 
+						style={{ 
+							position: 'sticky',
+							top: 0,
+							zIndex: 1030,
+							borderBottom: '1px solid #e9ecef'
+						}}
+					>
+						<div className="d-flex align-items-center w-100">
+							<Button
+								variant="link"
+								className="p-0 me-3 text-dark d-flex align-items-center"
+								onClick={() => setShowComposerModal(false)}
+								style={{ minWidth: 'auto' }}
+							>
+								<X size={24} />
+							</Button>
+							<h5 className="mb-0 flex-grow-1 fs-6 fw-bold">Create Post</h5>
+							<Button
+								ref={postClickRef}
+								onClick={handleSubmit}
+								disabled={isPostDisabled || isOverLimit}
+								className="rounded-pill px-3 py-1 fw-bold"
+								size="sm"
+								style={{
+									backgroundColor:
+										isPostDisabled || isOverLimit ? "#ccc" : "#1DA1F2",
+									border: "none",
+									color: "white",
+									minWidth: "60px"
+								}}
+							>
+								{submitting ? <Spinner size="sm" animation="border" /> : "Post"}
+							</Button>
+						</div>
+					</Modal.Header>
 
-				<Modal.Body 
-					className="pt-3 flex-grow-1 bg-white" 
-					style={{ 
-						overflowY: 'auto',
-						maxHeight: 'calc(100vh - 160px)',
-						minHeight: '300px',
-						paddingTop: '1rem',
-						paddingBottom: '1rem'
-					}}
-				>
+					<Modal.Body 
+						className="flex-grow-1 bg-white px-3 py-2" 
+						style={{ 
+							overflowY: 'auto',
+							flex: '1 1 auto',
+							minHeight: 0
+						}}
+					>
 					{error && (
 						<Alert variant="danger" className="mb-3">
 							{error}
@@ -874,145 +878,153 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				</Modal.Body>
 
 				<Modal.Footer 
-					className="border-0 pt-0 position-sticky bg-white" 
-					style={{ 
-						bottom: 0, 
-						zIndex: 1050,
-						marginTop: 'auto'
-					}}
-				>
-					<div className="d-flex justify-content-between align-items-center w-100">
-						<div className="d-flex gap-1">
+						className="border-0 pt-2 flex-shrink-0 bg-white" 
+						style={{ 
+							position: 'sticky',
+							bottom: 0,
+							zIndex: 1030,
+							borderTop: '1px solid #e9ecef'
+						}}
+					>
+						<div className="d-flex justify-content-between align-items-center w-100">
+							<div className="d-flex gap-1 flex-wrap">
+								<Button
+									variant="link"
+									size="sm"
+									className={activeClassName("text")}
+									onClick={() => {
+										setCurrentSelected("text");
+										setPostType("text");
+										setPlaceholder("What's happening?");
+									}}
+									disabled={
+										uploadingImages ||
+										images.length >=
+											getImageUploadLimit(currentUser?.subscription)
+									}
+									title="Text Post"
+									style={{ minWidth: '36px', minHeight: '36px' }}
+								>
+									<Type size={16} />
+								</Button>
 							<Button
-								variant="link"
-								size="sm"
-								className={activeClassName("text")}
-								onClick={() => {
-									setCurrentSelected("text");
-									setPostType("text");
-									setPlaceholder("What's happening?");
-								}}
-								disabled={
-									uploadingImages ||
-									images.length >=
-										getImageUploadLimit(currentUser?.subscription)
-								}
-								title="Text Post"
-							>
-								<Type size={18} />
-							</Button>
-							<Button
-								variant="link"
-								size="sm"
-								className={activeClassName("image")}
-								onClick={() => {
-									setCurrentSelected("image");
-									setPlaceholder("What's happening?");
-									fileInputRef.current.click();
-								}}
-								disabled={
-									uploadingImages ||
-									images.length >=
-										getImageUploadLimit(currentUser?.subscription)
-								}
-								title="Add Photos"
-							>
-								<Camera size={18} />
-							</Button>
-							<input
-								ref={fileInputRef}
-								type="file"
-								onChange={handleImageUpload}
-								accept="image/*"
-								multiple
-								style={{ display: "none" }}
-							/>
-							<Button
-								variant="link"
-								size="sm"
-								className={activeClassName("gif")}
-								onClick={() => {
-									setCurrentSelected("gif");
-									setShowStickerModal(true);
-									setPlaceholder("What's happening?");
-								}}
-								title="Add GIF"
-							>
-								<EmojiSmile size={18} />
-							</Button>
-							<Button
-								variant="link"
-								size="sm"
-								className={activeClassName("poll")}
-								onClick={() => {
-									setCurrentSelected("poll");
-									setPostType("poll");
-									setPlaceholder("Ask a question...");
-								}}
-								title="Create Poll"
-							>
-								<BarChart size={18} />
-							</Button>
-							<Button
-								variant="link"
-								size="sm"
-								className={`${activeClassName("live")} ${isStreaming ? "btn-danger" : ""}`}
-								onClick={() => {
-									setPlaceholder("What's happening?");
-									setShowLiveStudioModal(true);
-								}}
-								title={isStreaming ? "Manage Live Stream" : "Go Live"}
-							>
-								<CameraVideo size={18} />
-							</Button>
+									variant="link"
+									size="sm"
+									className={activeClassName("image")}
+									onClick={() => {
+										setCurrentSelected("image");
+										setPlaceholder("What's happening?");
+										fileInputRef.current.click();
+									}}
+									disabled={
+										uploadingImages ||
+										images.length >=
+											getImageUploadLimit(currentUser?.subscription)
+									}
+									title="Add Photos"
+									style={{ minWidth: '36px', minHeight: '36px' }}
+								>
+									<Camera size={16} />
+								</Button>
+								<input
+									ref={fileInputRef}
+									type="file"
+									onChange={handleImageUpload}
+									accept="image/*"
+									multiple
+									style={{ display: "none" }}
+								/>
+								<Button
+									variant="link"
+									size="sm"
+									className={activeClassName("gif")}
+									onClick={() => {
+										setCurrentSelected("gif");
+										setShowStickerModal(true);
+										setPlaceholder("What's happening?");
+									}}
+									title="Add GIF"
+									style={{ minWidth: '36px', minHeight: '36px' }}
+								>
+									<EmojiSmile size={16} />
+								</Button>
+								<Button
+									variant="link"
+									size="sm"
+									className={activeClassName("poll")}
+									onClick={() => {
+										setCurrentSelected("poll");
+										setPostType("poll");
+										setPlaceholder("Ask a question...");
+									}}
+									title="Create Poll"
+									style={{ minWidth: '36px', minHeight: '36px' }}
+								>
+									<BarChart size={16} />
+								</Button>
+								<Button
+									variant="link"
+									size="sm"
+									className={`${activeClassName("live")} ${isStreaming ? "btn-danger" : ""}`}
+									onClick={() => {
+										setPlaceholder("What's happening?");
+										setShowLiveStudioModal(true);
+									}}
+									title={isStreaming ? "Manage Live Stream" : "Go Live"}
+									style={{ minWidth: '36px', minHeight: '36px' }}
+								>
+									<CameraVideo size={16} />
+								</Button>
 						</div>
 
-						<div className="d-flex align-items-center gap-3">
-							{/* Character Count */}
-							{characterCount > 0 && (
-								<div className="d-flex align-items-center gap-2">
-									<svg width="20" height="20" viewBox="0 0 20 20">
-										<circle
-											cx="10"
-											cy="10"
-											r="8"
-											fill="none"
-											stroke={
-												isOverLimit
-													? "#ff6b6b"
-													: characterCount > characterLimit * 0.8
-														? "#ffb347"
-														: "#e1e8ed"
-											}
-											strokeWidth="2"
-										/>
-										<circle
-											cx="10"
-											cy="10"
-											r="8"
-											fill="none"
-											stroke={isOverLimit ? "#ff6b6b" : "#1DA1F2"}
-											strokeWidth="2"
-											strokeDasharray={`${(characterCount / characterLimit) * 50.26} 50.26`}
-											strokeLinecap="round"
-											transform="rotate(-90 10 10)"
-										/>
-									</svg>
-									<small
-										className={`fw-bold ${isOverLimit ? "text-danger" : "text-muted"}`}
-									>
-										{characterLimit - characterCount}
-									</small>
-								</div>
-							)}
+							<div className="d-flex align-items-center gap-2">
+								{/* Character Count */}
+								{characterCount > 0 && (
+									<div className="d-flex align-items-center gap-1">
+										<svg width="18" height="18" viewBox="0 0 20 20">
+											<circle
+												cx="10"
+												cy="10"
+												r="8"
+												fill="none"
+												stroke={
+													isOverLimit
+														? "#ff6b6b"
+														: characterCount > characterLimit * 0.8
+															? "#ffb347"
+															: "#e1e8ed"
+												}
+												strokeWidth="2"
+											/>
+											<circle
+												cx="10"
+												cy="10"
+												r="8"
+												fill="none"
+												stroke={isOverLimit ? "#ff6b6b" : "#1DA1F2"}
+												strokeWidth="2"
+												strokeDasharray={`${(characterCount / characterLimit) * 50.26} 50.26`}
+												strokeLinecap="round"
+												transform="rotate(-90 10 10)"
+											/>
+										</svg>
+										<small
+											className={`fw-bold ${isOverLimit ? "text-danger" : "text-muted"}`}
+											style={{ fontSize: '0.75rem' }}
+										>
+											{characterLimit - characterCount}
+										</small>
+									</div>
+								)}
 
-							{/* Privacy Indicator */}
-							<div className="d-flex align-items-center text-muted">
-								{getPrivacyIcon()}
+								{/* Privacy Indicator */}
+								<div className="d-flex align-items-center text-muted">
+									{getPrivacyIcon()}
+								</div>
 							</div>
 						</div>
-					</div>
-				</Modal.Footer>
+					</Modal.Footer>
+				</div>
 			</Modal>
 
 			{/* Sticker/GIF Modal */}

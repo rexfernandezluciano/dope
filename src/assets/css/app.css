@@ -403,7 +403,7 @@ button,
     padding: 0.25rem 0.5rem !important;
     border-radius: 16px !important;
   }
-  
+
   .action-btn svg {
     width: 18px !important;
     height: 18px !important;
@@ -1012,4 +1012,47 @@ button,
   100% {
     opacity: 1;
   }
+}
+
+/* PostComposer Modal Fixes for Production */
+.post-composer-modal .modal-dialog {
+	height: 100vh !important;
+	max-height: 100vh !important;
+	margin: 0 !important;
+}
+
+.post-composer-modal .modal-content {
+	height: 100% !important;
+	border-radius: 0 !important;
+	border: none !important;
+}
+
+.post-composer-modal .modal-header {
+	padding: 1rem 1rem 0.5rem !important;
+	min-height: 60px;
+}
+
+.post-composer-modal .modal-body {
+	padding: 0.5rem 1rem !important;
+	overflow-y: auto !important;
+	-webkit-overflow-scrolling: touch;
+}
+
+.post-composer-modal .modal-footer {
+	padding: 0.5rem 1rem 1rem !important;
+	min-height: 70px;
+}
+
+@media (min-width: 768px) {
+	.post-composer-modal .modal-dialog {
+		height: 80vh !important;
+		max-height: 600px !important;
+		margin: 10vh auto !important;
+		max-width: 600px !important;
+	}
+
+	.post-composer-modal .modal-content {
+		border-radius: 1rem !important;
+		border: 1px solid #dee2e6 !important;
+	}
 }
