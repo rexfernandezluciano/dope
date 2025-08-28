@@ -1209,15 +1209,50 @@ export const analyticsAPI = {
 			apiRequest("/auth/me").catch(() => ({ monetization: null }))
 		]);
 
+		// Enhance analytics data with computed fields
+		const enhancedAnalytics = {
+			...analyticsData,
+			overview: {
+				...analyticsData.overview,
+				totalPosts: analyticsData.overview?.totalPosts || analyticsData.posts?.length || 0,
+				postsThisPeriod: analyticsData.overview?.postsThisPeriod || analyticsData.posts?.filter(post => {
+					const postDate = new Date(post.createdAt);
+					const periodStart = new Date();
+					periodStart.setDate(periodStart.getDate() - parseInt(period));
+					return postDate >= periodStart;
+				})?.length || 0,
+				postsLast24h: analyticsData.overview?.postsLast24h || analyticsData.posts?.filter(post => {
+					const postDate = new Date(post.createdAt);
+					const yesterday = new Date();
+					yesterday.setDate(yesterday.getDate() - 1);
+					return postDate >= yesterday;
+				})?.length || 0,
+				sharesThisPeriod: analyticsData.overview?.sharesThisPeriod || 0
+			}
+		};
+
 		// Merge monetization eligibility data from /auth/me into analytics
 		return {
-			...analyticsData,
+			...enhancedAnalytics,
 			monetization: userData.monetization || {
 				isEligible: false,
 				requirements: {
-					followers: { current: 0, required: 500, met: false },
-					recentActivity: { postsLast24h: 0, required: 1, met: false },
-					accountStatus: { blocked: false, restricted: false, violations: 0, goodStanding: true }
+					followers: { 
+						current: enhancedAnalytics.overview?.currentFollowers || 0, 
+						required: 500, 
+						met: (enhancedAnalytics.overview?.currentFollowers || 0) >= 500 
+					},
+					recentActivity: { 
+						postsLast24h: enhancedAnalytics.overview?.postsLast24h || 0, 
+						required: 1, 
+						met: (enhancedAnalytics.overview?.postsLast24h || 0) >= 1 
+					},
+					accountStatus: { 
+						blocked: false, 
+						restricted: false, 
+						violations: 0, 
+						goodStanding: true 
+					}
 				}
 			}
 		};

@@ -381,10 +381,46 @@ const AnalyticsPage = () => {
 				</Col>
 				<Col xs={6} lg={3}>
 					<StatCard
+						value={formatNumber(analytics?.overview?.totalPosts || 0)}
+						label="Total Posts"
+						subtitle={`${analytics?.overview?.postsThisPeriod || 0} this period`}
+						variant="warning"
+					/>
+				</Col>
+			</Row>
+
+			{/* Additional Stats Row */}
+			<Row className="g-3 mb-4">
+				<Col xs={6} lg={3}>
+					<StatCard
 						value={`${analytics?.overview?.engagementRate || 0}%`}
 						label="Engagement Rate"
-						subtitle={`${formatNumber((analytics?.overview?.totalLikes || 0) + (analytics?.overview?.totalComments || 0) + (analytics?.overview?.totalShares || 0))} engagements`}
-						variant="warning"
+						subtitle={`${formatNumber((analytics?.overview?.totalLikes || 0) + (analytics?.overview?.totalComments || 0) + (analytics?.overview?.totalShares || 0))} total engagements`}
+						variant="info"
+					/>
+				</Col>
+				<Col xs={6} lg={3}>
+					<StatCard
+						value={formatNumber(analytics?.overview?.totalComments || 0)}
+						label="Total Comments"
+						subtitle={`Average ${((analytics?.overview?.totalComments || 0) / Math.max(analytics?.overview?.totalPosts || 1, 1)).toFixed(1)} per post`}
+						variant="secondary"
+					/>
+				</Col>
+				<Col xs={6} lg={3}>
+					<StatCard
+						value={formatNumber(analytics?.overview?.totalLikes || 0)}
+						label="Total Likes"
+						subtitle={`Average ${((analytics?.overview?.totalLikes || 0) / Math.max(analytics?.overview?.totalPosts || 1, 1)).toFixed(1)} per post`}
+						variant="success"
+					/>
+				</Col>
+				<Col xs={6} lg={3}>
+					<StatCard
+						value={formatNumber(analytics?.overview?.totalShares || 0)}
+						label="Total Shares"
+						subtitle={`${analytics?.overview?.sharesThisPeriod || 0} this period`}
+						variant="primary"
 					/>
 				</Col>
 			</Row>
@@ -654,9 +690,11 @@ const AnalyticsPage = () => {
 										</div>
 										<div className="text-end">
 											<h6 className="mb-0 text-primary">
-												{analytics?.overview?.totalPosts || 0}
+												{analytics?.overview?.postsThisPeriod || 0}
 											</h6>
-											<small className="text-muted">Consistent</small>
+											<small className="text-muted">
+												{analytics?.overview?.totalPosts || 0} total posts
+											</small>
 										</div>
 									</div>
 								</div>
@@ -699,36 +737,36 @@ const AnalyticsPage = () => {
 		const revenueGrowth = analytics?.overview?.revenueGrowth || 0;
 
 		// Get monetization eligibility from analytics
-		const monetization = analytics?.monetization;
+		const monetization = analytics?.monetization || {
+			isEligible: false,
+			requirements: {
+				followers: { 
+					current: analytics?.overview?.currentFollowers || 0, 
+					required: 500, 
+					met: (analytics?.overview?.currentFollowers || 0) >= 500 
+				},
+				recentActivity: { 
+					postsLast24h: analytics?.overview?.postsLast24h || 0, 
+					required: 1, 
+					met: (analytics?.overview?.postsLast24h || 0) >= 1 
+				},
+				accountStatus: { 
+					blocked: false, 
+					restricted: false, 
+					violations: 0, 
+					goodStanding: true 
+				}
+			}
+		};
 
 		console.log("Monetization Data:", JSON.stringify(monetization, null, 2));
 
-		console.log(
-			"Requirements:",
-			JSON.stringify(monetization?.requirements, null, 2),
-		);
-
-		const postLast24h =
-			monetization?.requirements?.recentActivity?.postsLast24h;
-
-		const followerMet = monetization?.requirements?.followers?.met;
-
-		const currentFollower = monetization?.requirements?.followers?.current;
-
-		const followerRequired = monetization?.requirements?.followers?.required;
-
-		const recentActivityMet = monetization?.requirements?.recentActivity?.met;
-
-		if (
-			!monetization?.requirements &&
-			!postLast24h &&
-			!followerMet &&
-			!followerRequired &&
-			!recentActivityMet &&
-			!currentFollower
-		) {
-			return <div></div>;
-		}
+		const postLast24h = monetization?.requirements?.recentActivity?.postsLast24h || 0;
+		const followerMet = monetization?.requirements?.followers?.met || false;
+		const currentFollower = monetization?.requirements?.followers?.current || 0;
+		const followerRequired = monetization?.requirements?.followers?.required || 500;
+		const recentActivityMet = monetization?.requirements?.recentActivity?.met || false;
+		const requiredPosts = monetization?.requirements?.recentActivity?.required || 1;
 
 		return (
 			<>
@@ -801,11 +839,7 @@ const AnalyticsPage = () => {
 										<div className="d-flex justify-content-between align-items-center mb-2">
 											<small className="text-muted">Daily Activity</small>
 											<Badge
-												bg={
-													monetization?.requirements?.recentActivity?.met
-														? "success"
-														: "secondary"
-												}
+												bg={recentActivityMet ? "success" : "secondary"}
 											>
 												{recentActivityMet ? (
 													<CheckCircle size={12} />
@@ -815,21 +849,28 @@ const AnalyticsPage = () => {
 											</Badge>
 										</div>
 										<div className="mb-2">
-											<strong>{postLast24h || 0}</strong>
+											<strong>{postLast24h}</strong>
 											<span className="text-muted">
 												{" "}
-												/ {recentActivityMet || 0} posts
+												/ {requiredPosts} posts
 											</span>
 										</div>
 										<div className="progress" style={{ height: "4px" }}>
 											<div
 												className={`progress-bar ${recentActivityMet ? "bg-success" : "bg-primary"}`}
 												style={{
-													width: `${Math.min(((postLast24h || 0) / (recentActivityMet || 1)) * 100, 100)}%`,
+													width: `${Math.min((postLast24h / requiredPosts) * 100, 100)}%`,
 												}}
 											></div>
 										</div>
-										<small className="text-muted">Posts in last 24h</small>
+										{!recentActivityMet && (
+											<small className="text-muted">
+												{requiredPosts - postLast24h} more needed today
+											</small>
+										)}
+										{recentActivityMet && (
+											<small className="text-success">Requirement met!</small>
+										)}
 									</div>
 								</Col>
 
