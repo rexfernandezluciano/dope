@@ -26,8 +26,6 @@ import { updatePageMeta } from "../utils/meta-utils";
 
 const RepostsPage = () => {
 	const { postId } = useParams();
-	const loaderData = useLoaderData() || {};
-	const { user: currentUser } = loaderData;
 	const navigate = useNavigate();
 	const [post, setPost] = useState(null);
 	const [reposts, setReposts] = useState([]);

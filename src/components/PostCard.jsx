@@ -238,7 +238,7 @@ const PostCard = ({
 				}
 			}
 		},
-		[onLike, post.id, post.likes, post.author.uid, currentUser, likingPost, post],
+		[onLike, currentUser, likingPost, post],
 	);
 
 	const handleShare = useCallback(

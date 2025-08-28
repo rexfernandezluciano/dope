@@ -4,7 +4,6 @@ import Cookies from "js-cookie";
 import axios from "axios";
 
 // Always use proxy for both development and production
-const isUsingProxy = true;
 
 // Define API endpoints based on environment
 const API_ENDPOINTS =
@@ -661,13 +660,6 @@ export const oauthAPI = {
 	// OAuth Authorization Flow
 	getAppInfo: async (clientId) => {
 		return await apiRequest(`/oauth/apps/info/${clientId}`, { method: "GET" });
-	},
-
-	authorize: async (authorizationData) => {
-		return await apiRequest("/oauth/authorize", {
-			method: "POST",
-			data: authorizationData,
-		});
 	},
 
 	// Helper function to get authorization URL
@@ -1391,12 +1383,12 @@ export const searchAPI = {
 	},
 
 	searchPosts: async (query, params = {}) => {
-		const searchParams = new URLSearchParams({
+		const queryParams = new URLSearchParams({
 			search: query,
 			limit: params.limit || 20,
 			...params,
 		});
-		return await apiRequest(`/posts?${searchParams.toString()}`);
+		return await apiRequest(`/posts?${queryParams.toString()}`);
 	},
 
 	searchHashtags: async (query) => {
