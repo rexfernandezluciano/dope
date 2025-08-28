@@ -539,7 +539,7 @@ const PostCard = ({
 							{/* Original Post Display for Reposts */}
 							{post.isRepost && post.originalPost && (
 								<div className="mb-2">
-									<div className="border rounded-3 p-3 bg-light">
+									<div className="border rounded-3 p-3 bg-white">
 										<div className="d-flex gap-2">
 											<Image
 												src={
