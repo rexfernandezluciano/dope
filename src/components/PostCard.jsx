@@ -536,99 +536,155 @@ const PostCard = ({
 								/>
 							)}
 
-							{/* Reposts Display */}
-							{post.reposts && post.reposts.length > 0 && (
+							{/* Original Post Display for Reposts */}
+							{post.isRepost && post.originalPost && (
 								<div className="mb-2">
-									<div className="border rounded-3 p-3">
-										<div className="d-flex align-items-center justify-content-between mb-2">
-											<h6 className="mb-0 text-muted">
-												<Share size={16} className="me-2" />
-												Reposts ({post.reposts.length})
-											</h6>
-											{post.reposts.length > 3 && (
-												<Button
-													variant="link"
-													size="sm"
-													className="p-0 text-primary"
-													onClick={(e) => {
-														e.stopPropagation();
-														navigate(`/post/${post.id}/reposts`);
-													}}
-												>
-													View all
-												</Button>
-											)}
-										</div>
-										{post.reposts.slice(0, 3).map((repost, index) => (
-											<div
-												key={repost.id}
-												className={`d-flex gap-2 ${index > 0 ? "mt-2" : ""}`}
-											>
-												<Image
-													src={
-														repost.user.photoURL ||
-														"https://i.pravatar.cc/150?img=10"
-													}
-													alt="repost avatar"
-													roundedCircle
-													width="24"
-													height="24"
-													style={{
-														objectFit: "cover",
-														minWidth: "24px",
-														minHeight: "24px",
-													}}
-												/>
-												<div className="flex-grow-1">
-													<div className="d-flex align-items-center gap-1">
-														<span
-															className="fw-bold small"
-															style={{ cursor: "pointer", color: "inherit" }}
-															onClick={(e) => {
-																e.stopPropagation();
-																navigate(`/${repost.user.username}`);
-															}}
-														>
-															{repost.user.name}
-														</span>
-														{repost.user.hasBlueCheck && (
-															<CheckCircleFill
-																className="text-primary"
-																size={12}
-															/>
-														)}
-														<span className="text-muted small">·</span>
-														<span className="text-muted small">
-															{formatTimeAgo(repost.createdAt)}
-														</span>
-													</div>
-													{repost.content && (
-														<div className="small text-muted">
-															{parseTextContent(repost.content, {
-																onHashtagClick: handleHashtagClick,
-																onMentionClick: handleMentionClick,
-																onLinkClick: handleLinkClick,
-															})}
-														</div>
+									<div className="border rounded-3 p-3 bg-light">
+										<div className="d-flex gap-2">
+											<Image
+												src={
+													post.originalPost.author.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
+												alt="original author avatar"
+												roundedCircle
+												width="32"
+												height="32"
+												style={{
+													objectFit: "cover",
+													minWidth: "32px",
+													minHeight: "32px",
+												}}
+											/>
+											<div className="flex-grow-1">
+												<div className="d-flex align-items-center gap-1 mb-2">
+													<span
+														className="fw-bold"
+														style={{ cursor: "pointer", color: "inherit" }}
+														onClick={(e) => {
+															e.stopPropagation();
+															navigate(`/${post.originalPost.author.username}`);
+														}}
+													>
+														{post.originalPost.author.name}
+													</span>
+													{post.originalPost.author.hasBlueCheck && (
+														<CheckCircleFill className="text-primary" size={16} />
+													)}
+													<span className="text-muted">·</span>
+													<span className="text-muted small">
+														{formatTimeAgo(post.originalPost.createdAt)}
+													</span>
+													<span className="text-muted">·</span>
+													{post.originalPost.privacy === "public" ? (
+														<Globe size={14} className="text-muted" />
+													) : post.originalPost.privacy === "private" ? (
+														<Lock size={14} className="text-muted" />
+													) : (
+														<PersonFill size={14} className="text-muted" />
 													)}
 												</div>
+
+												{post.originalPost.content && (
+													<div className="mb-2">
+														{parseTextContent(post.originalPost.content, {
+															onHashtagClick: handleHashtagClick,
+															onMentionClick: handleMentionClick,
+															onLinkClick: handleLinkClick,
+														})}
+													</div>
+												)}
+
+												{post.originalPost.imageUrls && post.originalPost.imageUrls.length > 0 && (
+													<div className="mb-2">
+														{post.originalPost.imageUrls.length === 1 ? (
+															<Image
+																src={post.originalPost.imageUrls[0]}
+																className="rounded w-100"
+																style={{
+																	height: "200px",
+																	objectFit: "cover",
+																	cursor: "pointer",
+																}}
+																onClick={(e) => {
+																	e.stopPropagation();
+																	openImageViewer(post.originalPost.imageUrls, 0);
+																}}
+															/>
+														) : (
+															<div className="d-flex gap-2" style={{ height: "200px" }}>
+																<div style={{ flex: "2" }}>
+																	<Image
+																		src={post.originalPost.imageUrls[0]}
+																		className="rounded w-100 h-100"
+																		style={{
+																			objectFit: "cover",
+																			cursor: "pointer",
+																		}}
+																		onClick={(e) => {
+																			e.stopPropagation();
+																			openImageViewer(post.originalPost.imageUrls, 0);
+																		}}
+																	/>
+																</div>
+																{post.originalPost.imageUrls.length > 1 && (
+																	<div className="d-flex flex-column gap-2" style={{ flex: "1" }}>
+																		<div style={{ height: post.originalPost.imageUrls.length > 2 ? "calc(50% - 4px)" : "100%" }}>
+																			<Image
+																				src={post.originalPost.imageUrls[1]}
+																				className="rounded w-100 h-100"
+																				style={{
+																					objectFit: "cover",
+																					cursor: "pointer",
+																				}}
+																				onClick={(e) => {
+																					e.stopPropagation();
+																					openImageViewer(post.originalPost.imageUrls, 1);
+																				}}
+																			/>
+																		</div>
+																		{post.originalPost.imageUrls.length > 2 && (
+																			<div style={{ height: "calc(50% - 4px)" }} className="position-relative">
+																				<Image
+																					src={post.originalPost.imageUrls[2]}
+																					className="rounded w-100 h-100"
+																					style={{
+																						objectFit: "cover",
+																						cursor: "pointer",
+																					}}
+																					onClick={(e) => {
+																						e.stopPropagation();
+																						openImageViewer(post.originalPost.imageUrls, 2);
+																					}}
+																				/>
+																				{post.originalPost.imageUrls.length > 3 && (
+																					<div
+																						className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
+																						style={{
+																							backgroundColor: "rgba(0, 0, 0, 0.7)",
+																							cursor: "pointer",
+																							color: "white",
+																							fontWeight: "bold",
+																							fontSize: "1rem",
+																						}}
+																						onClick={(e) => {
+																							e.stopPropagation();
+																							openImageViewer(post.originalPost.imageUrls, 2);
+																						}}
+																					>
+																						+{post.originalPost.imageUrls.length - 3}
+																					</div>
+																				)}
+																			</div>
+																		)}
+																	</div>
+																)}
+															</div>
+														)}
+													</div>
+												)}
 											</div>
-										))}
-										{post.reposts.length > 3 && (
-											<div className="text-center mt-2">
-												<Button
-													variant="link"
-													size="sm"
-													className="p-0 text-primary"
-													onClick={(e) => {
-														e.stopPropagation();
-														navigate(`/post/${post.id}/reposts`);
-													}}
-												>
-													+{post.reposts.length - 3} more reposts
-												</Button>
-											</div>
-										)}
+										</div>
 									</div>
 								</div>
 							)}
@@ -730,6 +786,17 @@ const PostCard = ({
 									)}
 									{post.stats?.shares > 0 && (
 										<span>{post.stats.shares} shares</span>
+									)}
+									{post.stats?.reposts > 0 && (
+										<span
+											style={{ cursor: "pointer" }}
+											onClick={(e) => {
+												e.stopPropagation();
+												navigate(`/post/${post.id}/reposts`);
+											}}
+										>
+											{post.stats.reposts} reposts
+										</span>
 									)}
 								</div>
 							</div>

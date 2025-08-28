@@ -48,10 +48,14 @@ const RepostsPage = () => {
 					throw new Error("Post not found");
 				}
 
-				// Load reposts
-				const repostsResponse = await postAPI.getReposts(postId);
-				if (repostsResponse && Array.isArray(repostsResponse.reposts)) {
-					setReposts(repostsResponse.reposts);
+				// Load reposts - now they're just regular posts with isRepost: true
+				const repostsResponse = await postAPI.getPostReposts(postId);
+				if (repostsResponse && Array.isArray(repostsResponse.posts)) {
+					// Filter for reposts of this specific post
+					const filteredReposts = repostsResponse.posts.filter(
+						post => post.isRepost && post.originalPost?.id === postId
+					);
+					setReposts(filteredReposts);
 				} else {
 					setReposts([]);
 				}
@@ -302,13 +306,13 @@ const RepostsPage = () => {
 							key={repost.id}
 							className="border-0 border-bottom rounded-0"
 							style={{ cursor: "pointer" }}
-							onClick={() => navigate(`/${repost.user.username}`)}
+							onClick={() => navigate(`/post/${repost.id}`)}
 						>
 							<Card.Body className="px-3 py-3">
 								<div className="d-flex gap-2">
 									<Image
 										src={
-											repost.user.photoURL ||
+											repost.author.photoURL ||
 											"https://i.pravatar.cc/150?img=10"
 										}
 										alt="avatar"
@@ -328,12 +332,12 @@ const RepostsPage = () => {
 												style={{ cursor: "pointer", color: "inherit" }}
 												onClick={(e) => {
 													e.stopPropagation();
-													navigate(`/${repost.user.username}`);
+													navigate(`/${repost.author.username}`);
 												}}
 											>
-												{repost.user.name}
+												{repost.author.name}
 											</span>
-											{repost.user.hasBlueCheck && (
+											{repost.author.hasBlueCheck && (
 												<CheckCircleFill className="text-primary" size={16} />
 											)}
 											<span className="text-muted">·</span>
