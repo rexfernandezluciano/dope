@@ -244,12 +244,9 @@ const PostCard = ({
 	const handleShare = useCallback(
 		(e) => {
 			e.stopPropagation();
-			sharePost(post.id); // Use the utility function
-			if (onShare) {
-				onShare(post.id);
-			}
+			setShowRepostModal(true); // Open repost modal instead of sharing
 		},
-		[post.id, onShare],
+		[],
 	);
 
 	const handleCommentToggle = useCallback(() => {

@@ -91,7 +91,7 @@ const PostDetailPage = () => {
 			const postResponse = await postAPI.getPost(postId);
 			if (postResponse && postResponse.post) {
 				setPost(postResponse.post);
-				
+
 				// Initialize like state from post data
 				setLiked(
 					postResponse.post.likes?.some(
@@ -209,7 +209,7 @@ const PostDetailPage = () => {
 
 	const handleLikePost = async () => {
 		if (likingPost || !currentUser) return;
-		
+
 		try {
 			setLikingPost(true);
 			const response = await postAPI.likePost(postId);
@@ -264,10 +264,12 @@ const PostDetailPage = () => {
 	};
 
 	// Replaced handleSharePost with the reusable sharePost utility
-	const handleSharePost = async (postId) => {
-		const postUrl = `${window.location.origin}/post/${postId}`;
-		await sharePost(postUrl);
-	};
+	const handleSharePost = useCallback(
+		(postId) => {
+			setShowRepostModal(true); // Open repost modal instead of sharing
+		},
+		[],
+	);
 
 	const handleHashtagClick = (hashtag) => {
 		navigate(`/search?q=%23${encodeURIComponent(hashtag)}&tab=comments`);
@@ -587,7 +589,7 @@ const PostDetailPage = () => {
 		}
 	};
 
-	
+
 
 	const handleSubmitReply = async (commentId, replyText, type = "reply") => {
 		if (!replyText?.trim()) return;
@@ -649,7 +651,7 @@ const PostDetailPage = () => {
 		}
 	};
 
-	
+
 
 	// Handle comment updates
 	const handleUpdateComment = async (commentId, newContent) => {
