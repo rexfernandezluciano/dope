@@ -231,29 +231,29 @@ const NavigationView = ({ children }) => {
 		} catch (error) {
 			console.error("Logout API error:", error);
 			// Continue with local logout even if API call fails
-		} finally {
-			try {
-				// Clear auth token using secure method
-				const { removeAuthToken } = await import("../../utils/app-utils.js");
-				removeAuthToken();
-
-				setShowLogoutDialog(false);
-				
-				// Redirect to start page
-				window.location.href = "/";
-			} catch (error) {
-				console.error("Local logout error:", error);
-				// Clear auth token even if there's an error
-				try {
-					const { removeAuthToken } = await import("../../utils/app-utils");
-					removeAuthToken();
-				} catch (tokenError) {
-					console.error("Failed to remove auth token:", tokenError);
-				}
-				// Still redirect
-				window.location.href = "/";
-			}
 		}
+
+		try {
+			// Clear auth token using secure method
+			const { removeAuthToken } = await import("../../utils/app-utils.js");
+			removeAuthToken();
+
+			// Also clear from ApiConfig
+			const { removeAuthToken: removeApiAuthToken } = await import("../../config/ApiConfig.js");
+			removeApiAuthToken();
+
+			// Clear any localStorage/sessionStorage items
+			localStorage.clear();
+			sessionStorage.clear();
+		} catch (tokenError) {
+			console.error("Failed to remove auth token:", tokenError);
+		}
+
+		// Hide the dialog first
+		setShowLogoutDialog(false);
+
+		// Force a complete page reload to clear all state
+		window.location.replace("/");
 	};
 
 	const mobileMenuItems = [
