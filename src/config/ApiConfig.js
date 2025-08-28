@@ -885,7 +885,9 @@ export const postAPI = {
 
 	// Get reposts for a post
 	getPostReposts: async (postId) => {
-		return this.apiCall(`/posts/${postId}/reposts`, "GET");
+		return await apiRequest(`/posts/${postId}/reposts`, {
+			method: "GET",
+		});
 	},
 
 	trackView: async (postId) => {
