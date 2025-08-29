@@ -1,6 +1,7 @@
 /** @format */
 
 import React, { useState, useEffect } from "react";
+import { useLoaderData } from "react-router-dom";
 import {
 	Container,
 	Row,
@@ -74,7 +75,6 @@ const AnalyticsPage = () => {
 			setLoading(false);
 		}
 	};
-	
 
 	useEffect(() => {
 		updatePageMeta(pageMetaData.analytics);
@@ -246,7 +246,8 @@ const AnalyticsPage = () => {
 						name: "Tips",
 						value:
 							(response.revenue?.breakdown?.tipsEarned?.percentage || 0) +
-								(response.revenue?.breakdown?.donationsEarned?.percentage || 0) || 15,
+								(response.revenue?.breakdown?.donationsEarned?.percentage ||
+									0) || 15,
 						color: "#ffc107",
 					},
 				],
@@ -741,33 +742,37 @@ const AnalyticsPage = () => {
 		const monetization = currentUser?.monetization || {
 			isEligible: false,
 			requirements: {
-				followers: { 
-					current: analytics?.overview?.currentFollowers || 0, 
-					required: 500, 
-					met: (analytics?.overview?.currentFollowers || 0) >= 500 
+				followers: {
+					current: analytics?.overview?.currentFollowers || 0,
+					required: 500,
+					met: (analytics?.overview?.currentFollowers || 0) >= 500,
 				},
-				recentActivity: { 
-					postsLast24h: analytics?.overview?.postsLast24h || 0, 
-					required: 1, 
-					met: (analytics?.overview?.postsLast24h || 0) >= 1 
+				recentActivity: {
+					postsLast24h: analytics?.overview?.postsLast24h || 0,
+					required: 1,
+					met: (analytics?.overview?.postsLast24h || 0) >= 1,
 				},
-				accountStatus: { 
-					blocked: false, 
-					restricted: false, 
-					violations: 0, 
-					goodStanding: true 
-				}
-			}
+				accountStatus: {
+					blocked: false,
+					restricted: false,
+					violations: 0,
+					goodStanding: true,
+				},
+			},
 		};
 
 		console.log("Monetization Data:", JSON.stringify(monetization, null, 2));
 
-		const postLast24h = monetization?.requirements?.recentActivity?.postsLast24h || 0;
+		const postLast24h =
+			monetization?.requirements?.recentActivity?.postsLast24h || 0;
 		const followerMet = monetization?.requirements?.followers?.met || false;
 		const currentFollower = monetization?.requirements?.followers?.current || 0;
-		const followerRequired = monetization?.requirements?.followers?.required || 500;
-		const recentActivityMet = monetization?.requirements?.recentActivity?.met || false;
-		const requiredPosts = monetization?.requirements?.recentActivity?.required || 1;
+		const followerRequired =
+			monetization?.requirements?.followers?.required || 500;
+		const recentActivityMet =
+			monetization?.requirements?.recentActivity?.met || false;
+		const requiredPosts =
+			monetization?.requirements?.recentActivity?.required || 1;
 
 		return (
 			<>
@@ -839,9 +844,7 @@ const AnalyticsPage = () => {
 									<div className="p-3 border rounded">
 										<div className="d-flex justify-content-between align-items-center mb-2">
 											<small className="text-muted">Daily Activity</small>
-											<Badge
-												bg={recentActivityMet ? "success" : "secondary"}
-											>
+											<Badge bg={recentActivityMet ? "success" : "secondary"}>
 												{recentActivityMet ? (
 													<CheckCircle size={12} />
 												) : (
