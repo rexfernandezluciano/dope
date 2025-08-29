@@ -42,6 +42,7 @@ import {
 import { TbBrandGoogleAnalytics } from "react-icons/tb";
 
 const AnalyticsPage = () => {
+	const { user: currentUser } = useLoaderData();
 	const [analytics, setAnalytics] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
@@ -283,7 +284,7 @@ const AnalyticsPage = () => {
 
 	if (loading) {
 		return (
-			<Container className="py-5 text-center">
+			<Container className="py-5 text-center min-vh-100">
 				<Spinner animation="border" variant="primary" />
 			</Container>
 		);
@@ -291,8 +292,8 @@ const AnalyticsPage = () => {
 
 	if (error) {
 		return (
-			<Container className="py-5">
-				<Alert variant="danger">{error}</Alert>
+			<Container className="text-center py-5 justify-content-center min-vh-100">
+				<p className="fw-bold text-muted">An error occured.</p>
 			</Container>
 		);
 	}
@@ -737,7 +738,7 @@ const AnalyticsPage = () => {
 		const revenueGrowth = analytics?.overview?.revenueGrowth || 0;
 
 		// Get monetization eligibility from analytics
-		const monetization = analytics?.monetization || {
+		const monetization = currentUser?.monetization || {
 			isEligible: false,
 			requirements: {
 				followers: { 

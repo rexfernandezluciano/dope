@@ -444,9 +444,9 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 							}}
 						/>
 						<div
-							className="flex-grow-1 d-flex align-items-center bg-light rounded-pill px-4 py-0 mb-3 fs-6 cursor-pointer border"
+							className="flex-grow-1 d-flex align-items-center bg-light p-0 mb-3 fs-6 cursor-pointer"
 							onClick={() => setShowComposerModal(true)}
-							style={{ cursor: "pointer", minHeight: "52px" }}
+							style={{ cursor: "pointer" }}
 						>
 							<span className="text-muted fs-6">{placeholder}</span>
 						</div>

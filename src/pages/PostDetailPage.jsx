@@ -690,8 +690,8 @@ const PostDetailPage = () => {
 
 	if (error || !post) {
 		return (
-			<Container className="py-3">
-				<Alert variant="danger">{error || "Post not found"}</Alert>
+			<Container className="py-5 text-center min-vh-100">
+				<p className="fw-bold text-muted">{error ? "An error occured." : "Post not found."}</p>
 			</Container>
 		);
 	}
