@@ -98,16 +98,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 	const handleContentChange = useCallback(
 		(event, newValue, newPlainTextValue, mentions) => {
 			setContent(newValue);
-
-			// Auto-resize textarea
-			const textarea = textareaRef.current?.querySelector("textarea");
-			if (textarea) {
-				textarea.style.height = "auto";
-				textarea.style.height = Math.min(textarea.scrollHeight, 200) + "px";
-			}
-		},
-		[],
-	);
+		}, []);
 
 	const uploadImage = async (file) => {
 		let finalFile = file;
@@ -457,20 +448,18 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 			{/* Full Post Composer Modal */}
 			<Modal
 				show={showComposerModal}
-				size="lg"
 				fullscreen="md-down"
 				backdrop="static"
 				onHide={() => setShowComposerModal(false)}
 				centered
-				className="post-composer-modal"
-				dialogClassName="h-100 mw-100"
+				className="post-composer-modal min-vh-100"
 				scrollable
 			>
-				<div className="modal-content h-100 d-flex flex-column">
+				<div className="modal-content min-vh-100 d-flex flex-column">
 					<Modal.Header 
-						className="border-0 pb-2 flex-shrink-0 sticky-top bg-white" 
+						className="border-0 pb-2 flex-shrink-0 fixed-top bg-white" 
 						style={{ 
-							position: 'sticky',
+							position: 'fixed',
 							top: 0,
 							zIndex: 1030,
 							borderBottom: '1px solid #e9ecef'
@@ -510,11 +499,15 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 						style={{ 
 							overflowY: 'auto',
 							flex: '1 1 auto',
+							marginTop: '56px',
+							marginBottom: '70px',
 							minHeight: 0
 						}}
 					>
 					{error && (
-						<Alert variant="danger" className="mb-3">
+						<Alert variant="danger" className="mb-3"
+							dismissible 
+							onHide={() => setError("")}>
 							{error}
 						</Alert>
 					)}
@@ -576,14 +569,14 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 												onClick={() => setPrivacy("public")}
 												className={`d-flex align-items-center gap-2 ${
 													privacy === "public"
-														? "bg-primary bg-opacity-10 text-primary"
+														? "bg-primary bg-opacity-10 text-white"
 														: ""
 												}`}
 											>
 												<Globe size={16} />
 												<div>
 													<div className="fw-bold">Everyone</div>
-													<small className="text-muted">Anyone can reply</small>
+													<small className={`fw-bold` + privacy === "public" ? "text-white": "text-muted"}>Anyone can reply</small>
 												</div>
 											</Dropdown.Item>
 
@@ -591,14 +584,14 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 												onClick={() => setPrivacy("followers")}
 												className={`d-flex align-items-center gap-2 ${
 													privacy === "followers"
-														? "bg-primary bg-opacity-10 text-primary"
+														? "bg-primary bg-opacity-10 text-white"
 														: ""
 												}`}
 											>
 												<PersonFill size={16} />
 												<div>
 													<div className="fw-bold">Followers</div>
-													<small className="text-muted">
+													<small className={`fw-bold` + privacy === "followers" ? "text-white": "text-muted"}>
 														Only followers can reply
 													</small>
 												</div>
@@ -608,14 +601,15 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 												onClick={() => setPrivacy("private")}
 												className={`d-flex align-items-center gap-2 ${
 													privacy === "private"
-														? "bg-primary bg-opacity-10 text-primary"
+														? "bg-primary bg-opacity-10 text-white"
 														: ""
 												}`}
 											>
 												<Lock size={16} />
 												<div>
 													<div className="fw-bold">Only you</div>
-													<small className="text-muted">
+													<small
+														className={`fw-bold` + privacy === "private" ? "text-white": "text-muted"}>
 														Only you can see this post
 													</small>
 												</div>
@@ -879,9 +873,9 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				</Modal.Body>
 
 				<Modal.Footer 
-						className="border-0 pt-2 flex-shrink-0 sticky-bottom bg-white" 
+						className="border-0 pt-2 flex-shrink-0 fixed-bottom bg-white" 
 						style={{ 
-							position: 'sticky',
+							position: 'fixed',
 							bottom: 0,
 							zIndex: 1030,
 							borderTop: '1px solid #e9ecef'
