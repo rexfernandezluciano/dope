@@ -435,16 +435,16 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 							src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
 							alt="avatar"
 							roundedCircle
-							width="48"
-							height="48"
+							width="40"
+							height="40"
 							style={{
 								objectFit: "cover",
-								minWidth: "48px",
-								minHeight: "48px",
+								minWidth: "40px",
+								minHeight: "40px",
 							}}
 						/>
 						<div
-							className="flex-grow-1 d-flex align-items-center bg-light p-0 mb-3 fs-6 cursor-pointer"
+							className="flex-grow-1 d-flex align-items-center p-0 fs-6 cursor-pointer"
 							onClick={() => setShowComposerModal(true)}
 							style={{ cursor: "pointer" }}
 						>
@@ -464,10 +464,11 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				centered
 				className="post-composer-modal"
 				dialogClassName="h-100 mw-100"
+				scrollable
 			>
 				<div className="modal-content h-100 d-flex flex-column">
 					<Modal.Header 
-						className="border-0 pb-2 flex-shrink-0 bg-white" 
+						className="border-0 pb-2 flex-shrink-0 sticky-top bg-white" 
 						style={{ 
 							position: 'sticky',
 							top: 0,
@@ -878,7 +879,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				</Modal.Body>
 
 				<Modal.Footer 
-						className="border-0 pt-2 flex-shrink-0 bg-white" 
+						className="border-0 pt-2 flex-shrink-0 sticky-bottom bg-white" 
 						style={{ 
 							position: 'sticky',
 							bottom: 0,
