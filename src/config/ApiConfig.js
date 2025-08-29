@@ -98,13 +98,6 @@ class HttpClient {
 			: `/v1${endpoint}`;
 		const url = `${this.currentBaseURL}${normalizedEndpoint}`;
 
-		console.log("🚀 Making axios request:", {
-			url,
-			method: options.method || "GET",
-			hasData: !!options.data,
-			timestamp: new Date().toISOString(),
-		});
-
 		try {
 			const response = await apiClient({
 				url,
@@ -118,13 +111,6 @@ class HttpClient {
 				...options,
 			});
 
-			console.log("📥 Axios response received:", {
-				status: response.status,
-				statusText: response.statusText,
-				url: response.config.url,
-				method: response.config.method,
-			});
-
 			return {
 				ok: response.status >= 200 && response.status < 300,
 				status: response.status,
@@ -133,23 +119,6 @@ class HttpClient {
 				headers: response.headers,
 			};
 		} catch (error) {
-			console.log("💥 Axios request failed:", {
-				url,
-				method: options.method || "GET",
-				error: error.name,
-				message: error.message,
-				status: error.response?.status,
-				statusText: error.response?.statusText,
-				data: error.response?.data,
-				code: error.code,
-				config: {
-					baseURL: error.config?.baseURL,
-					url: error.config?.url,
-					method: error.config?.method,
-					headers: error.config?.headers,
-				},
-			});
-
 			if (error.response) {
 				// Server error - API responded with error status
 				let errorMsg;
@@ -361,14 +330,12 @@ export const getAuthToken = () => {
 		// Check sessionStorage first (most recent)
 		let token = sessionStorage.getItem("authToken");
 		if (token) {
-			console.log("Auth token found in sessionStorage (current session)");
 			return token;
 		}
 
 		// Check localStorage
 		token = localStorage.getItem("authToken");
 		if (token) {
-			console.log("Auth token found in localStorage (persistent)");
 			// Also store in sessionStorage for faster access
 			sessionStorage.setItem("authToken", token);
 			return token;
@@ -397,8 +364,6 @@ export const removeAuthToken = () => {
 		sessionStorage.removeItem("authToken");
 		localStorage.removeItem("authToken");
 		Cookies.remove("authToken");
-
-		console.log("Auth token removed from all storage locations");
 	} catch (error) {
 		console.error("Error removing auth token:", error);
 	}
@@ -1204,58 +1169,7 @@ export const recommendationAPI = {
 // Analytics API
 export const analyticsAPI = {
 	getUserAnalytics: async (period = "30d") => {
-		const [analyticsData, userData] = await Promise.all([
-			apiRequest(`/analytics/user?period=${period}`),
-			apiRequest("/auth/me").catch(() => ({ monetization: null }))
-		]);
-
-		// Enhance analytics data with computed fields
-		const enhancedAnalytics = {
-			...analyticsData,
-			overview: {
-				...analyticsData.overview,
-				totalPosts: analyticsData.overview?.totalPosts || analyticsData.posts?.length || 0,
-				postsThisPeriod: analyticsData.overview?.postsThisPeriod || analyticsData.posts?.filter(post => {
-					const postDate = new Date(post.createdAt);
-					const periodStart = new Date();
-					periodStart.setDate(periodStart.getDate() - parseInt(period));
-					return postDate >= periodStart;
-				})?.length || 0,
-				postsLast24h: analyticsData.overview?.postsLast24h || analyticsData.posts?.filter(post => {
-					const postDate = new Date(post.createdAt);
-					const yesterday = new Date();
-					yesterday.setDate(yesterday.getDate() - 1);
-					return postDate >= yesterday;
-				})?.length || 0,
-				sharesThisPeriod: analyticsData.overview?.sharesThisPeriod || 0
-			}
-		};
-
-		// Merge monetization eligibility data from /auth/me into analytics
-		return {
-			...enhancedAnalytics,
-			monetization: userData.monetization || {
-				isEligible: false,
-				requirements: {
-					followers: { 
-						current: enhancedAnalytics.overview?.currentFollowers || 0, 
-						required: 500, 
-						met: (enhancedAnalytics.overview?.currentFollowers || 0) >= 500 
-					},
-					recentActivity: { 
-						postsLast24h: enhancedAnalytics.overview?.postsLast24h || 0, 
-						required: 1, 
-						met: (enhancedAnalytics.overview?.postsLast24h || 0) >= 1 
-					},
-					accountStatus: { 
-						blocked: false, 
-						restricted: false, 
-						violations: 0, 
-						goodStanding: true 
-					}
-				}
-			}
-		};
+		return await apiRequest(`/analytics/user?period=${period}`);
 	},
 
 	getPostAnalytics: async (postId) => {
@@ -1323,8 +1237,7 @@ export const businessAPI = {
 	getCampaignAnalytics: async (id, params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
 		return await apiRequest(
-			`/business/campaigns/${id}/analytics${queryString ? `?${queryString}` : ""}`,
-			{ method: "GET" }
+			`/business/campaigns/${id}/analytics${queryString ? `?${queryString}` : ""}`
 		);
 	},
 
