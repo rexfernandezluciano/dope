@@ -65,7 +65,7 @@ const SignUpPage = () => {
 		{
 			id: "premium",
 			name: "Premium",
-			price: "₱560",
+			price: "$9.99",
 			period: "month",
 			features: [
 				"10 images per post",
@@ -78,7 +78,7 @@ const SignUpPage = () => {
 		{
 			id: "pro",
 			name: "Pro",
-			price: "₱1,120",
+			price: "$25",
 			period: "month",
 			features: [
 				"Unlimited images per post",
@@ -127,7 +127,7 @@ const SignUpPage = () => {
 		const fetchGravatar = async () => {
 			if (email) {
 				try {
-					const url = await getGravatar(email);
+					const url = getGravatar(email);
 					if (url && typeof url === 'string' && url.startsWith('http')) {
 						setGravatarUrl(url);
 					} else {
@@ -171,7 +171,7 @@ const SignUpPage = () => {
 				const rememberMe = true;
 				setAuthToken(result.token, rememberMe);
 				setError("");
-				navigate("/home", { replace: true });
+				navigate("/", { replace: true });
 			} else {
 				setError("Google signup failed. Please try again.");
 			}
@@ -653,7 +653,7 @@ const SignUpPage = () => {
 									<Form.Control
 										type="date"
 										value={birthday}
-										onChange={(e) => setBirthday(e.target.value)}
+										onChange={(e) => setBirthday(new Date(e.target.value).toISOString())}
 										disabled={loading}
 										className="shadow-none"
 										required

@@ -72,7 +72,7 @@ const LoginPage = () => {
 				// Clear any existing errors
 				setError("");
 				// Use replace to prevent going back to login
-				navigate("/home", { replace: true });
+				navigate("/", { replace: true });
 			} else {
 				setError("Login failed. Please try again.");
 			}

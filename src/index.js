@@ -7,7 +7,6 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import AppRouter from "./router/AppRouter.jsx";
 
-// Import only needed Bootstrap CSS (you can further optimize by using SCSS)
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import "./config/FirebaseConfig.js";
