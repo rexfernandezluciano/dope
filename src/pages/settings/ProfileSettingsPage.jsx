@@ -2,7 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
-import { Container, Card, Form, Button, Alert, Row, Col } from "react-bootstrap";
+import {
+	Container,
+	Card,
+	Form,
+	Button,
+	Alert,
+	Row,
+	Col,
+} from "react-bootstrap";
 import { Person, Camera } from "react-bootstrap-icons";
 
 import { userAPI } from "../../config/ApiConfig";
@@ -43,21 +51,26 @@ const ProfileSettingsPage = () => {
 		);
 	}
 
-	const checkNameChangeLimit = lastChange => {
+	const checkNameChangeLimit = (lastChange) => {
 		if (!lastChange) return false;
 		const fourteenDaysAgo = new Date();
 		fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 		return new Date(lastChange) > fourteenDaysAgo;
 	};
 
-	const uploadProfileImageToCloudinary = async file => {
+	const uploadProfileImageToCloudinary = async (file) => {
 		// Handle HEIC files
 		let finalFile = file;
-		if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+		if (
+			file.type === "image/heic" ||
+			file.name.toLowerCase().endsWith(".heic")
+		) {
 			try {
 				const heic2any = (await import("heic2any")).default;
 				const blob = await heic2any({ blob: file, toType: "image/jpeg" });
-				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+				finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+					type: "image/jpeg",
+				});
 			} catch (err) {
 				console.error("Error converting HEIC:", err);
 				throw new Error("Failed to convert HEIC image");
@@ -76,13 +89,18 @@ const ProfileSettingsPage = () => {
 
 		try {
 			console.log("Uploading image to Cloudinary...", finalFile.name);
-			const response = await fetch("https://api.cloudinary.com/v1_1/zxpic/image/upload", {
-				method: "POST",
-				body: formData,
-			});
+			const response = await fetch(
+				"https://api.cloudinary.com/v1_1/zxpic/image/upload",
+				{
+					method: "POST",
+					body: formData,
+				},
+			);
 
 			if (!response.ok) {
-				throw new Error(`Cloudinary upload failed: ${response.status} ${response.statusText}`);
+				throw new Error(
+					`Cloudinary upload failed: ${response.status} ${response.statusText}`,
+				);
 			}
 
 			const data = await response.json();
@@ -106,9 +124,19 @@ const ProfileSettingsPage = () => {
 			let updateData = { ...settings };
 
 			// Check name change limit
-			if (settings.name !== user.name && checkNameChangeLimit(user.lastNameChange)) {
-				const daysLeft = Math.ceil((new Date(user.lastNameChange).getTime() + 14 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000));
-				setMessage(`You can only change your name once every 14 days. Please wait ${daysLeft} more days.`);
+			if (
+				settings.name !== user.name &&
+				checkNameChangeLimit(user.lastNameChange)
+			) {
+				const daysLeft = Math.ceil(
+					(new Date(user.lastNameChange).getTime() +
+						14 * 24 * 60 * 60 * 1000 -
+						Date.now()) /
+						(24 * 60 * 60 * 1000),
+				);
+				setMessage(
+					`You can only change your name once every 14 days. Please wait ${daysLeft} more days.`,
+				);
 				setMessageType("warning");
 				setLoading(false);
 				setUploadingProfileImage(false);
@@ -123,7 +151,9 @@ const ProfileSettingsPage = () => {
 			// Upload profile image if a new file was selected
 			if (settings.profileImageFile) {
 				try {
-					const uploadedUrl = await uploadProfileImageToCloudinary(settings.profileImageFile);
+					const uploadedUrl = await uploadProfileImageToCloudinary(
+						settings.profileImageFile,
+					);
 					updateData.photoURL = uploadedUrl;
 					// Remove the file from update data
 					delete updateData.profileImageFile;
@@ -150,18 +180,18 @@ const ProfileSettingsPage = () => {
 		}
 	};
 
-	const handleProfileImageUpload = e => {
+	const handleProfileImageUpload = (e) => {
 		const file = e.target.files[0];
 		if (file) {
 			// Create preview
 			const reader = new FileReader();
-			reader.onload = e => {
+			reader.onload = (e) => {
 				setProfileImagePreview(e.target.result);
 			};
 			reader.readAsDataURL(file);
 
 			// Store file for later upload
-			setSettings(prev => ({ ...prev, profileImageFile: file }));
+			setSettings((prev) => ({ ...prev, profileImageFile: file }));
 		}
 	};
 
@@ -172,7 +202,8 @@ const ProfileSettingsPage = () => {
 					variant={messageType}
 					dismissible
 					onClose={() => setMessage("")}
-					className="mb-4">
+					className="mb-4"
+				>
 					{message}
 				</Alert>
 			)}
@@ -192,10 +223,14 @@ const ProfileSettingsPage = () => {
 									<Form.Control
 										type="text"
 										value={settings.name}
-										onChange={e => setSettings(prev => ({ ...prev, name: e.target.value }))}
+										onChange={(e) =>
+											setSettings((prev) => ({ ...prev, name: e.target.value }))
+										}
 										placeholder="Your display name"
 									/>
-									<Form.Text className="text-muted">You can change your display name once every 14 days</Form.Text>
+									<Form.Text className="text-muted">
+										You can change your display name once every 14 days
+									</Form.Text>
 								</Form.Group>
 							</Col>
 							<Col md={6}>
@@ -204,27 +239,43 @@ const ProfileSettingsPage = () => {
 									<div className="d-flex flex-column align-items-center gap-3">
 										<div className="position-relative">
 											<img
-												src={profileImagePreview || settings.photoURL || "https://i.pravatar.cc/150?img=10"}
+												src={
+													profileImagePreview ||
+													settings.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
 												alt="Profile Preview"
 												className="rounded-circle"
 												width={80}
 												height={80}
 												style={{ objectFit: "cover", cursor: "pointer" }}
-												onClick={() => document.getElementById("profile-upload").click()}
+												onClick={() =>
+													document.getElementById("profile-upload").click()
+												}
 											/>
 											<Button
 												variant="primary"
 												size="sm"
 												className="position-absolute bottom-0 end-0 rounded-circle p-1"
-												style={{ width: "25px", height: "25px", fontSize: "12px" }}
-												onClick={() => document.getElementById("profile-upload").click()}>
+												style={{
+													width: "25px",
+													height: "25px",
+													fontSize: "12px",
+												}}
+												onClick={() =>
+													document.getElementById("profile-upload").click()
+												}
+											>
 												<Camera size={12} />
 											</Button>
 										</div>
 										<Button
 											variant="outline-primary"
 											size="sm"
-											onClick={() => document.getElementById("profile-upload").click()}>
+											onClick={() =>
+												document.getElementById("profile-upload").click()
+											}
+										>
 											Change Photo
 										</Button>
 									</div>
@@ -245,11 +296,15 @@ const ProfileSettingsPage = () => {
 								as="textarea"
 								rows={3}
 								value={settings.bio}
-								onChange={e => setSettings(prev => ({ ...prev, bio: e.target.value }))}
+								onChange={(e) =>
+									setSettings((prev) => ({ ...prev, bio: e.target.value }))
+								}
 								placeholder="Tell us about yourself"
 								maxLength={160}
 							/>
-							<Form.Text className="text-muted">{settings.bio.length}/160 characters</Form.Text>
+							<Form.Text className="text-muted">
+								{settings.bio.length}/160 characters
+							</Form.Text>
 						</Form.Group>
 
 						<Row>
@@ -258,17 +313,27 @@ const ProfileSettingsPage = () => {
 									<Form.Label>Birthday</Form.Label>
 									<Form.Control
 										type="date"
-										value={settings.birthday ? new Date(settings.birthday).toISOString().split("T")[0] : ""}
-										onChange={e => {
-											const date = e.target.value ? new Date(e.target.value) : null;
-											setSettings(prev => ({
+										value={
+											settings.birthday
+												? new Date(settings.birthday)
+														.toISOString()
+														.split("T")[0]
+												: ""
+										}
+										onChange={(e) => {
+											const date = e.target.value
+												? new Date(e.target.value)
+												: null;
+											setSettings((prev) => ({
 												...prev,
 												birthday: date ? date.toISOString() : null,
 											}));
 										}}
 										max={new Date().toISOString().split("T")[0]}
 									/>
-									<Form.Text className="text-muted">Your birthday information</Form.Text>
+									<Form.Text className="text-muted">
+										Your birthday information
+									</Form.Text>
 								</Form.Group>
 							</Col>
 							<Col md={6}>
@@ -276,14 +341,22 @@ const ProfileSettingsPage = () => {
 									<Form.Label>Gender</Form.Label>
 									<Form.Select
 										value={settings.gender}
-										onChange={e => setSettings(prev => ({ ...prev, gender: e.target.value }))}>
+										onChange={(e) =>
+											setSettings((prev) => ({
+												...prev,
+												gender: e.target.value,
+											}))
+										}
+									>
 										<option value="">Select Gender</option>
 										<option value="male">Male</option>
 										<option value="female">Female</option>
 										<option value="non_binary">Non-binary</option>
 										<option value="prefer_not_to_say">Prefer not to say</option>
 									</Form.Select>
-									<Form.Text className="text-muted">Your gender identity</Form.Text>
+									<Form.Text className="text-muted">
+										Your gender identity
+									</Form.Text>
 								</Form.Group>
 							</Col>
 						</Row>
@@ -297,10 +370,25 @@ const ProfileSettingsPage = () => {
 					variant="primary"
 					size="md"
 					onClick={handleSaveSettings}
-					disabled={loading || uploadingProfileImage}>
-					{uploadingProfileImage ? "Uploading..." : loading ? "Saving..." : "Save Profile"}
+					disabled={loading || uploadingProfileImage}
+				>
+					{uploadingProfileImage
+						? "Uploading..."
+						: loading
+							? "Saving..."
+							: "Save Profile"}
 				</Button>
 			</div>
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</div>
 	);
 };

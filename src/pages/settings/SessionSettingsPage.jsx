@@ -22,7 +22,6 @@ import {
 
 import { sessionAPI } from "../../config/ApiConfig";
 
-
 const SessionSettingsPage = () => {
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData;
@@ -367,6 +366,16 @@ const SessionSettingsPage = () => {
 					</Button>
 				</Modal.Footer>
 			</Modal>
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</div>
 	);
 };

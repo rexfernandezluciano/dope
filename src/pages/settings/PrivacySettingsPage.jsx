@@ -15,8 +15,8 @@ const PrivacySettingsPage = () => {
 			profile: "public",
 			comments: "public",
 			sharing: true,
-			chat: "public"
-		}
+			chat: "public",
+		},
 	});
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
@@ -29,7 +29,7 @@ const PrivacySettingsPage = () => {
 					profile: "public",
 					comments: "public",
 					sharing: true,
-					chat: "public"
+					chat: "public",
 				},
 				isProfilePrivate: user.isProfilePrivate || false,
 				allowFollowRequests: user.allowFollowRequests !== false,
@@ -37,7 +37,7 @@ const PrivacySettingsPage = () => {
 				allowDirectMessages: user.allowDirectMessages !== false,
 				allowTagging: user.allowTagging !== false,
 				showBirthday: user.showBirthday || false,
-				federatedDiscoverable: user.federatedDiscoverable || false
+				federatedDiscoverable: user.federatedDiscoverable || false,
 			});
 		}
 	}, [user]);
@@ -57,8 +57,8 @@ const PrivacySettingsPage = () => {
 			setMessage("Privacy settings updated successfully!");
 			setMessageType("success");
 		} catch (err) {
-			console.error('Error updating privacy settings:', err);
-			setMessage(err.message || 'Failed to update privacy settings');
+			console.error("Error updating privacy settings:", err);
+			setMessage(err.message || "Failed to update privacy settings");
 			setMessageType("danger");
 		} finally {
 			setLoading(false);
@@ -68,7 +68,7 @@ const PrivacySettingsPage = () => {
 	const privacyOptions = [
 		{ value: "public", label: "Public", icon: <Globe size={16} /> },
 		{ value: "followers", label: "Followers only", icon: <People size={16} /> },
-		{ value: "private", label: "Private", icon: <Lock size={16} /> }
+		{ value: "private", label: "Private", icon: <Lock size={16} /> },
 	];
 
 	return (
@@ -78,7 +78,8 @@ const PrivacySettingsPage = () => {
 					variant={messageType}
 					dismissible
 					onClose={() => setMessage("")}
-					className="mb-4">
+					className="mb-4"
+				>
 					{message}
 				</Alert>
 			)}
@@ -95,11 +96,14 @@ const PrivacySettingsPage = () => {
 							<Form.Label className="fw-bold">Profile Visibility</Form.Label>
 							<Form.Select
 								value={settings.privacy.profile}
-								onChange={(e) => setSettings(prev => ({
-									...prev,
-									privacy: { ...prev.privacy, profile: e.target.value }
-								}))}>
-								{privacyOptions.map(option => (
+								onChange={(e) =>
+									setSettings((prev) => ({
+										...prev,
+										privacy: { ...prev.privacy, profile: e.target.value },
+									}))
+								}
+							>
+								{privacyOptions.map((option) => (
 									<option key={option.value} value={option.value}>
 										{option.label}
 									</option>
@@ -114,11 +118,14 @@ const PrivacySettingsPage = () => {
 							<Form.Label className="fw-bold">Comment Visibility</Form.Label>
 							<Form.Select
 								value={settings.privacy.comments}
-								onChange={(e) => setSettings(prev => ({
-									...prev,
-									privacy: { ...prev.privacy, comments: e.target.value }
-								}))}>
-								{privacyOptions.map(option => (
+								onChange={(e) =>
+									setSettings((prev) => ({
+										...prev,
+										privacy: { ...prev.privacy, comments: e.target.value },
+									}))
+								}
+							>
+								{privacyOptions.map((option) => (
 									<option key={option.value} value={option.value}>
 										{option.label}
 									</option>
@@ -133,11 +140,14 @@ const PrivacySettingsPage = () => {
 							<Form.Label className="fw-bold">Direct Messages</Form.Label>
 							<Form.Select
 								value={settings.privacy.chat}
-								onChange={(e) => setSettings(prev => ({
-									...prev,
-									privacy: { ...prev.privacy, chat: e.target.value }
-								}))}>
-								{privacyOptions.map(option => (
+								onChange={(e) =>
+									setSettings((prev) => ({
+										...prev,
+										privacy: { ...prev.privacy, chat: e.target.value },
+									}))
+								}
+							>
+								{privacyOptions.map((option) => (
 									<option key={option.value} value={option.value}>
 										{option.label}
 									</option>
@@ -153,10 +163,12 @@ const PrivacySettingsPage = () => {
 								type="checkbox"
 								label="Allow others to share your posts"
 								checked={settings.privacy.sharing}
-								onChange={(e) => setSettings(prev => ({
-									...prev,
-									privacy: { ...prev.privacy, sharing: e.target.checked }
-								}))}
+								onChange={(e) =>
+									setSettings((prev) => ({
+										...prev,
+										privacy: { ...prev.privacy, sharing: e.target.checked },
+									}))
+								}
 							/>
 							<Form.Text className="text-muted d-block">
 								When enabled, other users can repost your content
@@ -171,11 +183,19 @@ const PrivacySettingsPage = () => {
 								id="federatedDiscoverable"
 								label="Federated Discovery (Fediverse/ActivityPub)"
 								checked={settings.federatedDiscoverable}
-								onChange={(e) => setSettings(prev => ({ ...prev, federatedDiscoverable: e.target.checked }))}
+								onChange={(e) =>
+									setSettings((prev) => ({
+										...prev,
+										federatedDiscoverable: e.target.checked,
+									}))
+								}
 								className="mb-3"
 							/>
 							<Form.Text className="text-muted d-block mb-3">
-								Allow your profile to be discoverable from other ActivityPub/Fediverse platforms like Mastodon, Pleroma, and others. When enabled, your profile can be found using webfinger lookups.
+								Allow your profile to be discoverable from other
+								ActivityPub/Fediverse platforms like Mastodon, Pleroma, and
+								others. When enabled, your profile can be found using webfinger
+								lookups.
 							</Form.Text>
 						</Form.Group>
 					</Form>
@@ -188,10 +208,21 @@ const PrivacySettingsPage = () => {
 					variant="primary"
 					size="md"
 					onClick={handleSaveSettings}
-					disabled={loading}>
+					disabled={loading}
+				>
 					{loading ? "Saving..." : "Save Privacy Settings"}
 				</Button>
 			</div>
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</div>
 	);
 };

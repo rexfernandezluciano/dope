@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useLoaderData } from "react-router-dom";
@@ -19,8 +18,8 @@ const NotificationSettingsPage = () => {
 			mentions: true,
 			reposts: true,
 			email: false,
-			push: true
-		}
+			push: true,
+		},
 	});
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
@@ -36,8 +35,8 @@ const NotificationSettingsPage = () => {
 					mentions: true,
 					reposts: true,
 					email: false,
-					push: true
-				}
+					push: true,
+				},
 			});
 		}
 	}, [user]);
@@ -57,8 +56,8 @@ const NotificationSettingsPage = () => {
 			setMessage("Notification settings updated successfully!");
 			setMessageType("success");
 		} catch (err) {
-			console.error('Error updating notification settings:', err);
-			setMessage(err.message || 'Failed to update notification settings');
+			console.error("Error updating notification settings:", err);
+			setMessage(err.message || "Failed to update notification settings");
 			setMessageType("danger");
 		} finally {
 			setLoading(false);
@@ -66,12 +65,12 @@ const NotificationSettingsPage = () => {
 	};
 
 	const handleNotificationChange = (key, value) => {
-		setSettings(prev => ({
+		setSettings((prev) => ({
 			...prev,
 			notifications: {
 				...prev.notifications,
-				[key]: value
-			}
+				[key]: value,
+			},
 		}));
 	};
 
@@ -82,7 +81,8 @@ const NotificationSettingsPage = () => {
 					variant={messageType}
 					dismissible
 					onClose={() => setMessage("")}
-					className="mb-4">
+					className="mb-4"
+				>
 					{message}
 				</Alert>
 			)}
@@ -97,13 +97,15 @@ const NotificationSettingsPage = () => {
 					<Form>
 						<div className="mb-4">
 							<h6 className="mb-3">Activity Notifications</h6>
-							
+
 							<Form.Group className="mb-3">
 								<Form.Check
 									type="checkbox"
 									label="Likes on your posts"
 									checked={settings.notifications.likes}
-									onChange={(e) => handleNotificationChange('likes', e.target.checked)}
+									onChange={(e) =>
+										handleNotificationChange("likes", e.target.checked)
+									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
 									Get notified when someone likes your posts
@@ -115,7 +117,9 @@ const NotificationSettingsPage = () => {
 									type="checkbox"
 									label="Comments on your posts"
 									checked={settings.notifications.comments}
-									onChange={(e) => handleNotificationChange('comments', e.target.checked)}
+									onChange={(e) =>
+										handleNotificationChange("comments", e.target.checked)
+									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
 									Get notified when someone comments on your posts
@@ -127,7 +131,9 @@ const NotificationSettingsPage = () => {
 									type="checkbox"
 									label="New followers"
 									checked={settings.notifications.follows}
-									onChange={(e) => handleNotificationChange('follows', e.target.checked)}
+									onChange={(e) =>
+										handleNotificationChange("follows", e.target.checked)
+									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
 									Get notified when someone follows you
@@ -139,7 +145,9 @@ const NotificationSettingsPage = () => {
 									type="checkbox"
 									label="Mentions"
 									checked={settings.notifications.mentions}
-									onChange={(e) => handleNotificationChange('mentions', e.target.checked)}
+									onChange={(e) =>
+										handleNotificationChange("mentions", e.target.checked)
+									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
 									Get notified when someone mentions you
@@ -151,7 +159,9 @@ const NotificationSettingsPage = () => {
 									type="checkbox"
 									label="Reposts of your content"
 									checked={settings.notifications.reposts}
-									onChange={(e) => handleNotificationChange('reposts', e.target.checked)}
+									onChange={(e) =>
+										handleNotificationChange("reposts", e.target.checked)
+									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
 									Get notified when someone reposts your content
@@ -163,13 +173,15 @@ const NotificationSettingsPage = () => {
 
 						<div className="mb-4">
 							<h6 className="mb-3">Delivery Methods</h6>
-							
+
 							<Form.Group className="mb-3">
 								<Form.Check
 									type="checkbox"
 									label="Push notifications"
 									checked={settings.notifications.push}
-									onChange={(e) => handleNotificationChange('push', e.target.checked)}
+									onChange={(e) =>
+										handleNotificationChange("push", e.target.checked)
+									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
 									Receive notifications on your device
@@ -181,7 +193,9 @@ const NotificationSettingsPage = () => {
 									type="checkbox"
 									label="Email notifications"
 									checked={settings.notifications.email}
-									onChange={(e) => handleNotificationChange('email', e.target.checked)}
+									onChange={(e) =>
+										handleNotificationChange("email", e.target.checked)
+									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
 									Receive notifications via email
@@ -198,10 +212,21 @@ const NotificationSettingsPage = () => {
 					variant="primary"
 					size="md"
 					onClick={handleSaveSettings}
-					disabled={loading}>
+					disabled={loading}
+				>
 					{loading ? "Saving..." : "Save Notification Settings"}
 				</Button>
 			</div>
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</div>
 	);
 };

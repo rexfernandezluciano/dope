@@ -1,15 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Card, Button, Row, Col, Badge, Alert, Spinner, Modal } from 'react-bootstrap';
-import { Heart, Calendar, CurrencyDollar, XCircle, CameraVideo } from 'react-bootstrap-icons';
-import { subscriptionAPI } from '../config/ApiConfig';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Card,
+  Button,
+  Row,
+  Col,
+  Badge,
+  Alert,
+  Spinner,
+  Modal,
+} from "react-bootstrap";
+import {
+  Heart,
+  Calendar,
+  CurrencyDollar,
+  XCircle,
+  CameraVideo,
+} from "react-bootstrap-icons";
+import { subscriptionAPI } from "../config/ApiConfig";
+import { useNavigate } from "react-router-dom";
 
 const MySubscriptionsPage = () => {
   const [subscriptions, setSubscriptions] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState('success');
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("success");
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const navigate = useNavigate();
@@ -24,10 +40,10 @@ const MySubscriptionsPage = () => {
       const response = await subscriptionAPI.getCreatorSubscriptions();
       setSubscriptions(response.subscriptions || []);
     } catch (error) {
-      console.error('Failed to load subscriptions:', error);
+      console.error("Failed to load subscriptions:", error);
       if (error.status === 404) {
-        setMessage('Subscription API not available. Please try again later.');
-        setMessageType('warning');
+        setMessage("Subscription API not available. Please try again later.");
+        setMessageType("warning");
       }
       setSubscriptions([]); // Set empty array on error
     }
@@ -38,10 +54,10 @@ const MySubscriptionsPage = () => {
       const response = await subscriptionAPI.getSubscribers();
       setSubscribers(response.subscribers || []);
     } catch (error) {
-      console.error('Failed to load subscribers:', error);
+      console.error("Failed to load subscribers:", error);
       if (error.status === 404) {
-        setMessage('Subscription API not available. Please try again later.');
-        setMessageType('warning');
+        setMessage("Subscription API not available. Please try again later.");
+        setMessageType("warning");
       }
       setSubscribers([]); // Set empty array on error
     } finally {
@@ -53,14 +69,16 @@ const MySubscriptionsPage = () => {
     if (!selectedSubscription) return;
 
     try {
-      await subscriptionAPI.unsubscribeFromCreator(selectedSubscription.creatorId);
-      setMessage('Subscription cancelled successfully');
-      setMessageType('success');
+      await subscriptionAPI.unsubscribeFromCreator(
+        selectedSubscription.creatorId,
+      );
+      setMessage("Subscription cancelled successfully");
+      setMessageType("success");
       setShowCancelModal(false);
       loadSubscriptions();
     } catch (error) {
-      setMessage(error.message || 'Failed to cancel subscription');
-      setMessageType('danger');
+      setMessage(error.message || "Failed to cancel subscription");
+      setMessageType("danger");
     }
   };
 
@@ -78,7 +96,7 @@ const MySubscriptionsPage = () => {
       <h2 className="mb-4 px-4">My Subscriptions</h2>
 
       {message && (
-        <Alert variant={messageType} dismissible onClose={() => setMessage('')}>
+        <Alert variant={messageType} dismissible onClose={() => setMessage("")}>
           {message}
         </Alert>
       )}
@@ -92,8 +110,13 @@ const MySubscriptionsPage = () => {
           {subscriptions.length === 0 ? (
             <div className="text-center py-4">
               <Heart size={48} className="text-muted mb-3" />
-              <p className="text-muted">You're not subscribed to any creators yet</p>
-              <Button variant="primary" onClick={() => navigate('/search?tab=users')}>
+              <p className="text-muted">
+                You're not subscribed to any creators yet
+              </p>
+              <Button
+                variant="primary"
+                onClick={() => navigate("/search?tab=users")}
+              >
                 Discover Creators
               </Button>
             </div>
@@ -105,16 +128,21 @@ const MySubscriptionsPage = () => {
                     <Card.Body>
                       <div className="d-flex align-items-center gap-3 mb-3">
                         <img
-                          src={subscription.creator.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(subscription.creator.name)}&size=50`}
+                          src={
+                            subscription.creator.photoURL ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(subscription.creator.name)}&size=50`
+                          }
                           alt={subscription.creator.name}
                           className="rounded-circle"
                           width="50"
                           height="50"
-                          style={{ objectFit: 'cover' }}
+                          style={{ objectFit: "cover" }}
                         />
                         <div>
                           <h6 className="mb-1">{subscription.creator.name}</h6>
-                          <small className="text-muted">@{subscription.creator.username}</small>
+                          <small className="text-muted">
+                            @{subscription.creator.username}
+                          </small>
                         </div>
                       </div>
 
@@ -129,14 +157,21 @@ const MySubscriptionsPage = () => {
 
                       <div className="d-flex align-items-center gap-2 mb-3 text-muted">
                         <Calendar size={14} />
-                        <small>Since {new Date(subscription.createdAt).toLocaleDateString()}</small>
+                        <small>
+                          Since{" "}
+                          {new Date(
+                            subscription.createdAt,
+                          ).toLocaleDateString()}
+                        </small>
                       </div>
 
                       <div className="d-flex gap-2">
                         <Button
                           variant="primary"
                           size="sm"
-                          onClick={() => navigate(`/${subscription.creator.username}`)}
+                          onClick={() =>
+                            navigate(`/${subscription.creator.username}`)
+                          }
                         >
                           View Profile
                         </Button>
@@ -170,24 +205,28 @@ const MySubscriptionsPage = () => {
           <p className="text-muted mb-3">
             Want to see your subscribers and detailed analytics?
           </p>
-          <Button
-            variant="primary"
-            onClick={() => navigate('/analytics')}
-          >
+          <Button variant="primary" onClick={() => navigate("/analytics")}>
             Go to Analytics Dashboard
           </Button>
         </Card.Body>
       </Card>
 
       {/* Cancel Subscription Modal */}
-      <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)} centered>
+      <Modal
+        show={showCancelModal}
+        onHide={() => setShowCancelModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title className="text-danger">Cancel Subscription</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedSubscription && (
             <>
-              <p>Are you sure you want to cancel your subscription to <strong>{selectedSubscription.creator.name}</strong>?</p>
+              <p>
+                Are you sure you want to cancel your subscription to{" "}
+                <strong>{selectedSubscription.creator.name}</strong>?
+              </p>
               <div className="bg-light p-3 rounded">
                 <p className="mb-0">You will lose access to:</p>
                 <ul className="mb-0">
@@ -209,6 +248,16 @@ const MySubscriptionsPage = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      {/* <!-- banner_ad --> */}
+      <ins
+        class="adsbygoogle"
+        style="display:block"
+        data-ad-client="ca-pub-1106169546112879"
+        data-ad-slot="2596463814"
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      ></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </Container>
   );
 };

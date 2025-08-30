@@ -1,19 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { Container, Card, Button, Alert, Spinner, Form, InputGroup } from 'react-bootstrap';
-import AgoraRTC from 'agora-rtc-sdk-ng';
-import io from 'socket.io-client';
+import React, { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
+import {
+	Container,
+	Card,
+	Button,
+	Alert,
+	Spinner,
+	Form,
+	InputGroup,
+} from "react-bootstrap";
+import AgoraRTC from "agora-rtc-sdk-ng";
+import io from "socket.io-client";
 import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
 
 const LiveStreamPage = () => {
 	const { streamKey } = useParams();
 	const [isLoading, setIsLoading] = useState(true);
 	const [streamActive, setStreamActive] = useState(false);
-	const [error, setError] = useState('');
+	const [error, setError] = useState("");
 	const [viewerCount, setViewerCount] = useState(0);
 	const [comments, setComments] = useState([]);
-	const [newComment, setNewComment] = useState('');
-	const [currentUser] = useState({ name: 'Anonymous', uid: 'anon' });
+	const [newComment, setNewComment] = useState("");
+	const [currentUser] = useState({ name: "Anonymous", uid: "anon" });
 
 	// Agora states
 	const [agoraClient, setAgoraClient] = useState(null);
@@ -22,36 +30,37 @@ const LiveStreamPage = () => {
 	const [isStreaming, setIsStreaming] = useState(false);
 	const [isJoined, setIsJoined] = useState(false);
 
-
 	const videoRef = useRef(null);
 	const socketRef = useRef(null);
 
 	// Agora configuration
 	const agoraConfig = {
-		appId: process.env.REACT_APP_AGORA_APP_ID || 'your-agora-app-id',
+		appId: process.env.REACT_APP_AGORA_APP_ID || "your-agora-app-id",
 		token: null, // You should generate this server-side for production
-		channel: streamKey || 'default-channel',
-		uid: null
+		channel: streamKey || "default-channel",
+		uid: null,
 	};
 
 	useEffect(() => {
 		// Initialize Agora client
-		const client = AgoraRTC.createClient({ mode: 'live', codec: 'vp8' });
+		const client = AgoraRTC.createClient({ mode: "live", codec: "vp8" });
 		setAgoraClient(client);
 
 		// Initialize Socket.IO for real-time comments
-		socketRef.current = io(process.env.REACT_APP_SOCKET_URL || 'ws://localhost:3001');
+		socketRef.current = io(
+			process.env.REACT_APP_SOCKET_URL || "ws://localhost:3001",
+		);
 
-		socketRef.current.on('connect', () => {
-			console.log('Connected to comment server');
-			socketRef.current.emit('join-stream', streamKey);
+		socketRef.current.on("connect", () => {
+			console.log("Connected to comment server");
+			socketRef.current.emit("join-stream", streamKey);
 		});
 
-		socketRef.current.on('new-comment', (comment) => {
-			setComments(prev => [...prev, comment]);
+		socketRef.current.on("new-comment", (comment) => {
+			setComments((prev) => [...prev, comment]);
 		});
 
-		socketRef.current.on('viewer-count', (count) => {
+		socketRef.current.on("viewer-count", (count) => {
 			setViewerCount(count);
 		});
 
@@ -65,25 +74,27 @@ const LiveStreamPage = () => {
 		};
 	}, [streamKey]);
 
-	const handleUserPublished = React.useCallback(async (user, mediaType) => {
-		try {
-			await agoraClient.subscribe(user, mediaType);
+	const handleUserPublished = React.useCallback(
+		async (user, mediaType) => {
+			try {
+				await agoraClient.subscribe(user, mediaType);
 
-			if (mediaType === 'video') {
-				const remoteVideoTrack = user.videoTrack;
-				if (videoRef.current) {
-					remoteVideoTrack.play(videoRef.current);
+				if (mediaType === "video") {
+					const remoteVideoTrack = user.videoTrack;
+					if (videoRef.current) {
+						remoteVideoTrack.play(videoRef.current);
+					}
 				}
 
+				if (mediaType === "audio") {
+					user.audioTrack.play();
+				}
+			} catch (err) {
+				console.error("Failed to subscribe to user:", err);
 			}
-
-			if (mediaType === 'audio') {
-				user.audioTrack.play();
-			}
-		} catch (err) {
-			console.error('Failed to subscribe to user:', err);
-		}
-	}, [agoraClient]);
+		},
+		[agoraClient],
+	);
 
 	const handleUserUnpublished = React.useCallback((user, mediaType) => {
 		// Handle user unpublished
@@ -101,27 +112,26 @@ const LiveStreamPage = () => {
 				if (!agoraClient) return;
 
 				// Set client role as audience initially
-				await agoraClient.setClientRole('audience');
+				await agoraClient.setClientRole("audience");
 
 				// Set up event listeners
-				agoraClient.on('user-published', handleUserPublished);
-				agoraClient.on('user-unpublished', handleUserUnpublished);
-				agoraClient.on('user-left', handleUserLeft);
+				agoraClient.on("user-published", handleUserPublished);
+				agoraClient.on("user-unpublished", handleUserUnpublished);
+				agoraClient.on("user-left", handleUserLeft);
 
 				// Join the channel
 				await agoraClient.join(
 					agoraConfig.appId,
 					agoraConfig.channel,
 					agoraConfig.token,
-					agoraConfig.uid
+					agoraConfig.uid,
 				);
 
 				setIsJoined(true);
 				setStreamActive(true);
-
 			} catch (err) {
-				console.error('Failed to initialize stream:', err);
-				setError('Failed to connect to live stream');
+				console.error("Failed to initialize stream:", err);
+				setError("Failed to connect to live stream");
 			} finally {
 				setIsLoading(false);
 			}
@@ -130,7 +140,16 @@ const LiveStreamPage = () => {
 		if (agoraClient) {
 			initializeStream();
 		}
-	}, [agoraClient, agoraConfig.appId, agoraConfig.channel, agoraConfig.token, agoraConfig.uid, handleUserPublished, handleUserUnpublished, handleUserLeft]);
+	}, [
+		agoraClient,
+		agoraConfig.appId,
+		agoraConfig.channel,
+		agoraConfig.token,
+		agoraConfig.uid,
+		handleUserPublished,
+		handleUserUnpublished,
+		handleUserLeft,
+	]);
 
 	useEffect(() => {
 		// Update page meta data
@@ -142,22 +161,22 @@ const LiveStreamPage = () => {
 			if (!agoraClient || !isJoined) return;
 
 			// Switch to broadcaster role
-			await agoraClient.setClientRole('host');
+			await agoraClient.setClientRole("host");
 
 			// Create and publish local tracks
 			const videoTrack = await AgoraRTC.createCameraVideoTrack({
-				optimizationMode: 'detail',
+				optimizationMode: "detail",
 				encoderConfig: {
 					width: 1280,
 					height: 720,
 					frameRate: 30,
 					bitrateMin: 1000,
 					bitrateMax: 3000,
-				}
+				},
 			});
 
 			const audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
-				encoderConfig: 'high_quality_stereo'
+				encoderConfig: "high_quality_stereo",
 			});
 
 			// Play local video
@@ -174,12 +193,11 @@ const LiveStreamPage = () => {
 
 			// Notify server about stream start
 			if (socketRef.current) {
-				socketRef.current.emit('stream-started', streamKey);
+				socketRef.current.emit("stream-started", streamKey);
 			}
-
 		} catch (err) {
-			console.error('Failed to start broadcast:', err);
-			setError('Failed to start live stream');
+			console.error("Failed to start broadcast:", err);
+			setError("Failed to start live stream");
 		}
 	};
 
@@ -199,18 +217,17 @@ const LiveStreamPage = () => {
 
 			if (agoraClient) {
 				await agoraClient.unpublish();
-				await agoraClient.setClientRole('audience');
+				await agoraClient.setClientRole("audience");
 			}
 
 			setIsStreaming(false);
 
 			// Notify server about stream end
 			if (socketRef.current) {
-				socketRef.current.emit('stream-ended', streamKey);
+				socketRef.current.emit("stream-ended", streamKey);
 			}
-
 		} catch (err) {
-			console.error('Failed to stop broadcast:', err);
+			console.error("Failed to stop broadcast:", err);
 		}
 	};
 
@@ -223,15 +240,15 @@ const LiveStreamPage = () => {
 			uid: currentUser.uid,
 			text: newComment.trim(),
 			timestamp: new Date().toISOString(),
-			streamKey
+			streamKey,
 		};
 
-		socketRef.current.emit('send-comment', comment);
-		setNewComment('');
+		socketRef.current.emit("send-comment", comment);
+		setNewComment("");
 	};
 
 	const handleKeyPress = (e) => {
-		if (e.key === 'Enter' && !e.shiftKey) {
+		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
 			sendComment();
 		}
@@ -261,7 +278,7 @@ const LiveStreamPage = () => {
 									className="w-100 bg-dark d-flex align-items-center justify-content-center"
 									style={{
 										height: "450px",
-										borderRadius: "0.375rem 0.375rem 0 0"
+										borderRadius: "0.375rem 0.375rem 0 0",
 									}}
 								>
 									{!streamActive && (
@@ -280,7 +297,7 @@ const LiveStreamPage = () => {
 											backgroundColor: "rgba(220, 53, 69, 0.9)",
 											color: "white",
 											fontSize: "0.875rem",
-											fontWeight: "bold"
+											fontWeight: "bold",
 										}}
 									>
 										<span
@@ -291,7 +308,7 @@ const LiveStreamPage = () => {
 												backgroundColor: "#fff",
 												display: "inline-block",
 												marginRight: "6px",
-												animation: "pulse 1.5s infinite"
+												animation: "pulse 1.5s infinite",
 											}}
 										></span>
 										LIVE
@@ -304,7 +321,7 @@ const LiveStreamPage = () => {
 									style={{
 										backgroundColor: "rgba(0, 0, 0, 0.7)",
 										color: "white",
-										fontSize: "0.875rem"
+										fontSize: "0.875rem",
 									}}
 								>
 									👁️ {viewerCount.toLocaleString()} watching
@@ -322,10 +339,7 @@ const LiveStreamPage = () => {
 												Start Broadcasting
 											</Button>
 										) : (
-											<Button
-												variant="outline-light"
-												onClick={stopBroadcast}
-											>
+											<Button variant="outline-light" onClick={stopBroadcast}>
 												Stop Broadcasting
 											</Button>
 										)}
@@ -368,14 +382,21 @@ const LiveStreamPage = () => {
 												<div className="flex-shrink-0">
 													<div
 														className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-														style={{ width: "32px", height: "32px", fontSize: "0.75rem" }}
+														style={{
+															width: "32px",
+															height: "32px",
+															fontSize: "0.75rem",
+														}}
 													>
 														{comment.user.charAt(0).toUpperCase()}
 													</div>
 												</div>
 												<div className="flex-grow-1">
 													<div className="d-flex align-items-center gap-2 mb-1">
-														<span className="fw-bold" style={{ fontSize: "0.875rem" }}>
+														<span
+															className="fw-bold"
+															style={{ fontSize: "0.875rem" }}
+														>
 															{comment.user}
 														</span>
 														<small className="text-muted">
@@ -422,6 +443,17 @@ const LiveStreamPage = () => {
 					{error}
 				</Alert>
 			)}
+
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</Container>
 	);
 };

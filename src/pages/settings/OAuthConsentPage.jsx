@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
@@ -45,7 +44,7 @@ const OAuthConsentPage = () => {
 	const handleRevokeAuthorization = async (authId) => {
 		if (
 			!window.confirm(
-				"Are you sure you want to revoke this authorization? The application will lose access to your account."
+				"Are you sure you want to revoke this authorization? The application will lose access to your account.",
 			)
 		) {
 			return;
@@ -71,7 +70,7 @@ const OAuthConsentPage = () => {
 			revoked: <X size={12} className="me-1" />,
 			expired: <Clock size={12} className="me-1" />,
 		};
-		
+
 		return (
 			<Badge bg={variants[status] || "secondary"}>
 				{icons[status]}
@@ -155,7 +154,7 @@ const OAuthConsentPage = () => {
 												</td>
 												<td>
 													<div>
-														{auth.scope.split(' ').map((scope) => (
+														{auth.scope.split(" ").map((scope) => (
 															<Badge
 																key={scope}
 																bg="light"
@@ -196,9 +195,7 @@ const OAuthConsentPage = () => {
 														<Button
 															variant="outline-danger"
 															size="sm"
-															onClick={() =>
-																handleRevokeAuthorization(auth.id)
-															}
+															onClick={() => handleRevokeAuthorization(auth.id)}
 														>
 															Revoke
 														</Button>
@@ -262,7 +259,7 @@ const OAuthConsentPage = () => {
 								<Col>
 									<strong>Granted Permissions:</strong>
 									<div className="mt-2">
-										{selectedAuth.scope.split(' ').map((scope) => (
+										{selectedAuth.scope.split(" ").map((scope) => (
 											<div key={scope} className="mb-2">
 												<Badge bg="primary" className="me-2">
 													{scope}
@@ -295,17 +292,19 @@ const OAuthConsentPage = () => {
 								<Row className="mb-3">
 									<Col>
 										<strong>Expires:</strong>
-										<div>{new Date(selectedAuth.expiresAt).toLocaleString()}</div>
+										<div>
+											{new Date(selectedAuth.expiresAt).toLocaleString()}
+										</div>
 									</Col>
 								</Row>
 							)}
 
 							<Alert variant="info">
 								<small>
-									<strong>Note:</strong> This application can access your account
-									with the permissions shown above. You can revoke access at any
-									time, which will immediately prevent the application from
-									accessing your account.
+									<strong>Note:</strong> This application can access your
+									account with the permissions shown above. You can revoke
+									access at any time, which will immediately prevent the
+									application from accessing your account.
 								</small>
 							</Alert>
 						</div>
@@ -331,6 +330,16 @@ const OAuthConsentPage = () => {
 					</Button>
 				</Modal.Footer>
 			</Modal>
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</Container>
 	);
 };

@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
@@ -16,7 +15,7 @@ const AccountSettingsPage = () => {
 		username: "",
 		email: "",
 		name: "",
-		federatedDiscoverable: false
+		federatedDiscoverable: false,
 	});
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
@@ -28,7 +27,7 @@ const AccountSettingsPage = () => {
 			setSettings({
 				username: user.username || "",
 				email: user.email || "",
-				name: user.name || ""
+				name: user.name || "",
 			});
 		}
 	}, [user]);
@@ -54,9 +53,19 @@ const AccountSettingsPage = () => {
 			let updateData = { ...settings };
 
 			// Check username change limit
-			if (settings.username !== user.username && checkUsernameChangeLimit(user.lastUsernameChange)) {
-				const daysLeft = Math.ceil((new Date(user.lastUsernameChange).getTime() + (30 * 24 * 60 * 60 * 1000) - Date.now()) / (24 * 60 * 60 * 1000));
-				setMessage(`You can only change your username once every 30 days. Please wait ${daysLeft} more days.`);
+			if (
+				settings.username !== user.username &&
+				checkUsernameChangeLimit(user.lastUsernameChange)
+			) {
+				const daysLeft = Math.ceil(
+					(new Date(user.lastUsernameChange).getTime() +
+						30 * 24 * 60 * 60 * 1000 -
+						Date.now()) /
+						(24 * 60 * 60 * 1000),
+				);
+				setMessage(
+					`You can only change your username once every 30 days. Please wait ${daysLeft} more days.`,
+				);
 				setMessageType("warning");
 				setLoading(false);
 				return;
@@ -71,8 +80,8 @@ const AccountSettingsPage = () => {
 			setMessage("Account settings updated successfully!");
 			setMessageType("success");
 		} catch (err) {
-			console.error('Error updating account settings:', err);
-			setMessage(err.message || 'Failed to update account settings');
+			console.error("Error updating account settings:", err);
+			setMessage(err.message || "Failed to update account settings");
 			setMessageType("danger");
 		} finally {
 			setLoading(false);
@@ -102,7 +111,8 @@ const AccountSettingsPage = () => {
 					variant={messageType}
 					dismissible
 					onClose={() => setMessage("")}
-					className="mb-4">
+					className="mb-4"
+				>
 					{message}
 				</Alert>
 			)}
@@ -120,7 +130,9 @@ const AccountSettingsPage = () => {
 							<Form.Control
 								type="text"
 								value={settings.username}
-								onChange={(e) => setSettings(prev => ({ ...prev, username: e.target.value }))}
+								onChange={(e) =>
+									setSettings((prev) => ({ ...prev, username: e.target.value }))
+								}
 								placeholder="Your username"
 							/>
 							<Form.Text className="text-muted">
@@ -133,7 +145,9 @@ const AccountSettingsPage = () => {
 							<Form.Control
 								type="text"
 								value={settings.name}
-								onChange={(e) => setSettings(prev => ({ ...prev, name: e.target.value }))}
+								onChange={(e) =>
+									setSettings((prev) => ({ ...prev, name: e.target.value }))
+								}
 								placeholder="Your display name"
 							/>
 						</Form.Group>
@@ -154,7 +168,8 @@ const AccountSettingsPage = () => {
 								)}
 							</div>
 							<Form.Text className="text-muted">
-								Email changes require verification. Contact support to change your email.
+								Email changes require verification. Contact support to change
+								your email.
 							</Form.Text>
 						</Form.Group>
 					</Form>
@@ -172,9 +187,15 @@ const AccountSettingsPage = () => {
 						<div className="d-flex justify-content-between align-items-center">
 							<div>
 								<h6 className="mb-1">Subscription</h6>
-								<p className="text-muted mb-0 text-capitalize">{user?.membership?.subscription || user?.subscription || 'free'}</p>
+								<p className="text-muted mb-0 text-capitalize">
+									{user?.membership?.subscription ||
+										user?.subscription ||
+										"free"}
+								</p>
 								{user?.membership?.nextBillingDate && (
-									<small className="text-muted d-block">Next billing: {user.membership.nextBillingDate}</small>
+									<small className="text-muted d-block">
+										Next billing: {user.membership.nextBillingDate}
+									</small>
 								)}
 							</div>
 							{user?.hasBlueCheck && (
@@ -185,7 +206,9 @@ const AccountSettingsPage = () => {
 						<div className="d-flex justify-content-between align-items-center">
 							<div>
 								<h6 className="mb-1">Account Created</h6>
-								<p className="text-muted mb-0">{new Date(user.createdAt).toLocaleDateString()}</p>
+								<p className="text-muted mb-0">
+									{new Date(user.createdAt).toLocaleDateString()}
+								</p>
 							</div>
 						</div>
 					</div>
@@ -198,28 +221,39 @@ const AccountSettingsPage = () => {
 					variant="primary"
 					size="md"
 					onClick={handleSaveSettings}
-					disabled={loading}>
+					disabled={loading}
+				>
 					{loading ? "Saving..." : "Save Changes"}
 				</Button>
 
 				<Button
 					variant="outline-danger"
 					size="md"
-					onClick={() => setShowDeleteModal(true)}>
+					onClick={() => setShowDeleteModal(true)}
+				>
 					<Trash size={16} className="me-2" />
 					Delete Account
 				</Button>
 			</div>
 
 			{/* Delete Account Modal */}
-			<Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+			<Modal
+				show={showDeleteModal}
+				onHide={() => setShowDeleteModal(false)}
+				centered
+			>
 				<Modal.Header closeButton>
 					<Modal.Title className="text-danger">Delete Account</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
-					<p>Are you sure you want to delete your account? This action cannot be undone.</p>
+					<p>
+						Are you sure you want to delete your account? This action cannot be
+						undone.
+					</p>
 					<p className="text-danger">
-						<strong>All your posts, comments, and data will be permanently removed.</strong>
+						<strong>
+							All your posts, comments, and data will be permanently removed.
+						</strong>
 					</p>
 				</Modal.Body>
 				<Modal.Footer>
@@ -231,6 +265,16 @@ const AccountSettingsPage = () => {
 					</Button>
 				</Modal.Footer>
 			</Modal>
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</div>
 	);
 };

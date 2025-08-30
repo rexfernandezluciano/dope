@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
@@ -111,7 +110,7 @@ const OAuthAppsPage = () => {
 	const handleRegenerateSecret = async (appId) => {
 		if (
 			!window.confirm(
-				"Are you sure you want to regenerate the client secret? This will invalidate the current secret."
+				"Are you sure you want to regenerate the client secret? This will invalidate the current secret.",
 			)
 		) {
 			return;
@@ -169,10 +168,7 @@ const OAuthAppsPage = () => {
 								Manage your OAuth applications and API access
 							</p>
 						</div>
-						<Button
-							variant="primary"
-							onClick={() => setShowCreateModal(true)}
-						>
+						<Button variant="primary" onClick={() => setShowCreateModal(true)}>
 							<Plus className="me-2" />
 							New App
 						</Button>
@@ -186,7 +182,8 @@ const OAuthAppsPage = () => {
 							<Card.Body>
 								<h5>No OAuth Apps</h5>
 								<p className="text-muted">
-									Create your first OAuth application to get started with the API
+									Create your first OAuth application to get started with the
+									API
 								</p>
 								<Button
 									variant="primary"
@@ -351,7 +348,7 @@ const OAuthAppsPage = () => {
 												...formData,
 												scopes: Array.from(
 													e.target.selectedOptions,
-													(option) => option.value
+													(option) => option.value,
 												),
 											})
 										}
@@ -388,7 +385,10 @@ const OAuthAppsPage = () => {
 						</Row>
 					</Modal.Body>
 					<Modal.Footer>
-						<Button variant="secondary" onClick={() => setShowCreateModal(false)}>
+						<Button
+							variant="secondary"
+							onClick={() => setShowCreateModal(false)}
+						>
 							Cancel
 						</Button>
 						<Button type="submit" variant="primary">
@@ -405,9 +405,7 @@ const OAuthAppsPage = () => {
 				size="lg"
 			>
 				<Modal.Header closeButton>
-					<Modal.Title>
-						{selectedApp?.name} - Application Details
-					</Modal.Title>
+					<Modal.Title>{selectedApp?.name} - Application Details</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
 					{selectedApp && (
@@ -546,6 +544,16 @@ const OAuthAppsPage = () => {
 					</Button>
 				</Modal.Footer>
 			</Modal>
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</Container>
 	);
 };

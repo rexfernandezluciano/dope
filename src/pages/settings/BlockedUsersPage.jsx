@@ -1,8 +1,14 @@
-
-import React, { useState, useEffect } from 'react';
-import { Container, Card, Button, Alert, Spinner, Image } from 'react-bootstrap';
-import { useLoaderData, useNavigate } from 'react-router-dom';
-import { blockAPI } from '../../config/ApiConfig';
+import React, { useState, useEffect } from "react";
+import {
+	Container,
+	Card,
+	Button,
+	Alert,
+	Spinner,
+	Image,
+} from "react-bootstrap";
+import { useLoaderData, useNavigate } from "react-router-dom";
+import { blockAPI } from "../../config/ApiConfig";
 
 const BlockedUsersPage = () => {
 	const loaderData = useLoaderData() || {};
@@ -10,7 +16,7 @@ const BlockedUsersPage = () => {
 	const navigate = useNavigate();
 	const [blockedUsers, setBlockedUsers] = useState([]);
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState('');
+	const [error, setError] = useState("");
 	const [unblockingUsers, setUnblockingUsers] = useState(new Set());
 
 	useEffect(() => {
@@ -20,8 +26,8 @@ const BlockedUsersPage = () => {
 				const response = await blockAPI.getBlockedUsers();
 				setBlockedUsers(response.blockedUsers || []);
 			} catch (err) {
-				console.error('Error fetching blocked users:', err);
-				setError('Failed to load blocked users');
+				console.error("Error fetching blocked users:", err);
+				setError("Failed to load blocked users");
 			} finally {
 				setLoading(false);
 			}
@@ -34,14 +40,16 @@ const BlockedUsersPage = () => {
 
 	const handleUnblock = async (userId) => {
 		try {
-			setUnblockingUsers(prev => new Set([...prev, userId]));
+			setUnblockingUsers((prev) => new Set([...prev, userId]));
 			await blockAPI.unblockUser(userId);
-			setBlockedUsers(prev => prev.filter(block => block.blockedUserId !== userId));
+			setBlockedUsers((prev) =>
+				prev.filter((block) => block.blockedUserId !== userId),
+			);
 		} catch (err) {
-			console.error('Error unblocking user:', err);
-			setError('Failed to unblock user');
+			console.error("Error unblocking user:", err);
+			setError("Failed to unblock user");
 		} finally {
-			setUnblockingUsers(prev => {
+			setUnblockingUsers((prev) => {
 				const newSet = new Set(prev);
 				newSet.delete(userId);
 				return newSet;
@@ -83,7 +91,7 @@ const BlockedUsersPage = () => {
 			</div>
 
 			{error && (
-				<Alert variant="danger" onClose={() => setError('')} dismissible>
+				<Alert variant="danger" onClose={() => setError("")} dismissible>
 					{error}
 				</Alert>
 			)}
@@ -103,22 +111,26 @@ const BlockedUsersPage = () => {
 								<div className="d-flex align-items-center justify-content-between">
 									<div className="d-flex align-items-center gap-3">
 										<Image
-											src={block.blockedUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
+											src={
+												block.blockedUser?.photoURL ||
+												"https://i.pravatar.cc/150?img=10"
+											}
 											alt="avatar"
 											roundedCircle
 											width="50"
 											height="50"
-											style={{ objectFit: 'cover' }}
+											style={{ objectFit: "cover" }}
 										/>
 										<div>
 											<div className="fw-bold">
-												{block.blockedUser?.name || 'Unknown User'}
+												{block.blockedUser?.name || "Unknown User"}
 											</div>
 											<p className="text-muted mb-0">
-												@{block.blockedUser?.username || 'unknown'}
+												@{block.blockedUser?.username || "unknown"}
 											</p>
 											<small className="text-muted">
-												Blocked on {new Date(block.createdAt).toLocaleDateString()}
+												Blocked on{" "}
+												{new Date(block.createdAt).toLocaleDateString()}
 											</small>
 										</div>
 									</div>
@@ -134,7 +146,7 @@ const BlockedUsersPage = () => {
 												Unblocking...
 											</>
 										) : (
-											'Unblock'
+											"Unblock"
 										)}
 									</Button>
 								</div>
@@ -143,6 +155,16 @@ const BlockedUsersPage = () => {
 					))}
 				</div>
 			)}
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</Container>
 	);
 };

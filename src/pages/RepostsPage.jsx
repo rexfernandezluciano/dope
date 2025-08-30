@@ -50,7 +50,7 @@ const RepostsPage = () => {
 				if (repostsResponse && Array.isArray(repostsResponse.posts)) {
 					// Filter for reposts of this specific post
 					const filteredReposts = repostsResponse.posts.filter(
-						post => post.isRepost && post.originalPost?.id === postId
+						(post) => post.isRepost && post.originalPost?.id === postId,
 					);
 					setReposts(filteredReposts);
 				} else {
@@ -364,6 +364,16 @@ const RepostsPage = () => {
 					))}
 				</div>
 			)}
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</Container>
 	);
 };

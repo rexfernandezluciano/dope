@@ -30,17 +30,18 @@ import { parseTextContent } from "../utils/text-utils";
 const SearchPage = () => {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
-	const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "");
-	const [activeTab, setActiveTab] = useState(searchParams.get('tab') || "posts");
+	const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
+	const [activeTab, setActiveTab] = useState(
+		searchParams.get("tab") || "posts",
+	);
 	const [posts, setPosts] = useState([]);
 	const [users, setUsers] = useState([]);
 	const [comments, setComments] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 
-
 	// Get current user from localStorage or context
-	const {user: currentUser} = useLoaderData();
+	const { user: currentUser } = useLoaderData();
 
 	// Update URL when search query changes
 	useEffect(() => {
@@ -57,12 +58,11 @@ const SearchPage = () => {
 
 	// Listen for URL parameter changes (back/forward navigation)
 	useEffect(() => {
-		const urlQuery = searchParams.get('q') || "";
-		const urlTab = searchParams.get('tab') || "posts";
+		const urlQuery = searchParams.get("q") || "";
+		const urlTab = searchParams.get("tab") || "posts";
 		setSearchQuery(urlQuery);
 		setActiveTab(urlTab);
 	}, [searchParams]);
-
 
 	const performSearch = useCallback(async (searchQueryParam, tab) => {
 		if (!searchQueryParam.trim()) return;
@@ -72,21 +72,29 @@ const SearchPage = () => {
 			setError("");
 
 			if (tab === "posts") {
-				const response = await apiRequest(`/posts?search=${encodeURIComponent(searchQueryParam)}&limit=20`);
+				const response = await apiRequest(
+					`/posts?search=${encodeURIComponent(searchQueryParam)}&limit=20`,
+				);
 				setPosts(response.posts || []);
 			} else if (tab === "users") {
 				// Use /users endpoint to get all users, then filter by search query
 				const response = await apiRequest(`/users`);
 				const allUsers = response.users || [];
-				const filteredUsers = allUsers.filter(user => 
-					user.name.toLowerCase().includes(searchQueryParam.toLowerCase()) ||
-					user.username.toLowerCase().includes(searchQueryParam.toLowerCase()) ||
-					(user.bio && user.bio.toLowerCase().includes(searchQueryParam.toLowerCase()))
+				const filteredUsers = allUsers.filter(
+					(user) =>
+						user.name.toLowerCase().includes(searchQueryParam.toLowerCase()) ||
+						user.username
+							.toLowerCase()
+							.includes(searchQueryParam.toLowerCase()) ||
+						(user.bio &&
+							user.bio.toLowerCase().includes(searchQueryParam.toLowerCase())),
 				);
 				setUsers(filteredUsers);
 			} else if (tab === "comments") {
 				// Use the correct API endpoint for comment search with proper parameters
-				const response = await apiRequest(`/comments/search?query=${encodeURIComponent(searchQueryParam)}&limit=20&sortBy=desc`);
+				const response = await apiRequest(
+					`/comments/search?query=${encodeURIComponent(searchQueryParam)}&limit=20&sortBy=desc`,
+				);
 				setComments(response.comments || []);
 			}
 		} catch (err) {
@@ -106,30 +114,31 @@ const SearchPage = () => {
 		performSearch(searchQuery, activeTab);
 	}, [searchQuery, activeTab, performSearch]);
 
-
 	useEffect(() => {
-		const query = searchParams.get('q');
+		const query = searchParams.get("q");
 		if (query) {
 			setSearchQuery(query);
 			performSearch(query);
 			updatePageMeta({
 				title: `Search: ${query} - DOPE Network`,
 				description: `Search results for "${query}" on DOPE Network.`,
-				keywords: `search, ${query}, posts, people, DOPE Network`
+				keywords: `search, ${query}, posts, people, DOPE Network`,
 			});
 		} else {
 			updatePageMeta(pageMetaData.search);
 		}
 	}, [searchParams]);
 
-
 	useEffect(() => {
 		updatePageMeta({
-			title: searchQuery ? `Search results for "${searchQuery}"` : "Search DOPE Network",
-			description: searchQuery ? `Find posts, users, and comments related to "${searchQuery}".` : "Search for posts, people, and comments on the DOPE Network.",
+			title: searchQuery
+				? `Search results for "${searchQuery}"`
+				: "Search DOPE Network",
+			description: searchQuery
+				? `Find posts, users, and comments related to "${searchQuery}".`
+				: "Search for posts, people, and comments on the DOPE Network.",
 		});
 	}, [searchQuery]);
-
 
 	const handleLikePost = async (postId) => {
 		try {
@@ -146,10 +155,12 @@ const SearchPage = () => {
 							...post,
 							likes: isLiked
 								? likes.filter((like) => like.user.uid !== currentUser.uid)
-								: [...likes, { user: {uid: currentUser.uid }}],
+								: [...likes, { user: { uid: currentUser.uid } }],
 							stats: {
 								...post.stats,
-								likes: isLiked ? (post.stats?.likes || 0) - 1 : (post.stats?.likes || 0) + 1,
+								likes: isLiked
+									? (post.stats?.likes || 0) - 1
+									: (post.stats?.likes || 0) + 1,
 							},
 						};
 					}
@@ -190,11 +201,14 @@ const SearchPage = () => {
 			performSearch(searchQuery, tab);
 		} else if (tab === "users" && users.length === 0 && searchQuery.trim()) {
 			performSearch(searchQuery, tab);
-		} else if (tab === "comments" && comments.length === 0 && searchQuery.trim()) {
+		} else if (
+			tab === "comments" &&
+			comments.length === 0 &&
+			searchQuery.trim()
+		) {
 			performSearch(searchQuery, tab);
 		}
 	};
-
 
 	return (
 		<Container fluid className="py-0 px-0">
@@ -204,13 +218,18 @@ const SearchPage = () => {
 					variant="link"
 					size="sm"
 					className="text-dark p-0 d-flex align-items-center justify-content-center"
-					style={{ minWidth: '32px', height: '32px' }}
+					style={{ minWidth: "32px", height: "32px" }}
 					onClick={() => navigate(-1)}
 				>
 					<ArrowLeft size={18} />
 				</Button>
 				<div className="flex-grow-1">
-					<Form onSubmit={(e) => { e.preventDefault(); handleSearch(); }}>
+					<Form
+						onSubmit={(e) => {
+							e.preventDefault();
+							handleSearch();
+						}}
+					>
 						<div className="d-flex gap-1 gap-md-2">
 							<Form.Control
 								type="text"
@@ -218,14 +237,14 @@ const SearchPage = () => {
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
 								className="rounded-pill border-0 bg-light"
-								style={{ fontSize: '14px' }}
+								style={{ fontSize: "14px" }}
 								autoFocus
 							/>
 							<Button
 								type="submit"
 								variant="primary"
 								className="rounded-pill d-flex align-items-center justify-content-center"
-								style={{ minWidth: '40px', height: '38px' }}
+								style={{ minWidth: "40px", height: "38px" }}
 								disabled={loading}
 							>
 								{loading ? <Spinner size="sm" /> : <Search size={14} />}
@@ -242,19 +261,29 @@ const SearchPage = () => {
 			)}
 
 			{searchQuery && (
-				<div className="border-bottom bg-white sticky-top" style={{ top: '60px' }}>
-					<Nav variant="tabs" className="px-2 px-md-3" style={{ borderBottom: 'none' }}>
+				<div
+					className="border-bottom bg-white sticky-top"
+					style={{ top: "60px" }}
+				>
+					<Nav
+						variant="tabs"
+						className="px-2 px-md-3"
+						style={{ borderBottom: "none" }}
+					>
 						<Nav.Item className="flex-fill flex-md-grow-0">
 							<Nav.Link
 								active={activeTab === "posts"}
 								onClick={() => handleTabChange("posts")}
 								className="d-flex align-items-center justify-content-center justify-content-md-start gap-1 gap-md-2 py-2 px-2 px-md-3 text-center text-md-start"
-								style={{ fontSize: '13px', fontWeight: '500' }}
+								style={{ fontSize: "13px", fontWeight: "500" }}
 							>
 								<Hash size={14} />
 								<span className="d-none d-sm-inline">Posts</span>
 								<span className="d-sm-none">Posts</span>
-								<span className="badge bg-secondary ms-1" style={{ fontSize: '10px' }}>
+								<span
+									className="badge bg-secondary ms-1"
+									style={{ fontSize: "10px" }}
+								>
 									{posts.length}
 								</span>
 							</Nav.Link>
@@ -264,12 +293,15 @@ const SearchPage = () => {
 								active={activeTab === "users"}
 								onClick={() => handleTabChange("users")}
 								className="d-flex align-items-center justify-content-center justify-content-md-start gap-1 gap-md-2 py-2 px-2 px-md-3 text-center text-md-start"
-								style={{ fontSize: '13px', fontWeight: '500' }}
+								style={{ fontSize: "13px", fontWeight: "500" }}
 							>
 								<Person size={14} />
 								<span className="d-none d-sm-inline">People</span>
 								<span className="d-sm-none">People</span>
-								<span className="badge bg-secondary ms-1" style={{ fontSize: '10px' }}>
+								<span
+									className="badge bg-secondary ms-1"
+									style={{ fontSize: "10px" }}
+								>
 									{users.length}
 								</span>
 							</Nav.Link>
@@ -279,12 +311,15 @@ const SearchPage = () => {
 								active={activeTab === "comments"}
 								onClick={() => handleTabChange("comments")}
 								className="d-flex align-items-center justify-content-center justify-content-md-start gap-1 gap-md-2 py-2 px-2 px-md-3 text-center text-md-start"
-								style={{ fontSize: '13px', fontWeight: '500' }}
+								style={{ fontSize: "13px", fontWeight: "500" }}
 							>
 								<ChatDots size={14} />
 								<span className="d-none d-sm-inline">Comments</span>
 								<span className="d-sm-none">Comments</span>
-								<span className="badge bg-secondary ms-1" style={{ fontSize: '10px' }}>
+								<span
+									className="badge bg-secondary ms-1"
+									style={{ fontSize: "10px" }}
+								>
 									{comments.length}
 								</span>
 							</Nav.Link>
@@ -316,12 +351,14 @@ const SearchPage = () => {
 								onShare={(postId) => {
 									const postUrl = `${window.location.origin}/post/${postId}`;
 									if (navigator.share) {
-										navigator.share({
-											title: "Check out this post",
-											url: postUrl,
-										}).catch(() => {
-											navigator.clipboard.writeText(postUrl);
-										});
+										navigator
+											.share({
+												title: "Check out this post",
+												url: postUrl,
+											})
+											.catch(() => {
+												navigator.clipboard.writeText(postUrl);
+											});
 									} else {
 										navigator.clipboard.writeText(postUrl);
 									}
@@ -353,22 +390,34 @@ const SearchPage = () => {
 									<div className="p-3">
 										<div className="d-flex align-items-start gap-3">
 											<Image
-												src={user.photoURL || "https://i.pravatar.cc/150?img=10"}
+												src={
+													user.photoURL || "https://i.pravatar.cc/150?img=10"
+												}
 												alt="avatar"
 												roundedCircle
 												width="48"
 												height="48"
 												className="d-none d-sm-block"
-												style={{ objectFit: "cover", minWidth: "48px", minHeight: "48px" }}
+												style={{
+													objectFit: "cover",
+													minWidth: "48px",
+													minHeight: "48px",
+												}}
 											/>
 											<Image
-												src={user.photoURL || "https://i.pravatar.cc/150?img=10"}
+												src={
+													user.photoURL || "https://i.pravatar.cc/150?img=10"
+												}
 												alt="avatar"
 												roundedCircle
 												width="40"
 												height="40"
 												className="d-sm-none"
-												style={{ objectFit: "cover", minWidth: "40px", minHeight: "40px" }}
+												style={{
+													objectFit: "cover",
+													minWidth: "40px",
+													minHeight: "40px",
+												}}
 											/>
 											<div className="flex-grow-1 min-width-0">
 												<div className="d-flex align-items-center gap-2 mb-1">
@@ -385,14 +434,19 @@ const SearchPage = () => {
 														</span>
 													)}
 												</div>
-												<p className="text-muted mb-1 small text-truncate">@{user.username}</p>
+												<p className="text-muted mb-1 small text-truncate">
+													@{user.username}
+												</p>
 												{user.bio && (
-													<p className="mb-2 small text-muted d-none d-md-block" style={{ 
-														display: '-webkit-box',
-														WebkitLineClamp: 2,
-														WebkitBoxOrient: 'vertical',
-														overflow: 'hidden'
-													}}>
+													<p
+														className="mb-2 small text-muted d-none d-md-block"
+														style={{
+															display: "-webkit-box",
+															WebkitLineClamp: 2,
+															WebkitBoxOrient: "vertical",
+															overflow: "hidden",
+														}}
+													>
 														{user.bio}
 													</p>
 												)}
@@ -400,10 +454,12 @@ const SearchPage = () => {
 													variant="outline-primary"
 													size="sm"
 													className="mt-1"
-													style={{ fontSize: '12px' }}
+													style={{ fontSize: "12px" }}
 													onClick={() => navigate(`/${user.username}`)}
 												>
-													<span className="d-none d-sm-inline">View Profile</span>
+													<span className="d-none d-sm-inline">
+														View Profile
+													</span>
 													<span className="d-sm-none">View</span>
 												</Button>
 											</div>
@@ -436,7 +492,10 @@ const SearchPage = () => {
 									<div className="p-3">
 										<div className="d-flex gap-2 gap-md-3">
 											<Image
-												src={comment.author.photoURL || "https://i.pravatar.cc/150?img=10"}
+												src={
+													comment.author.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
 												alt="avatar"
 												roundedCircle
 												width="36"
@@ -445,7 +504,10 @@ const SearchPage = () => {
 												style={{ objectFit: "cover" }}
 											/>
 											<Image
-												src={comment.author.photoURL || "https://i.pravatar.cc/150?img=10"}
+												src={
+													comment.author.photoURL ||
+													"https://i.pravatar.cc/150?img=10"
+												}
 												alt="avatar"
 												roundedCircle
 												width="40"
@@ -457,30 +519,48 @@ const SearchPage = () => {
 												<div className="d-flex align-items-center gap-1 gap-md-2 mb-1 flex-wrap">
 													<span
 														className="fw-bold text-truncate"
-														style={{ cursor: "pointer", maxWidth: '120px' }}
-														onClick={() => navigate(`/${comment.author.username}`)}
+														style={{ cursor: "pointer", maxWidth: "120px" }}
+														onClick={() =>
+															navigate(`/${comment.author.username}`)
+														}
 													>
 														{comment.author.name}
 													</span>
 													{comment.author.hasBlueCheck && (
-														<CheckCircleFill className="text-primary flex-shrink-0" size={14} />
+														<CheckCircleFill
+															className="text-primary flex-shrink-0"
+															size={14}
+														/>
 													)}
-													<span className="text-muted d-none d-sm-inline">·</span>
-													<span className="text-muted small flex-shrink-0" style={{ fontSize: '12px' }}>
+													<span className="text-muted d-none d-sm-inline">
+														·
+													</span>
+													<span
+														className="text-muted small flex-shrink-0"
+														style={{ fontSize: "12px" }}
+													>
 														{formatTimeAgo(comment.createdAt)}
 													</span>
 												</div>
-												<div className="mb-2" style={{ fontSize: '14px', lineHeight: '1.4' }}>
+												<div
+													className="mb-2"
+													style={{ fontSize: "14px", lineHeight: "1.4" }}
+												>
 													{parseTextContent(comment.content, {
-														onHashtagClick: (hashtag) => navigate(`/search?q=%23${encodeURIComponent(hashtag)}`),
-														onMentionClick: (username) => navigate(`/${username}`),
-														onLinkClick: (url) => window.open(url, '_blank', 'noopener,noreferrer')
+														onHashtagClick: (hashtag) =>
+															navigate(
+																`/search?q=%23${encodeURIComponent(hashtag)}`,
+															),
+														onMentionClick: (username) =>
+															navigate(`/${username}`),
+														onLinkClick: (url) =>
+															window.open(url, "_blank", "noopener,noreferrer"),
 													})}
 												</div>
 												<Button
 													variant="outline-primary"
 													size="sm"
-													style={{ fontSize: '12px', padding: '4px 12px' }}
+													style={{ fontSize: "12px", padding: "4px 12px" }}
 													onClick={() => navigate(`/post/${comment.postId}`)}
 												>
 													<span className="d-none d-sm-inline">View Post</span>
@@ -502,9 +582,21 @@ const SearchPage = () => {
 					<Search size={36} className="mb-3 d-md-none" />
 					<h5 className="d-none d-md-block">Search DOPE Network</h5>
 					<h6 className="d-md-none">Search DOPE Network</h6>
-					<p className="mb-0" style={{ fontSize: '14px' }}>Find posts, people, and comments</p>
+					<p className="mb-0" style={{ fontSize: "14px" }}>
+						Find posts, people, and comments
+					</p>
 				</div>
 			)}
+			{/* <!-- banner_ad --> */}
+			<ins
+				class="adsbygoogle"
+				style="display:block"
+				data-ad-client="ca-pub-1106169546112879"
+				data-ad-slot="2596463814"
+				data-ad-format="auto"
+				data-full-width-responsive="true"
+			></ins>
+			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 		</Container>
 	);
 };
