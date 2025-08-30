@@ -10,11 +10,7 @@ import {
 	Modal,
 	Image,
 } from "react-bootstrap";
-import {
-	ChevronLeft,
-	ChevronRight,
-	X,
-} from "react-bootstrap-icons";
+import { ChevronLeft, ChevronRight, X } from "react-bootstrap-icons";
 
 import AgoraRTC from "agora-rtc-sdk-ng";
 
@@ -58,7 +54,6 @@ const HomePage = () => {
 	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
-
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -152,10 +147,6 @@ const HomePage = () => {
 	};
 
 	// Removed unused utility functions (now handled by PostComposer)
-
-
-
-
 
 	const handleStartLiveStream = async (streamData) => {
 		try {
@@ -374,7 +365,7 @@ const HomePage = () => {
 				liveVideoUrl: streamUrl,
 				privacy: streamData.privacy.toLowerCase() || "public",
 				hashtags: extractHashtags(streamData.description || streamData.title),
-				mentions: extractMentions(streamData.description || streamData.title)
+				mentions: extractMentions(streamData.description || streamData.title),
 			};
 
 			try {
@@ -388,12 +379,15 @@ const HomePage = () => {
 						comments: response.post.comments || [],
 						stats: response.post.stats || { comments: 0, likes: 0, shares: 0 },
 						likes: response.post.likes || [],
-						isLiveStreaming: true
+						isLiveStreaming: true,
 					};
-					setPosts(prevPosts => [postWithDefaults, ...prevPosts]);
+					setPosts((prevPosts) => [postWithDefaults, ...prevPosts]);
 				}
 			} catch (postError) {
-				console.warn("Failed to create live stream post, but stream is active:", postError);
+				console.warn(
+					"Failed to create live stream post, but stream is active:",
+					postError,
+				);
 				// Don't fail the entire stream if post creation fails
 			}
 		} catch (error) {
@@ -492,8 +486,6 @@ const HomePage = () => {
 
 	// Removed unused toggleLiveMode function
 
-
-
 	const handleDeletePost = (postId) => {
 		setPostToDelete(postId);
 		setShowDeleteDialog(true);
@@ -533,22 +525,31 @@ const HomePage = () => {
 				prevPosts.map((post) => {
 					if (post.id === postId) {
 						const updatedPost = { ...post };
-						const currentUserLiked = post.likes.some(like => like.user?.uid === currentUser.uid);
+						const currentUserLiked = post.likes.some(
+							(like) => like.user?.uid === currentUser.uid,
+						);
 
 						// Update likes based on response
 						if (response.liked && !currentUserLiked) {
 							// Add current user to likes
-							updatedPost.likes = [...post.likes, { user: { uid: currentUser.uid, name: currentUser.displayName } }];
+							updatedPost.likes = [
+								...post.likes,
+								{
+									user: { uid: currentUser.uid, name: currentUser.displayName },
+								},
+							];
 						} else if (!response.liked && currentUserLiked) {
 							// Remove current user from likes
-							updatedPost.likes = post.likes.filter(like => like.user?.uid !== currentUser.uid);
+							updatedPost.likes = post.likes.filter(
+								(like) => like.user?.uid !== currentUser.uid,
+							);
 						}
 
 						// Update stats if available
 						if (updatedPost.stats) {
 							updatedPost.stats = {
 								...updatedPost.stats,
-								likes: updatedPost.likes.length
+								likes: updatedPost.likes.length,
 							};
 						}
 
@@ -578,8 +579,6 @@ const HomePage = () => {
 			setShowImageViewer(true);
 		}
 	};
-
-
 
 	const displayedPosts = posts;
 
@@ -630,14 +629,13 @@ const HomePage = () => {
 								...newPost,
 								comments: newPost.comments || [],
 								stats: newPost.stats || { comments: 0, likes: 0, shares: 0 },
-								likes: newPost.likes || []
+								likes: newPost.likes || [],
 							};
-							setPosts(prevPosts => [postWithDefaults, ...prevPosts]);
+							setPosts((prevPosts) => [postWithDefaults, ...prevPosts]);
 						}}
 						placeholder="What's happening?"
 					/>
 				)}
-
 
 				<div
 					className="d-flex align-items-center justify-content-between px-0 pt-2 border-bottom bg-white sticky-top-md"
@@ -687,9 +685,9 @@ const HomePage = () => {
 								<React.Fragment key={`post-${post.id}-${index}`}>
 									{/* Show user recommendations at the top for logged-in users */}
 									{index === 0 && user && (
-										<UserRecommendation 
-											key="user-recommendations" 
-											currentUser={user} 
+										<UserRecommendation
+											key="user-recommendations"
+											currentUser={user}
 											onClose={() => {
 												// Could hide recommendations if user dismisses
 											}}
@@ -703,7 +701,9 @@ const HomePage = () => {
 										onLike={handleLikePost}
 										onShare={() => handleSharePost(post.id)}
 										onDeletePost={handleDeletePost}
-										onPostClick={(e) => handleImageClick(post.images, post.id, e)}
+										onPostClick={(e) =>
+											handleImageClick(post.images, post.id, e)
+										}
 										onHashtagClick={handleHashtagClick}
 										showComments={true}
 										comments={post.comments || []}
@@ -738,6 +738,7 @@ const HomePage = () => {
 					onHide={closeImageViewer}
 					centered
 					size="md"
+					fullscreen="md-down"
 					className="image-viewer-modal"
 				>
 					<Modal.Body className="p-0 bg-dark text-center">
@@ -785,7 +786,7 @@ const HomePage = () => {
 								src={currentImages[currentImageIndex]}
 								className="w-100"
 								style={{
-									maxHeight: "80vh",
+									maxHeight: "100vh",
 									objectFit: "contain",
 								}}
 							/>
@@ -801,24 +802,29 @@ const HomePage = () => {
 			)}
 
 			{/* Delete Post Confirmation Dialog */}
-			<AlertDialog
-				show={showDeleteDialog}
-				title="Delete Post"
-				message="Are you sure you want to delete this post? This action cannot be undone."
-				onCancel={() => setShowDeleteDialog(false)}
-				onConfirm={confirmDeletePost}
-				isLoading={deletingPost}
-			/>
+			{showDeleteDialog && (
+				<AlertDialog
+					show={showDeleteDialog}
+					title="Delete Post"
+					message="Are you sure you want to delete this post? This action cannot be undone."
+					onHide={() => setShowDeleteDialog(false)}
+					onDialogButtonClick={confirmDeletePost}
+					dialogButtonMessage="Delete Now"
+					type="danger"
+				/>
+			)}
 
 			{/* Live Studio Modal */}
-			<LiveStudioModal
-				show={showLiveStudioModal}
-				onHide={() => setShowLiveStudioModal(false)}
-				onStartStream={handleStartLiveStream}
-				onStopStream={handleStopLiveStream}
-				isStreaming={isStreaming}
-				currentUser={user} // Pass the user state
-			/>
+			{showLiveStudioModal && (
+				<LiveStudioModal
+					show={showLiveStudioModal}
+					onHide={() => setShowLiveStudioModal(false)}
+					onStartStream={handleStartLiveStream}
+					onStopStream={handleStopLiveStream}
+					isStreaming={isStreaming}
+					currentUser={user} // Pass the user state
+				/>
+			)}
 		</>
 	);
 };
