@@ -452,19 +452,10 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				backdrop="static"
 				onHide={() => setShowComposerModal(false)}
 				centered
-				className="post-composer-modal min-vh-100"
-				scrollable
+				className="post-composer-modal"
+				scrollable={false}
 			>
-				<div className="modal-content min-vh-100 d-flex flex-column">
-					<Modal.Header 
-						className="border-0 pb-2 flex-shrink-0 fixed-top bg-white" 
-						style={{ 
-							position: 'fixed',
-							top: 0,
-							zIndex: 1030,
-							borderBottom: '1px solid #e9ecef'
-						}}
-					>
+				<Modal.Header closeButton={false} className="border-0">
 						<div className="d-flex align-items-center w-100">
 							<Button
 								variant="link"
@@ -494,16 +485,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 						</div>
 					</Modal.Header>
 
-					<Modal.Body 
-						className="flex-grow-1 bg-white px-3 py-2" 
-						style={{ 
-							overflowY: 'auto',
-							flex: '1 1 auto',
-							marginTop: '56px',
-							marginBottom: '70px',
-							minHeight: 0
-						}}
-					>
+					<Modal.Body className="flex-grow-1 bg-white px-3 py-2">
 					{error && (
 						<Alert variant="danger" className="mb-3"
 							dismissible 
@@ -872,15 +854,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 					</Form>
 				</Modal.Body>
 
-				<Modal.Footer 
-						className="border-0 pt-2 flex-shrink-0 fixed-bottom bg-white" 
-						style={{ 
-							position: 'fixed',
-							bottom: 0,
-							zIndex: 1030,
-							borderTop: '1px solid #e9ecef'
-						}}
-					>
+				<Modal.Footer className="border-0 pt-2 flex-shrink-0 bg-white">
 						<div className="d-flex justify-content-between align-items-center w-100">
 							<div className="d-flex gap-1 flex-wrap">
 								<Button
@@ -1019,7 +993,6 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 							</div>
 						</div>
 					</Modal.Footer>
-				</div>
 			</Modal>
 
 			{/* Sticker/GIF Modal */}
