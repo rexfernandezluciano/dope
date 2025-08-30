@@ -588,7 +588,7 @@ const HomePage = () => {
 			<Container className="py-3 px-3">
 				{error && (
 					<Alert variant="danger" className="mb-3">
-						{error ? "An error occured. Please try again later."}
+						{error || "An error occurred. Please try again later."}
 					</Alert>
 				)}
 
