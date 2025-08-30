@@ -381,8 +381,7 @@ const ProfileSettingsPage = () => {
 			</div>
 			{/* <!-- banner_ad --> */}
 			<ins
-				class="adsbygoogle"
-				style="display:block"
+				className="adsbygoogle d-block"
 				data-ad-client="ca-pub-1106169546112879"
 				data-ad-slot="2596463814"
 				data-ad-format="auto"
