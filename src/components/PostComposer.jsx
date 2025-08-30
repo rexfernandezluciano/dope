@@ -1,5 +1,5 @@
 /** @format */
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
 	Card,
 	Form,
@@ -102,6 +102,17 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 
 	const uploadImage = async (file) => {
 		let finalFile = file;
+		
+		// Validate file type
+		if (!file.type.startsWith("image/") && !file.name.toLowerCase().endsWith(".heic")) {
+			throw new Error(`${file.name} is not a valid image file`);
+		}
+		
+		// Validate file size (10MB limit)
+		if (file.size > 10 * 1024 * 1024) {
+			throw new Error(`${file.name} is too large. Maximum size is 10MB`);
+		}
+		
 		if (
 			file.type === "image/heic" ||
 			file.name.toLowerCase().endsWith(".heic")
@@ -121,13 +132,29 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 		formData.append("images", finalFile);
 
 		try {
+			console.log("Uploading image:", finalFile.name, "Size:", finalFile.size);
 			const response = await imageAPI.uploadImages(formData);
-			if (response && response.imageUrls && response.imageUrls.length > 0) {
-				return response.imageUrls[0];
+			
+			if (!response) {
+				throw new Error("No response received from server");
 			}
-			throw new Error("No image URL returned");
+			
+			if (!response.imageUrls || !Array.isArray(response.imageUrls) || response.imageUrls.length === 0) {
+				throw new Error("Invalid response: No image URLs returned");
+			}
+			
+			const imageUrl = response.imageUrls[0];
+			if (!imageUrl || typeof imageUrl !== 'string') {
+				throw new Error("Invalid image URL received");
+			}
+			
+			console.log("Image upload successful:", imageUrl);
+			return imageUrl;
 		} catch (error) {
 			console.error("Error uploading image:", error);
+			if (error.message.includes("Network Error") || error.message.includes("fetch")) {
+				throw new Error("Network error: Please check your connection and try again");
+			}
 			throw error;
 		}
 	};
@@ -157,26 +184,38 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 			setError("");
 
 			const uploadedUrls = [];
+			let uploadProgress = 0;
 
 			try {
-				for (const file of files) {
-					if (!file.type.startsWith("image/")) {
-						throw new Error(`${file.name} is not a valid image file`);
+				for (let i = 0; i < files.length; i++) {
+					const file = files[i];
+					console.log(`Processing file ${i + 1}/${files.length}:`, file.name);
+					
+					try {
+						const url = await uploadImage(file);
+						uploadedUrls.push(url);
+						uploadProgress++;
+						console.log(`Successfully uploaded ${uploadProgress}/${files.length} files`);
+					} catch (fileError) {
+						console.error(`Failed to upload ${file.name}:`, fileError);
+						throw new Error(`Failed to upload ${file.name}: ${fileError.message}`);
 					}
-
-					if (file.size > 10 * 1024 * 1024) {
-						// 10MB limit
-						throw new Error(`${file.name} is too large. Maximum size is 10MB`);
-					}
-
-					const url = await uploadImage(file);
-					uploadedUrls.push(url);
 				}
 
-				setImages((prev) => [...prev, ...uploadedUrls]);
+				if (uploadedUrls.length > 0) {
+					setImages((prev) => [...prev, ...uploadedUrls]);
+					console.log("All images uploaded successfully:", uploadedUrls);
+				}
 			} catch (err) {
 				console.error("Error processing files:", err);
 				setError(err.message || "Failed to upload one or more images");
+				
+				// Clean up any successfully uploaded URLs if there was a partial failure
+				uploadedUrls.forEach(url => {
+					if (url && url.startsWith('blob:')) {
+						URL.revokeObjectURL(url);
+					}
+				});
 			} finally {
 				setUploadingImages(false);
 				e.target.value = "";
@@ -364,6 +403,17 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 	};
 
 	// Custom styles for react-mentions
+	// Cleanup blob URLs when component unmounts to prevent memory leaks
+	useEffect(() => {
+		return () => {
+			images.forEach(url => {
+				if (url && url.startsWith('blob:')) {
+					URL.revokeObjectURL(url);
+				}
+			});
+		};
+	}, []);
+
 	const mentionsStyle = {
 		control: {
 			backgroundColor: "transparent",
