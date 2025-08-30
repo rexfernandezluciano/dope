@@ -36,7 +36,6 @@ import RepostModal from "../components/RepostModal";
 import {
 	formatTimeAgo,
 	deletePost as deletePostUtil,
-	sharePost,
 } from "../utils/common-utils";
 import { parseTextContent } from "../utils/text-utils";
 import { updatePageMeta } from "../utils/meta-utils";
@@ -80,7 +79,6 @@ const PostDetailPage = () => {
 	const [liked, setLiked] = useState(false);
 	const [likeCount, setLikeCount] = useState(0);
 	const [replies, setReplies] = useState({});
-	const [commentDonationAmount, setCommentDonationAmount] = useState("");
 
 	const loadPost = useCallback(async () => {
 		try {
@@ -703,7 +701,7 @@ const PostDetailPage = () => {
 				className="d-flex align-items-center gap-3 p-3 border-bottom bg-white sticky-top d-none d-md-block"
 				style={{
 					top: "112px" /* Below navbar (56px) + tabs (56px) */,
-					zIndex: 1018 /* Below tabs but above content */,
+					zIndex: 10 /* Below tabs but above content */,
 				}}
 			>
 				<Button
