@@ -946,18 +946,9 @@ export const pollAPI = {
 
 // Image API
 export const imageAPI = {
-	uploadImages: async (imageFiles) => {
-		const formData = new FormData();
-
-		// Handle single file or array of files
-		if (Array.isArray(imageFiles)) {
-			imageFiles.forEach((file, index) => {
-				formData.append('images', file);
-			});
-		} else {
-			formData.append('images', imageFiles);
-		}
-
+	uploadImages: async (formData) => {
+		// FormData is already created and populated in PostComposer
+		// Just pass it directly to the API
 		return await apiRequest("/images/upload", {
 			method: "POST",
 			data: formData,
