@@ -22,13 +22,13 @@ const getMetaData = (url, params = {}) => {
 					title: `${params.displayName || params.username} (@${params.username}) - DOPE Network`,
 					description: `View ${params.displayName || params.username}'s profile on DOPE Network. See their posts, followers, and more.`,
 					keywords: `${params.username}, ${params.displayName}, profile, DOPE Network, social media`,
-					ogImage: params.avatar || "/logo512.png",
+					ogImage: params.avatar || "/assets/cover.png",
 			  }
 			: {
 					title: "DOPE Network - Social Media Platform",
 					description: "DOPE Network - A modern social media platform connecting communities worldwide. Share, discover, and engage with friends and communities.",
 					keywords: "DOPE Network, social media, community, social networking, microblogging, posts, friends",
-					ogImage: "/logo512.png",
+					ogImage: "/assets/cover.png",
 			  };
 
 	const routes = {
@@ -37,13 +37,13 @@ const getMetaData = (url, params = {}) => {
 			title: params.title ? params.title : `Post - DOPE Network`,
 			description: params.content ? `${params.content.substring(0, 160)}...` : "View post on DOPE Network",
 			keywords: "post, content, DOPE Network, social media",
-			ogImage: params.image || "/logo512.png",
+			ogImage: params.image || "/assets/cover.png",
 		},
 		"/search": {
 			title: params.query ? `Search: ${params.query} - DOPE Network` : "Search - DOPE Network",
 			description: params.query ? `Search results for "${params.query}" on DOPE Network.` : "Search for posts and people on DOPE Network.",
 			keywords: `search, ${params.query || "posts, people"}, DOPE Network`,
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/analytics": {
 			title: "Analytics - DOPE Network",
@@ -55,91 +55,91 @@ const getMetaData = (url, params = {}) => {
 			title: "Subscription - DOPE Network",
 			description: "Manage your DOPE Network subscription and premium features.",
 			keywords: "subscription, premium, features, billing, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/livestream": {
 			title: "Live Stream - DOPE Network",
 			description: "Join live streams and connect with your community in real-time.",
 			keywords: "livestream, live, streaming, community, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/waitinglist": {
 			title: "Join Waiting List - DOPE Network",
 			description: "Join the waiting list to get early access to DOPE Network features.",
 			keywords: "waiting list, early access, beta, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/network-test": {
 			title: "Network Diagnostics - DOPE Network",
 			description: "Test your network connectivity and API endpoints for optimal performance.",
 			keywords: "network test, diagnostics, connectivity, API, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/policies/privacy": {
 			title: "Privacy Policy - DOPE Network",
 			description: "Read our privacy policy to understand how we protect and handle your data.",
 			keywords: "privacy policy, data protection, privacy, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/policies/terms": {
 			title: "Terms of Service - DOPE Network",
 			description: "Read our terms of service to understand the rules and guidelines for using DOPE Network.",
 			keywords: "terms of service, terms, conditions, guidelines, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/settings": {
 			title: "Settings - DOPE Network",
 			description: "Manage your account settings on DOPE Network",
 			keywords: "settings, account, DOPE Network, social media",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/auth/login": {
 			title: "Sign In - DOPE Network",
 			description: "Sign in to your DOPE Network account to connect with your community.",
 			keywords: "login, sign in, authentication, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/auth/signup": {
 			title: "Sign Up - DOPE Network",
 			description: "Create a new DOPE Network account to join the community.",
 			keywords: "signup, register, create account, join, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/auth/verify": {
 			title: "Verify Email - DOPE Network",
 			description: "Verify your email address to complete your DOPE Network account setup.",
 			keywords: "verify, email verification, account setup, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/auth/google/callback": {
 			title: "Authentication - DOPE Network",
 			description: "Completing authentication process for DOPE Network.",
 			keywords: "authentication, oauth, callback, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/auth/forgot-password": {
 			title: "Forgot Password - DOPE Network",
 			description: "Reset your DOPE Network password. Enter your email to receive reset instructions.",
 			keywords: "forgot password, password reset, recover account, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/auth/reset-password": {
 			title: "Reset Password - DOPE Network",
 			description: "Set a new password for your DOPE Network account.",
 			keywords: "reset password, new password, account recovery, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/business": {
 			title: "Business Manager - DOPE Network",
 			description: "Create, Manage, and Earn on Ads with Business Ad Campaign.",
 			keywords: "advertise, business, ads, creators, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 		"/my-subscription": {
 			title: "My Subscription - DOPE Network",
 			description: "Manage your subscription and creator's membership.",
 			keywords: "subscription, business, ads, creators, DOPE Network",
-			ogImage: "/logo512.png",
+			ogImage: "/assets/cover.png",
 		},
 	};
 
@@ -211,7 +211,7 @@ module.exports = async function handler(req, res) {
 						metaData = getMetaData("/", {
 							username,
 							displayName: userData.user.name,
-							avatar: userData.user.avatar,
+							avatar: userData.user.photoURL,
 							federatedDiscoverable: userData.user.federatedDiscoverable,
 						});
 					} else {
