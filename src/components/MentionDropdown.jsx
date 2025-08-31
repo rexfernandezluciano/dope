@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ListGroup, Image, Spinner } from 'react-bootstrap';
 import { CheckCircleFill } from 'react-bootstrap-icons';
 import { apiRequest } from '../config/ApiConfig.js';
+import { useAuth } from '../config/FirebaseConfig';
 
 const MentionDropdown = ({ 
   show, 
@@ -14,6 +15,7 @@ const MentionDropdown = ({
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const dropdownRef = useRef(null);
+  const { currentUser } = useAuth();
 
   const searchUsers = useCallback(async (searchQuery) => {
     if (!searchQuery || searchQuery.length < 2) {
@@ -23,8 +25,21 @@ const MentionDropdown = ({
 
     try {
       setLoading(true);
-      const response = await apiRequest(`/users/search?query=${encodeURIComponent(searchQuery)}&limit=5`);
-      setUsers(response?.users || []);
+      const response = await apiRequest(`/users/search?query=${encodeURIComponent(searchQuery)}&limit=8`);
+      let foundUsers = response?.users || [];
+      
+      // Include current user in results if they match the query
+      if (currentUser && currentUser.username && currentUser.name) {
+        const queryLower = searchQuery.toLowerCase();
+        const matchesUsername = currentUser.username.toLowerCase().includes(queryLower);
+        const matchesName = currentUser.name.toLowerCase().includes(queryLower);
+        
+        if ((matchesUsername || matchesName) && !foundUsers.some(u => u.uid === currentUser.uid)) {
+          foundUsers = [currentUser, ...foundUsers];
+        }
+      }
+      
+      setUsers(foundUsers);
       setSelectedIndex(0);
     } catch (error) {
       console.error('Failed to search users:', error);
@@ -32,7 +47,7 @@ const MentionDropdown = ({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     if (show && query) {
@@ -60,9 +75,10 @@ const MentionDropdown = ({
           if (users[selectedIndex]) {
             onSelect({
                 ...users[selectedIndex],
-                uid: users[selectedIndex].uid || users[selectedIndex].id, // Ensure uid is available
-                username: users[selectedIndex].username || users[selectedIndex].uid, // Keep username for display
-                name: users[selectedIndex].name || users[selectedIndex].displayName || 'Unknown User'
+                uid: users[selectedIndex].uid || users[selectedIndex].id,
+                username: users[selectedIndex].username || users[selectedIndex].uid,
+                name: users[selectedIndex].name || users[selectedIndex].displayName || 'Unknown User',
+                display: users[selectedIndex].name || users[selectedIndex].displayName || users[selectedIndex].username || 'Unknown User'
               });
           }
           break;
@@ -113,7 +129,8 @@ const MentionDropdown = ({
                 ...user,
                 uid: user.uid,
                 username: user.username,
-                name: user.name || 'Unknown User'
+                name: user.name || 'Unknown User',
+                display: user.name || user.displayName || user.username || 'Unknown User'
               })}
               style={{ cursor: 'pointer' }}
             >

@@ -24,6 +24,7 @@ import {
 	CameraVideo,
 	Type,
 	BarChart,
+	CheckCircleFill,
 } from "react-bootstrap-icons";
 import { MentionsInput, Mention } from "react-mentions";
 import { postAPI, imageAPI, userAPI } from "../config/ApiConfig";
@@ -102,17 +103,17 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 
 	const uploadImage = async (file) => {
 		let finalFile = file;
-		
+
 		// Validate file type
 		if (!file.type.startsWith("image/") && !file.name.toLowerCase().endsWith(".heic")) {
 			throw new Error(`${file.name} is not a valid image file`);
 		}
-		
+
 		// Validate file size (10MB limit)
 		if (file.size > 10 * 1024 * 1024) {
 			throw new Error(`${file.name} is too large. Maximum size is 10MB`);
 		}
-		
+
 		if (
 			file.type === "image/heic" ||
 			file.name.toLowerCase().endsWith(".heic")
@@ -134,20 +135,20 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 		try {
 			console.log("Uploading image:", finalFile.name, "Size:", finalFile.size);
 			const response = await imageAPI.uploadImages(formData);
-			
+
 			if (!response) {
 				throw new Error("No response received from server");
 			}
-			
+
 			if (!response.imageUrls || !Array.isArray(response.imageUrls) || response.imageUrls.length === 0) {
 				throw new Error("Invalid response: No image URLs returned");
 			}
-			
+
 			const imageUrl = response.imageUrls[0];
 			if (!imageUrl || typeof imageUrl !== 'string') {
 				throw new Error("Invalid image URL received");
 			}
-			
+
 			console.log("Image upload successful:", imageUrl);
 			return imageUrl;
 		} catch (error) {
@@ -190,7 +191,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				for (let i = 0; i < files.length; i++) {
 					const file = files[i];
 					console.log(`Processing file ${i + 1}/${files.length}:`, file.name);
-					
+
 					try {
 						const url = await uploadImage(file);
 						uploadedUrls.push(url);
@@ -209,7 +210,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 			} catch (err) {
 				console.error("Error processing files:", err);
 				setError(err.message || "Failed to upload one or more images");
-				
+
 				// Clean up any successfully uploaded URLs if there was a partial failure
 				uploadedUrls.forEach(url => {
 					if (url && url.startsWith('blob:')) {
@@ -538,7 +539,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 					<Modal.Body className="flex-grow-1 bg-white px-3 py-2">
 					{error && (
 						<Alert variant="danger" className="mb-3"
-							dismissible 
+							dismissible
 							onHide={() => setError("")}>
 							{error}
 						</Alert>
@@ -608,7 +609,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 												<Globe size={16} />
 												<div>
 													<div className="fw-bold">Everyone</div>
-													<small className={`fw-bold` + privacy === "public" ? "text-white": "text-muted"}>Anyone can reply</small>
+													<small className={`fw-bold` + privacy === "public" ? "text-white": "text-muted"}>Everyone can reply</small>
 												</div>
 											</Dropdown.Item>
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Modal, Form, Button, Spinner, Image, Alert } from 'react-bootstrap';
 import { MentionsInput, Mention } from "react-mentions";
@@ -18,13 +17,26 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
 
     try {
       const users = await userAPI.searchUsers(query);
+      let foundUsers = users || [];
 
-      const mentionData = users.map((user) => ({
+      // Include current user in results if they match the query and currentUser exists
+      if (window.currentUser && window.currentUser.username && window.currentUser.name) {
+        const queryLower = query.toLowerCase();
+        const matchesUsername = window.currentUser.username.toLowerCase().includes(queryLower);
+        const matchesName = window.currentUser.name.toLowerCase().includes(queryLower);
+
+        if ((matchesUsername || matchesName) && !foundUsers.some(u => u.uid === window.currentUser.uid)) {
+          foundUsers = [window.currentUser, ...foundUsers];
+        }
+      }
+
+      const mentionData = foundUsers.map((user) => ({
         id: user.uid,
-        display: user.username || user.name,
-        name: user.name,
+        display: user.name || user.displayName || user.username || 'Unknown User',
+        name: user.name || user.displayName || 'Unknown User',
         username: user.username,
         photoURL: user.photoURL,
+        hasBlueCheck: user.hasBlueCheck || false
       }));
 
       callback(mentionData);
@@ -162,6 +174,14 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
                         <div className="fw-bold small">{entry.name}</div>
                         <small className="text-muted">@{entry.username}</small>
                       </div>
+                      {entry.hasBlueCheck && (
+                        <img
+                          src="path/to/check-circle-fill.svg" // Replace with actual path to the icon
+                          alt="Verified"
+                          width="16"
+                          height="16"
+                        />
+                      )}
                     </div>
                   )}
                   style={{
@@ -179,7 +199,7 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
               }).length}/280 characters
             </Form.Text>
           </Form.Group>
-          
+
           {/* Original post preview */}
           <div className="border rounded p-3 mb-3 bg-light">
             <div className="d-flex align-items-center gap-2 mb-2">

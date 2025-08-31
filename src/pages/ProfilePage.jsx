@@ -227,11 +227,7 @@ const ProfilePage = () => {
 				} catch (err) {
 					console.error("Error loading followers:", err);
 					setFollowers([]);
-					// Return early to prevent following API call if user not found
-					if (err.message === "User not found") {
-						setLoading(false);
-						return;
-					}
+					// Continue execution even if followers fail to load
 				}
 
 				try {
@@ -240,6 +236,7 @@ const ProfilePage = () => {
 				} catch (err) {
 					console.error("Error loading following:", err);
 					setFollowing([]);
+					// Continue execution even if following fails to load
 				}
 
 				setLoading(false);
