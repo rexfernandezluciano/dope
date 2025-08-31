@@ -1,48 +1,52 @@
-
 /** @format */
 
 import React, { useState, useEffect } from 'react';
 import { userAPI } from '../config/ApiConfig';
 
 // Component to resolve mention UIDs to display names
-export const MentionComponent = ({ uid, onMentionClick }) => {
+const MentionComponent = ({ identifier, onMentionClick }) => {
 	const [userData, setUserData] = useState(null);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
 		const fetchUserData = async () => {
 			try {
-				const user = await userAPI.getUserById(uid);
-				setUserData(user);
+				const response = await userAPI.getUser(identifier);
+				if (response && response.user) {
+					setUserData(response.user);
+				}
 			} catch (error) {
-				console.error('Failed to resolve mention:', error);
-				// Set fallback data
-				setUserData({ name: uid, username: uid });
+				console.error('Error fetching user data:', error);
 			} finally {
 				setLoading(false);
 			}
 		};
 
-		if (uid) {
+		if (identifier) {
 			fetchUserData();
 		}
-	}, [uid]);
+	}, [identifier]);
 
-	const displayName = userData?.name || userData?.displayName || uid;
-	const username = userData?.username || uid;
+	if (loading) {
+		return <span className="mention-loading">@{identifier}</span>;
+	}
+
+	if (!userData) {
+		return <span className="mention-error">@{identifier}</span>;
+	}
 
 	return (
 		<span
-			className={`mention-link mention-component ${loading ? 'loading' : ''}`}
+			className="mention-link"
 			onClick={(e) => {
+				e.preventDefault();
 				e.stopPropagation();
-				if (!loading) {
-					onMentionClick(username);
+				if (onMentionClick) {
+					onMentionClick(userData.username);
 				}
 			}}
-			title={loading ? `Loading @${uid}...` : `${displayName} (@${username})`}
 		>
-			@{loading ? uid : displayName}
+			{userData.name}
 		</span>
 	);
 };
@@ -136,7 +140,7 @@ const parseLineContent = (line, handlers) => {
 		} else if (matchedText.startsWith('@')) {
 			// Check if it's a formatted mention @[Name](uid) or simple @username
 			const formattedMentionMatch = matchedText.match(/@\[([^\]]+)\]\(([^)]+)\)/);
-			
+
 			if (formattedMentionMatch) {
 				// Formatted mention: @[Display Name](uid)
 				const [, displayName, uid] = formattedMentionMatch;
@@ -144,7 +148,7 @@ const parseLineContent = (line, handlers) => {
 					<span
 						key={`mention-${match.index}`}
 						className="text-primary fw-bold mention-link"
-						style={{ 
+						style={{
 							cursor: 'pointer',
 							textDecoration: 'none',
 							borderRadius: '4px',
@@ -173,7 +177,7 @@ const parseLineContent = (line, handlers) => {
 				elements.push(
 					<MentionComponent
 						key={`mention-${match.index}`}
-						uid={identifier}
+						identifier={identifier}
 						onMentionClick={handlers.onMentionClick}
 					/>
 				);
@@ -244,7 +248,7 @@ export const extractHashtags = (text) => {
  */
 export const extractMentions = (text) => {
 	if (!text) return [];
-	
+
 	// Extract formatted mentions @[Name](uid)
 	const formattedMentions = [];
 	const formattedMatches = text.match(/@\[([^\]]+)\]\(([^)]+)\)/g);
@@ -254,14 +258,14 @@ export const extractMentions = (text) => {
 			return uidMatch ? uidMatch[2] : match.substring(1);
 		}));
 	}
-	
+
 	// Extract simple mentions @username
 	const simpleMentions = [];
 	const simpleMatches = text.match(/@[\w\u00c0-\u024f\u1e00-\u1eff]+/g);
 	if (simpleMatches) {
 		simpleMentions.push(...simpleMatches.map(mention => mention.substring(1)));
 	}
-	
+
 	return [...formattedMentions, ...simpleMentions];
 };
 
