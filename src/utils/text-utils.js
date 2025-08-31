@@ -7,16 +7,22 @@ import { userAPI } from '../config/ApiConfig';
 export const MentionComponent = ({ identifier, onMentionClick, displayName }) => {
 	const [userData, setUserData] = useState(null);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(false);
 
 	useEffect(() => {
 		const fetchUserData = async () => {
 			try {
+				setLoading(true);
+				setError(false);
 				const response = await userAPI.getUser(identifier);
 				if (response && response.user) {
 					setUserData(response.user);
+				} else {
+					setError(true);
 				}
 			} catch (error) {
 				console.error('Error fetching user data:', error);
+				setError(true);
 			} finally {
 				setLoading(false);
 			}
@@ -24,8 +30,23 @@ export const MentionComponent = ({ identifier, onMentionClick, displayName }) =>
 
 		if (identifier) {
 			fetchUserData();
+		} else {
+			setLoading(false);
+			setError(true);
 		}
 	}, [identifier]);
+
+	const handleClick = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		if (onMentionClick && userData && userData.username) {
+			// Always navigate using the resolved username from user data
+			onMentionClick(userData.username);
+		} else if (onMentionClick && displayName) {
+			// Fallback to displayName if userData is not available but displayName exists
+			onMentionClick(displayName);
+		}
+	};
 
 	if (loading) {
 		return (
@@ -39,24 +60,23 @@ export const MentionComponent = ({ identifier, onMentionClick, displayName }) =>
 					backgroundColor: 'rgba(13, 110, 253, 0.1)',
 				}}
 			>
-				{displayName ? `@${displayName}` : `@${identifier}`}
+				{displayName ? displayName : identifier}
 			</span>
 		);
 	}
 
-	if (!userData) {
+	if (error || !userData) {
 		return (
 			<span 
-				className="text-primary fw-bold mention-error"
+				className="text-muted mention-error"
 				style={{
-					cursor: 'pointer',
-					textDecoration: 'none',
 					borderRadius: '4px',
 					padding: '2px 4px',
-					backgroundColor: 'rgba(13, 110, 253, 0.1)',
+					backgroundColor: 'rgba(108, 117, 125, 0.1)',
 				}}
+				title="User not found"
 			>
-				{displayName ? `@${displayName}` : `@${identifier}`}
+				{displayName ? displayName : identifier}
 			</span>
 		);
 	}
@@ -72,14 +92,7 @@ export const MentionComponent = ({ identifier, onMentionClick, displayName }) =>
 				backgroundColor: 'rgba(13, 110, 253, 0.1)',
 				transition: 'all 0.2s ease'
 			}}
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				if (onMentionClick) {
-					// Always navigate using username, not uid
-					onMentionClick(userData.username);
-				}
-			}}
+			onClick={handleClick}
 			onMouseEnter={(e) => {
 				e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.2)';
 			}}
@@ -88,7 +101,7 @@ export const MentionComponent = ({ identifier, onMentionClick, displayName }) =>
 			}}
 			title={`${userData.name} (@${userData.username})`}
 		>
-			{displayName || userData.name}
+			{userData.name}
 		</span>
 	);
 };
