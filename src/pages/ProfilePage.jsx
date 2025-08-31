@@ -18,15 +18,11 @@ import {
 	Calendar,
 	CheckCircleFill,
 	Camera,
-	Heart,
-	Gift,
 	PersonAdd,
-	PersonCheckFill,
 	PersonFillCheck,
 	PersonSlash,
 	PersonFillSlash,
 	PersonHeart,
-	PersonFillHeart,
 } from "react-bootstrap-icons";
 
 import { userAPI, postAPI, blockAPI, imageAPI } from "../config/ApiConfig";
@@ -37,11 +33,9 @@ import {
 	handlePostOption,
 	formatJoinDate,
 } from "../utils/common-utils";
-import { updatePageMeta, pageMetaData } from "../utils/meta-utils";
+import { updatePageMeta } from "../utils/meta-utils";
 import {
-	discoverActor,
 	formatActivityPubHandle,
-	parseActivityPubNote,
 } from "../utils/activitypub-utils";
 import PostCard from "../components/PostCard";
 import AlertDialog from "../components/dialogs/AlertDialog";
