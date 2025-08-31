@@ -1206,7 +1206,22 @@ button,
 
 /* Ensure proper z-index stacking */
 .image-viewer-modal {
-	z-index: 1060 !important;
+	z-index: 1070 !important;
+}
+
+.image-viewer-modal .dropdown-menu {
+	z-index: 1075 !important;
+}
+
+/* Text truncation utilities */
+.min-width-0 {
+	min-width: 0;
+}
+
+.text-truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* Mobile responsiveness for image viewer */

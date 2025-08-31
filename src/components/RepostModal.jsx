@@ -85,7 +85,7 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
   };
 
   return (
-    <Modal show={show} onHide={handleClose} centered fullscreen="md-down" size="lg" className="d-md-flex">
+    <Modal show={show} onHide={handleClose} centered fullscreen="md-down" size="lg" className="d-md-flex" style={{ zIndex: 1080 }}>
       <Modal.Header closeButton>
         <Modal.Title>Repost</Modal.Title>
       </Modal.Header>

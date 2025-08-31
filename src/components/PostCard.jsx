@@ -14,14 +14,11 @@ import {
 	HeartFill,
 	ChatDots,
 	Share,
-	X,
 	ThreeDots,
 	CheckCircleFill,
 	Globe,
 	Lock,
 	PersonFill,
-	ChevronLeft,
-	ChevronRight,
 } from "react-bootstrap-icons";
 
 import {
@@ -33,9 +30,8 @@ import {
 import {
 	formatTimeAgo,
 	deletePost as deletePostUtil,
-	sharePost,
 } from "../utils/common-utils";
-import { parseTextContent, MentionComponent } from "../utils/text-utils";
+import { parseTextContent } from "../utils/text-utils";
 import { handleLikeNotification } from "../utils/notification-helpers";
 import CommentItem from "./CommentItem";
 import PollView from "./PollView";
@@ -391,7 +387,7 @@ const PostCard = ({
 										)}
 										{isProfileUpdate && (
 											<small className="text-muted text-truncate" style={{ maxWidth: "100px" }}>
-												updated {post.author.gender === "male" ? "his" : 
+												updated {post.author.gender === "male" ? "his" :
 												post.author.gender === "female" ? "her" : "their"} avatar
 											</small>
 										)}

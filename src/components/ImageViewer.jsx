@@ -2,9 +2,8 @@
 /** @format */
 
 import React, { useState, useEffect } from "react";
-import { Modal, Button, Image } from "react-bootstrap";
+import { Modal, Button, Image, Dropdown } from "react-bootstrap";
 import {
-	X,
 	ChevronLeft,
 	ChevronRight,
 	ThreeDots,
@@ -66,28 +65,36 @@ const ImageViewer = ({
 		setShowOverlay((prev) => !prev);
 	};
 
-	const handleKeyDown = (e) => {
-		if (!show) return;
-		
-		switch (e.key) {
-			case "ArrowLeft":
-				if (currentImageIndex > 0) handlePrevious();
-				break;
-			case "ArrowRight":
-				if (currentImageIndex < images.length - 1) handleNext();
-				break;
-			case "Escape":
-				onHide();
-				break;
-			default:
-				break;
-		}
-	};
+	
 
 	useEffect(() => {
-		document.addEventListener("keydown", handleKeyDown);
-		return () => document.removeEventListener("keydown", handleKeyDown);
-	}, [show, currentImageIndex, images.length]);
+		const handleKeyDownEvent = (e) => {
+			if (!show) return;
+			
+			switch (e.key) {
+				case "ArrowLeft":
+					if (currentImageIndex > 0) {
+						setCurrentImageIndex((prev) => Math.max(0, prev - 1));
+						setShowOverlay(true);
+					}
+					break;
+				case "ArrowRight":
+					if (currentImageIndex < images.length - 1) {
+						setCurrentImageIndex((prev) => Math.min(images.length - 1, prev + 1));
+						setShowOverlay(true);
+					}
+					break;
+				case "Escape":
+					onHide();
+					break;
+				default:
+					break;
+			}
+		};
+
+		document.addEventListener("keydown", handleKeyDownEvent);
+		return () => document.removeEventListener("keydown", handleKeyDownEvent);
+	}, [show, currentImageIndex, images.length, onHide]);
 
 	const getPrivacyIcon = (privacy) => {
 		switch (privacy) {
@@ -115,6 +122,7 @@ const ImageViewer = ({
 			fullscreen
 			className="image-viewer-modal"
 			backdrop="static"
+			style={{ zIndex: 1070 }}
 		>
 			<div className="position-relative w-100 h-100 bg-black">
 				{/* Top Action Bar */}
@@ -138,47 +146,91 @@ const ImageViewer = ({
 					</Button>
 
 					{post && (
-						<div className="d-flex align-items-center gap-2 text-white text-center flex-grow-1 mx-3">
-							<div className="d-flex align-items-center gap-2">
-								<Image
-									src={post.author.photoURL || "https://i.pravatar.cc/150?img=10"}
-									alt="avatar"
-									roundedCircle
-									width="32"
-									height="32"
-									style={{ objectFit: "cover" }}
-								/>
-								<div className="d-flex flex-column align-items-start">
-									<div className="d-flex align-items-center gap-1">
-										<span
-											className="fw-bold text-white"
-											style={{ cursor: "pointer" }}
-											onClick={() => onNavigateToProfile?.(post.author.username)}
-										>
-											{post.author.name}
-										</span>
-										{post.author.hasBlueCheck && (
-											<CheckCircleFill className="text-primary" size={14} />
-										)}
-									</div>
-									<div className="d-flex align-items-center gap-1 small text-white-50">
-										<span>{formatTimeAgo(post.createdAt)}</span>
-										<span>·</span>
-										{getPrivacyIcon(post.privacy)}
-									</div>
+						<div className="d-flex align-items-center gap-2 text-white flex-grow-1 mx-3 min-width-0">
+							<Image
+								src={post.author.photoURL || "https://i.pravatar.cc/150?img=10"}
+								alt="avatar"
+								roundedCircle
+								width="32"
+								height="32"
+								style={{ objectFit: "cover" }}
+							/>
+							<div className="d-flex align-items-center gap-2 min-width-0 flex-grow-1">
+								<div className="d-flex align-items-center gap-1 min-width-0">
+									<span
+										className="fw-bold text-white text-truncate"
+										style={{ cursor: "pointer" }}
+										onClick={() => onNavigateToProfile?.(post.author.username)}
+									>
+										{post.author.name}
+									</span>
+									{post.author.hasBlueCheck && (
+										<CheckCircleFill className="text-primary flex-shrink-0" size={14} />
+									)}
 								</div>
+								<span className="text-white-50 flex-shrink-0">·</span>
+								<span className="small text-white-50 flex-shrink-0">{formatTimeAgo(post.createdAt)}</span>
+								<span className="flex-shrink-0">{getPrivacyIcon(post.privacy)}</span>
 							</div>
 						</div>
 					)}
 
-					<Button
-						variant="link"
-						className="text-white p-2"
-						onClick={onPostOptions}
-						style={{ backgroundColor: "rgba(0,0,0,0.5)", borderRadius: "50%" }}
-					>
-						<ThreeDots size={20} />
-					</Button>
+					<Dropdown align="end">
+						<Dropdown.Toggle
+							as={Button}
+							variant="link"
+							className="text-white p-2"
+							style={{ 
+								backgroundColor: "rgba(0,0,0,0.5)", 
+								borderRadius: "50%",
+								border: "none"
+							}}
+						>
+							<ThreeDots size={20} />
+						</Dropdown.Toggle>
+						<Dropdown.Menu 
+							className="bg-dark border-secondary"
+							style={{ zIndex: 1055 }}
+						>
+							<Dropdown.Item 
+								className="text-white"
+								style={{ backgroundColor: "transparent" }}
+								onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.1)"}
+								onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+								onClick={() => {
+									onPostOptions?.();
+								}}
+							>
+								View Post Details
+							</Dropdown.Item>
+							<Dropdown.Item 
+								className="text-white"
+								style={{ backgroundColor: "transparent" }}
+								onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(255,255,255,0.1)"}
+								onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+								onClick={() => {
+									if (post?.author?.username) {
+										onNavigateToProfile?.(post.author.username);
+									}
+								}}
+							>
+								View Profile
+							</Dropdown.Item>
+							<Dropdown.Divider className="border-secondary" />
+							<Dropdown.Item 
+								className="text-danger"
+								style={{ backgroundColor: "transparent" }}
+								onMouseEnter={(e) => e.target.style.backgroundColor = "rgba(220,53,69,0.1)"}
+								onMouseLeave={(e) => e.target.style.backgroundColor = "transparent"}
+								onClick={() => {
+									// Add report functionality
+									console.log("Report post");
+								}}
+							>
+								Report Post
+							</Dropdown.Item>
+						</Dropdown.Menu>
+					</Dropdown>
 				</div>
 
 				{/* Navigation Arrows */}
