@@ -8,6 +8,9 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Get the actual post to repost - if it's already a repost, use the original
+  const actualPostToRepost = post?.isRepost && post?.originalPost ? post.originalPost : post;
+
   // Function to search for users for mentions
   const searchMentionUsers = useCallback(async (query, callback) => {
     if (!query) {
@@ -63,7 +66,8 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
     try {
       setError('');
       setSubmitting(true);
-      await onRepost(content);
+      // Pass the actual post ID to repost (original post if this is a repost)
+      await onRepost(content, actualPostToRepost?.id);
       handleClose();
     } catch (err) {
       console.error('Repost failed:', err);
@@ -204,21 +208,28 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
           <div className="border rounded p-3 mb-3 bg-light">
             <div className="d-flex align-items-center gap-2 mb-2">
               <img
-                src={post?.author?.photoURL || "https://i.pravatar.cc/150?img=10"}
+                src={actualPostToRepost?.author?.photoURL || "https://i.pravatar.cc/150?img=10"}
                 alt="avatar"
                 className="rounded-circle"
                 width="24"
                 height="24"
                 style={{ objectFit: "cover" }}
               />
-              <span className="fw-bold small">{post?.author?.name}</span>
-              <span className="text-muted small">@{post?.author?.username}</span>
+              <span className="fw-bold small">{actualPostToRepost?.author?.name}</span>
+              <span className="text-muted small">@{actualPostToRepost?.author?.username}</span>
             </div>
             <div className="small">
-              {post?.content && post.content.length > 100 
-                ? `${post.content.substring(0, 100)}...` 
-                : post?.content}
+              {actualPostToRepost?.content && actualPostToRepost.content.length > 100 
+                ? `${actualPostToRepost.content.substring(0, 100)}...` 
+                : actualPostToRepost?.content}
             </div>
+            {post?.isRepost && (
+              <div className="mt-2 pt-2 border-top">
+                <small className="text-muted">
+                  <i>Originally posted by {actualPostToRepost?.author?.name}</i>
+                </small>
+              </div>
+            )}
           </div>
 
           <div className="d-flex justify-content-end gap-2">

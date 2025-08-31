@@ -287,9 +287,11 @@ const PostCard = ({
 	}, []);
 
 	const handleRepost = useCallback(
-		async (content = "") => {
+		async (content = "", specificPostId = null) => {
 			try {
-				const response = await postAPI.repost(post.id, content);
+				// Use the specific post ID if provided, otherwise use the current post's ID
+				const postIdToRepost = specificPostId || post.id;
+				const response = await postAPI.repost(postIdToRepost, content);
 				console.log("Reposted successfully:", response);
 				setShowRepostModal(false);
 				return response;
