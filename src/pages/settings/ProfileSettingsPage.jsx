@@ -15,6 +15,7 @@ import { Person, Camera } from "react-bootstrap-icons";
 import { Adsense } from "@ctrl/react-adsense";
 
 import { userAPI, imageAPI } from "../../config/ApiConfig";
+import ImageCropper from "../../components/ImageCropper";
 
 const ProfileSettingsPage = () => {
 	const loaderData = useLoaderData() || {};
@@ -31,6 +32,8 @@ const ProfileSettingsPage = () => {
 	const [messageType, setMessageType] = useState("success");
 	const [profileImagePreview, setProfileImagePreview] = useState("");
 	const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
+	const [showCropModal, setShowCropModal] = useState(false);
+	const [originalImageSrc, setOriginalImageSrc] = useState("");
 
 	useEffect(() => {
 		if (user) {
@@ -190,16 +193,44 @@ const ProfileSettingsPage = () => {
 	const handleProfileImageUpload = (e) => {
 		const file = e.target.files[0];
 		if (file) {
-			// Create preview
+			// Validate file type
+			if (
+				!file.type.startsWith("image/") &&
+				!file.name.toLowerCase().endsWith(".heic")
+			) {
+				setMessage("Please select a valid image file.");
+				setMessageType("danger");
+				return;
+			}
+
+			// Validate file size (10MB limit for original)
+			if (file.size > 10 * 1024 * 1024) {
+				setMessage("Image size must be less than 10MB.");
+				setMessageType("danger");
+				return;
+			}
+
+			// Create preview for cropping
 			const reader = new FileReader();
 			reader.onload = (e) => {
-				setProfileImagePreview(e.target.result);
+				setOriginalImageSrc(e.target.result);
+				setShowCropModal(true);
 			};
 			reader.readAsDataURL(file);
-
-			// Store file for later upload
-			setSettings((prev) => ({ ...prev, profileImageFile: file }));
 		}
+	};
+
+	const handleCropComplete = (croppedFile) => {
+		// Create preview from cropped file
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			setProfileImagePreview(e.target.result);
+		};
+		reader.readAsDataURL(croppedFile);
+
+		// Store cropped file for upload
+		setSettings((prev) => ({ ...prev, profileImageFile: croppedFile }));
+		setMessage("");
 	};
 
 	return (
@@ -386,6 +417,15 @@ const ProfileSettingsPage = () => {
 							: "Save Profile"}
 				</Button>
 			</div>
+			{/* Image Cropper Modal */}
+			<ImageCropper
+				show={showCropModal}
+				onHide={() => setShowCropModal(false)}
+				imageSrc={originalImageSrc}
+				onCropComplete={handleCropComplete}
+				aspectRatio={1}
+			/>
+
 			{/* <!-- banner_ad --> */}
 			<Adsense
 				client="ca-pub-1106169546112879"

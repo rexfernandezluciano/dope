@@ -42,6 +42,7 @@ import AlertDialog from "../components/dialogs/AlertDialog";
 import UserBlockModal from "../components/UserBlockModal";
 import ReportModal from "../components/ReportModal";
 import UserSubscriptionModal from "../components/UserSubscriptionModal";
+import ImageCropper from "../components/ImageCropper";
 
 const ProfilePage = () => {
 	const { username: rawUsername, handle } = useParams();
@@ -77,6 +78,8 @@ const ProfilePage = () => {
 	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 	const [showReportModal, setShowReportModal] = useState(false);
 	const [reportType, setReportType] = useState("user");
+	const [showCropModal, setShowCropModal] = useState(false);
+	const [originalImageSrc, setOriginalImageSrc] = useState("");
 
 	const navigate = useNavigate();
 
@@ -436,12 +439,22 @@ const ProfilePage = () => {
 			// Create preview
 			const reader = new FileReader();
 			reader.onload = (e) => {
-				setProfileImagePreview(e.target.result);
+				setOriginalImageSrc(e.target.result);
+				setProfileImagePreview(e.target.result); // Set preview for initial display
+				setShowCropModal(true); // Open crop modal
 			};
 			reader.readAsDataURL(file);
 
 			// Store file for later upload
 			setEditForm((prev) => ({ ...prev, profileImageFile: file }));
+		}
+	};
+
+	const handleCropComplete = async (croppedFile) => {
+		if (croppedFile) {
+			setProfileImagePreview(URL.createObjectURL(croppedFile)); // Update preview with cropped image
+			setEditForm((prev) => ({ ...prev, profileImageFile: croppedFile })); // Store cropped file for upload
+			setShowCropModal(false);
 		}
 	};
 
@@ -980,6 +993,7 @@ const ProfilePage = () => {
 							onClick={() => {
 								setShowEditModal(false);
 								setProfileImagePreview("");
+								setOriginalImageSrc(""); // Clear original image source on cancel
 							}}
 							disabled={uploadingProfileImage}
 						>
@@ -995,6 +1009,15 @@ const ProfilePage = () => {
 					</Modal.Footer>
 				</Modal>
 			)}
+
+			{/* Image Cropper Modal */}
+			<ImageCropper
+				show={showCropModal}
+				onHide={() => setShowCropModal(false)}
+				imageSrc={originalImageSrc}
+				onCropComplete={handleCropComplete}
+				aspectRatio={1}
+			/>
 
 			{/* Post Options Modal */}
 			{showPostOptionsModal && selectedPostForOptions && (

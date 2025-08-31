@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner, Card } from "react-bootstrap";
 import "animate.css";
 import heic2any from "heic2any";
+import ImageCropper from "../../components/cropper/ImageCropper"; // Assuming ImageCropper is in this path
 
 import { authAPI, imageAPI } from "../../config/ApiConfig";
 import DopeAPI from "../../utils/dope-api-utils";
@@ -16,7 +17,7 @@ import { initializeGoogleOAuth } from "../../utils/google-auth-utils";
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
 import Stepper from "../../components/stepper/Stepper";
-import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
+import socialNetIllustration from "../../assets/images/undraw_social_networking_v4z1.svg";
 
 const SignUpPage = () => {
 	const [step, setStep] = useState(0);
@@ -39,6 +40,10 @@ const SignUpPage = () => {
 	const [gravatarUrl, setGravatarUrl] = useState(
 		"https://www.gravatar.com/avatar/00000000000000000000000000000000?d=identicon&s=200",
 	);
+
+	// For image cropping
+	const [showCropModal, setShowCropModal] = useState(false);
+	const [originalImageSrc, setOriginalImageSrc] = useState(null);
 
 	const [error, setError] = useState("");
 	const [dialogMessage] = useState("");
@@ -325,20 +330,9 @@ const SignUpPage = () => {
 			}
 
 			// Set the photo and create preview
-			setPhoto(finalFile);
-			try {
-				const previewUrl = URL.createObjectURL(finalFile);
-				if (previewUrl && typeof previewUrl === 'string' && previewUrl.startsWith('blob:')) {
-					setPhotoPreview(previewUrl);
-				} else {
-					throw new Error('Invalid blob URL generated');
-				}
-			} catch (urlError) {
-				console.error('Failed to create preview URL:', urlError);
-				setError('Failed to preview image. Please try again.');
-				setPhoto(null);
-				setPhotoPreview(null);
-			}
+			setOriginalImageSrc(URL.createObjectURL(finalFile)); // Set for cropper
+			setShowCropModal(true); // Show the cropper modal
+
 		} catch (err) {
 			console.error("Image processing failed:", err);
 			setError(
@@ -347,8 +341,32 @@ const SignUpPage = () => {
 			// Reset to default on error
 			setPhoto(null);
 			setPhotoPreview(null);
+			setOriginalImageSrc(null);
 		}
 	};
+
+	// Handler for when cropping is complete
+	const handleCropComplete = (croppedFile) => {
+		if (croppedFile) {
+			setPhoto(croppedFile); // Store the cropped file
+			try {
+				const previewUrl = URL.createObjectURL(croppedFile);
+				if (previewUrl && typeof previewUrl === 'string' && previewUrl.startsWith('blob:')) {
+					setPhotoPreview(previewUrl); // Set preview for the cropped image
+				} else {
+					throw new Error('Invalid blob URL generated for cropped image');
+				}
+			} catch (urlError) {
+				console.error('Failed to create preview URL for cropped image:', urlError);
+				setError('Failed to preview cropped image. Please try again.');
+				setPhoto(null);
+				setPhotoPreview(null);
+			}
+		}
+		setShowCropModal(false); // Hide the cropper modal
+		setOriginalImageSrc(null); // Clear the original image source
+	};
+
 
 	const handleSignup = async () => {
 		try {
@@ -822,6 +840,15 @@ const SignUpPage = () => {
 						</div>
 					)}
 				</Col>
+
+				{/* Image Cropper Modal */}
+				<ImageCropper
+					show={showCropModal}
+					onHide={() => setShowCropModal(false)}
+					imageSrc={originalImageSrc}
+					onCropComplete={handleCropComplete}
+					aspectRatio={1}
+				/>
 			</Row>
 
 			{showDialog && (
