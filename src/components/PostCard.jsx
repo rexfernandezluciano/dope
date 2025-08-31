@@ -385,7 +385,12 @@ const PostCard = ({
 									{post.author.hasBlueCheck && (
 										<CheckCircleFill className="text-primary" size={16} />
 									)}
-									{isProfileUpdate && (<small className="fw-bold">updated {post.author.gender === "male" ? "his" : "her" ? post.author.gender === "non_binary" || post.author.gender === "not_prefer_to_say" ? "their" : "their"} avatar</small>)}
+									{isProfileUpdate && (
+								<small className="fw-bold">
+									updated {post.author.gender === "male" ? "his" : 
+									post.author.gender === "female" ? "her" : "their"} avatar
+								</small>
+							)}
 									<span className="text-muted">·</span>
 									<span className="text-muted small">
 										{formatTimeAgo(post.createdAt)}
