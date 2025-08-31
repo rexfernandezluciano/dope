@@ -582,15 +582,19 @@ const HomePage = () => {
 
 	const displayedPosts = posts;
 
+	if (error) {
+		return (
+			<Container className="py-3">
+				<div className="px-3 text-center min-vh-100">
+					<p className="fw-bold">Something went wrong.</p>
+				</div>
+			</Container>
+		);
+	}
+	
 	return (
 		<>
-			<Container className="py-3 px-3">
-				{error && (
-					<Alert variant="danger" className="mb-3">
-						{error || "An error occurred. Please try again later."}
-					</Alert>
-				)}
-
+			<Container className="py-3 px-0">
 				{/* Live Broadcasting Status Bar */}
 				{isStreaming && (
 					<div className="bg-danger text-white px-3 py-2 d-flex align-items-center justify-content-between">
