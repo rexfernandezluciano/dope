@@ -682,7 +682,7 @@ export const userAPI = {
 
 	getUser: async (username) => {
 		if (username) {
-			return await apiRequest(`/users/${username}`, {
+			return await apiRequest(`/users/find/${username}`, {
 				method: "GET",
 			});
 		} else {
@@ -694,7 +694,7 @@ export const userAPI = {
 	},
 
 	getProfile: async (username) => {
-		return await apiRequest(`/users/${username}`, {
+		return await apiRequest(`/users/find/${username}`, {
 			method: "GET",
 		});
 	},
@@ -714,7 +714,7 @@ export const userAPI = {
 	},
 
 	getUserById: async (userId) => {
-		return await apiRequest(`/users/${userId}`, {
+		return await apiRequest(`/users/find/${userId}`, {
 			method: "GET",
 		});
 	},
