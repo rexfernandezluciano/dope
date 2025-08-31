@@ -92,9 +92,22 @@ const SubscriptionPage = () => {
 				try {
 					await loadPayPalSDK();
 				} catch (sdkError) {
-					throw new Error(
-						"Failed to load PayPal SDK. Please refresh and try again.",
-					);
+					console.error('PayPal SDK loading failed:', sdkError);
+					
+					// Check if we're in Replit environment
+					const isReplit = window.location.hostname.includes('replit.dev') || 
+					                 window.location.hostname.includes('replit.co') || 
+					                 window.location.hostname.includes('replit.app');
+					
+					if (isReplit) {
+						throw new Error(
+							"PayPal services are currently restricted in this environment. Please try again later or contact support for alternative payment options."
+						);
+					} else {
+						throw new Error(
+							"Failed to load PayPal SDK. Please check your internet connection and try again."
+						);
+					}
 				}
 
 				// Create PayPal payment method
@@ -104,14 +117,27 @@ const SubscriptionPage = () => {
 						"#paypal-card-container",
 					);
 				} catch (paypalError) {
-					throw new Error("PayPal card setup failed. Please try again.");
+					console.error('PayPal payment method creation failed:', paypalError);
+					
+					if (paypalError.message.includes('cancelled')) {
+						throw new Error("Payment setup was cancelled. Please try again when ready.");
+					} else if (paypalError.message.includes('Container')) {
+						throw new Error("Payment interface not ready. Please close and reopen this dialog.");
+					} else {
+						throw new Error(`PayPal setup failed: ${paypalError.message}`);
+					}
+				}
+
+				// Validate payment method ID
+				if (!paymentMethodId) {
+					throw new Error("Failed to create payment method. Please try again.");
 				}
 
 				// Add the payment method to the user's account
 				const response = await paymentAPI.addPaymentMethod({
 					type: "paypal_card",
 					paypalPaymentMethodId: paymentMethodId,
-					last4: cardForm.cardNumber.substr(-4),
+					last4: cardForm.cardNumber ? cardForm.cardNumber.substr(-4) : "****",
 					expiryMonth: cardForm.expiryDate,
 					expiryYear: cardForm.expiryYear,
 					holderName: cardForm.cardholderName,
@@ -289,12 +315,26 @@ const SubscriptionPage = () => {
 				try {
 					await loadPayPalSDK();
 					// PayPal SDK loaded successfully
+					console.log("PayPal SDK loaded successfully");
 				} catch (error) {
 					console.error("Failed to load PayPal SDK:", error);
-					setMessage(
-						"Failed to load PayPal SDK. Please refresh and try again.",
-					);
-					setMessageType("danger");
+					
+					// Check if we're in Replit environment
+					const isReplit = window.location.hostname.includes('replit.dev') || 
+					                 window.location.hostname.includes('replit.co') || 
+					                 window.location.hostname.includes('replit.app');
+					
+					if (isReplit) {
+						setMessage(
+							"PayPal services may be restricted in this development environment. Some payment features may not work as expected.",
+						);
+						setMessageType("warning");
+					} else {
+						setMessage(
+							"Failed to load PayPal services. Please check your internet connection and try again.",
+						);
+						setMessageType("danger");
+					}
 				}
 			};
 
