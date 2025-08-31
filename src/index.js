@@ -12,15 +12,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./config/FirebaseConfig.js";
 import "./config/OneSignalConfig.js";
 import { setupCSP } from "./utils/security-utils.js";
-import { setupSW } from './utils/app-check-utils';
 import { checkExternalServices } from './utils/external-api-utils';
 import "animate.css";
 import "./assets/css/app.css";
 
 // Environment is automatically set by the build process
-
-// Setup service worker and app check
-setupSW();
 
 // Check external services availability
 checkExternalServices().then(services => {
