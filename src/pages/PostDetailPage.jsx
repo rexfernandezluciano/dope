@@ -745,23 +745,31 @@ const PostDetailPage = () => {
 						/>
 						<div className="flex-grow-1">
 							<div className="d-flex align-items-center justify-content-between">
-								<div className="d-flex align-items-center gap-1">
-									<span
-										className="fw-bold"
-										style={{ cursor: "pointer", color: "inherit" }}
-										onClick={() => navigate(`/${post?.author.username}`)}
-									>
-										{post.author.name}
-									</span>
-									{post.author.hasBlueCheck && (
-										<CheckCircleFill className="text-primary" size={16} />
-									)}
-									<span className="text-muted">·</span>
-									<span className="text-muted small">
-										{formatTimeAgo(post.createdAt)}
-									</span>
-									<span className="text-muted">·</span>
-									{getPrivacyIcon(post.privacy)}
+								<div className="d-flex align-items-center gap-1 flex-wrap">
+									<div className="d-flex align-items-center gap-1 flex-shrink-0">
+										<span
+											className="fw-bold"
+											style={{ cursor: "pointer", color: "inherit" }}
+											onClick={() => navigate(`/${post?.author.username}`)}
+										>
+											{post.author.name}
+										</span>
+										{post.author.hasBlueCheck && (
+											<CheckCircleFill className="text-primary" size={16} />
+										)}
+										{post.postType === "profile_update" && (
+											<small className="fw-bold text-nowrap">
+												updated {post.author.gender === "male" ? "his" : 
+												post.author.gender === "female" ? "her" : "their"} avatar
+											</small>
+										)}
+									</div>
+									<div className="d-flex align-items-center gap-1 text-muted small flex-shrink-0">
+										<span>·</span>
+										<span>{formatTimeAgo(post.createdAt)}</span>
+										<span>·</span>
+										{getPrivacyIcon(post.privacy)}
+									</div>
 								</div>
 								<Button
 									variant="link"
