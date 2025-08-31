@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import AppRouter from "./router/AppRouter.jsx";
+import { DopeNetworkProvider } from './components/DopeNetworkProvider';
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
@@ -87,7 +88,9 @@ if (isProduction) {
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <AppRouter />
+    <DopeNetworkProvider>
+      <AppRouter />
+    </DopeNetworkProvider>
     <Analytics />
     <SpeedInsights />
   </React.StrictMode>,

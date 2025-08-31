@@ -1,7 +1,8 @@
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { useAuth, useNotifications } from '../hooks/useDopeAPI';
-import { getSubscriptionStatus } from '../utils/dope-api-utils';
+import { useAuth } from '../hooks/useDopeAPI';
+import { businessAPI, userAPI, notificationAPI } from '../config/ApiConfig';
+import { centavosToPesos } from '../utils/common-utils';
 
 // Create contexts
 const DopeNetworkContext = createContext();
@@ -12,6 +13,7 @@ const ACTION_TYPES = {
   SET_USER: 'SET_USER',
   SET_SUBSCRIPTION: 'SET_SUBSCRIPTION',
   SET_NOTIFICATIONS: 'SET_NOTIFICATIONS',
+  SET_CREDITS: 'SET_CREDITS',
   SET_LOADING: 'SET_LOADING',
   SET_ERROR: 'SET_ERROR',
   UPDATE_USER_STATS: 'UPDATE_USER_STATS',
@@ -27,10 +29,15 @@ const initialState = {
   subscription: null,
   notifications: [],
   unreadNotificationsCount: 0,
+  credits: {
+    credits: 0,
+    creditsDisplay: "₱0.00",
+    creditsInCentavos: 0
+  },
   isLoading: true,
   error: null,
-  theme: 'light',
-  preferences: {
+  theme: localStorage.getItem('dopeNetworkTheme') || 'light',
+  preferences: JSON.parse(localStorage.getItem('dopeNetworkPreferences') || '{}') || {
     autoplay: true,
     showSensitiveContent: false,
     emailNotifications: true,
@@ -57,8 +64,14 @@ const dopeNetworkReducer = (state, action) => {
     case ACTION_TYPES.SET_NOTIFICATIONS:
       return {
         ...state,
-        notifications: action.payload.notifications,
-        unreadNotificationsCount: action.payload.unreadCount
+        notifications: action.payload.notifications || [],
+        unreadNotificationsCount: action.payload.unreadCount || 0
+      };
+    
+    case ACTION_TYPES.SET_CREDITS:
+      return {
+        ...state,
+        credits: action.payload
       };
     
     case ACTION_TYPES.SET_LOADING:
@@ -126,63 +139,69 @@ const dopeNetworkReducer = (state, action) => {
 export const DopeNetworkProvider = ({ children }) => {
   const [state, dispatch] = useReducer(dopeNetworkReducer, initialState);
   const { user, loading: authLoading, error: authError } = useAuth();
-  const { 
-    notifications, 
-    unreadCount, 
-    loading: notificationsLoading 
-  } = useNotifications();
 
-  // Load user data and subscription
+  // Load user data and related information
   useEffect(() => {
     const loadUserData = async () => {
       if (user) {
         dispatch({ type: ACTION_TYPES.SET_USER, payload: user });
         
         try {
-          // Load subscription data
-          const subscription = await getSubscriptionStatus();
-          dispatch({ type: ACTION_TYPES.SET_SUBSCRIPTION, payload: subscription });
+          // Load credits data
+          const creditsData = await businessAPI.getCredits();
+          dispatch({ type: ACTION_TYPES.SET_CREDITS, payload: {
+            credits: centavosToPesos(creditsData.creditsInCentavos || 0),
+            creditsDisplay: `₱${centavosToPesos(creditsData.creditsInCentavos || 0).toFixed(2)}`,
+            creditsInCentavos: creditsData.creditsInCentavos || 0
+          }});
+        } catch (error) {
+          console.error('Failed to load credits:', error);
+          dispatch({ type: ACTION_TYPES.SET_CREDITS, payload: {
+            credits: 0,
+            creditsDisplay: "₱0.00",
+            creditsInCentavos: 0
+          }});
+        }
+
+        try {
+          // Load subscription data if available
+          if (user.subscription || user.membership?.subscription) {
+            dispatch({ type: ACTION_TYPES.SET_SUBSCRIPTION, payload: user.subscription || user.membership?.subscription });
+          }
         } catch (error) {
           console.error('Failed to load subscription:', error);
         }
-        
-        // Load preferences from localStorage
-        const savedPreferences = localStorage.getItem('dopeNetworkPreferences');
-        if (savedPreferences) {
-          try {
-            const preferences = JSON.parse(savedPreferences);
-            dispatch({ type: ACTION_TYPES.SET_PREFERENCES, payload: preferences });
-          } catch (error) {
-            console.error('Failed to parse saved preferences:', error);
-          }
+
+        try {
+          // Load notifications
+          const notificationsData = await notificationAPI.getNotifications();
+          const unreadCount = notificationsData.filter(notif => !notif.read).length;
+          dispatch({
+            type: ACTION_TYPES.SET_NOTIFICATIONS,
+            payload: {
+              notifications: notificationsData,
+              unreadCount
+            }
+          });
+        } catch (error) {
+          console.error('Failed to load notifications:', error);
         }
         
-        // Load theme from localStorage
-        const savedTheme = localStorage.getItem('dopeNetworkTheme');
-        if (savedTheme) {
-          dispatch({ type: ACTION_TYPES.SET_THEME, payload: savedTheme });
-        }
       } else {
         dispatch({ type: ACTION_TYPES.SET_USER, payload: null });
         dispatch({ type: ACTION_TYPES.SET_SUBSCRIPTION, payload: null });
+        dispatch({ type: ACTION_TYPES.SET_CREDITS, payload: {
+          credits: 0,
+          creditsDisplay: "₱0.00",
+          creditsInCentavos: 0
+        }});
       }
     };
 
-    loadUserData();
-  }, [user]);
-
-  // Update notifications
-  useEffect(() => {
-    if (!notificationsLoading) {
-      dispatch({
-        type: ACTION_TYPES.SET_NOTIFICATIONS,
-        payload: {
-          notifications,
-          unreadCount
-        }
-      });
+    if (!authLoading) {
+      loadUserData();
     }
-  }, [notifications, unreadCount, notificationsLoading]);
+  }, [user, authLoading]);
 
   // Handle auth errors
   useEffect(() => {
@@ -195,13 +214,15 @@ export const DopeNetworkProvider = ({ children }) => {
   useEffect(() => {
     dispatch({ 
       type: ACTION_TYPES.SET_LOADING, 
-      payload: authLoading || notificationsLoading 
+      payload: authLoading 
     });
-  }, [authLoading, notificationsLoading]);
+  }, [authLoading]);
 
   // Save preferences to localStorage when they change
   useEffect(() => {
-    localStorage.setItem('dopeNetworkPreferences', JSON.stringify(state.preferences));
+    if (Object.keys(state.preferences).length > 0) {
+      localStorage.setItem('dopeNetworkPreferences', JSON.stringify(state.preferences));
+    }
   }, [state.preferences]);
 
   // Save theme to localStorage when it changes
@@ -246,6 +267,11 @@ export const dopeNetworkActions = {
   setSubscription: (subscription) => ({
     type: ACTION_TYPES.SET_SUBSCRIPTION,
     payload: subscription
+  }),
+
+  setCredits: (credits) => ({
+    type: ACTION_TYPES.SET_CREDITS,
+    payload: credits
   }),
   
   updateUserStats: (stats) => ({

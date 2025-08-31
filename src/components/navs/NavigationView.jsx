@@ -31,16 +31,13 @@ import {
 	GoGear,
 } from "react-icons/go";
 import { TbBrandGoogleAnalytics } from "react-icons/tb";
-import { businessAPI } from "../../config/ApiConfig";
 
 import {
 	initializeNotifications,
 	requestNotificationPermission,
 	setupNotificationListener,
-	getUnreadNotificationCount,
 } from "../../utils/messaging-utils";
-import { getUser } from "../../utils/app-utils";
-import { centavosToPesos } from "../../utils/common-utils";
+import { useDopeNetworkContext } from "../DopeNetworkProvider";
 
 import logo from "../../assets/images/dope.png";
 import AlertDialog from "../dialogs/AlertDialog";
@@ -52,16 +49,18 @@ const NavigationView = ({ children }) => {
 	const loaderData = useLoaderData() || {};
 	const { user: loaderUserData } = loaderData; // Renamed to avoid conflict
 
+	// Use DopeNetworkProvider state
+	const { 
+		user, 
+		notifications, 
+		unreadNotificationsCount: unreadCount, 
+		credits,
+		isLoading 
+	} = useDopeNetworkContext();
+
 	const [searchQuery, setSearchQuery] = useState("");
 	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 	const [, setNotificationsEnabled] = useState(false);
-	const [user, setUser] = useState(null);
-	const [notifications, setNotifications] = useState([]);
-	const [unreadCount, setUnreadCount] = useState(0);
-	const [credits, setCredits] = useState({
-		credits: 0,
-		creditsDisplay: "₱0.00",
-	});
 
 	// Handle NProgress completion for navigation
 	useEffect(() => {
@@ -91,49 +90,26 @@ const NavigationView = ({ children }) => {
 		// Add event listener to document for all link clicks
 		document.addEventListener("click", handleLinkClick);
 
-		// Initialize user and notifications
-		if (loaderUserData && loaderUserData.uid) {
-			setUser(loaderUserData);
-			initializeNotifications(loaderUserData.uid);
+		// Initialize notifications for authenticated user
+		if (user && user.uid) {
+			initializeNotifications(user.uid);
 			requestNotificationPermission().then((granted) => {
 				setNotificationsEnabled(granted);
 			});
-		} else {
-			// If user data is not available from loader, attempt to fetch it
-			const initializeUser = async () => {
-				try {
-					const userData = await getUser();
-					if (userData) {
-						setUser(userData);
 
-						// Initialize notifications for the user
-						await initializeNotifications(userData.uid);
+			// Setup real-time notification listener
+			const unsubscribe = setupNotificationListener(
+				user.uid,
+				(newNotifications) => {
+					// This will be handled by DopeNetworkProvider
+					console.log(`${newNotifications.length} new notifications received`);
+				},
+			);
 
-						// Setup real-time notification listener
-						const unsubscribe = setupNotificationListener(
-							userData.uid,
-							(newNotifications) => {
-								setNotifications(newNotifications);
-								setUnreadCount(newNotifications.length);
-							},
-						);
-
-						// Get initial unread count
-						const initialUnreadCount = await getUnreadNotificationCount(
-							userData.uid,
-						);
-						setUnreadCount(initialUnreadCount);
-
-						// Cleanup listener on unmount
-						return () => {
-							if (unsubscribe) unsubscribe();
-						};
-					}
-				} catch (error) {
-					console.error("Error initializing user:", error);
-				}
+			return () => {
+				if (unsubscribe) unsubscribe();
+				document.removeEventListener("click", handleLinkClick);
 			};
-			initializeUser();
 		}
 
 		// Check current notification permission
@@ -141,84 +117,11 @@ const NavigationView = ({ children }) => {
 			setNotificationsEnabled(Notification.permission === "granted");
 		}
 
-		// Load credits for authenticated user
-		const loadCredits = async () => {
-			if (loaderUserData && loaderUserData.uid) {
-				try {
-					const creditsData = await businessAPI.getCredits();
-					setCredits(creditsData);
-				} catch (error) {
-					console.error("Failed to load credits:", error);
-				}
-			}
-		};
-		loadCredits();
-
 		// Cleanup function
 		return () => {
 			document.removeEventListener("click", handleLinkClick);
 		};
-	}, [location, loaderUserData]); // Dependency on loaderUserData
-
-	// Effect to setup notification listener if user is available from loader
-	useEffect(() => {
-		if (loaderUserData && loaderUserData.uid) {
-			setUser(loaderUserData);
-			initializeNotifications(loaderUserData.uid);
-
-			// Setup real-time notification listener
-			const unsubscribe = setupNotificationListener(
-				loaderUserData.uid,
-				(newNotifications) => {
-					setNotifications(newNotifications);
-					setUnreadCount(newNotifications.length);
-				},
-			);
-
-			// Get initial unread count
-			getUnreadNotificationCount(loaderUserData.uid).then(
-				(initialUnreadCount) => {
-					setUnreadCount(initialUnreadCount);
-				},
-			);
-
-			return () => {
-				if (unsubscribe) unsubscribe();
-			};
-		}
-	}, [loaderUserData]);
-
-	useEffect(() => {
-		if (user && user.uid) {
-			// Load unread notification count
-			const loadNotificationCount = async () => {
-				const count = await getUnreadNotificationCount(user.uid);
-				setUnreadCount(count);
-			};
-			loadNotificationCount();
-
-			// Setup real-time notification listener
-			const unsubscribe = setupNotificationListener(
-				user.uid,
-				(newNotifications) => {
-					setNotifications(newNotifications);
-					setUnreadCount(newNotifications.length);
-
-					// Play notification sound for new notifications (optional)
-					if (newNotifications.length > 0) {
-						// You can add a notification sound here
-						console.log(
-							`${newNotifications.length} new notifications received`,
-						);
-					}
-				},
-			);
-
-			return () => {
-				if (unsubscribe) unsubscribe();
-			};
-		}
-	}, [user]);
+	}, [location, user]);
 
 	const handleLogout = () => {
 		setShowLogoutDialog(true);
@@ -348,7 +251,7 @@ const NavigationView = ({ children }) => {
 		navigate(href);
 	};
 
-	if (!user) {
+	if (isLoading || !user) {
 		return (
 			<div className="d-flex justify-content-center align-items-center vh-100">
 				<div>Loading...</div>
@@ -583,10 +486,7 @@ const NavigationView = ({ children }) => {
 							<small className="text-success fw-bold d-flex align-items-center justify-content-center">
 								<GoStar size={14} className="me-1" />
 								<span className="text-truncate">
-									$
-									{centavosToPesos(
-										credits?.creditsInCentavos || "0.00",
-									).toFixed(2)}
+									${credits?.credits?.toFixed(2) || "0.00"}
 								</span>{" "}
 								<span
 									className="bg-light px-1 py-1 rounded-5 ms-2"
