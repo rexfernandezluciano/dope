@@ -44,7 +44,7 @@ const SessionSettingsPage = () => {
 			const data = await sessionAPI.getSessions();
 			console.log("Sessions response:", data);
 			setSessions(data.sessions || []);
-		} catch (error) {
+		} catch {
 			console.error("Error loading sessions:", error);
 			// Updated to use setError
 			setError(error.message || "Failed to load sessions");

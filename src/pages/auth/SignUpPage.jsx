@@ -5,11 +5,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner, Card } from "react-bootstrap";
 import "animate.css";
 import heic2any from "heic2any";
-import ImageCropper from "../../components/cropper/ImageCropper"; // Assuming ImageCropper is in this path
+import ImageCropper from "../../components/ImageCropper";
 
 import { authAPI, imageAPI } from "../../config/ApiConfig";
 import DopeAPI from "../../utils/dope-api-utils";
-import { getGravatar, createUsername } from "../../utils/app-utils";
+import { getGravatar } from "../../utils/app-utils";
 import { setAuthToken } from "../../config/ApiConfig";
 import { updatePageMeta, pageMetaData } from "../../utils/meta-utils";
 import { initializeGoogleOAuth } from "../../utils/google-auth-utils";
@@ -17,7 +17,7 @@ import { initializeGoogleOAuth } from "../../utils/google-auth-utils";
 import IntroductionBanner from "../../components/banners/IntroductionBanner";
 import AlertDialog from "../../components/dialogs/AlertDialog";
 import Stepper from "../../components/stepper/Stepper";
-import socialNetIllustration from "../../assets/images/undraw_social_networking_v4z1.svg";
+import socialNetIllustration from "../../assets/images/undraw_social-networking_v4z1.svg";
 
 const SignUpPage = () => {
 	const [step, setStep] = useState(0);

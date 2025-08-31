@@ -1,7 +1,7 @@
 import { initializeOneSignal, getOneSignalPlayerId, setOneSignalExternalUserId, requestNotificationPermission as requestOneSignalPermission } from "../config/OneSignalConfig";
 import { db } from "../config/FirebaseConfig";
 import { collection, addDoc, doc, setDoc, query, where, onSnapshot, orderBy, limit, getDocs, updateDoc, serverTimestamp } from "firebase/firestore";
-import { getUser } from './app-utils.js';
+// Removed unused getUser import
 
 /**
  * Initialize OneSignal and set user ID

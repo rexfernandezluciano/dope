@@ -173,7 +173,7 @@ export const convertPostToNote = (post, baseUrl) => {
   };
 };
 
-export default {
+const activityPubUtils = {
   discoverActor,
   getUserActor,
   getUserOutbox,
@@ -182,3 +182,5 @@ export default {
   parseActivityPubNote,
   convertPostToNote
 };
+
+export default activityPubUtils;
