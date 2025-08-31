@@ -174,7 +174,8 @@ a:focus {
 
 /* Comment thread connecting lines */
 .comment-thread {
-  position: relative;
+	border-left: 2px solid #e9ecef;
+	padding-left: 1rem;
 }
 
 .comment-thread .comment-item {
@@ -1177,4 +1178,46 @@ button,
 
 .mention-suggestion-item:last-child {
 	border-bottom: none;
+}
+
+/* ImageViewer styles */
+.image-viewer-modal .modal-content {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.image-viewer-modal .modal-dialog {
+	margin: 0 !important;
+	max-width: 100% !important;
+	height: 100vh !important;
+	width: 100vw !important;
+}
+
+.image-viewer-modal .modal-body {
+	padding: 0 !important;
+	height: 100vh !important;
+}
+
+/* Smooth transitions for overlay elements */
+.transition-opacity {
+	transition: opacity 0.3s ease !important;
+}
+
+/* Ensure proper z-index stacking */
+.image-viewer-modal {
+	z-index: 1060 !important;
+}
+
+/* Mobile responsiveness for image viewer */
+@media (max-width: 768px) {
+	.image-viewer-modal .position-fixed.top-0 .d-flex {
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.image-viewer-modal .position-fixed.bottom-0 .p-4 {
+		padding: 1rem !important;
+	}
 }

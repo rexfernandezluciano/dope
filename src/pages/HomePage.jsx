@@ -10,7 +10,17 @@ import {
 	Modal,
 	Image,
 } from "react-bootstrap";
-import { ChevronLeft, ChevronRight, X } from "react-bootstrap-icons";
+import {
+	Heart,
+	HeartFill,
+	ChatDots,
+	Share,
+	Filter,
+	X,
+	ChevronLeft,
+	ChevronRight,
+} from "react-bootstrap-icons";
+import ImageViewer from "../components/ImageViewer";
 
 import AgoraRTC from "agora-rtc-sdk-ng";
 
@@ -49,6 +59,7 @@ const HomePage = () => {
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
 	const [currentImages, setCurrentImages] = useState([]);
+	const [postContentForViewer, setPostContentForViewer] = useState(null); // To store post content for the viewer
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 	const [postToDelete, setPostToDelete] = useState(null);
 	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
@@ -568,14 +579,18 @@ const HomePage = () => {
 	const closeImageViewer = () => {
 		setShowImageViewer(false);
 		setCurrentImageIndex(0);
+		setPostContentForViewer(null); // Clear post content
 	};
 
-	const handleImageClick = (postImages, postId, e) => {
-		// Find the post object by its ID
-		const clickedPost = posts.find((post) => post.id === postId);
+	const handleImageClick = (postImages, clickedPost, e) => {
 		if (clickedPost && clickedPost.images) {
 			setCurrentImageIndex(0); // Reset index for new images
 			setCurrentImages(clickedPost.images);
+			setPostContentForViewer({
+				content: clickedPost.content,
+				title: clickedPost.author?.name, // Assuming author name is the title
+				// Add other relevant post details if needed
+			});
 			setShowImageViewer(true);
 		}
 	};
@@ -591,7 +606,7 @@ const HomePage = () => {
 			</Container>
 		);
 	}
-	
+
 	return (
 		<>
 			<Container className="py-3 px-0">
@@ -706,7 +721,7 @@ const HomePage = () => {
 										onShare={() => handleSharePost(post.id)}
 										onDeletePost={handleDeletePost}
 										onPostClick={(e) =>
-											handleImageClick(post.images, post.id, e)
+											handleImageClick(post.images, post, e)
 										}
 										onHashtagClick={handleHashtagClick}
 										showComments={true}
@@ -737,72 +752,13 @@ const HomePage = () => {
 
 			{/* Image Viewer Modal */}
 			{showImageViewer && (
-				<Modal
-					show={showImageViewer}
-					onHide={closeImageViewer}
-					centered
-					size="md"
-					fullscreen="md-down"
-					className="image-viewer-modal"
-				>
-					<Modal.Body className="p-0 bg-dark text-center">
-						<div className="position-relative">
-							<Button
-								variant="link"
-								className="position-absolute top-0 end-0 m-2 text-white"
-								style={{ zIndex: 10 }}
-								onClick={closeImageViewer}
-							>
-								<X size={24} />
-							</Button>
-
-							{currentImages.length > 1 && (
-								<>
-									<Button
-										variant="link"
-										className="position-absolute top-50 start-0 translate-middle-y text-white ms-2"
-										style={{ zIndex: 10 }}
-										disabled={currentImageIndex === 0}
-										onClick={() =>
-											setCurrentImageIndex((prev) => Math.max(0, prev - 1))
-										}
-									>
-										<ChevronLeft size={32} />
-									</Button>
-
-									<Button
-										variant="link"
-										className="position-absolute top-50 end-0 translate-middle-y text-white me-2"
-										style={{ zIndex: 10 }}
-										disabled={currentImageIndex === currentImages.length - 1}
-										onClick={() =>
-											setCurrentImageIndex((prev) =>
-												Math.min(currentImages.length - 1, prev + 1),
-											)
-										}
-									>
-										<ChevronRight size={32} />
-									</Button>
-								</>
-							)}
-
-							<Image
-								src={currentImages[currentImageIndex]}
-								className="w-100"
-								style={{
-									maxHeight: "100vh",
-									objectFit: "contain",
-								}}
-							/>
-
-							{currentImages.length > 1 && (
-								<div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 text-white">
-									{currentImageIndex + 1} / {currentImages.length}
-								</div>
-							)}
-						</div>
-					</Modal.Body>
-				</Modal>
+				<ImageViewer
+					images={currentImages}
+					postContent={postContentForViewer}
+					currentIndex={currentImageIndex}
+					onClose={closeImageViewer}
+					onIndexChange={setCurrentImageIndex}
+				/>
 			)}
 
 			{/* Delete Post Confirmation Dialog */}

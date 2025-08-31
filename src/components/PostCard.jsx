@@ -40,6 +40,7 @@ import { handleLikeNotification } from "../utils/notification-helpers";
 import CommentItem from "./CommentItem";
 import PollView from "./PollView";
 import RepostModal from "./RepostModal";
+import ImageViewer from "./ImageViewer";
 import NProgress from "nprogress";
 
 const PostCard = ({
@@ -1022,74 +1023,23 @@ const PostCard = ({
 				</Card.Body>
 			</Card>
 
-			{/* Image Viewer Modal */}
-			{showImageViewer && (
-				<Modal
-					show={showImageViewer}
-					onHide={closeImageViewer}
-					centered
-					size="lg"
-					className="image-viewer-modal"
-				>
-					<Modal.Body className="p-0 bg-dark text-center">
-						<div className="position-relative">
-							<Button
-								variant="link"
-								className="position-absolute top-0 end-0 m-2 text-white"
-								style={{ zIndex: 10 }}
-								onClick={closeImageViewer}
-							>
-								<X size={24} />
-							</Button>
-
-							{currentImages.length > 1 && (
-								<>
-									<Button
-										variant="link"
-										className="position-absolute top-50 start-0 translate-middle-y text-white ms-2"
-										style={{ zIndex: 10 }}
-										disabled={currentImageIndex === 0}
-										onClick={() =>
-											setCurrentImageIndex((prev) => Math.max(0, prev - 1))
-										}
-									>
-										<ChevronLeft size={32} />
-									</Button>
-
-									<Button
-										variant="link"
-										className="position-absolute top-50 end-0 translate-middle-y text-white me-2"
-										style={{ zIndex: 10 }}
-										disabled={currentImageIndex === currentImages.length - 1}
-										onClick={() =>
-											setCurrentImageIndex((prev) =>
-												Math.min(currentImages.length - 1, prev + 1),
-											)
-										}
-									>
-										<ChevronRight size={32} />
-									</Button>
-								</>
-							)}
-
-							<Image
-								src={currentImages[currentImageIndex]}
-								className="w-100"
-								style={{
-									maxHeight: "80vh",
-									objectFit: "contain",
-								}}
-							/>
-
-							{currentImages.length > 1 && (
-								<div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 text-white">
-									{currentImageIndex + 1} / {currentImages.length}
-								</div>
-							)}
-						</div>
-					</Modal.Body>
-				</Modal>
-			)}
+			{/* Image Viewer */}
+			<ImageViewer
+				show={showImageViewer}
+				onHide={closeImageViewer}
+				images={currentImages}
+				initialIndex={currentImageIndex}
+				post={post}
+				currentUser={currentUser}
+				onLike={handleLike}
+				onComment={handleCommentToggle}
+				onShare={handleShare}
+				onPostOptions={openPostOptionsModal}
+				onHashtagClick={handleHashtagClick}
+				onMentionClick={handleMentionClick}
+				onLinkClick={handleLinkClick}
+				onNavigateToProfile={(username) => navigate(`/${username}`)}
+			/>
 
 			{/* Post Options Modal */}
 			<Modal
