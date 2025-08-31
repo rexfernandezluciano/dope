@@ -173,8 +173,9 @@ export const DopeNetworkProvider = ({ children }) => {
         }
 
         try {
-          // Load notifications
-          const notificationsData = await notificationAPI.getNotifications();
+          // Load notifications from Firestore
+          const { getUserNotifications } = await import('../utils/messaging-utils');
+          const notificationsData = await getUserNotifications(user.uid, 20);
           const unreadCount = notificationsData.filter(notif => !notif.read).length;
           dispatch({
             type: ACTION_TYPES.SET_NOTIFICATIONS,

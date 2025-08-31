@@ -43,6 +43,7 @@ const NotificationsDropdown = ({ notifications = [], unreadCount = 0, user }) =>
 		
 		setLoading(true);
 		try {
+			// Use Firestore notifications directly since API endpoint doesn't exist
 			const allNotifs = await getUserNotifications(user.uid, 50);
 			setAllNotifications(allNotifs || []);
 		} catch (error) {
