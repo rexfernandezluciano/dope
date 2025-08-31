@@ -80,13 +80,13 @@ const getMetaData = (url, params = {}) => {
 			keywords: `search, ${params.query || "posts, people"}, DOPE Network`,
 			ogImage: "/assets/cover.png",
 		},
-		"/analytics": {
+		"/dashboard/analytics": {
 			title: "Analytics - DOPE Network",
 			description: "View your profile analytics, engagement metrics, and growth insights.",
 			keywords: "analytics, insights, metrics, engagement, DOPE Network",
 			ogImage: "/assets/cover.png",
 		},
-		"/subscription": {
+		"/account/billing/subscription": {
 			title: "Subscription - DOPE Network",
 			description: "Manage your DOPE Network subscription and premium features.",
 			keywords: "subscription, premium, features, billing, DOPE Network",
@@ -164,13 +164,13 @@ const getMetaData = (url, params = {}) => {
 			keywords: "reset password, new password, account recovery, DOPE Network",
 			ogImage: "/assets/cover.png",
 		},
-		"/business": {
+		"/dashboard/business": {
 			title: "Business Manager - DOPE Network",
 			description: "Create, Manage, and Earn on Ads with Business Ad Campaign.",
 			keywords: "advertise, business, ads, creators, DOPE Network",
 			ogImage: "/assets/cover.png",
 		},
-		"/my-subscription": {
+		"/manage/creators/subscription": {
 			title: "My Subscriptiom - DOPE Network",
 			description: "Manage your subscription and creator's membership..",
 			keywords: "subscription, business, ads, creators, DOPE Network",
