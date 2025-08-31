@@ -77,6 +77,7 @@ const ProfilePage = () => {
 	const [isBlocked, setIsBlocked] = useState(false);
 	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 	const [showReportModal, setShowReportModal] = useState(false);
+	const [reportType, setReportType] = useState("user");
 	const [showCropModal, setShowCropModal] = useState(false);
 	const [originalImageSrc, setOriginalImageSrc] = useState("");
 
