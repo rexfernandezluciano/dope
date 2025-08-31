@@ -40,6 +40,11 @@ const BusinessPage = lazy(() => import("../pages/BusinessPage"));
 const MySubscriptionsPage = lazy(() => import("../pages/MySubscriptionsPage"));
 const ForgotPasswordPage = lazy(() => import("../pages/auth/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("../pages/auth/ResetPasswordPage"));
+// Payment and Credits pages
+const PaymentSuccessPage = lazy(() => import("../pages/payments/PaymentSuccessPage"));
+const PaymentCancelPage = lazy(() => import("../pages/payments/PaymentCancelPage"));
+const CreditsSuccessPage = lazy(() => import("../pages/credits/CreditsSuccessPage"));
+const CreditsCancelPage = lazy(() => import("../pages/credits/CreditsCancelPage"));
 // Lazy load settings route components
 const SessionSettingsPage = lazy(() =>
 	import("../pages/settings/SessionSettingsPage"),
@@ -328,6 +333,26 @@ const router = createBrowserRouter([
 				<OAuthAuthorizePage />
 			</RequireAuth>
 		),
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/payments/success",
+		element: <PaymentSuccessPage />,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/payments/cancel",
+		element: <PaymentCancelPage />,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/credits/success",
+		element: <CreditsSuccessPage />,
+		hydrateFallbackElement: <LoadingView />,
+	},
+	{
+		path: "/credits/cancel",
+		element: <CreditsCancelPage />,
 		hydrateFallbackElement: <LoadingView />,
 	},
 ]);

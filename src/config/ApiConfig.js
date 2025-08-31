@@ -1549,6 +1549,14 @@ export const subscriptionAPI = {
 			`/subscriptions/history${queryString ? `?${queryString}` : ""}`,
 		);
 	},
+
+	// Confirm payment after PayPal redirect
+	confirmPayment: async (paymentData) => {
+		return await apiRequest("/payments/confirm", {
+			method: "POST",
+			data: paymentData,
+		});
+	},
 };
 
 // Admin API
