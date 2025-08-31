@@ -786,19 +786,6 @@ const PostDetailPage = () => {
 									<ThreeDots size={16} />
 								</Button>
 							</div>
-									className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
-									style={{
-										width: "32px",
-										height: "32px",
-										background: "none",
-										border: "none !important",
-										boxShadow: "none !important",
-									}}
-									onClick={() => setShowPostOptionsModal(true)}
-								>
-									<ThreeDots size={16} />
-								</Button>
-							</div>
 
 							{post.content && (
 								<div className="mb-2 mt-2 fs-5">
