@@ -72,12 +72,11 @@ const ProfilePage = () => {
 	const [profileImagePreview, setProfileImagePreview] = useState("");
 	const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
 	const [isFederatedProfile, setIsFederatedProfile] = useState(false);
-	const [federatedActor, setFederatedActor] = useState(null);
+	const [federatedActor] = useState(null);
 	const [showBlockModal, setShowBlockModal] = useState(false);
 	const [isBlocked, setIsBlocked] = useState(false);
 	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 	const [showReportModal, setShowReportModal] = useState(false);
-	const [reportType, setReportType] = useState("user");
 	const [showCropModal, setShowCropModal] = useState(false);
 	const [originalImageSrc, setOriginalImageSrc] = useState("");
 
@@ -244,7 +243,7 @@ const ProfilePage = () => {
 		};
 
 		loadProfile();
-	}, [currentUser?.uid]);
+	}, [currentUser?.uid, username]);
 
 	// Update page meta data when profile user changes
 	useEffect(() => {
