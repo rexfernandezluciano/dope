@@ -90,12 +90,14 @@ class HttpClient {
 
 	async makeRequest(endpoint, options = {}) {
 		// Add /v1 prefix if not already present, except for WebFinger and ActivityPub endpoints
-		const isWebFingerOrActivityPub = endpoint.startsWith("/.well-known") ||
+		const isWebFingerOrActivityPub =
+			endpoint.startsWith("/.well-known") ||
 			endpoint.startsWith("/activitypub");
 
-		const normalizedEndpoint = endpoint.startsWith("/v1") || isWebFingerOrActivityPub
-			? endpoint
-			: `/v1${endpoint}`;
+		const normalizedEndpoint =
+			endpoint.startsWith("/v1") || isWebFingerOrActivityPub
+				? endpoint
+				: `/v1${endpoint}`;
 		const url = `${this.currentBaseURL}${normalizedEndpoint}`;
 
 		try {
@@ -135,7 +137,8 @@ class HttpClient {
 					});
 				} else if (status === 409) {
 					// Handle conflict errors specifically
-					errorMsg = data?.message || data?.error || `Conflict error (${status})`;
+					errorMsg =
+						data?.message || data?.error || `Conflict error (${status})`;
 					console.log("🚨 409 Conflict Details:", {
 						endpoint,
 						message: data?.message,
@@ -146,7 +149,7 @@ class HttpClient {
 					// Handle validation errors
 					errorMsg = data?.message || data?.error || "Validation failed";
 					if (data?.details && Array.isArray(data.details)) {
-						errorMsg += `: ${data.details.join(', ')}`;
+						errorMsg += `: ${data.details.join(", ")}`;
 					}
 					console.log("🚨 422 Validation Error Details:", {
 						endpoint,
@@ -156,7 +159,8 @@ class HttpClient {
 					});
 				} else if (status === 429) {
 					// Handle rate limiting
-					const retryAfter = error.response.headers['retry-after'] || data?.retryAfter;
+					const retryAfter =
+						error.response.headers["retry-after"] || data?.retryAfter;
 					errorMsg = data?.message || "Rate limit exceeded";
 
 					console.log("🚨 429 Rate Limit Details:", {
@@ -172,7 +176,10 @@ class HttpClient {
 						errorMsg += `. Please wait ${retryAfter} seconds before trying again.`;
 					}
 				} else if (status >= 500) {
-					errorMsg = data?.message || error.response.statusText || `Server error (${status})`;
+					errorMsg =
+						data?.message ||
+						error.response.statusText ||
+						`Server error (${status})`;
 					console.log("🚨 Server Error Details:", {
 						status,
 						endpoint,
@@ -180,7 +187,10 @@ class HttpClient {
 						url: error.config?.url,
 					});
 				} else {
-					errorMsg = data?.message || error.response.statusText || `Request failed (${status})`;
+					errorMsg =
+						data?.message ||
+						error.response.statusText ||
+						`Request failed (${status})`;
 				}
 
 				console.log("🚨 HTTP Error Response:", {
@@ -197,7 +207,8 @@ class HttpClient {
 
 				// Add retry-after header for rate limiting
 				if (status === 429) {
-					apiError.retryAfter = error.response.headers['retry-after'] || data?.retryAfter;
+					apiError.retryAfter =
+						error.response.headers["retry-after"] || data?.retryAfter;
 				}
 
 				throw apiError;
@@ -221,7 +232,7 @@ class HttpClient {
 	}
 
 	async requestWithFailover(endpoint, options = {}) {
-		const endpoints = API_ENDPOINTS.filter(url => url !== "");
+		const endpoints = API_ENDPOINTS.filter((url) => url !== "");
 		let lastError;
 
 		// Helper function to determine if error should trigger failover
@@ -245,7 +256,9 @@ class HttpClient {
 					// API responded with an error (like 401, 404, etc.), don't try other endpoints
 					throw error;
 				}
-				console.log("Proxy request failed due to network error, trying direct API...");
+				console.log(
+					"Proxy request failed due to network error, trying direct API...",
+				);
 			}
 		}
 
@@ -260,7 +273,10 @@ class HttpClient {
 					// API responded with an error, don't try other endpoints
 					throw error;
 				}
-				console.log(`Network error for ${baseUrl}, trying next endpoint:`, error.message);
+				console.log(
+					`Network error for ${baseUrl}, trying next endpoint:`,
+					error.message,
+				);
 				continue;
 			}
 		}
@@ -281,7 +297,7 @@ export const apiRequest = async (endpoint, options = {}) => {
 		if (!response?.ok) {
 			throw new Error(
 				response?.data?.message ||
-				`HTTP ${response?.status}: ${response?.statusText}`,
+					`HTTP ${response?.status}: ${response?.statusText}`,
 			);
 		}
 
@@ -507,9 +523,12 @@ export const authAPI = {
 	},
 
 	validateVerificationId: async (verificationId) => {
-		return await apiRequest(`/auth/validate-verification-id/${verificationId}`, {
-			method: "GET",
-		});
+		return await apiRequest(
+			`/auth/validate-verification-id/${verificationId}`,
+			{
+				method: "GET",
+			},
+		);
 	},
 
 	forgotPassword: async (email) => {
@@ -533,9 +552,12 @@ export const authAPI = {
 	},
 
 	checkEmailExists: async (email) => {
-		return await apiRequest(`/auth/check-email?email=${encodeURIComponent(email)}`, {
-			method: "GET",
-		});
+		return await apiRequest(
+			`/auth/check-email?email=${encodeURIComponent(email)}`,
+			{
+				method: "GET",
+			},
+		);
 	},
 };
 
@@ -628,7 +650,12 @@ export const oauthAPI = {
 	},
 
 	// Helper function to get authorization URL
-	getAuthorizationUrl: (clientId, redirectUri, scope = "read write", state = null) => {
+	getAuthorizationUrl: (
+		clientId,
+		redirectUri,
+		scope = "read write",
+		state = null,
+	) => {
 		const params = new URLSearchParams({
 			response_type: "code",
 			client_id: clientId,
@@ -667,7 +694,7 @@ export const userAPI = {
 	},
 
 	getProfile: async (username) => {
-		return await apiRequest(`/auth/me`, {
+		return await apiRequest(`/users/${username}`, {
 			method: "GET",
 		});
 	},
@@ -679,10 +706,10 @@ export const userAPI = {
 		});
 	},
 
-	updateProfile: async (userData) => {
-		return await apiRequest("/user/profile", {
-			method: "PUT",
-			data: userData,
+	updateProfile: async (url) => {
+		return await apiRequest("/users/profile-picture", {
+			method: "POST",
+			data: { photoURL: url },
 		});
 	},
 
@@ -733,7 +760,9 @@ export const userAPI = {
 			search: query,
 			...params,
 		});
-		const response = await apiRequest(`/users/search?query=${encodeURIComponent(query)}&limit=5`);
+		const response = await apiRequest(
+			`/users/search?query=${encodeURIComponent(query)}&limit=5`,
+		);
 		return response.users || [];
 	},
 
@@ -775,7 +804,9 @@ export const userAPI = {
 
 	getRecommendedUsers: (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
-		return apiRequest(`/users/recommended${queryString ? `?${queryString}` : ""}`);
+		return apiRequest(
+			`/users/recommended${queryString ? `?${queryString}` : ""}`,
+		);
 	},
 };
 
@@ -792,7 +823,7 @@ export const postAPI = {
 		const queryParams = new URLSearchParams({
 			page: page.toString(),
 			limit: limit.toString(),
-			...params
+			...params,
 		});
 		return apiRequest(`/v1/posts?${queryParams.toString()}`);
 	},
@@ -1142,19 +1173,36 @@ export const blockAPI = {
 // Recommendation API
 export const recommendationAPI = {
 	getUserRecommendations: async (params = {}) => {
-		const queryString = new URLSearchParams({ type: 'users', limit: 10, ...params }).toString();
-		return await apiRequest(`/recommendations${queryString ? `?${queryString}` : ""}`);
+		const queryString = new URLSearchParams({
+			type: "users",
+			limit: 10,
+			...params,
+		}).toString();
+		return await apiRequest(
+			`/recommendations${queryString ? `?${queryString}` : ""}`,
+		);
 	},
 
 	getPostRecommendations: async (params = {}) => {
-		const queryString = new URLSearchParams({ type: 'posts', limit: 10, ...params }).toString();
-		return await apiRequest(`/recommendations${queryString ? `?${queryString}` : ""}`);
+		const queryString = new URLSearchParams({
+			type: "posts",
+			limit: 10,
+			...params,
+		}).toString();
+		return await apiRequest(
+			`/recommendations${queryString ? `?${queryString}` : ""}`,
+		);
 	},
 
 	getTrendingHashtags: async (params = {}) => {
-		const queryString = new URLSearchParams({ limit: 10, ...params }).toString();
-		return await apiRequest(`/recommendations/trending${queryString ? `?${queryString}` : ""}`);
-	}
+		const queryString = new URLSearchParams({
+			limit: 10,
+			...params,
+		}).toString();
+		return await apiRequest(
+			`/recommendations/trending${queryString ? `?${queryString}` : ""}`,
+		);
+	},
 };
 
 // Analytics API
@@ -1228,7 +1276,7 @@ export const businessAPI = {
 	getCampaignAnalytics: async (id, params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
 		return await apiRequest(
-			`/business/campaigns/${id}/analytics${queryString ? `?${queryString}` : ""}`
+			`/business/campaigns/${id}/analytics${queryString ? `?${queryString}` : ""}`,
 		);
 	},
 
@@ -1236,7 +1284,7 @@ export const businessAPI = {
 		const queryString = new URLSearchParams(params).toString();
 		return await apiRequest(
 			`/business/analytics${queryString ? `?${queryString}` : ""}`,
-			{ method: "GET" }
+			{ method: "GET" },
 		);
 	},
 
@@ -1286,10 +1334,11 @@ export const paymentAPI = {
 	},
 
 	// Get payment methods
-	getPaymentMethods: () => apiRequest('/payments/methods', { method: 'GET' }),
+	getPaymentMethods: () => apiRequest("/payments/methods", { method: "GET" }),
 
 	// Get payment providers and membership plans
-	getPaymentProviders: () => apiRequest('/payments/providers', { method: 'GET' }),
+	getPaymentProviders: () =>
+		apiRequest("/payments/providers", { method: "GET" }),
 
 	deletePaymentMethod: async (paymentMethodId) => {
 		return await apiRequest(`/payments/methods/${paymentMethodId}`, {
@@ -1490,7 +1539,9 @@ export const subscriptionAPI = {
 	// Get subscription history
 	getSubscriptionHistory: async (params = {}) => {
 		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(`/subscriptions/history${queryString ? `?${queryString}` : ""}`);
+		return await apiRequest(
+			`/subscriptions/history${queryString ? `?${queryString}` : ""}`,
+		);
 	},
 };
 
@@ -1527,47 +1578,49 @@ export const adminAPI = {
 // ActivityPub API
 export const activityPubAPI = {
 	getWebfinger: async (resource) => {
-		return await apiRequest(`/.well-known/webfinger?resource=${encodeURIComponent(resource)}`);
+		return await apiRequest(
+			`/.well-known/webfinger?resource=${encodeURIComponent(resource)}`,
+		);
 	},
 
 	getUserActor: async (username) => {
 		return await apiRequest(`/activitypub/users/${username}`, {
 			headers: {
-				'Accept': 'application/activity+json'
-			}
+				Accept: "application/activity+json",
+			},
 		});
 	},
 
 	getUserOutbox: async (username, page = null) => {
-		const url = `/activitypub/users/${username}/outbox${page ? `?page=${page}` : ''}`;
+		const url = `/activitypub/users/${username}/outbox${page ? `?page=${page}` : ""}`;
 		return await apiRequest(url, {
 			headers: {
-				'Accept': 'application/activity+json'
-			}
+				Accept: "application/activity+json",
+			},
 		});
 	},
 
 	getUserFollowers: async (username) => {
 		return await apiRequest(`/activitypub/users/${username}/followers`, {
 			headers: {
-				'Accept': 'application/activity+json'
-			}
+				Accept: "application/activity+json",
+			},
 		});
 	},
 
 	getUserFollowing: async (username) => {
 		return await apiRequest(`/activitypub/users/${username}/following`, {
 			headers: {
-				'Accept': 'application/activity+json'
-			}
+				Accept: "application/activity+json",
+			},
 		});
 	},
 
 	getPostActivity: async (postId) => {
 		return await apiRequest(`/activitypub/posts/${postId}`, {
 			headers: {
-				'Accept': 'application/activity+json'
-			}
+				Accept: "application/activity+json",
+			},
 		});
 	},
 };
@@ -1598,7 +1651,8 @@ export const api = {
 	likePost: postAPI.likePost,
 
 	// Polls
-	votePoll: (postId, optionIndex) => apiRequest(`/posts/${postId}/vote`, "POST", { optionIndex }),
+	votePoll: (postId, optionIndex) =>
+		apiRequest(`/posts/${postId}/vote`, "POST", { optionIndex }),
 
 	// Users
 	getUser: userAPI.getUser,

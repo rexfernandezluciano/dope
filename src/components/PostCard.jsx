@@ -53,6 +53,7 @@ const PostCard = ({
 }) => {
 	// Check if this is an ad post
 	const isAdPost = post.isAd && post.adCampaign;
+	const isProfileUpdate = post.postType === "profile_update";
 	const navigate = useNavigate();
 	const [showImageViewer, setShowImageViewer] = useState(false);
 	const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -384,6 +385,7 @@ const PostCard = ({
 									{post.author.hasBlueCheck && (
 										<CheckCircleFill className="text-primary" size={16} />
 									)}
+									{isProfileUpdate && (<small className="fw-bold">updated {post.author.gender === "male" ? "his" : "her" ? post.author.gender === "non_binary" || post.author.gender === "not_prefer_to_say" ? "their" : "their"} avatar</small>)}
 									<span className="text-muted">·</span>
 									<span className="text-muted small">
 										{formatTimeAgo(post.createdAt)}

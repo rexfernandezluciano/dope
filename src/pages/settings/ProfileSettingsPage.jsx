@@ -88,26 +88,35 @@ const ProfileSettingsPage = () => {
 		try {
 			console.log("Uploading image:", finalFile.name, "Size:", finalFile.size);
 			const response = await imageAPI.uploadImages(formData);
-			
+
 			if (!response) {
 				throw new Error("No response received from server");
 			}
-			
-			if (!response.imageUrls || !Array.isArray(response.imageUrls) || response.imageUrls.length === 0) {
+
+			if (
+				!response.imageUrls ||
+				!Array.isArray(response.imageUrls) ||
+				response.imageUrls.length === 0
+			) {
 				throw new Error("Invalid response: No image URLs returned");
 			}
-			
+
 			const imageUrl = response.imageUrls[0];
-			if (!imageUrl || typeof imageUrl !== 'string') {
+			if (!imageUrl || typeof imageUrl !== "string") {
 				throw new Error("Invalid image URL received");
 			}
-			
+
 			console.log("Image upload successful:", imageUrl);
 			return imageUrl;
 		} catch (error) {
 			console.error("Error uploading image:", error);
-			if (error.message.includes("Network Error") || error.message.includes("fetch")) {
-				throw new Error("Network error: Please check your connection and try again");
+			if (
+				error.message.includes("Network Error") ||
+				error.message.includes("fetch")
+			) {
+				throw new Error(
+					"Network error: Please check your connection and try again",
+				);
 			}
 			throw error;
 		}
@@ -150,7 +159,7 @@ const ProfileSettingsPage = () => {
 					const uploadedUrl = await uploadProfileImage(
 						settings.profileImageFile,
 					);
-					updateData.photoURL = uploadedUrl;
+					await userAPI.updateProfile(uploadedUrl);
 					// Remove the file from update data
 					delete updateData.profileImageFile;
 				} catch (uploadError) {
