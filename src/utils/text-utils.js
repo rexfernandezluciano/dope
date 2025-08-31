@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { userAPI } from '../config/ApiConfig';
 
 // Component to resolve mention UIDs to display names
-export const MentionComponent = ({ identifier, onMentionClick }) => {
+export const MentionComponent = ({ identifier, onMentionClick, displayName }) => {
 	const [userData, setUserData] = useState(null);
 	const [loading, setLoading] = useState(true);
 
@@ -28,25 +28,67 @@ export const MentionComponent = ({ identifier, onMentionClick }) => {
 	}, [identifier]);
 
 	if (loading) {
-		return <span className="mention-loading">@{identifier}</span>;
+		return (
+			<span 
+				className="text-primary fw-bold mention-loading"
+				style={{
+					cursor: 'pointer',
+					textDecoration: 'none',
+					borderRadius: '4px',
+					padding: '2px 4px',
+					backgroundColor: 'rgba(13, 110, 253, 0.1)',
+				}}
+			>
+				{displayName ? `@${displayName}` : `@${identifier}`}
+			</span>
+		);
 	}
 
 	if (!userData) {
-		return <span className="mention-error">@{identifier}</span>;
+		return (
+			<span 
+				className="text-primary fw-bold mention-error"
+				style={{
+					cursor: 'pointer',
+					textDecoration: 'none',
+					borderRadius: '4px',
+					padding: '2px 4px',
+					backgroundColor: 'rgba(13, 110, 253, 0.1)',
+				}}
+			>
+				{displayName ? `@${displayName}` : `@${identifier}`}
+			</span>
+		);
 	}
 
 	return (
 		<span
-			className="mention-link"
+			className="text-primary fw-bold mention-link"
+			style={{
+				cursor: 'pointer',
+				textDecoration: 'none',
+				borderRadius: '4px',
+				padding: '2px 4px',
+				backgroundColor: 'rgba(13, 110, 253, 0.1)',
+				transition: 'all 0.2s ease'
+			}}
 			onClick={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
 				if (onMentionClick) {
+					// Always navigate using username, not uid
 					onMentionClick(userData.username);
 				}
 			}}
+			onMouseEnter={(e) => {
+				e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.2)';
+			}}
+			onMouseLeave={(e) => {
+				e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+			}}
+			title={`${userData.name} (@${userData.username})`}
 		>
-			{userData.name}
+			{displayName || userData.name}
 		</span>
 	);
 };
@@ -145,31 +187,12 @@ const parseLineContent = (line, handlers) => {
 				// Formatted mention: @[Display Name](uid)
 				const [, displayName, uid] = formattedMentionMatch;
 				elements.push(
-					<span
+					<MentionComponent
 						key={`mention-${match.index}`}
-						className="text-primary fw-bold mention-link"
-						style={{
-							cursor: 'pointer',
-							textDecoration: 'none',
-							borderRadius: '4px',
-							padding: '2px 4px',
-							backgroundColor: 'rgba(13, 110, 253, 0.1)',
-							transition: 'all 0.2s ease'
-						}}
-						onClick={(e) => {
-							e.stopPropagation();
-							handlers.onMentionClick(uid);
-						}}
-						onMouseEnter={(e) => {
-							e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.2)';
-						}}
-						onMouseLeave={(e) => {
-							e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
-						}}
-						title={`${displayName} (${uid})`}
-					>
-						@{displayName}
-					</span>
+						identifier={uid}
+						onMentionClick={handlers.onMentionClick}
+						displayName={displayName}
+					/>
 				);
 			} else {
 				// Simple mention: @username or @uid - resolve to display name
