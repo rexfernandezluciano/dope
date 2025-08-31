@@ -6,18 +6,18 @@ import { userAPI } from '../config/ApiConfig';
 
 // Component to resolve mention UIDs to display names
 const MentionComponent = ({ uid, onMentionClick }) => {
-	const [displayName, setDisplayName] = useState(`@${uid}`);
+	const [userData, setUserData] = useState(null);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
 		const fetchUserData = async () => {
 			try {
-				const userData = await userAPI.getUserById(uid);
-				setDisplayName(`@${userData.name || userData.displayName || uid}`);
+				const user = await userAPI.getUserById(uid);
+				setUserData(user);
 			} catch (error) {
 				console.error('Failed to resolve mention:', error);
-				// Keep the uid as fallback
-				setDisplayName(`@${uid}`);
+				// Set fallback data
+				setUserData({ name: uid, username: uid });
 			} finally {
 				setLoading(false);
 			}
@@ -28,17 +28,33 @@ const MentionComponent = ({ uid, onMentionClick }) => {
 		}
 	}, [uid]);
 
+	const displayName = userData?.name || userData?.displayName || uid;
+	const username = userData?.username || uid;
+
 	return (
 		<span
-			className="text-info fw-bold"
-			style={{ cursor: 'pointer' }}
+			className="text-primary fw-bold mention-link"
+			style={{ 
+				cursor: 'pointer',
+				textDecoration: 'none',
+				borderRadius: '4px',
+				padding: '2px 4px',
+				backgroundColor: 'rgba(13, 110, 253, 0.1)',
+				transition: 'all 0.2s ease'
+			}}
 			onClick={(e) => {
 				e.stopPropagation();
-				onMentionClick(uid);
+				onMentionClick(username);
 			}}
-			title={`User ID: ${uid}`}
+			onMouseEnter={(e) => {
+				e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.2)';
+			}}
+			onMouseLeave={(e) => {
+				e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+			}}
+			title={`${displayName} (@${username})`}
 		>
-			{loading ? `@${uid}` : displayName}
+			@{loading ? uid : displayName}
 		</span>
 	);
 };
@@ -86,7 +102,7 @@ const parseLineContent = (line, handlers) => {
 	// Regular expressions for different content types
 	const patterns = {
 		hashtag: /#[\w\u00c0-\u024f\u1e00-\u1eff]+/g,
-		mention: /@[\w\u00c0-\u024f\u1e00-\u1eff]+/g,
+		mention: /@\[([^\]]+)\]\(([^)]+)\)|@[\w\u00c0-\u024f\u1e00-\u1eff]+/g,
 		url: /(https?:\/\/[^\s]+)/g,
 		email: /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g
 	};
@@ -130,15 +146,50 @@ const parseLineContent = (line, handlers) => {
 				</span>
 			);
 		} else if (matchedText.startsWith('@')) {
-			// Mention - resolve uid to display name
-			const uid = matchedText.substring(1);
-			elements.push(
-				<MentionComponent
-					key={`mention-${match.index}`}
-					uid={uid}
-					onMentionClick={handlers.onMentionClick}
-				/>
-			);
+			// Check if it's a formatted mention @[Name](uid) or simple @username
+			const formattedMentionMatch = matchedText.match(/@\[([^\]]+)\]\(([^)]+)\)/);
+			
+			if (formattedMentionMatch) {
+				// Formatted mention: @[Display Name](uid)
+				const [, displayName, uid] = formattedMentionMatch;
+				elements.push(
+					<span
+						key={`mention-${match.index}`}
+						className="text-primary fw-bold mention-link"
+						style={{ 
+							cursor: 'pointer',
+							textDecoration: 'none',
+							borderRadius: '4px',
+							padding: '2px 4px',
+							backgroundColor: 'rgba(13, 110, 253, 0.1)',
+							transition: 'all 0.2s ease'
+						}}
+						onClick={(e) => {
+							e.stopPropagation();
+							handlers.onMentionClick(uid);
+						}}
+						onMouseEnter={(e) => {
+							e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.2)';
+						}}
+						onMouseLeave={(e) => {
+							e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+						}}
+						title={`${displayName} (${uid})`}
+					>
+						@{displayName}
+					</span>
+				);
+			} else {
+				// Simple mention: @username or @uid - resolve to display name
+				const identifier = matchedText.substring(1);
+				elements.push(
+					<MentionComponent
+						key={`mention-${match.index}`}
+						uid={identifier}
+						onMentionClick={handlers.onMentionClick}
+					/>
+				);
+			}
 		} else if (matchedText.startsWith('http')) {
 			// URL
 			elements.push(
@@ -205,8 +256,25 @@ export const extractHashtags = (text) => {
  */
 export const extractMentions = (text) => {
 	if (!text) return [];
-	const matches = text.match(/@[\w\u00c0-\u024f\u1e00-\u1eff]+/g);
-	return matches ? matches.map(mention => mention.substring(1)) : [];
+	
+	// Extract formatted mentions @[Name](uid)
+	const formattedMentions = [];
+	const formattedMatches = text.match(/@\[([^\]]+)\]\(([^)]+)\)/g);
+	if (formattedMatches) {
+		formattedMentions.push(...formattedMatches.map(match => {
+			const uidMatch = match.match(/@\[([^\]]+)\]\(([^)]+)\)/);
+			return uidMatch ? uidMatch[2] : match.substring(1);
+		}));
+	}
+	
+	// Extract simple mentions @username
+	const simpleMentions = [];
+	const simpleMatches = text.match(/@[\w\u00c0-\u024f\u1e00-\u1eff]+/g);
+	if (simpleMatches) {
+		simpleMentions.push(...simpleMatches.map(mention => mention.substring(1)));
+	}
+	
+	return [...formattedMentions, ...simpleMentions];
 };
 
 /**

@@ -355,7 +355,7 @@ button,
   white-space: nowrap;
 }
 
-/* Responsive text utilities */
+/* Responsive text sizing for very small screens */
 @media (max-width: 576px) {
   .text-truncate-username {
     max-width: 120px;
@@ -1083,12 +1083,12 @@ button,
 		height: 100vh !important;
 		height: 100dvh !important; /* Use dynamic viewport height if supported */
 	}
-	
+
 	.post-composer-modal .modal-content {
 		height: 100vh !important;
 		height: 100dvh !important; /* Use dynamic viewport height if supported */
 	}
-	
+
 	/* Prevent body scroll when modal is open */
 	body.modal-open {
 		overflow: hidden !important;
@@ -1096,12 +1096,12 @@ button,
 		width: 100% !important;
 		height: 100% !important;
 	}
-	
+
 	/* Fix for iOS Safari address bar */
 	.post-composer-modal .modal-header {
 		padding-top: env(safe-area-inset-top, 1rem) !important;
 	}
-	
+
 	.post-composer-modal .modal-footer {
 		padding-bottom: env(safe-area-inset-bottom, 1rem) !important;
 	}
@@ -1115,23 +1115,23 @@ button,
 		max-width: 600px !important;
 		width: auto !important;
 	}
-	
+
 	.post-composer-modal .modal-content {
 		height: 100% !important;
 		border-radius: 1rem !important;
 		border: 1px solid #dee2e6 !important;
 	}
-	
+
 	.post-composer-modal .modal-header {
 		position: relative !important;
 		padding: 1rem 1rem 0.5rem !important;
 	}
-	
+
 	.post-composer-modal .modal-body {
 		margin-top: 0 !important;
 		margin-bottom: 0 !important;
 	}
-	
+
 	.post-composer-modal .modal-footer {
 		position: relative !important;
 		padding: 0.5rem 1rem 1rem !important;
