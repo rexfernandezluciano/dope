@@ -712,6 +712,12 @@ export const userAPI = {
 		});
 	},
 
+	deleteUser: async (username) => {
+		return await apiRequest(`/users/${username}`, {
+			method: "DELETE",
+		});
+	},
+
 	updateProfile: async (url) => {
 		return await apiRequest("/users/profile-picture", {
 			method: "POST",
@@ -720,7 +726,7 @@ export const userAPI = {
 	},
 
 	getUserById: async (userId) => {
-		return await apiRequest(`/users/find/${userId}`, {
+		return await apiRequest(`/users/${userId}`, {
 			method: "GET",
 		});
 	},

@@ -92,12 +92,17 @@ const AccountSettingsPage = () => {
 	const handleDeleteAccount = async () => {
 		try {
 			setLoading(true);
-			// Note: This would need to be implemented in the API
-			// await userAPI.deleteAccount();
+			setMessage("");
+			
+			// Delete the user account via API
+			await userAPI.deleteUser(user.username);
+			
+			// Remove auth token and redirect
 			removeAuthToken();
 			window.location.href = "/";
 		} catch (err) {
-			setMessage(err.message);
+			console.error("Error deleting account:", err);
+			setMessage(err.message || "Failed to delete account");
 			setMessageType("danger");
 		} finally {
 			setLoading(false);
