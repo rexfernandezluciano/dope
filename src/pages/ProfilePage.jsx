@@ -244,7 +244,7 @@ const ProfilePage = () => {
 		};
 
 		loadProfile();
-	}, [username, currentUser?.uid]);
+	}, [currentUser?.uid]);
 
 	// Update page meta data when profile user changes
 	useEffect(() => {
