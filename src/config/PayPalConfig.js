@@ -33,17 +33,42 @@ export const loadPayPalSDK = () => {
       return;
     }
 
+    // Check if we're in a supported environment
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      reject(new Error('PayPal SDK requires browser environment'));
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = `https://www.paypal.com/sdk/js?client-id=${paypalConfig.clientId}&vault=${paypalConfig.sdkOptions.vault}&intent=${paypalConfig.sdkOptions.intent}&components=${paypalConfig.sdkOptions.components}`;
+    script.async = true;
+    script.defer = true;
+    
     script.onload = () => {
-      if (window.paypal) {
-        resolve(window.paypal);
-      } else {
-        reject(new Error('PayPal SDK failed to load'));
-      }
+      // Wait a bit for PayPal to initialize
+      setTimeout(() => {
+        if (window.paypal) {
+          resolve(window.paypal);
+        } else {
+          reject(new Error('PayPal SDK loaded but not available'));
+        }
+      }, 100);
     };
-    script.onerror = () => reject(new Error('Failed to load PayPal SDK'));
-    document.head.appendChild(script);
+    
+    script.onerror = (error) => {
+      console.error('PayPal SDK loading error:', error);
+      reject(new Error('Failed to load PayPal SDK - network or CORS issue'));
+    };
+    
+    script.ontimeout = () => {
+      reject(new Error('PayPal SDK loading timed out'));
+    };
+    
+    try {
+      document.head.appendChild(script);
+    } catch (error) {
+      reject(new Error('Failed to append PayPal script to document'));
+    }
   });
 };
 

@@ -31,6 +31,12 @@ const apiClient = axios.create({
 		"User-Agent": "DOPE-Network-Client/1.0",
 		"X-Requested-With": "XMLHttpRequest",
 	},
+	// Handle CORS and network issues better
+	validateStatus: function (status) {
+		return status >= 200 && status < 500; // Don't reject on 4xx errors
+	},
+	maxRedirects: 5,
+	withCredentials: false, // Set to false for external APIs
 });
 
 // Request interceptor to add auth token

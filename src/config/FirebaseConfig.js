@@ -28,30 +28,39 @@ try {
 	const missingKeys = requiredKeys.filter(key => !firebaseConfig[key] || firebaseConfig[key].includes('your-'));
 	
 	if (missingKeys.length > 0) {
-		throw new Error(`Missing Firebase configuration for: ${missingKeys.join(', ')}`);
-	}
+		console.warn(`Missing Firebase configuration for: ${missingKeys.join(', ')}`);
+		// Create mock objects to prevent crashes
+		db = null;
+		messaging = null;
+		app = null;
+	} else {
+		app = initializeApp(firebaseConfig);
+		db = getFirestore(app);
 
-	app = initializeApp(firebaseConfig);
-	db = getFirestore(app);
-
-	// Initialize Firebase Cloud Messaging
-	if (typeof window !== "undefined") {
-		try {
-			messaging = getMessaging(app);
-		} catch (messagingError) {
-			console.warn('Firebase messaging initialization failed:', messagingError);
+		// Initialize Firebase Cloud Messaging with better error handling
+		if (typeof window !== "undefined" && 'serviceWorker' in navigator && 'PushManager' in window) {
+			try {
+				messaging = getMessaging(app);
+				console.log('✅ Firebase messaging initialized');
+			} catch (messagingError) {
+				console.warn('Firebase messaging initialization failed:', messagingError.message);
+				messaging = null;
+			}
+		} else {
+			console.warn('Service Worker or Push Manager not supported, skipping messaging init');
 			messaging = null;
 		}
-	}
 
-	console.log('✅ Firebase initialized successfully');
+		console.log('✅ Firebase initialized successfully');
+	}
 } catch (error) {
-	console.error("❌ Firebase initialization error:", error);
-	console.error("Please check your Firebase configuration in environment variables");
+	console.error("❌ Firebase initialization error:", error.message);
+	console.warn("Firebase services will be disabled");
 	
 	// Create mock objects to prevent crashes
 	db = null;
 	messaging = null;
+	app = null;
 }
 
 // Add connection state monitoring to reduce console errors
