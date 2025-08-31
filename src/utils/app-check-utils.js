@@ -4,6 +4,16 @@
  */
 
 /**
+ * Setup service worker (placeholder for compatibility)
+ * @returns {Promise<void>} Always resolves
+ */
+export const setupSW = async () => {
+	// Service worker setup disabled for compatibility
+	console.log('Service worker setup disabled');
+	return Promise.resolve();
+};
+
+/**
  * Get App Check token for API requests (disabled)
  * @returns {Promise<null>} Always returns null
  */
