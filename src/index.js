@@ -11,12 +11,28 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 import "./config/FirebaseConfig.js";
 import "./config/OneSignalConfig.js";
+import { initializeOneSignal, requestNotificationPermission } from "./config/OneSignalConfig.js";
 import { setupCSP } from "./utils/security-utils.js";
 import { checkExternalServices } from './utils/external-api-utils';
 import "animate.css";
 import "./assets/css/app.css";
 
 // Environment is automatically set by the build process
+
+// Initialize OneSignal for notifications
+initializeOneSignal().then(() => {
+  console.log('OneSignal initialized successfully');
+  // Request notification permission after initialization
+  requestNotificationPermission().then((granted) => {
+    if (granted) {
+      console.log('Notification permission granted');
+    } else {
+      console.log('Notification permission denied');
+    }
+  });
+}).catch(error => {
+  console.error('Failed to initialize OneSignal:', error);
+});
 
 // Check external services availability
 checkExternalServices().then(services => {

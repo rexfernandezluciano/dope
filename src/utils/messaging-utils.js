@@ -75,26 +75,44 @@ const savePlayerIdToFirestore = async (playerId, uid) => {
  */
 export const sendLikeNotification = async (postId, post, currentUser) => {
 	try {
-		if (!post?.author?.uid || post.author.uid === currentUser.uid) return;
+		if (!post?.author?.uid || !currentUser?.uid) {
+			console.warn('Missing required user data for like notification');
+			return;
+		}
 
-		const notification = {
-			userId: post.author.uid,
+		// Don't send notification if user likes their own post
+		if (post.author.uid === currentUser.uid) return;
+
+		console.log('Preparing like notification for:', post.author.uid);
+
+		const notificationData = {
 			type: 'like',
 			title: 'New Like',
-			message: `${currentUser.name} liked your post`,
+			message: `${currentUser.displayName || currentUser.username} liked your post`,
+			recipientId: post.author.uid,
+			senderId: currentUser.uid,
+			postId: postId,
 			url: `/post/${postId}`,
 			read: false,
-			createdAt: serverTimestamp(),
-			data: {
-				postId,
-				likerId: currentUser.uid,
-				likerName: currentUser.name
-			}
+			createdAt: new Date()
 		};
 
-		await addDoc(collection(db, "notifications"), notification);
+		// Save to Firestore
+		const docRef = await addDoc(collection(db, 'notifications'), notificationData);
+		console.log('Notification saved to Firestore:', docRef.id);
+
+		// Send push notification via OneSignal
+		const pushResult = await sendPushNotification(
+			post.author.uid,
+			notificationData.title,
+			notificationData.message,
+			{ postId, type: 'like' }
+		);
+
+		console.log('Push notification result:', pushResult);
+
 	} catch (error) {
-		console.error("Error sending like notification:", error);
+		console.error('Error sending like notification:', error);
 	}
 };
 
@@ -281,4 +299,72 @@ export const setupNotificationListener = (userId, callback) => {
 export const setupMessageListener = () => {
 	console.log("Message listener setup");
 	// Placeholder implementation
+};
+
+/**
+ * Send a push notification via OneSignal
+ * @param {string} userId - The external user ID to send the notification to
+ * @param {string} title - The title of the notification
+ * @param {string} message - The body of the notification
+ * @param {Object} data - Optional data to include with the notification
+ * @returns {Promise<Object|null>} The result from the OneSignal API or null if an error occurred
+ */
+export const sendPushNotification = async (userId, title, message, data = {}) => {
+	try {
+		if (!title || !message) {
+			console.warn('Missing title or message for push notification');
+			return;
+		}
+
+		console.log('Attempting to send push notification:', { userId, title, message });
+
+		// Check if OneSignal credentials are configured
+		const appId = process.env.REACT_APP_ONESIGNAL_APP_ID;
+		const restApiKey = process.env.REACT_APP_ONESIGNAL_REST_API_KEY;
+
+		if (!appId || appId === 'your-onesignal-app-id') {
+			console.error('OneSignal App ID not configured');
+			return;
+		}
+
+		if (!restApiKey) {
+			console.error('OneSignal REST API Key not configured');
+			return;
+		}
+
+		// Use OneSignal REST API to send notification
+		const notification = {
+			app_id: appId,
+			include_external_user_ids: [userId],
+			headings: { en: title },
+			contents: { en: message },
+			data: data,
+			web_url: data.url || window.location.origin
+		};
+
+		console.log('Sending notification payload:', notification);
+
+		const response = await fetch('https://onesignal.com/api/v1/notifications', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Basic ${restApiKey}`
+			},
+			body: JSON.stringify(notification)
+		});
+
+		if (!response.ok) {
+			const errorData = await response.json();
+			console.error('OneSignal API error response:', errorData);
+			throw new Error(`OneSignal API error: ${response.status} - ${JSON.stringify(errorData)}`);
+		}
+
+		const result = await response.json();
+		console.log('Push notification sent successfully:', result.id);
+		return result;
+
+	} catch (error) {
+		console.error('Error sending push notification:', error);
+		throw error;
+	}
 };
