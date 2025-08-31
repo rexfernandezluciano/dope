@@ -13,7 +13,7 @@ import {
 } from "react-bootstrap";
 import { Person, Camera } from "react-bootstrap-icons";
 
-import { userAPI } from "../../config/ApiConfig";
+import { userAPI, imageAPI } from "../../config/ApiConfig";
 
 const ProfileSettingsPage = () => {
 	const loaderData = useLoaderData() || {};
@@ -58,7 +58,7 @@ const ProfileSettingsPage = () => {
 		return new Date(lastChange) > fourteenDaysAgo;
 	};
 
-	const uploadProfileImageToCloudinary = async (file) => {
+	const uploadProfileImage = async (file) => {
 		// Handle HEIC files
 		let finalFile = file;
 		if (
@@ -83,37 +83,33 @@ const ProfileSettingsPage = () => {
 		}
 
 		const formData = new FormData();
-		formData.append("file", finalFile);
-		formData.append("upload_preset", "dope-network");
-		formData.append("folder", "profile_pictures");
+		formData.append("images", finalFile);
 
 		try {
-			console.log("Uploading image to Cloudinary...", finalFile.name);
-			const response = await fetch(
-				"https://api.cloudinary.com/v1_1/zxpic/image/upload",
-				{
-					method: "POST",
-					body: formData,
-				},
-			);
-
-			if (!response.ok) {
-				throw new Error(
-					`Cloudinary upload failed: ${response.status} ${response.statusText}`,
-				);
+			console.log("Uploading image:", finalFile.name, "Size:", finalFile.size);
+			const response = await imageAPI.uploadImages(formData);
+			
+			if (!response) {
+				throw new Error("No response received from server");
 			}
-
-			const data = await response.json();
-			console.log("Cloudinary upload successful:", data.secure_url);
-
-			if (!data.secure_url) {
-				throw new Error("No secure URL returned from Cloudinary");
+			
+			if (!response.imageUrls || !Array.isArray(response.imageUrls) || response.imageUrls.length === 0) {
+				throw new Error("Invalid response: No image URLs returned");
 			}
-
-			return data.secure_url;
+			
+			const imageUrl = response.imageUrls[0];
+			if (!imageUrl || typeof imageUrl !== 'string') {
+				throw new Error("Invalid image URL received");
+			}
+			
+			console.log("Image upload successful:", imageUrl);
+			return imageUrl;
 		} catch (error) {
-			console.error("Error uploading to Cloudinary:", error);
-			throw new Error(`Failed to upload image: ${error.message}`);
+			console.error("Error uploading image:", error);
+			if (error.message.includes("Network Error") || error.message.includes("fetch")) {
+				throw new Error("Network error: Please check your connection and try again");
+			}
+			throw error;
 		}
 	};
 
@@ -151,7 +147,7 @@ const ProfileSettingsPage = () => {
 			// Upload profile image if a new file was selected
 			if (settings.profileImageFile) {
 				try {
-					const uploadedUrl = await uploadProfileImageToCloudinary(
+					const uploadedUrl = await uploadProfileImage(
 						settings.profileImageFile,
 					);
 					updateData.photoURL = uploadedUrl;
