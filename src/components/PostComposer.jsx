@@ -443,7 +443,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 		"&multiLine": {
 			control: {
 				fontFamily: "inherit",
-				minHeight: "120px",
+				minHeight: "60px",
 				border: "none",
 				outline: "none",
 			},
@@ -486,7 +486,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 		<>
 			{/* Inline Post Composer */}
 			<Card className="border-0 border-bottom rounded-0 shadow-none">
-				<Card.Body className="px-4 py-3">
+				<Card.Body className="px-4 pb-3 pt-1">
 					<div className="d-flex gap-3">
 						<Image
 							src={currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"}
@@ -522,14 +522,14 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 				scrollable={false}
 			>
 				<Modal.Header closeButton={false} className="border-0">
-						<div className="d-flex align-items-center w-100">
+						<div className="d-flex align-items-center pt-3 w-100">
 							<Button
 								variant="link"
 								className="p-0 me-3 text-dark d-flex align-items-center"
 								onClick={() => setShowComposerModal(false)}
 								style={{ minWidth: 'auto' }}
 							>
-								<X size={24} />
+								<X size={30} />
 							</Button>
 							<h5 className="mb-0 flex-grow-1 fs-6 fw-bold">Create Post</h5>
 							<Button
@@ -551,7 +551,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 						</div>
 					</Modal.Header>
 
-					<Modal.Body className="flex-grow-1 bg-white px-3 py-2">
+					<Modal.Body className="flex-grow-1 bg-white px-3 pb-2 pt-4">
 					{error && (
 						<Alert variant="danger" className="mb-3"
 							dismissible
@@ -561,7 +561,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 					)}
 
 					<Form onSubmit={handleSubmit}>
-						<div className="d-flex gap-3">
+						<div className="d-flex gap-3 mt-3">
 							<Image
 								src={
 									currentUser?.photoURL || "https://i.pravatar.cc/150?img=10"
@@ -624,7 +624,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 												<Globe size={16} />
 												<div>
 													<div className="fw-bold">Everyone</div>
-													<small className={`fw-bold` + privacy === "public" ? "text-white": "text-muted"}>Everyone can reply</small>
+													<small>Everyone can reply</small>
 												</div>
 											</Dropdown.Item>
 
@@ -639,7 +639,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 												<PersonFill size={16} />
 												<div>
 													<div className="fw-bold">Followers</div>
-													<small className={`fw-bold` + privacy === "followers" ? "text-white": "text-muted"}>
+													<small>
 														Only followers can reply
 													</small>
 												</div>
@@ -656,8 +656,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 												<Lock size={16} />
 												<div>
 													<div className="fw-bold">Only you</div>
-													<small
-														className={`fw-bold` + privacy === "private" ? "text-white": "text-muted"}>
+													<small>
 														Only you can see this post
 													</small>
 												</div>
@@ -939,7 +938,7 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 					</Form>
 				</Modal.Body>
 
-				<Modal.Footer className="border-0 pt-2 flex-shrink-0 bg-white">
+				<Modal.Footer className="border-0 pt-0 flex-shrink-0 bg-white">
 						<div className="d-flex justify-content-between align-items-center w-100">
 							<div className="d-flex gap-1 flex-wrap">
 								<Button
