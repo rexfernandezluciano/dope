@@ -373,32 +373,34 @@ const PostCard = ({
 						/>
 						<div className="flex-grow-1">
 							<div className="d-flex align-items-center justify-content-between">
-								<div className="d-flex align-items-center gap-1">
-									<span
-										className="fw-bold"
-										style={{ cursor: "pointer", color: "inherit" }}
-										onClick={(e) => {
-											e.stopPropagation();
-											navigate(`/${post.author.username}`);
-										}}
-									>
-										{post.author.name}
-									</span>
-									{post.author.hasBlueCheck && (
-										<CheckCircleFill className="text-primary" size={16} />
-									)}
-									{isProfileUpdate && (
-								<small className="fw-bold">
-									updated {post.author.gender === "male" ? "his" : 
-									post.author.gender === "female" ? "her" : "their"} avatar
-								</small>
-							)}
-									<span className="text-muted">·</span>
-									<span className="text-muted small">
-										{formatTimeAgo(post.createdAt)}
-									</span>
-									<span className="text-muted">·</span>
-									{privacyIcon}
+								<div className="d-flex align-items-center gap-1 flex-wrap">
+									<div className="d-flex align-items-center gap-1 flex-shrink-0">
+										<span
+											className="fw-bold"
+											style={{ cursor: "pointer", color: "inherit" }}
+											onClick={(e) => {
+												e.stopPropagation();
+												navigate(`/${post.author.username}`);
+											}}
+										>
+											{post.author.name}
+										</span>
+										{post.author.hasBlueCheck && (
+											<CheckCircleFill className="text-primary" size={16} />
+										)}
+										{isProfileUpdate && (
+											<small className="fw-bold text-nowrap">
+												updated {post.author.gender === "male" ? "his" : 
+												post.author.gender === "female" ? "her" : "their"} avatar
+											</small>
+										)}
+									</div>
+									<div className="d-flex align-items-center gap-1 text-muted small flex-shrink-0">
+										<span>·</span>
+										<span>{formatTimeAgo(post.createdAt)}</span>
+										<span>·</span>
+										{privacyIcon}
+									</div>
 								</div>
 								<Button
 									variant="link"
