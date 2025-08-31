@@ -146,15 +146,7 @@ const ImageViewer = ({
 					</Button>
 
 					{post && (
-						<div className="d-flex align-items-center gap-2 text-white flex-grow-1 mx-3 min-width-0">
-							<Image
-								src={post.author.photoURL || "https://i.pravatar.cc/150?img=10"}
-								alt="avatar"
-								roundedCircle
-								width="32"
-								height="32"
-								style={{ objectFit: "cover" }}
-							/>
+						<div className="d-flex align-items-center gap-2 text-white mx-3 min-width-0">
 							<div className="d-flex align-items-center gap-2 min-width-0 flex-grow-1">
 								<div className="d-flex align-items-center gap-1 min-width-0">
 									<span
@@ -162,15 +154,12 @@ const ImageViewer = ({
 										style={{ cursor: "pointer" }}
 										onClick={() => onNavigateToProfile?.(post.author.username)}
 									>
-										{post.author.name}
+										{post.author.name}'s post
 									</span>
 									{post.author.hasBlueCheck && (
 										<CheckCircleFill className="text-primary flex-shrink-0" size={14} />
 									)}
 								</div>
-								<span className="text-white-50 flex-shrink-0">·</span>
-								<span className="small text-white-50 flex-shrink-0">{formatTimeAgo(post.createdAt)}</span>
-								<span className="flex-shrink-0">{getPrivacyIcon(post.privacy)}</span>
 							</div>
 						</div>
 					)}
