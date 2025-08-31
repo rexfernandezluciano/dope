@@ -112,6 +112,143 @@ const ProfilePage = () => {
 			}
 		};
 
+		const loadLocalProfile = async (userResponse) => {
+			try {
+				// Handle response structure - the API returns user data directly
+				const profileUserData = userResponse.user;
+				const profilePrivacy = profileUserData.privacy?.profile || "public";
+
+				// Check if current user can view this profile
+				const canViewProfile = () => {
+					// Profile owner can always view their own profile
+					if (profileUserData.uid === currentUser.uid) return true;
+
+					// Public profiles are visible to everyone
+					if (profilePrivacy === "public") return true;
+
+					// Private profiles are only visible to the owner
+					if (profilePrivacy === "private") return false;
+
+					// Followers-only profiles are visible to followers
+					if (profilePrivacy === "followers") {
+						return profileUserData.isFollowedByCurrentUser || false;
+					}
+
+					return false;
+				};
+
+				if (!canViewProfile()) {
+					throw new Error("This profile is private");
+				}
+
+				setProfileUser(profileUserData);
+
+				// Check if user is blocked
+				setIsBlocked(profileUserData.isBlocked || false);
+
+				// Set edit form data
+				setEditForm({
+					name: userResponse.user.name || "",
+					bio: userResponse.user.bio || "",
+					photoURL: userResponse.user.photoURL || "",
+				});
+
+				// Set posts from user response if available
+				if (userResponse.user.posts) {
+					// Filter posts based on profile privacy
+					const filteredPosts = userResponse.user.posts.filter((post) => {
+						// Profile owner can see all their posts
+						if (post.author.uid === currentUser.uid) return true;
+
+						// For other users, respect the profile privacy settings
+						const authorPrivacy = post.author.privacy?.profile || "public";
+
+						if (authorPrivacy === "public") return true;
+						if (authorPrivacy === "private") return false;
+						if (authorPrivacy === "followers") {
+							return post.author.isFollowedByCurrentUser || false;
+						}
+
+						return false;
+					});
+
+					setPosts(filteredPosts);
+				} else {
+					// Fallback to separate posts API call
+					try {
+						const postsResponse = await postAPI.getPosts(1, 20, {
+							author: username,
+						});
+
+						// Filter posts based on profile privacy
+						const filteredPosts = (postsResponse.posts || []).filter((post) => {
+							// Profile owner can see all their posts
+							if (post.author.uid === currentUser.uid) return true;
+
+							// For other users, respect the profile privacy settings
+							const authorPrivacy = post.author.privacy?.profile || "public";
+
+							if (authorPrivacy === "public") return true;
+							if (authorPrivacy === "private") return false;
+							if (authorPrivacy === "followers") {
+								return post.author.isFollowedByCurrentUser || false;
+							}
+
+							return false;
+						});
+
+						setPosts(filteredPosts);
+					} catch (err) {
+						console.error("Error loading posts:", err);
+						setPosts([]);
+					}
+				}
+
+				// Load followers and following data
+				try {
+					const followersResponse = await userAPI.getFollowers(username);
+					setFollowers(followersResponse.followers || []);
+
+					// Check if current user is following this profile from user data or followers list
+					if (currentUser) {
+						const isFollowingFromUserData =
+							profileUserData.isFollowedByCurrentUser;
+						const isFollowingFromFollowers = (
+							followersResponse.followers || []
+						).some((f) => f.uid === currentUser.uid);
+
+						// Prefer the user data value if available, otherwise check followers list
+						setIsFollowing(
+							isFollowingFromUserData !== undefined
+								? isFollowingFromUserData
+								: isFollowingFromFollowers,
+						);
+					}
+				} catch (err) {
+					console.error("Error loading followers:", err);
+					setFollowers([]);
+					// Return early to prevent following API call if user not found
+					if (err.message === "User not found") {
+						setLoading(false);
+						return;
+					}
+				}
+
+				try {
+					const followingResponse = await userAPI.getFollowing(username);
+					setFollowing(followingResponse.following || []);
+				} catch (err) {
+					console.error("Error loading following:", err);
+					setFollowing([]);
+				}
+
+				setLoading(false);
+			} catch (err) {
+				console.error("Error loading local profile:", err);
+				throw err;
+			}
+		};
+
 		loadProfile();
 	}, [username, currentUser?.uid]);
 
