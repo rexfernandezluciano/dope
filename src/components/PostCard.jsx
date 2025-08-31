@@ -373,11 +373,11 @@ const PostCard = ({
 						/>
 						<div className="flex-grow-1">
 							<div className="d-flex align-items-center justify-content-between">
-								<div className="d-flex align-items-center gap-1 flex-wrap">
+								<div className="d-flex align-items-center gap-1 flex-grow-1 min-width-0">
 									<div className="d-flex align-items-center gap-1 flex-shrink-0">
 										<span
-											className="fw-bold"
-											style={{ cursor: "pointer", color: "inherit" }}
+											className="fw-bold text-truncate"
+											style={{ cursor: "pointer", color: "inherit", maxWidth: "120px" }}
 											onClick={(e) => {
 												e.stopPropagation();
 												navigate(`/${post.author.username}`);
@@ -395,7 +395,7 @@ const PostCard = ({
 											</small>
 										)}
 									</div>
-									<div className="d-flex align-items-center gap-1 text-muted small flex-shrink-0">
+									<div className="d-flex align-items-center gap-1 text-muted small text-nowrap flex-shrink-0">
 										<span>·</span>
 										<span>{formatTimeAgo(post.createdAt)}</span>
 										<span>·</span>
@@ -404,7 +404,7 @@ const PostCard = ({
 								</div>
 								<Button
 									variant="link"
-									className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center"
+									className="text-muted p-1 border-0 rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
 									style={{
 										width: "32px",
 										height: "32px",
