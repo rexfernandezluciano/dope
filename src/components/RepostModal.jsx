@@ -218,11 +218,108 @@ const RepostModal = ({ show, onHide, onRepost, post, currentUser, loading = fals
               <span className="fw-bold small">{actualPostToRepost?.author?.name}</span>
               <span className="text-muted small">@{actualPostToRepost?.author?.username}</span>
             </div>
-            <div className="small">
-              {actualPostToRepost?.content && actualPostToRepost.content.length > 100 
-                ? `${actualPostToRepost.content.substring(0, 100)}...` 
-                : actualPostToRepost?.content}
-            </div>
+            
+            {/* Post content */}
+            {actualPostToRepost?.content && (
+              <div className="small mb-2">
+                {actualPostToRepost.content.length > 100 
+                  ? `${actualPostToRepost.content.substring(0, 100)}...` 
+                  : actualPostToRepost.content}
+              </div>
+            )}
+
+            {/* Images preview */}
+            {actualPostToRepost?.imageUrls && actualPostToRepost.imageUrls.length > 0 && (
+              <div className="mb-2">
+                {actualPostToRepost.imageUrls.length === 1 ? (
+                  <Image
+                    src={actualPostToRepost.imageUrls[0]}
+                    className="rounded w-100"
+                    style={{
+                      height: "150px",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  <div className="d-flex gap-1" style={{ height: "150px" }}>
+                    <div style={{ flex: "2" }}>
+                      <Image
+                        src={actualPostToRepost.imageUrls[0]}
+                        className="rounded w-100 h-100"
+                        style={{ objectFit: "cover" }}
+                      />
+                    </div>
+                    {actualPostToRepost.imageUrls.length > 1 && (
+                      <div className="d-flex flex-column gap-1" style={{ flex: "1" }}>
+                        <div style={{ height: actualPostToRepost.imageUrls.length > 2 ? "calc(50% - 2px)" : "100%" }}>
+                          <Image
+                            src={actualPostToRepost.imageUrls[1]}
+                            className="rounded w-100 h-100"
+                            style={{ objectFit: "cover" }}
+                          />
+                        </div>
+                        {actualPostToRepost.imageUrls.length > 2 && (
+                          <div style={{ height: "calc(50% - 2px)" }} className="position-relative">
+                            <Image
+                              src={actualPostToRepost.imageUrls[2]}
+                              className="rounded w-100 h-100"
+                              style={{ objectFit: "cover" }}
+                            />
+                            {actualPostToRepost.imageUrls.length > 3 && (
+                              <div
+                                className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded"
+                                style={{
+                                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                                  color: "white",
+                                  fontWeight: "bold",
+                                  fontSize: "0.8rem",
+                                }}
+                              >
+                                +{actualPostToRepost.imageUrls.length - 3}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Poll preview */}
+            {actualPostToRepost?.poll && (
+              <div className="border rounded p-2 mb-2 bg-white">
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <small className="fw-bold text-muted">📊 Poll</small>
+                  <small className="text-muted">
+                    {actualPostToRepost.poll.isExpired ? 'Ended' : 
+                     actualPostToRepost.poll.expiresAt ? 
+                     `${Math.max(0, Math.floor((new Date(actualPostToRepost.poll.expiresAt) - new Date()) / (1000 * 60 * 60)))}h left` : 
+                     'Active'}
+                  </small>
+                </div>
+                {actualPostToRepost.poll.options?.slice(0, 2).map((option, index) => (
+                  <div key={index} className="d-flex justify-content-between align-items-center mb-1">
+                    <small className="text-truncate" style={{ maxWidth: "70%" }}>
+                      {option.text}
+                    </small>
+                    <small className="text-muted">
+                      {option.percentage || 0}%
+                    </small>
+                  </div>
+                ))}
+                {actualPostToRepost.poll.options?.length > 2 && (
+                  <small className="text-muted">
+                    +{actualPostToRepost.poll.options.length - 2} more options
+                  </small>
+                )}
+                <div className="text-muted small mt-1">
+                  {actualPostToRepost.poll.totalVotes || 0} votes
+                </div>
+              </div>
+            )}
+
             {post?.isRepost && (
               <div className="mt-2 pt-2 border-top">
                 <small className="text-muted">
