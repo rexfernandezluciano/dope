@@ -394,6 +394,7 @@ const ProfilePage = () => {
 						editForm.profileImageFile,
 					);
 					await userAPI.updateProfile(uploadedUrl);
+					updateData.photoURL = uploadedUrl;
 				} catch (uploadError) {
 					setError(`Image upload failed: ${uploadError.message}`);
 					setUploadingProfileImage(false);

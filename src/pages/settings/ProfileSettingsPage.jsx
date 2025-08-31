@@ -161,6 +161,7 @@ const ProfileSettingsPage = () => {
 						settings.profileImageFile,
 					);
 					await userAPI.updateProfile(uploadedUrl);
+					updateData.photoURL = uploadedUrl;
 					// Remove the file from update data
 					delete updateData.profileImageFile;
 				} catch (uploadError) {
