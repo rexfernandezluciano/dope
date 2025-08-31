@@ -87,6 +87,8 @@ const ProfilePage = () => {
 	const navigate = useNavigate();
 
 	useEffect(() => {
+		if (!username || !currentUser) return;
+
 		const loadProfile = async () => {
 			try {
 				setLoading(true);
@@ -226,6 +228,7 @@ const ProfilePage = () => {
 				} catch (err) {
 					console.error("Error loading followers:", err);
 					setFollowers([]);
+					// Don't throw error for followers/following - it's not critical
 				}
 
 				try {
@@ -234,6 +237,7 @@ const ProfilePage = () => {
 				} catch (err) {
 					console.error("Error loading following:", err);
 					setFollowing([]);
+					// Don't throw error for followers/following - it's not critical
 				}
 			} catch (err) {
 				console.error("Error loading local profile:", err);
@@ -241,13 +245,8 @@ const ProfilePage = () => {
 			}
 		};
 
-		if (username && currentUser) {
-			loadProfile();
-			return () => {
-				// Cleanup if needed
-			};
-		}
-	}, [username, currentUser]);
+		loadProfile();
+	}, [username, currentUser?.uid]); // Use currentUser.uid instead of entire currentUser object
 
 	// Update page meta data when profile user changes
 	useEffect(() => {
