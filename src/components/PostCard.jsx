@@ -389,7 +389,7 @@ const PostCard = ({
 											<CheckCircleFill className="text-primary" size={16} />
 										)}
 										{isProfileUpdate && (
-											<small className="fw-bold text-nowrap">
+											<small className="text-muted text-truncate" style={{ maxWidth: "100px" }}>
 												updated {post.author.gender === "male" ? "his" : 
 												post.author.gender === "female" ? "her" : "their"} avatar
 											</small>

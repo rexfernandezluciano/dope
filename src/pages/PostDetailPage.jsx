@@ -758,7 +758,7 @@ const PostDetailPage = () => {
 											<CheckCircleFill className="text-primary" size={16} />
 										)}
 										{post.postType === "profile_update" && (
-											<small className="fw-bold text-nowrap">
+											<small className="text-muted text-truncate" style={{ maxWidth: "100px" }}>
 												updated {post.author.gender === "male" ? "his" : 
 												post.author.gender === "female" ? "her" : "their"} avatar
 											</small>
