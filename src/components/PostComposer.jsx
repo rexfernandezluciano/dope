@@ -82,19 +82,34 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 
 		try {
 			const users = await userAPI.searchUsers(query);
+			let foundUsers = users || [];
 
-			const mentionData = users.map((user) => ({
+			// Include current user in results if they match the query and currentUser exists
+			if (currentUser && currentUser.username && currentUser.name) {
+				const queryLower = query.toLowerCase();
+				const matchesUsername = currentUser.username.toLowerCase().includes(queryLower);
+				const matchesName = currentUser.name.toLowerCase().includes(queryLower);
+
+				if ((matchesUsername || matchesName) && !foundUsers.some(u => u.uid === currentUser.uid)) {
+					foundUsers = [currentUser, ...foundUsers];
+				}
+			}
+
+			const mentionData = foundUsers.map((user) => ({
 				id: user.uid,
-				display: user.username || user.name,
+				display: user.name || user.displayName || user.username || 'Unknown User',
+				name: user.name || user.displayName || 'Unknown User',
+				username: user.username,
+				photoURL: user.photoURL,
+				hasBlueCheck: user.hasBlueCheck || false
 			}));
 
-			console.log(`User: ${users}`);
 			callback(mentionData);
 		} catch (error) {
 			console.error("Error searching users:", error);
 			callback([]);
 		}
-	}, []);
+	}, [currentUser]);
 
 	const handleContentChange = useCallback(
 		(event, newValue, newPlainTextValue, mentions) => {
@@ -665,6 +680,25 @@ const PostComposer = ({ currentUser, onPostCreated }) => {
 											data={searchMentionUsers}
 											displayTransform={(id, display) => `@${display}`}
 											markup="@[__display__](__id__)"
+											renderSuggestion={(entry, search, highlightedDisplay, index, focused) => (
+												<div className="d-flex align-items-center gap-2">
+													<Image
+														src={entry.photoURL || "https://i.pravatar.cc/150?img=10"}
+														alt="avatar"
+														roundedCircle
+														width="32"
+														height="32"
+														style={{ objectFit: "cover" }}
+													/>
+													<div className="flex-grow-1">
+														<div className="fw-bold">{entry.name}</div>
+														<small className="text-muted">@{entry.username}</small>
+													</div>
+													{entry.hasBlueCheck && (
+														<CheckCircleFill className="text-primary" size={14} />
+													)}
+												</div>
+											)}
 											style={{
 												backgroundColor: "#e3f2fd",
 												color: "#1976d2",
