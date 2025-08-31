@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
+import { Adsense } from "@ctrl/react-adsense";
 import { updatePageMeta } from "../utils/meta-utils";
 
 const TermsOfServicePage = () => {
@@ -170,14 +171,12 @@ const TermsOfServicePage = () => {
 			</Row>
 
 			{/* <!-- banner_ad --> */}
-			<ins
-				className="adsbygoogle d-block"
-				data-ad-client="ca-pub-1106169546112879"
-				data-ad-slot="2596463814"
-				data-ad-format="auto"
-				data-full-width-responsive="true"
-			></ins>
-			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+			<Adsense
+				client="ca-pub-1106169546112879"
+				slot="2596463814"
+				style={{ display: "block" }}
+				format="auto"
+			/>
 		</Container>
 	);
 };

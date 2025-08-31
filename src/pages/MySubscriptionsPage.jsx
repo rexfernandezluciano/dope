@@ -13,10 +13,10 @@ import {
 import {
   Heart,
   Calendar,
-  CurrencyDollar,
   XCircle,
   CameraVideo,
 } from "react-bootstrap-icons";
+import { Adsense } from "@ctrl/react-adsense"
 import { subscriptionAPI } from "../config/ApiConfig";
 import { useNavigate } from "react-router-dom";
 
@@ -250,14 +250,12 @@ const MySubscriptionsPage = () => {
       </Modal>
       
       {/* <!-- banner_ad --> */}
-      <ins
-        className="adsbygoogle d-block"
-        data-ad-client="ca-pub-1106169546112879"
-        data-ad-slot="2596463814"
-        data-ad-format="auto"
-        data-full-width-responsive="true"
-      ></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      <Adsense
+        client="ca-pub-1106169546112879"
+        slot="2596463814"
+        style={{ display: "block" }}
+        format="auto"
+      />
     </Container>
   );
 };

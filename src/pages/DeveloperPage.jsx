@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useState, useEffect } from "react";
@@ -26,6 +25,7 @@ import {
 	Shield,
 	Plus,
 } from "react-bootstrap-icons";
+import { Adsense } from "@ctrl/react-adsense";
 import { updatePageMeta } from "../utils/meta-utils";
 import { oauthAPI, businessAPI } from "../config/ApiConfig";
 import OAuthAppsPage from "./settings/OAuthAppsPage";
@@ -185,7 +185,10 @@ const DeveloperPage = () => {
 													<Col md={6} className="mb-3">
 														<Card className="h-100 border-0 bg-light">
 															<Card.Body className="text-center">
-																<Globe size={32} className="text-primary mb-2" />
+																<Globe
+																	size={32}
+																	className="text-primary mb-2"
+																/>
 																<h6>Create OAuth App</h6>
 																<p className="text-muted small">
 																	Build integrations with OAuth 2.0
@@ -292,7 +295,8 @@ const DeveloperPage = () => {
 											<div>
 												<h4>API Keys</h4>
 												<p className="text-muted">
-													Manage your API keys for server-to-server authentication
+													Manage your API keys for server-to-server
+													authentication
 												</p>
 											</div>
 											<Button
@@ -353,13 +357,15 @@ const DeveloperPage = () => {
 																		))}
 																	</td>
 																	<td>
-																		{new Date(key.createdAt).toLocaleDateString()}
+																		{new Date(
+																			key.createdAt,
+																		).toLocaleDateString()}
 																	</td>
 																	<td>
 																		{key.lastUsedAt
 																			? new Date(
-																					key.lastUsedAt
-																			  ).toLocaleDateString()
+																					key.lastUsedAt,
+																				).toLocaleDateString()
 																			: "Never"}
 																	</td>
 																	<td>
@@ -425,15 +431,27 @@ const DeveloperPage = () => {
 											</Card.Header>
 											<Card.Body>
 												<div className="d-grid gap-2">
-													<Button variant="outline-primary" href="#" target="_blank">
+													<Button
+														variant="outline-primary"
+														href="#"
+														target="_blank"
+													>
 														<Book className="me-2" size={16} />
 														Full API Docs
 													</Button>
-													<Button variant="outline-secondary" href="#" target="_blank">
+													<Button
+														variant="outline-secondary"
+														href="#"
+														target="_blank"
+													>
 														<Code className="me-2" size={16} />
 														SDKs & Libraries
 													</Button>
-													<Button variant="outline-info" href="#" target="_blank">
+													<Button
+														variant="outline-info"
+														href="#"
+														target="_blank"
+													>
 														<Gear className="me-2" size={16} />
 														API Status
 													</Button>
@@ -507,7 +525,10 @@ const DeveloperPage = () => {
 						</Alert>
 					</Modal.Body>
 					<Modal.Footer>
-						<Button variant="secondary" onClick={() => setShowApiKeyModal(false)}>
+						<Button
+							variant="secondary"
+							onClick={() => setShowApiKeyModal(false)}
+						>
 							Cancel
 						</Button>
 						<Button type="submit" variant="primary">
@@ -516,6 +537,13 @@ const DeveloperPage = () => {
 					</Modal.Footer>
 				</Form>
 			</Modal>
+			{/* <!-- banner_ad --> */}
+			<Adsense
+				client="ca-pub-1106169546112879"
+				slot="2596463814"
+				style={{ display: "block" }}
+				format="auto"
+			/>
 		</Container>
 	);
 };

@@ -8,6 +8,7 @@ import {
 	Image,
 } from "react-bootstrap";
 import { useLoaderData, useNavigate } from "react-router-dom";
+import { Adsense } from "@ctrl/react-adsense";
 import { blockAPI } from "../../config/ApiConfig";
 
 const BlockedUsersPage = () => {
@@ -156,14 +157,12 @@ const BlockedUsersPage = () => {
 				</div>
 			)}
 			{/* <!-- banner_ad --> */}
-			<ins
-				className="adsbygoogle d-block"
-				data-ad-client="ca-pub-1106169546112879"
-				data-ad-slot="2596463814"
-				data-ad-format="auto"
-				data-full-width-responsive="true"
-			></ins>
-			<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+			<Adsense
+				client="ca-pub-1106169546112879"
+				slot="2596463814"
+				style={{ display: "block" }}
+				format="auto"
+			/>
 		</Container>
 	);
 };
