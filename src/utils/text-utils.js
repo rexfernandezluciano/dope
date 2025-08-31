@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { userAPI } from '../config/ApiConfig';
 
 // Component to resolve mention UIDs to display names
-const MentionComponent = ({ identifier, onMentionClick }) => {
+export const MentionComponent = ({ identifier, onMentionClick }) => {
 	const [userData, setUserData] = useState(null);
 	const [loading, setLoading] = useState(true);
 
