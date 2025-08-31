@@ -28,7 +28,7 @@ import {
 	GoStar,
 	GoBriefcase,
 	GoHeart,
-	GoGear
+	GoGear,
 } from "react-icons/go";
 import { TbBrandGoogleAnalytics } from "react-icons/tb";
 import { businessAPI } from "../../config/ApiConfig";
@@ -70,16 +70,26 @@ const NavigationView = ({ children }) => {
 
 		// Add click listeners to all navigation links
 		const handleLinkClick = (e) => {
-			const target = e.target.closest('a');
-			const isTabClick = target && (target.closest('.nav-tabs') || target.closest('.nav-pills') || target.hasAttribute('data-bs-toggle'));
+			const target = e.target.closest("a");
+			const isTabClick =
+				target &&
+				(target.closest(".nav-tabs") ||
+					target.closest(".nav-pills") ||
+					target.hasAttribute("data-bs-toggle"));
 
-			if (target && target.href && !target.href.startsWith('mailto:') && !target.href.startsWith('tel:') && !isTabClick) {
+			if (
+				target &&
+				target.href &&
+				!target.href.startsWith("mailto:") &&
+				!target.href.startsWith("tel:") &&
+				!isTabClick
+			) {
 				NProgress.start();
 			}
 		};
 
 		// Add event listener to document for all link clicks
-		document.addEventListener('click', handleLinkClick);
+		document.addEventListener("click", handleLinkClick);
 
 		// Initialize user and notifications
 		if (loaderUserData && loaderUserData.uid) {
@@ -146,7 +156,7 @@ const NavigationView = ({ children }) => {
 
 		// Cleanup function
 		return () => {
-			document.removeEventListener('click', handleLinkClick);
+			document.removeEventListener("click", handleLinkClick);
 		};
 	}, [location, loaderUserData]); // Dependency on loaderUserData
 
@@ -178,17 +188,8 @@ const NavigationView = ({ children }) => {
 		}
 	}, [loaderUserData]);
 
-	// Placeholder for checkAdminStatus if it's defined elsewhere
-	const checkAdminStatus = async (userId) => {
-		// Replace with actual admin check logic if needed
-		console.log(`Checking admin status for ${userId}`);
-	};
-
 	useEffect(() => {
 		if (user && user.uid) {
-			// Check if current user is an admin
-			checkAdminStatus(user.uid);
-
 			// Load unread notification count
 			const loadNotificationCount = async () => {
 				const count = await getUnreadNotificationCount(user.uid);
@@ -239,7 +240,9 @@ const NavigationView = ({ children }) => {
 			removeAuthToken();
 
 			// Also clear from ApiConfig
-			const { removeAuthToken: removeApiAuthToken } = await import("../../config/ApiConfig.js");
+			const { removeAuthToken: removeApiAuthToken } = await import(
+				"../../config/ApiConfig.js"
+			);
 			removeApiAuthToken();
 
 			// Clear any localStorage/sessionStorage items
@@ -324,7 +327,12 @@ const NavigationView = ({ children }) => {
 
 	const navItemClass = (href) => {
 		const isActive = location.pathname === href;
-		return `nav-link px-3 py-2 rounded-5 ${isActive ? "bg-primary text-white" : "text-dark"}`;
+		return `nav-link px-3 py-2 rounded-end-5 ${isActive ? "bg-primary text-white" : "text-dark"}`;
+	};
+
+	const mobileNavItemClass = (href) => {
+		const isActive = location.pathname === href;
+		return `nav-link mobile-nav-bar px-3 py-2 rounded-5 ${isActive ? "bg-primary text-white" : "text-dark"}`;
 	};
 
 	const handleSearch = (e) => {
@@ -395,7 +403,12 @@ const NavigationView = ({ children }) => {
 								</Dropdown.Toggle>
 								<Dropdown.Menu align="end">
 									<span className="small fw-bold px-3 mb-2">Credits</span>
-									<p className="text-muted rounded-5 py-1 bg-light mt-2 mb-2 mx-3 px-3 fw-bold d-flex align-items-center justify-content-between gap-2">${credits.credits.toFixed(2)} <span className="text-primary fw-bold small">Buy Credits</span></p>
+									<p className="text-muted rounded-5 py-1 bg-light mt-2 mb-2 mx-3 px-3 fw-bold d-flex align-items-center justify-content-between gap-2">
+										${credits.credits.toFixed(2)}{" "}
+										<span className="text-primary fw-bold small">
+											Buy Credits
+										</span>
+									</p>
 									<span className="small fw-bold px-3 mt-2 mb-2">Billing</span>
 									<Dropdown.Item as={Link} to="/account/billing/subscription">
 										<GoStar size={18} className="me-2" />
@@ -423,7 +436,7 @@ const NavigationView = ({ children }) => {
 										Settings & Privacy
 									</Dropdown.Item>
 									<Dropdown.Item onClick={handleLogout} className="text-danger">
-										<BoxArrowRight size={18} className="me-2"/>
+										<BoxArrowRight size={18} className="me-2" />
 										Logout
 									</Dropdown.Item>
 								</Dropdown.Menu>
@@ -437,7 +450,7 @@ const NavigationView = ({ children }) => {
 						<Link
 							key={idx}
 							to={item.href}
-							className={navItemClass(item.href)}
+							className={mobileNavItemClass(item.href)}
 							style={{ textDecoration: "none" }}
 							onClick={() => handleNavigate(item.href)}
 						>
@@ -553,7 +566,8 @@ const NavigationView = ({ children }) => {
 											(user?.membership?.subscription || user?.subscription) ===
 											"premium"
 												? "bg-warning text-dark"
-												: (user?.membership?.subscription || user?.subscription) === "pro"
+												: (user?.membership?.subscription ||
+															user?.subscription) === "pro"
 													? "bg-primary"
 													: "bg-secondary"
 										}`}
@@ -567,12 +581,15 @@ const NavigationView = ({ children }) => {
 						</p>
 						<p className="text-center">
 							<small className="text-success fw-bold d-flex align-items-center justify-content-center">
-								$
-								{centavosToPesos(credits?.creditsInCentavos || "0.00").toFixed(
-									2,
-								)}{" "}
+								<GoStar size={14} className="me-1" />
+								<span className="text-truncate">
+									$
+									{centavosToPesos(
+										credits?.creditsInCentavos || "0.00",
+									).toFixed(2)}
+								</span>{" "}
 								<span
-									className="bg-light px-1 py-2 me-2"
+									className="bg-light px-1 py-1 rounded-5 ms-2"
 									style={{ fontSize: "12px" }}
 								>
 									Credits

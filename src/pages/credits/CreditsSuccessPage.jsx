@@ -98,7 +98,7 @@ const CreditsSuccessPage = () => {
 									<Star className="me-2" />
 									View Dashboard
 								</Button>
-								<Button as={Link} to="/home" variant="outline-secondary">
+								<Button as={Link} to="/" variant="outline-secondary">
 									<ArrowLeft className="me-2" />
 									Back to Home
 								</Button>

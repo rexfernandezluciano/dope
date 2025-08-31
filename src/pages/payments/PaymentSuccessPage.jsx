@@ -110,7 +110,7 @@ const PaymentSuccessPage = () => {
 									<CreditCard className="me-2" />
 									View Subscription
 								</Button>
-								<Button as={Link} to="/home" variant="outline-secondary">
+								<Button as={Link} to="/account/billing/subscription" variant="outline-secondary">
 									<ArrowLeft className="me-2" />
 									Back to Home
 								</Button>

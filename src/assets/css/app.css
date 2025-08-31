@@ -166,32 +166,10 @@ a:focus {
   font-weight: 600;
 }
 
-/* Horizontal scroll container for images */
-.horizontal-scroll-container {
-  overflow-x: auto !important;
-  overflow-y: hidden;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: #ccc transparent;
-}
-
-.horizontal-scroll-container::-webkit-scrollbar {
-  height: 6px;
-}
-
-.horizontal-scroll-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.horizontal-scroll-container::-webkit-scrollbar-thumb {
-  background-color: #ccc;
-  border-radius: 3px;
-}
-
-.horizontal-scroll-item {
-  flex-shrink: 0;
-  display: inline-block;
+.mobile-nav-bar:hover {
+  background: rgba(0, 105, 181, 0.1) !important;
+  color: #0069B5 !important;
+  border-radius: 18px !important;
 }
 
 /* Comment thread connecting lines */
