@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Image, Button, Form, Collapse, Badge, InputGroup } from 'react-bootstrap';
 import { Heart, HeartFill, ChatDots, CheckCircleFill, PencilSquare, Trash, Gift, CurrencyDollar } from 'react-bootstrap-icons';
 import { formatTimeAgo } from '../utils/common-utils';
-import { parseTextContent } from '../utils/text-utils';
+import { parseTextContent, MentionComponent } from '../utils/text-utils';
 import { commentAPI, userAPI } from '../config/ApiConfig'; // Assuming userAPI is imported here
 
 const CommentItem = ({

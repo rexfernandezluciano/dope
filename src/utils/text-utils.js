@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { userAPI } from '../config/ApiConfig';
 
 // Component to resolve mention UIDs to display names
-const MentionComponent = ({ uid, onMentionClick }) => {
+export const MentionComponent = ({ uid, onMentionClick }) => {
 	const [userData, setUserData] = useState(null);
 	const [loading, setLoading] = useState(true);
 
@@ -33,26 +33,14 @@ const MentionComponent = ({ uid, onMentionClick }) => {
 
 	return (
 		<span
-			className="text-primary fw-bold mention-link"
-			style={{ 
-				cursor: 'pointer',
-				textDecoration: 'none',
-				borderRadius: '4px',
-				padding: '2px 4px',
-				backgroundColor: 'rgba(13, 110, 253, 0.1)',
-				transition: 'all 0.2s ease'
-			}}
+			className={`mention-link mention-component ${loading ? 'loading' : ''}`}
 			onClick={(e) => {
 				e.stopPropagation();
-				onMentionClick(username);
+				if (!loading) {
+					onMentionClick(username);
+				}
 			}}
-			onMouseEnter={(e) => {
-				e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.2)';
-			}}
-			onMouseLeave={(e) => {
-				e.target.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
-			}}
-			title={`${displayName} (@${username})`}
+			title={loading ? `Loading @${uid}...` : `${displayName} (@${username})`}
 		>
 			@{loading ? uid : displayName}
 		</span>

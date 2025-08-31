@@ -35,7 +35,7 @@ import {
 	deletePost as deletePostUtil,
 	sharePost,
 } from "../utils/common-utils";
-import { parseTextContent } from "../utils/text-utils";
+import { parseTextContent, MentionComponent } from "../utils/text-utils";
 import { handleLikeNotification } from "../utils/notification-helpers";
 import CommentItem from "./CommentItem";
 import PollView from "./PollView";

@@ -1142,3 +1142,61 @@ button,
 		border-radius: 1rem !important;
 		border: 1px solid #dee2e6 !important;
 	}
+
+/* Mention links styling */
+.mention-link {
+	color: var(--bs-primary) !important;
+	text-decoration: none !important;
+	font-weight: 600 !important;
+	border-radius: 4px;
+	padding: 2px 4px;
+	background-color: rgba(13, 110, 253, 0.1);
+	transition: all 0.2s ease;
+}
+
+/* Mention component specific styles */
+.mention-component {
+	display: inline-block;
+	cursor: pointer;
+	user-select: none;
+}
+
+.mention-component:hover {
+	background-color: rgba(13, 110, 253, 0.2) !important;
+	transform: translateY(-1px);
+}
+
+.mention-component.loading {
+	opacity: 0.7;
+}
+
+/* Mention dropdown styling */
+.mention-suggestions {
+	position: absolute;
+	z-index: 1050;
+	background: white;
+	border: 1px solid #dee2e6;
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	max-height: 200px;
+	overflow-y: auto;
+	min-width: 200px;
+}
+
+.mention-suggestion-item {
+	padding: 8px 12px;
+	border-bottom: 1px solid #f8f9fa;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.mention-suggestion-item:hover,
+.mention-suggestion-item.focused {
+	background-color: #e3f2fd;
+}
+
+.mention-suggestion-item:last-child {
+	border-bottom: none;
+}
