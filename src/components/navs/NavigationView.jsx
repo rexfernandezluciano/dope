@@ -31,6 +31,7 @@ import {
 	GoGear,
 } from "react-icons/go";
 import { TbBrandGoogleAnalytics } from "react-icons/tb";
+import { Grid3x3 } from "react-bootstrap-icons";
 
 import {
 	initializeNotifications,
