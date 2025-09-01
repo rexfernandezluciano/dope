@@ -1,4 +1,3 @@
-
 /** @format */
 
 import { useLoaderData } from "react-router-dom";
@@ -77,9 +76,21 @@ const NotificationSettingsPage = () => {
 	const handleSaveSettings = async () => {
 		try {
 			setLoading(true);
-			// Send the settings in the structure the server expects
-			const payload = { settings };
-			await notificationAPI.updateSettings(payload);
+
+			// Transform the nested settings structure to match the server's expected flat structure
+			const flatSettings = {
+				emailNotifications: settings.email.likes || settings.email.comments || settings.email.follows || settings.email.mentions || settings.email.tips || settings.email.subscriptions || settings.email.security,
+				pushNotifications: settings.push.likes || settings.push.comments || settings.push.follows || settings.push.mentions || settings.push.tips || settings.push.subscriptions || settings.push.security,
+				smsNotifications: false, // Not implemented in UI
+				marketingEmails: settings.email.marketing || false,
+				securityAlerts: settings.email.security || settings.push.security || settings.inApp.security,
+				followNotifications: settings.email.follows || settings.push.follows || settings.inApp.follows,
+				likeNotifications: settings.email.likes || settings.push.likes || settings.inApp.likes,
+				commentNotifications: settings.email.comments || settings.push.comments || settings.inApp.comments,
+				mentionNotifications: settings.email.mentions || settings.push.mentions || settings.inApp.mentions
+			};
+
+			await notificationAPI.updateSettings(flatSettings);
 			setMessage("Notification settings updated successfully!");
 			setMessageType("success");
 		} catch (err) {
@@ -140,7 +151,7 @@ const NotificationSettingsPage = () => {
 									<Form.Text className="text-muted d-block mb-2">
 										{notification.description}
 									</Form.Text>
-									
+
 									<div className="d-flex gap-4">
 										<Form.Group>
 											<Form.Check
@@ -152,7 +163,7 @@ const NotificationSettingsPage = () => {
 												}
 											/>
 										</Form.Group>
-										
+
 										<Form.Group>
 											<Form.Check
 												type="checkbox"
@@ -163,7 +174,7 @@ const NotificationSettingsPage = () => {
 												}
 											/>
 										</Form.Group>
-										
+
 										<Form.Group>
 											<Form.Check
 												type="checkbox"
