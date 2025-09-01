@@ -72,8 +72,7 @@ apiClient.interceptors.request.use(
 			}
 		}
 
-		// Apply security middleware
-		const secureConfig = await SecurityMiddleware.apply(config);
+		return config;
 	},
 	(error) => {
 		return Promise.reject(error);
