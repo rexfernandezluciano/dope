@@ -215,12 +215,14 @@ const PrivacySettingsPage = () => {
 				</Button>
 			</div>
 			{/* <!-- banner_ad --> */}
-			<Adsense
-				client="ca-pub-1106169546112879"
-				slot="2596463814"
-				style={{ display: "block" }}
-				format="auto"
-			/>
+			{user.membership?.subscription === "free" && (
+				<Adsense
+					client="ca-pub-1106169546112879"
+					slot="2596463814"
+					style={{ display: "block" }}
+					format="auto"
+				/>
+			)}
 		</div>
 	);
 };

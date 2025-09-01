@@ -93,10 +93,10 @@ const AccountSettingsPage = () => {
 		try {
 			setLoading(true);
 			setMessage("");
-			
+
 			// Delete the user account via API
 			await userAPI.deleteUser(user.username);
-			
+
 			// Remove auth token and redirect
 			removeAuthToken();
 			window.location.href = "/";
@@ -222,7 +222,7 @@ const AccountSettingsPage = () => {
 			</Card>
 
 			{/* Action Buttons */}
-			<div className="d-grid gap-2">
+			<div className="d-grid gap-2 mb-3">
 				<Button
 					variant="primary"
 					size="md"
@@ -272,12 +272,14 @@ const AccountSettingsPage = () => {
 				</Modal.Footer>
 			</Modal>
 			{/* <!-- banner_ad --> */}
-			<Adsense
-				client="ca-pub-1106169546112879"
-				slot="2596463814"
-				style={{ display: "block" }}
-				format="auto"
-			/>
+			{user.membership?.subscription === "free" && (
+				<Adsense
+					client="ca-pub-1106169546112879"
+					slot="2596463814"
+					style={{ display: "block" }}
+					format="auto"
+				/>
+			)}
 		</div>
 	);
 };

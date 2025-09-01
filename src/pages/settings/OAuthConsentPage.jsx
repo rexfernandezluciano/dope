@@ -14,10 +14,12 @@ import {
 	Modal,
 } from "react-bootstrap";
 import { Check, X, Eye, Clock } from "react-bootstrap-icons";
+import { useLoaderData } from "react-router-dom";
 import { Adsense } from "@ctrl/react-adsense";
 import { oauthAPI } from "../../config/ApiConfig";
 
 const OAuthConsentPage = () => {
+	const { user } = useLoaderData();
 	const [authorizations, setAuthorizations] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState("");
@@ -332,12 +334,14 @@ const OAuthConsentPage = () => {
 				</Modal.Footer>
 			</Modal>
 			{/* <!-- banner_ad --> */}
-			<Adsense
-				client="ca-pub-1106169546112879"
-				slot="2596463814"
-				style={{ display: "block" }}
-				format="auto"
-			/>
+			{user.membership?.subscription === "free" && (
+				<Adsense
+					client="ca-pub-1106169546112879"
+					slot="2596463814"
+					style={{ display: "block" }}
+					format="auto"
+				/>
+			)}
 		</Container>
 	);
 };

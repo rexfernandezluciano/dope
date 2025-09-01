@@ -16,11 +16,13 @@ import {
   XCircle,
   CameraVideo,
 } from "react-bootstrap-icons";
+import { useLoaderData } from "react-router-dom";
 import { Adsense } from "@ctrl/react-adsense"
 import { subscriptionAPI } from "../config/ApiConfig";
 import { useNavigate } from "react-router-dom";
 
 const MySubscriptionsPage = () => {
+  const { user } = useLoaderData();
   const [subscriptions, setSubscriptions] = useState([]);
   const [subscribers, setSubscribers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -250,12 +252,14 @@ const MySubscriptionsPage = () => {
       </Modal>
       
       {/* <!-- banner_ad --> */}
-      <Adsense
-        client="ca-pub-1106169546112879"
-        slot="2596463814"
-        style={{ display: "block" }}
-        format="auto"
-      />
+      {user.membership?.subscription === "free" && (
+        <Adsense
+          client="ca-pub-1106169546112879"
+          slot="2596463814"
+          style={{ display: "block" }}
+          format="auto"
+        />
+      )}
     </Container>
   );
 };
