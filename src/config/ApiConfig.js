@@ -1488,7 +1488,7 @@ export const notificationAPI = {
 		if (unread) params.append('unread', 'true');
 		if (since) params.append('since', since);
 
-		const response = await apiCall(`/v1/notifications?${params.toString()}`, {
+		const response = await apiRequest(`/v1/notifications?${params.toString()}`, {
 			method: 'GET'
 		});
 		return response;
@@ -1496,7 +1496,7 @@ export const notificationAPI = {
 
 	// Send notification
 	async sendNotification(notificationData) {
-		const response = await apiCall('/v1/notifications', {
+		const response = await apiRequest('/v1/notifications', {
 			method: 'POST',
 			body: JSON.stringify(notificationData)
 		});
@@ -1505,7 +1505,7 @@ export const notificationAPI = {
 
 	// Mark notification as read
 	async markAsRead(notificationId) {
-		const response = await apiCall(`/v1/notifications/${notificationId}/read`, {
+		const response = await apiRequest(`/v1/notifications/${notificationId}/read`, {
 			method: 'PUT'
 		});
 		return response;
@@ -1513,7 +1513,7 @@ export const notificationAPI = {
 
 	// Mark all notifications as read
 	async markAllAsRead() {
-		const response = await apiCall('/v1/notifications/read-all', {
+		const response = await apiRequest('/v1/notifications/read-all', {
 			method: 'PUT'
 		});
 		return response;
@@ -1521,7 +1521,7 @@ export const notificationAPI = {
 
 	// Delete notification
 	async deleteNotification(notificationId) {
-		const response = await apiCall(`/v1/notifications/${notificationId}`, {
+		const response = await apiRequest(`/v1/notifications/${notificationId}`, {
 			method: 'DELETE'
 		});
 		return response;
@@ -1529,7 +1529,7 @@ export const notificationAPI = {
 
 	// Get notification settings
 	async getSettings() {
-		const response = await apiCall('/v1/notifications/settings', {
+		const response = await apiRequest('/v1/notifications/settings', {
 			method: 'GET'
 		});
 		return response;
@@ -1537,7 +1537,7 @@ export const notificationAPI = {
 
 	// Update notification settings
 	async updateSettings(settings) {
-		const response = await apiCall('/v1/notifications/settings', {
+		const response = await apiRequest('/v1/notifications/settings', {
 			method: 'PUT',
 			body: JSON.stringify(settings)
 		});
