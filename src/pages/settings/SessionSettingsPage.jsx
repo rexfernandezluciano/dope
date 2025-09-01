@@ -168,22 +168,94 @@ const SessionSettingsPage = () => {
 							No active sessions found
 						</div>
 					) : (
-						<div className="table-responsive">
-							<Table hover responsive className="mb-0">
-								<thead>
-									<tr>
-										<th>Device</th>
-										<th>Location</th>
-										<th>IP Address</th>
-										<th>Last Activity</th>
-										<th>Status</th>
-										<th>Actions</th>
-									</tr>
-								</thead>
-								<tbody>
-									{sessions.map((session) => (
-										<tr key={session.id}>
-											<td>
+						<>
+							{/* Desktop Table View */}
+							<div className="table-responsive d-none d-md-block">
+								<Table hover responsive className="mb-0">
+									<thead>
+										<tr>
+											<th>Device</th>
+											<th>Location</th>
+											<th>IP Address</th>
+											<th>Last Activity</th>
+											<th>Status</th>
+											<th>Actions</th>
+										</tr>
+									</thead>
+									<tbody>
+										{sessions.map((session) => (
+											<tr key={session.id}>
+												<td>
+													<div className="d-flex align-items-center gap-2">
+														{getDeviceIcon(session.device)}
+														<div>
+															<div className="fw-medium">
+																{session.device ||
+																	session.userAgent ||
+																	"Unknown Device"}
+															</div>
+															<small className="text-muted">
+																{session.browser}
+															</small>
+														</div>
+													</div>
+												</td>
+												<td>
+													<div>
+														{session.location ? (
+															<div>{session.location}</div>
+														) : (
+															<span className="text-muted">Unknown</span>
+														)}
+													</div>
+												</td>
+												<td>
+													<code className="small">
+														{session.ipAddress || "Unknown"}
+													</code>
+												</td>
+												<td>
+													<div>{formatLastActivity(session.lastActivity)}</div>
+													<small className="text-muted">
+														Created:{" "}
+														{new Date(session.createdAt).toLocaleDateString()}
+													</small>
+												</td>
+												<td>
+													{session.isActive ? (
+														<Badge bg="success">Current Session</Badge>
+													) : (
+														<Badge bg="secondary">Active</Badge>
+													)}
+												</td>
+												<td>
+													{!session.isActive && (
+														<Button
+															variant="outline-danger"
+															size="sm"
+															onClick={() => {
+																setSelectedSession(session);
+																setShowRevokeModal(true);
+															}}
+															disabled={loading}
+														>
+															<Trash size={14} className="me-1" />
+															Revoke
+														</Button>
+													)}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</Table>
+							</div>
+
+							{/* Mobile Card View */}
+							<div className="d-md-none">
+								{sessions.map((session) => (
+									<Card key={session.id} className="mb-3 border-0 shadow-sm">
+										<Card.Body className="p-3">
+											<div className="d-flex justify-content-between align-items-start mb-3">
 												<div className="d-flex align-items-center gap-2">
 													{getDeviceIcon(session.device)}
 													<div>
@@ -197,37 +269,45 @@ const SessionSettingsPage = () => {
 														</small>
 													</div>
 												</div>
-											</td>
-											<td>
-												<div>
-													{session.location ? (
-														<div>{session.location}</div>
-													) : (
-														<span className="text-muted">Unknown</span>
-													)}
-												</div>
-											</td>
-											<td>
-												<code className="small">
-													{session.ipAddress || "Unknown"}
-												</code>
-											</td>
-											<td>
-												<div>{formatLastActivity(session.lastActivity)}</div>
-												<small className="text-muted">
-													Created:{" "}
-													{new Date(session.createdAt).toLocaleDateString()}
-												</small>
-											</td>
-											<td>
 												{session.isActive ? (
-													<Badge bg="success">Current Session</Badge>
+													<Badge bg="success">Current</Badge>
 												) : (
 													<Badge bg="secondary">Active</Badge>
 												)}
-											</td>
-											<td>
-												{!session.isActive && (
+											</div>
+
+											<div className="row g-2 mb-3">
+												<div className="col-6">
+													<small className="text-muted d-block">Location</small>
+													<div className="fw-medium">
+														{session.location || "Unknown"}
+													</div>
+												</div>
+												<div className="col-6">
+													<small className="text-muted d-block">IP Address</small>
+													<code className="small">
+														{session.ipAddress || "Unknown"}
+													</code>
+												</div>
+											</div>
+
+											<div className="row g-2 mb-3">
+												<div className="col-6">
+													<small className="text-muted d-block">Last Activity</small>
+													<div className="small">
+														{formatLastActivity(session.lastActivity)}
+													</div>
+												</div>
+												<div className="col-6">
+													<small className="text-muted d-block">Created</small>
+													<div className="small">
+														{new Date(session.createdAt).toLocaleDateString()}
+													</div>
+												</div>
+											</div>
+
+											{!session.isActive && (
+												<div className="d-grid">
 													<Button
 														variant="outline-danger"
 														size="sm"
@@ -238,15 +318,15 @@ const SessionSettingsPage = () => {
 														disabled={loading}
 													>
 														<Trash size={14} className="me-1" />
-														Revoke
+														Revoke Session
 													</Button>
-												)}
-											</td>
-										</tr>
-									))}
-								</tbody>
-							</Table>
-						</div>
+												</div>
+											)}
+										</Card.Body>
+									</Card>
+								))}
+							</div>
+						</>
 					)}
 				</Card.Body>
 			</Card>
