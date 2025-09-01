@@ -132,27 +132,25 @@ export const formatNotificationData = (title, message, url = null, data = {}) =>
 
 /**
  * Helper function to check if notifications are enabled for the user
- * @param {Object} userSettings - User notification settings
+ * @param {Object} userSettings - User notification settings (nested structure)
  * @param {string} notificationType - Type of notification
+ * @param {string} deliveryMethod - Delivery method ('email', 'push', 'inApp')
  * @returns {boolean} Whether notifications are enabled
  */
-export const shouldSendNotification = (userSettings, notificationType) => {
-	if (!userSettings) return true;
+export const shouldSendNotification = (userSettings, notificationType, deliveryMethod = 'inApp') => {
+	if (!userSettings || !userSettings[deliveryMethod]) return true;
 
-	switch (notificationType) {
-		case 'like':
-			return userSettings.likeNotifications !== false;
-		case 'comment':
-			return userSettings.commentNotifications !== false;
-		case 'follow':
-			return userSettings.followNotifications !== false;
-		case 'mention':
-			return userSettings.mentionNotifications !== false;
-		case 'security':
-			return userSettings.securityAlerts !== false;
-		case 'marketing':
-			return userSettings.marketingEmails !== false;
-		default:
-			return true;
-	}
+	const typeMapping = {
+		'like': 'likes',
+		'comment': 'comments',
+		'follow': 'follows',
+		'mention': 'mentions',
+		'tip': 'tips',
+		'subscription': 'subscriptions',
+		'security': 'security',
+		'marketing': 'marketing'
+	};
+
+	const settingKey = typeMapping[notificationType] || notificationType;
+	return userSettings[deliveryMethod][settingKey] !== false;
 };

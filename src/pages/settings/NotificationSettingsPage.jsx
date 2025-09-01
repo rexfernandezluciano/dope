@@ -13,15 +13,36 @@ const NotificationSettingsPage = () => {
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData;
 	const [settings, setSettings] = useState({
-		emailNotifications: true,
-		pushNotifications: true,
-		smsNotifications: false,
-		marketingEmails: false,
-		securityAlerts: true,
-		followNotifications: true,
-		likeNotifications: true,
-		commentNotifications: true,
-		mentionNotifications: true,
+		email: {
+			likes: true,
+			comments: true,
+			follows: true,
+			mentions: true,
+			tips: true,
+			subscriptions: true,
+			security: true,
+			marketing: false,
+		},
+		push: {
+			likes: true,
+			comments: true,
+			follows: true,
+			mentions: true,
+			tips: true,
+			subscriptions: true,
+			security: true,
+			marketing: false,
+		},
+		inApp: {
+			likes: true,
+			comments: true,
+			follows: true,
+			mentions: true,
+			tips: true,
+			subscriptions: true,
+			security: true,
+			marketing: true,
+		},
 	});
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
@@ -66,10 +87,13 @@ const NotificationSettingsPage = () => {
 		}
 	};
 
-	const handleNotificationChange = (key, value) => {
+	const handleNotificationChange = (category, type, value) => {
 		setSettings((prev) => ({
 			...prev,
-			[key]: value,
+			[category]: {
+				...prev[category],
+				[type]: value,
+			},
 		}));
 	};
 
@@ -95,139 +119,60 @@ const NotificationSettingsPage = () => {
 				<Card.Body>
 					<Form>
 						<div className="mb-4">
-							<h6 className="mb-3">Activity Notifications</h6>
+							<h6 className="mb-3">Notification Types</h6>
 
-							<Form.Group className="mb-3">
-								<Form.Check
-									type="checkbox"
-									label="Likes on your posts"
-									checked={settings.likeNotifications}
-									onChange={(e) =>
-										handleNotificationChange("likeNotifications", e.target.checked)
-									}
-								/>
-								<Form.Text className="text-muted d-block ms-4">
-									Get notified when someone likes your posts
-								</Form.Text>
-							</Form.Group>
-
-							<Form.Group className="mb-3">
-								<Form.Check
-									type="checkbox"
-									label="Comments on your posts"
-									checked={settings.commentNotifications}
-									onChange={(e) =>
-										handleNotificationChange("commentNotifications", e.target.checked)
-									}
-								/>
-								<Form.Text className="text-muted d-block ms-4">
-									Get notified when someone comments on your posts
-								</Form.Text>
-							</Form.Group>
-
-							<Form.Group className="mb-3">
-								<Form.Check
-									type="checkbox"
-									label="New followers"
-									checked={settings.followNotifications}
-									onChange={(e) =>
-										handleNotificationChange("followNotifications", e.target.checked)
-									}
-								/>
-								<Form.Text className="text-muted d-block ms-4">
-									Get notified when someone follows you
-								</Form.Text>
-							</Form.Group>
-
-							<Form.Group className="mb-3">
-								<Form.Check
-									type="checkbox"
-									label="Mentions"
-									checked={settings.mentionNotifications}
-									onChange={(e) =>
-										handleNotificationChange("mentionNotifications", e.target.checked)
-									}
-								/>
-								<Form.Text className="text-muted d-block ms-4">
-									Get notified when someone mentions you
-								</Form.Text>
-							</Form.Group>
-
-							<Form.Group className="mb-3">
-								<Form.Check
-									type="checkbox"
-									label="Security alerts"
-									checked={settings.securityAlerts}
-									onChange={(e) =>
-										handleNotificationChange("securityAlerts", e.target.checked)
-									}
-								/>
-								<Form.Text className="text-muted d-block ms-4">
-									Get notified about security-related activities
-								</Form.Text>
-							</Form.Group>
-
-							<Form.Group className="mb-3">
-								<Form.Check
-									type="checkbox"
-									label="Marketing emails"
-									checked={settings.marketingEmails}
-									onChange={(e) =>
-										handleNotificationChange("marketingEmails", e.target.checked)
-									}
-								/>
-								<Form.Text className="text-muted d-block ms-4">
-									Receive promotional emails and updates
-								</Form.Text>
-							</Form.Group>
-						</div>
-
-						<hr />
-
-						<div className="mb-4">
-							<h6 className="mb-3">Delivery Methods</h6>
-
-							<Form.Group className="mb-3">
-								<Form.Check
-									type="checkbox"
-									label="Push notifications"
-									checked={settings.pushNotifications}
-									onChange={(e) =>
-										handleNotificationChange("pushNotifications", e.target.checked)
-									}
-								/>
-								<Form.Text className="text-muted d-block ms-4">
-									Receive notifications on your device
-								</Form.Text>
-							</Form.Group>
-
-							<Form.Group className="mb-3">
-								<Form.Check
-									type="checkbox"
-									label="Email notifications"
-									checked={settings.emailNotifications}
-									onChange={(e) =>
-										handleNotificationChange("emailNotifications", e.target.checked)
-									}
-								/>
-								<Form.Text className="text-muted d-block ms-4">
-									Receive notifications via email
-								</Form.Text>
-							</Form.Group>
-
-							<Form.Group className="mb-3">
-								<Form.Check
-									type="checkbox"
-									label="SMS notifications"
-									checked={settings.smsNotifications}
-									onChange={(e) =>
-										handleNotificationChange("smsNotifications", e.target.checked)
-									}
-								/>
-								<Form.Text className="text-muted d-block ms-4">
-									Receive notifications via SMS
-								</Form.Text>
-							</Form.Group>
+							{[
+								{ key: "likes", label: "Likes on your posts", description: "Get notified when someone likes your posts" },
+								{ key: "comments", label: "Comments on your posts", description: "Get notified when someone comments on your posts" },
+								{ key: "follows", label: "New followers", description: "Get notified when someone follows you" },
+								{ key: "mentions", label: "Mentions", description: "Get notified when someone mentions you" },
+								{ key: "tips", label: "Tips received", description: "Get notified when you receive tips" },
+								{ key: "subscriptions", label: "Subscription updates", description: "Get notified about subscription-related activities" },
+								{ key: "security", label: "Security alerts", description: "Get notified about security-related activities" },
+								{ key: "marketing", label: "Marketing communications", description: "Receive promotional emails and updates" },
+							].map((notification) => (
+								<div key={notification.key} className="mb-4">
+									<h6 className="mb-2">{notification.label}</h6>
+									<Form.Text className="text-muted d-block mb-2">
+										{notification.description}
+									</Form.Text>
+									
+									<div className="d-flex gap-4">
+										<Form.Group>
+											<Form.Check
+												type="checkbox"
+												label="Email"
+												checked={settings.email[notification.key]}
+												onChange={(e) =>
+													handleNotificationChange("email", notification.key, e.target.checked)
+												}
+											/>
+										</Form.Group>
+										
+										<Form.Group>
+											<Form.Check
+												type="checkbox"
+												label="Push"
+												checked={settings.push[notification.key]}
+												onChange={(e) =>
+													handleNotificationChange("push", notification.key, e.target.checked)
+												}
+											/>
+										</Form.Group>
+										
+										<Form.Group>
+											<Form.Check
+												type="checkbox"
+												label="In-App"
+												checked={settings.inApp[notification.key]}
+												onChange={(e) =>
+													handleNotificationChange("inApp", notification.key, e.target.checked)
+												}
+											/>
+										</Form.Group>
+									</div>
+								</div>
+							))}
 						</div>
 					</Form>
 				</Card.Body>
