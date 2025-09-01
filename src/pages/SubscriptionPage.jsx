@@ -72,8 +72,6 @@ const SubscriptionPage = () => {
 	const [showCancelModal, setShowCancelModal] = useState(false);
 	const [showAddPaymentModal, setShowAddPaymentModal] = useState(false);
 	const [selectedPaymentType, setSelectedPaymentType] = useState("card");
-	const [isSignupFlow, setIsSignupFlow] = useState(false);
-	const [pendingSignupData, setPendingSignupData] = useState(null);
 	const [cardForm, setCardForm] = useState({
 		cardNumber: "",
 		expiryDate: "",
