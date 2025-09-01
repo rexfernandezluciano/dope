@@ -670,8 +670,11 @@ const SignUpPage = () => {
 									<Form.Label>Birthday</Form.Label>
 									<Form.Control
 										type="date"
-										value={birthday}
-										onChange={(e) => setBirthday(new Date(e.target.value).toISOString())}
+										value={birthday ? new Date(birthday).toISOString().split('T')[0] : ""}
+										onChange={(e) => {
+											const date = e.target.value ? new Date(e.target.value) : null;
+											setBirthday(date ? date.toISOString() : "");
+										}}
 										disabled={loading}
 										className="shadow-none"
 										required
