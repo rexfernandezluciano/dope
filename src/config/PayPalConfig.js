@@ -160,6 +160,7 @@ export const createPayPalPaymentMethod = (type = 'card') => {
           : `https://www.paypal.com/agreements/approve?${params.toString()}`;
         
         window.location.href = vaultUrl;
+        resolve({ type: 'redirect', url: vaultUrl })
       }
     } catch (error) {
       console.error('PayPal redirect setup error:', error);
