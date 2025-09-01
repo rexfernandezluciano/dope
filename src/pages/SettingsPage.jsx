@@ -12,7 +12,7 @@ import {
 	Shield,
 	List,
 	Lock,
-	Apps,
+	Grid3x3,
 } from "react-bootstrap-icons";
 import { Link } from "react-router-dom";
 
@@ -86,7 +86,7 @@ const SettingsPage = () => {
 			{
 				key: "oauth-apps",
 				label: "OAuth Apps",
-				icon: <Apps size={20} />,
+				icon: <Grid3x3 size={20} />,
 				component: <OAuthAppsPage />,
 				category: "Developer",
 			},
