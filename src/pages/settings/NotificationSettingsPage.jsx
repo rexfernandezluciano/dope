@@ -12,36 +12,15 @@ const NotificationSettingsPage = () => {
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData || {};
 	const [settings, setSettings] = useState({
-		email: {
-			likes: true,
-			comments: true,
-			follows: true,
-			mentions: true,
-			tips: true,
-			subscriptions: true,
-			security: true,
-			marketing: false,
-		},
-		push: {
-			likes: true,
-			comments: true,
-			follows: true,
-			mentions: true,
-			tips: true,
-			subscriptions: true,
-			security: true,
-			marketing: false,
-		},
-		inApp: {
-			likes: true,
-			comments: true,
-			follows: true,
-			mentions: true,
-			tips: true,
-			subscriptions: true,
-			security: true,
-			marketing: true,
-		},
+		emailNotifications: false,
+		pushNotifications: true,
+		smsNotifications: false,
+		marketingEmails: false,
+		securityAlerts: true,
+		followNotifications: true,
+		likeNotifications: true,
+		commentNotifications: true,
+		mentionNotifications: true,
 	});
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
@@ -51,8 +30,8 @@ const NotificationSettingsPage = () => {
 		const fetchNotificationSettings = async () => {
 			try {
 				const response = await notificationAPI.getSettings();
-				if (response && response.settings && typeof response.settings === 'object') {
-					setSettings(response.settings);
+				if (response && typeof response === "object") {
+					setSettings(response);
 				}
 			} catch (err) {
 				console.error("Error fetching notification settings:", err);
@@ -75,12 +54,8 @@ const NotificationSettingsPage = () => {
 
 	const handleSaveSettings = async () => {
 		try {
-			setLoading(true);
-
-			// Send the nested settings structure wrapped in a settings property as the server expects
-			const payload = { settings };
-
-			await notificationAPI.updateSettings(payload);
+			setLoading(true);		
+			await notificationAPI.updateSettings(settings);
 			setMessage("Notification settings updated successfully!");
 			setMessageType("success");
 		} catch (err) {
@@ -92,13 +67,10 @@ const NotificationSettingsPage = () => {
 		}
 	};
 
-	const handleNotificationChange = (category, type, value) => {
+	const handleNotificationChange = (type, value) => {
 		setSettings((prev) => ({
 			...prev,
-			[category]: {
-				...prev[category],
-				[type]: value,
-			},
+			[type]: value,
 		}));
 	};
 
@@ -121,61 +93,84 @@ const NotificationSettingsPage = () => {
 					<Bell size={20} />
 					<h5 className="mb-0">Notification Preferences</h5>
 				</Card.Header>
-				<Card.Body>
+				<Card.Body className="px-3">
 					<Form>
 						<div className="mb-4">
 							<h6 className="mb-3">Notification Types</h6>
 
 							{[
-								{ key: "likes", label: "Likes on your posts", description: "Get notified when someone likes your posts" },
-								{ key: "comments", label: "Comments on your posts", description: "Get notified when someone comments on your posts" },
-								{ key: "follows", label: "New followers", description: "Get notified when someone follows you" },
-								{ key: "mentions", label: "Mentions", description: "Get notified when someone mentions you" },
-								{ key: "tips", label: "Tips received", description: "Get notified when you receive tips" },
-								{ key: "subscriptions", label: "Subscription updates", description: "Get notified about subscription-related activities" },
-								{ key: "security", label: "Security alerts", description: "Get notified about security-related activities" },
-								{ key: "marketing", label: "Marketing communications", description: "Receive promotional emails and updates" },
+								{
+									key: "emailNotifications",
+									label: "Email Notifications",
+									description: "Receive notifications via email",
+								},
+								{
+									key: "pushNotifications",
+									label: "Push Notifications",
+									description: "Receive notifications via push notifications",
+								},
+								{
+									key: "smsNotifications",
+									label: "SMS Notifications",
+									description: "Receive notifications via SMS",
+								},
+								{
+									key: "likeNotifications",
+									label: "Likes on your posts",
+									description: "Get notified when someone likes your posts",
+								},
+								{
+									key: "commentNotifications",
+									label: "Comments on your posts",
+									description:
+										"Get notified when someone comments on your posts",
+								},
+								{
+									key: "followNotifications",
+									label: "New followers",
+									description: "Get notified when someone follows you",
+								},
+								{
+									key: "mentionNotifications",
+									label: "Mentions",
+									description: "Get notified when someone mentions you",
+								},
+								{
+									key: "tipNotifications",
+									label: "Tips received",
+									description: "Get notified when you receive tips",
+								},
+								{
+									key: "securityAlerts",
+									label: "Security alerts",
+									description: "Get notified about security-related activities",
+								},
+								{
+									key: "marketingEmails",
+									label: "Marketing communications",
+									description: "Receive promotional emails and updates",
+								},
 							].map((notification) => (
 								<div key={notification.key} className="mb-4">
 									<h6 className="mb-2">{notification.label}</h6>
 									<Form.Text className="text-muted d-block mb-2">
-										{notification.description}
+										<Form.Group>
+											<Form.Check
+												type="checkbox"
+												label={`${notification.description}`}
+												checked={
+													settings?.[notification.key] ||
+													false
+												}
+												onChange={(e) =>
+													handleNotificationChange(
+														notification.key,
+														e.target.checked,
+													)
+												}
+											/>
+										</Form.Group>
 									</Form.Text>
-
-									<div className="d-flex gap-4">
-										<Form.Group>
-											<Form.Check
-												type="checkbox"
-												label="Email"
-												checked={settings?.email?.[notification.key] || false}
-												onChange={(e) =>
-													handleNotificationChange("email", notification.key, e.target.checked)
-												}
-											/>
-										</Form.Group>
-
-										<Form.Group>
-											<Form.Check
-												type="checkbox"
-												label="Push"
-												checked={settings?.push?.[notification.key] || false}
-												onChange={(e) =>
-													handleNotificationChange("push", notification.key, e.target.checked)
-												}
-											/>
-										</Form.Group>
-
-										<Form.Group>
-											<Form.Check
-												type="checkbox"
-												label="In-App"
-												checked={settings?.inApp?.[notification.key] || false}
-												onChange={(e) =>
-													handleNotificationChange("inApp", notification.key, e.target.checked)
-												}
-											/>
-										</Form.Group>
-									</div>
 								</div>
 							))}
 						</div>
