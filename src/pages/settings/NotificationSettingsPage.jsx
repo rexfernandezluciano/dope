@@ -77,7 +77,9 @@ const NotificationSettingsPage = () => {
 	const handleSaveSettings = async () => {
 		try {
 			setLoading(true);
-			await notificationAPI.updateSettings(settings);
+			// Send the settings in the structure the server expects
+			const payload = { settings };
+			await notificationAPI.updateSettings(payload);
 			setMessage("Notification settings updated successfully!");
 			setMessageType("success");
 		} catch (err) {
