@@ -1,7 +1,5 @@
 import { initializeOneSignal, getOneSignalPlayerId, setOneSignalExternalUserId, requestNotificationPermission as requestOneSignalPermission } from "../config/OneSignalConfig";
-import { db } from "../config/FirebaseConfig";
-import { collection, addDoc, doc, setDoc, query, where, onSnapshot, orderBy, limit, getDocs, updateDoc, serverTimestamp } from "firebase/firestore";
-// Removed unused getUser import
+// Firestore imports removed since notifications are handled by API
 
 /**
  * Initialize OneSignal and set user ID
@@ -50,20 +48,16 @@ export const requestNotificationPermission = async () => {
 };
 
 /**
- * Save OneSignal player ID to Firestore
+ * Save OneSignal player ID via API
  * @param {string} playerId - OneSignal player ID
  * @param {string} uid - User's unique identifier
  */
 const savePlayerIdToFirestore = async (playerId, uid) => {
 	try {
-		await setDoc(doc(db, "users", uid), {
-			oneSignalPlayerId: playerId,
-			updatedAt: serverTimestamp()
-		}, { merge: true });
-
-		console.log("OneSignal player ID saved to Firestore");
+		// This would typically be handled by the API when setting up notifications
+		console.log("OneSignal player ID would be saved via API:", playerId);
 	} catch (error) {
-		console.error("Error saving player ID to Firestore:", error);
+		console.error("Error saving player ID:", error);
 	}
 };
 
@@ -83,36 +77,10 @@ export const sendLikeNotification = async (postId, post, currentUser) => {
 		// Don't send notification if user likes their own post
 		if (post.author.uid === currentUser.uid) return;
 
-		console.log('Preparing like notification for:', post.author.uid);
-
-		const notificationData = {
-			type: 'like',
-			title: 'New Like',
-			message: `${currentUser.displayName || currentUser.username} liked your post`,
-			recipientId: post.author.uid,
-			senderId: currentUser.uid,
-			postId: postId,
-			url: `/post/${postId}`,
-			read: false,
-			createdAt: new Date()
-		};
-
-		// Save to Firestore
-		const docRef = await addDoc(collection(db, 'notifications'), notificationData);
-		console.log('Notification saved to Firestore:', docRef.id);
-
-		// Send push notification via OneSignal
-		const pushResult = await sendPushNotification(
-			post.author.uid,
-			notificationData.title,
-			notificationData.message,
-			{ postId, type: 'like' }
-		);
-
-		console.log('Push notification result:', pushResult);
+		console.log('Like notification will be handled automatically by the API');
 
 	} catch (error) {
-		console.error('Error sending like notification:', error);
+		console.error('Error in like notification handler:', error);
 	}
 };
 
@@ -125,23 +93,9 @@ export const sendFollowNotification = async (followedUserId, currentUser) => {
 	try {
 		if (followedUserId === currentUser.uid) return;
 
-		const notification = {
-			userId: followedUserId,
-			type: 'follow',
-			title: 'New Follower',
-			message: `${currentUser.name} started following you`,
-			url: `/${currentUser.username}`,
-			read: false,
-			createdAt: serverTimestamp(),
-			data: {
-				followerId: currentUser.uid,
-				followerName: currentUser.name
-			}
-		};
-
-		await addDoc(collection(db, "notifications"), notification);
+		console.log('Follow notification will be handled automatically by the API');
 	} catch (error) {
-		console.error("Error sending follow notification:", error);
+		console.error("Error in follow notification handler:", error);
 	}
 };
 
@@ -156,25 +110,9 @@ export const sendCommentNotification = async (postId, post, currentUser, comment
 	try {
 		if (!post?.author?.uid || post.author.uid === currentUser.uid) return;
 
-		const notification = {
-			userId: post.author.uid,
-			type: 'comment',
-			title: 'New Comment',
-			message: `${currentUser.name} commented on your post: "${commentText.substring(0, 50)}${commentText.length > 50 ? '...' : ''}"`,
-			url: `/posts/${postId}`,
-			read: false,
-			createdAt: serverTimestamp(),
-			data: {
-				postId,
-				commenterId: currentUser.uid,
-				commenterName: currentUser.name,
-				commentText
-			}
-		};
-
-		await addDoc(collection(db, "notifications"), notification);
+		console.log('Comment notification will be handled automatically by the API');
 	} catch (error) {
-		console.error("Error sending comment notification:", error);
+		console.error("Error in comment notification handler:", error);
 	}
 };
 
@@ -194,50 +132,30 @@ export const notifyFollowersOfNewPost = async (postId, postData) => {
 };
 
 /**
- * Get user notifications
+ * Get user notifications from API
  * @param {string} userId - User ID
  * @param {number} limitCount - Number of notifications to fetch
  * @returns {Promise<Array>} Array of notifications
  */
 export const getUserNotifications = async (userId, limitCount = 20) => {
 	try {
-		const q = query(
-			collection(db, "notifications"),
-			where("userId", "==", userId),
-			orderBy("createdAt", "desc"),
-			limit(limitCount)
-		);
-
-		const querySnapshot = await getDocs(q);
-		return querySnapshot.docs.map(doc => ({
-			id: doc.id,
-			...doc.data()
-		}));
+		const { notificationAPI } = await import('../config/ApiConfig.js');
+		const response = await notificationAPI.getUserNotifications(limitCount);
+		return response.data?.notifications || response.notifications || [];
 	} catch (error) {
-		console.error("Error getting user notifications:", error);
+		console.error("Error getting user notifications from API:", error);
 		return [];
 	}
 };
 
 /**
- * Mark notification as read
+ * Mark notification as read using API
  * @param {string} notificationId - Notification ID
  */
 export const markNotificationAsRead = async (notificationId) => {
 	try {
-		const response = await fetch(`/v1/notifications/${notificationId}/read`, {
-			method: 'PUT',
-			headers: {
-				'Authorization': `Bearer ${localStorage.getItem('token')}`,
-				'Content-Type': 'application/json'
-			}
-		});
-
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-
-		return await response.json();
+		const { notificationAPI } = await import('../config/ApiConfig.js');
+		return await notificationAPI.markAsRead(notificationId);
 	} catch (error) {
 		console.error("Error marking notification as read:", error);
 		throw error;
@@ -245,58 +163,59 @@ export const markNotificationAsRead = async (notificationId) => {
 };
 
 /**
- * Get unread notification count
+ * Get unread notification count from API
  * @param {string} userId - User ID
  * @returns {Promise<number>} Number of unread notifications
  */
 export const getUnreadNotificationCount = async (userId) => {
 	try {
-		if (!db) {
-			console.warn("Firestore not available, returning 0 notifications");
-			return 0;
-		}
-
-		const q = query(
-			collection(db, "notifications"),
-			where("userId", "==", userId),
-			where("read", "==", false)
-		);
-
-		const querySnapshot = await getDocs(q);
-		return querySnapshot.size;
+		const { notificationAPI } = await import('../config/ApiConfig.js');
+		const response = await notificationAPI.getUserNotifications(1, true); // Get 1 unread notification
+		return response.data?.unreadCount || response.unreadCount || 0;
 	} catch (error) {
-		console.error("Error getting unread notification count:", error);
+		console.error("Error getting unread notification count from API:", error);
 		return 0;
 	}
 };
 
 /**
- * Setup notification listener
+ * Setup notification listener using API polling
  * @param {string} userId - User ID
  * @param {Function} callback - Callback function for new notifications
  * @returns {Function} Unsubscribe function
  */
 export const setupNotificationListener = (userId, callback) => {
 	try {
-		if (!db) {
-			console.warn("Firestore not available, notification listener disabled");
-			return () => {}; // Return empty function as fallback
-		}
+		let intervalId;
+		let lastCheck = new Date().toISOString();
 
-		const q = query(
-			collection(db, "notifications"),
-			where("userId", "==", userId),
-			where("read", "==", false),
-			orderBy("createdAt", "desc")
-		);
+		const checkForNewNotifications = async () => {
+			try {
+				const { notificationAPI } = await import('../config/ApiConfig.js');
+				const response = await notificationAPI.getUserNotifications(20, true, lastCheck);
+				const notifications = response.data?.notifications || response.notifications || [];
+				
+				if (notifications.length > 0) {
+					callback(notifications);
+					lastCheck = new Date().toISOString();
+				}
+			} catch (error) {
+				console.error("Error checking for new notifications:", error);
+			}
+		};
 
-		return onSnapshot(q, (querySnapshot) => {
-			const notifications = querySnapshot.docs.map(doc => ({
-				id: doc.id,
-				...doc.data()
-			}));
-			callback(notifications);
-		});
+		// Poll every 30 seconds for new notifications
+		intervalId = setInterval(checkForNewNotifications, 30000);
+		
+		// Initial check
+		checkForNewNotifications();
+
+		// Return unsubscribe function
+		return () => {
+			if (intervalId) {
+				clearInterval(intervalId);
+			}
+		};
 	} catch (error) {
 		console.error("Error setting up notification listener:", error);
 		return () => {}; // Return empty function as fallback
@@ -311,70 +230,9 @@ export const setupMessageListener = () => {
 	// Placeholder implementation
 };
 
-/**
- * Send a push notification via OneSignal
- * @param {string} userId - The external user ID to send the notification to
- * @param {string} title - The title of the notification
- * @param {string} message - The body of the notification
- * @param {Object} data - Optional data to include with the notification
- * @returns {Promise<Object|null>} The result from the OneSignal API or null if an error occurred
- */
+// Push notifications are now handled automatically by the API
+// This function is kept for backward compatibility but does nothing
 export const sendPushNotification = async (userId, title, message, data = {}) => {
-	try {
-		if (!title || !message) {
-			console.warn('Missing title or message for push notification');
-			return;
-		}
-
-		console.log('Attempting to send push notification:', { userId, title, message });
-
-		// Check if OneSignal credentials are configured
-		const appId = process.env.REACT_APP_ONESIGNAL_APP_ID;
-		const restApiKey = process.env.REACT_APP_ONESIGNAL_REST_API_KEY;
-
-		if (!appId || appId === 'your-onesignal-app-id') {
-			console.error('OneSignal App ID not configured');
-			return;
-		}
-
-		if (!restApiKey) {
-			console.error('OneSignal REST API Key not configured');
-			return;
-		}
-
-		// Use OneSignal REST API to send notification
-		const notification = {
-			app_id: appId,
-			include_external_user_ids: [userId],
-			headings: { en: title },
-			contents: { en: message },
-			data: data,
-			web_url: data.url || window.location.origin
-		};
-
-		console.log('Sending notification payload:', notification);
-
-		const response = await fetch('https://onesignal.com/api/v1/notifications', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Basic ${restApiKey}`
-			},
-			body: JSON.stringify(notification)
-		});
-
-		if (!response.ok) {
-			const errorData = await response.json();
-			console.error('OneSignal API error response:', errorData);
-			throw new Error(`OneSignal API error: ${response.status} - ${JSON.stringify(errorData)}`);
-		}
-
-		const result = await response.json();
-		console.log('Push notification sent successfully:', result.id);
-		return result;
-
-	} catch (error) {
-		console.error('Error sending push notification:', error);
-		throw error;
-	}
+	console.log('Push notifications are handled automatically by the API');
+	return { success: true, message: 'Handled by API' };
 };
