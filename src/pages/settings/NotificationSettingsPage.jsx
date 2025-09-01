@@ -11,7 +11,7 @@ import { notificationAPI } from "../../config/ApiConfig.js";
 
 const NotificationSettingsPage = () => {
 	const loaderData = useLoaderData() || {};
-	const { user } = loaderData;
+	const { user } = loaderData || {};
 	const [settings, setSettings] = useState({
 		email: {
 			likes: true,
@@ -52,22 +52,24 @@ const NotificationSettingsPage = () => {
 		const fetchNotificationSettings = async () => {
 			try {
 				const response = await notificationAPI.getSettings();
-				setSettings(response);
+				if (response && typeof response === 'object') {
+					setSettings(response);
+				}
 			} catch (err) {
 				console.error("Error fetching notification settings:", err);
 				// Keep default settings if fetch fails
 			}
 		};
 
-		if (user) {
+		if (user && user.uid) {
 			fetchNotificationSettings();
 		}
 	}, [user]);
 
-	if (!user) {
+	if (!user || !user.uid) {
 		return (
 			<Container className="text-center py-5">
-				<div>Loading...</div>
+				<div>Loading user data...</div>
 			</Container>
 		);
 	}
