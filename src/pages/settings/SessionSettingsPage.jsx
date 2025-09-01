@@ -169,7 +169,7 @@ const SessionSettingsPage = () => {
 						</div>
 					) : (
 						<div className="table-responsive">
-							<Table hover className="mb-0">
+							<Table hover responsive className="mb-0">
 								<thead>
 									<tr>
 										<th>Device</th>
@@ -188,7 +188,7 @@ const SessionSettingsPage = () => {
 													{getDeviceIcon(session.device)}
 													<div>
 														<div className="fw-medium">
-															{session.deviceName ||
+															{session.device ||
 																session.userAgent ||
 																"Unknown Device"}
 														</div>
@@ -295,10 +295,8 @@ const SessionSettingsPage = () => {
 							<p>Are you sure you want to revoke this session?</p>
 							<div className="bg-light p-3 rounded">
 								<div className="d-flex align-items-center gap-2 mb-2">
-									{getDeviceIcon(selectedSession.deviceType)}
-									<strong>
-										{selectedSession.deviceName || "Unknown Device"}
-									</strong>
+									{getDeviceIcon((selectedSession.device || "").toLowerCase())}
+									<strong>{selectedSession.device || "Unknown Device"}</strong>
 								</div>
 								<div className="small text-muted">
 									<div>IP: {selectedSession.ipAddress}</div>
