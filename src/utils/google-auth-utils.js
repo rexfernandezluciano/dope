@@ -62,6 +62,8 @@ class GoogleAuthObserver {
 			console.log('GoogleAuthObserver: Received message:', event);
 			console.log('Event origin:', event.origin);
 			console.log('Event data:', event.data);
+			console.log('Event data type:', event.data?.type);
+			console.log('Event data result:', event.data?.result);
 			
 			// Verify origin for security
 			const apiBaseUrl = getApiBaseUrl();

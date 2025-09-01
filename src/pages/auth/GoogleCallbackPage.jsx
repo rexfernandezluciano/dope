@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Spinner, Alert } from 'react-bootstrap';
-import { authAPI } from '../../config/ApiConfig'; // Assuming authAPI is defined elsewhere
+import { authAPI, setAuthToken } from '../../config/ApiConfig';
 
 const GoogleCallbackPage = () => {
 	const [searchParams] = useSearchParams();
@@ -9,13 +9,7 @@ const GoogleCallbackPage = () => {
 	const [message, setMessage] = useState('Processing authentication...');
 	const navigate = useNavigate();
 
-	// Helper function to set authentication token and redirect
-	const setAuthToken = (token, persist) => {
-		if (persist) {
-			localStorage.setItem('authToken', token);
-		}
-		// Potentially update global state or context here
-	};
+	
 
 	useEffect(() => {
 		console.log('GoogleCallbackPage: Component mounted');

@@ -127,7 +127,7 @@ const LoginPage = () => {
 				const rememberMe = true;
 				setAuthToken(result.token, rememberMe);
 				setError("");
-				navigate("/home", { replace: true });
+				navigate("/", { replace: true });
 			} else {
 				setError("Google login failed. Please try again.");
 			}
