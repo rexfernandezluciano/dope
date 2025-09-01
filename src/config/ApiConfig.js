@@ -1523,15 +1523,15 @@ export const notificationAPI = {
 	// Mark notification as read
 	async markAsRead(notificationId) {
 		const response = await apiRequest(`/v1/notifications/${notificationId}/read`, {
-			method: 'PUT'
+			method: 'PATCH'
 		});
 		return response;
 	},
 
 	// Mark all notifications as read
 	async markAllAsRead() {
-		const response = await apiRequest('/v1/notifications/read-all', {
-			method: 'PUT'
+		const response = await apiRequest('/v1/notifications/mark-all-read', {
+			method: 'PATCH'
 		});
 		return response;
 	},
