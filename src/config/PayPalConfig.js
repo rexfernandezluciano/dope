@@ -113,91 +113,56 @@ export const loadPayPalSDK = () => {
   });
 };
 
-// PayPal payment method creation helper using Buttons API
-export const createPayPalPaymentMethod = (containerId) => {
+// Generate PayPal authorization URL for wallet linking
+export const generatePayPalAuthUrl = (returnUrl, cancelUrl) => {
+  const baseUrl = paypalConfig.environment === 'sandbox' 
+    ? 'https://www.sandbox.paypal.com/connect'
+    : 'https://www.paypal.com/connect';
+  
+  const params = new URLSearchParams({
+    client_id: paypalConfig.clientId,
+    response_type: 'code',
+    scope: 'openid email',
+    redirect_uri: returnUrl,
+    cancel_uri: cancelUrl || returnUrl,
+    flowEntry: 'static'
+  });
+  
+  return `${baseUrl}?${params.toString()}`;
+};
+
+// PayPal payment method creation helper using redirect approach
+export const createPayPalPaymentMethod = (type = 'card') => {
   return new Promise((resolve, reject) => {
-    if (!window.paypal) {
-      reject(new Error("PayPal SDK not loaded"));
-      return;
-    }
-
     try {
-      // Check if container exists
-      const container = document.querySelector(containerId);
-      if (!container) {
-        reject(new Error(`Container ${containerId} not found`));
-        return;
-      }
+      const currentUrl = window.location.origin + window.location.pathname;
+      const returnUrl = `${currentUrl}?paypal_return=true&type=${type}`;
+      const cancelUrl = `${currentUrl}?paypal_cancel=true`;
 
-      // Clear any existing content
-      container.innerHTML = '';
-
-      // Use PayPal Buttons API for payment method creation
-      const buttons = window.paypal.Buttons({
-        style: {
-          layout: 'horizontal',
-          color: 'blue',
-          shape: 'rect',
-          label: 'pay',
-          height: 40
-        },
-        
-        createOrder: (data, actions) => {
-          // Create a temporary $0.01 order for payment method verification
-          return actions.order.create({
-            purchase_units: [{
-              amount: {
-                value: '0.01',
-                currency_code: 'USD'
-              },
-              description: 'Payment method verification'
-            }],
-            intent: 'AUTHORIZE' // Only authorize, don't capture
-          });
-        },
-
-        onApprove: async (data, actions) => {
-          try {
-            // Get order details to extract payment method
-            const orderDetails = await actions.order.get();
-            
-            if (orderDetails && orderDetails.id) {
-              // For demo purposes, we'll use the order ID as payment method ID
-              // In a real implementation, you'd extract the actual payment method ID
-              resolve(orderDetails.id);
-            } else {
-              reject(new Error('No payment method information received from PayPal'));
-            }
-          } catch (error) {
-            console.error('PayPal approval error:', error);
-            reject(new Error('Failed to process PayPal approval'));
-          }
-        },
-
-        onError: (err) => {
-          console.error('PayPal Error:', err);
-          const errorMessage = err && err.message ? err.message : 'PayPal payment setup failed';
-          reject(new Error(`PayPal error: ${errorMessage}`));
-        },
-
-        onCancel: (data) => {
-          console.log('PayPal payment cancelled:', data);
-          reject(new Error('PayPal payment setup was cancelled by user'));
-        }
-      });
-
-      if (buttons && typeof buttons.render === 'function') {
-        buttons.render(containerId).then(() => {
-          console.log('PayPal buttons rendered successfully');
-        }).catch((renderError) => {
-          console.error('PayPal render error:', renderError);
-          reject(new Error('Failed to render PayPal payment buttons'));
-        });
+      if (type === 'wallet') {
+        // For wallet linking, redirect to PayPal authorization
+        const authUrl = generatePayPalAuthUrl(returnUrl, cancelUrl);
+        window.location.href = authUrl;
       } else {
-        reject(new Error('PayPal Buttons API is not available'));
+        // For card linking, use the vault flow
+        const params = new URLSearchParams({
+          client_id: paypalConfig.clientId,
+          response_type: 'code',
+          scope: 'https://uri.paypal.com/services/payments/payment',
+          redirect_uri: returnUrl,
+          cancel_uri: cancelUrl,
+          vault: 'true',
+          intent: 'authorize'
+        });
+        
+        const vaultUrl = paypalConfig.environment === 'sandbox'
+          ? `https://www.sandbox.paypal.com/agreements/approve?${params.toString()}`
+          : `https://www.paypal.com/agreements/approve?${params.toString()}`;
+        
+        window.location.href = vaultUrl;
       }
     } catch (error) {
-      console.error('PayPal setup error:', error);
+      console.error('PayPal redirect setup error:', error);
       reject(new Error(`PayPal setup failed: ${error.message}`));
     }
   });

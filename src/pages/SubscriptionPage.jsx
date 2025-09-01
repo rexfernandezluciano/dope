@@ -86,97 +86,20 @@ const SubscriptionPage = () => {
 			setLoading(true);
 			setMessage("");
 
+			// Close modal before redirecting
+			setShowAddPaymentModal(false);
+
 			if (selectedPaymentType === "card") {
-				// Load PayPal SDK first
-				try {
-					await loadPayPalSDK();
-				} catch (sdkError) {
-					console.error('PayPal SDK loading failed:', sdkError);
-					
-					// Check if we're in Replit environment
-					const isReplit = window.location.hostname.includes('replit.dev') || 
-					                 window.location.hostname.includes('replit.co') || 
-					                 window.location.hostname.includes('replit.app');
-					
-					if (isReplit) {
-						throw new Error(
-							"PayPal services are currently restricted in this environment. Please try again later or contact support for alternative payment options."
-						);
-					} else {
-						throw new Error(
-							"Failed to load PayPal SDK. Please check your internet connection and try again."
-						);
-					}
-				}
-
-				// Create PayPal payment method
-				let paymentMethodId;
-				try {
-					paymentMethodId = await createPayPalPaymentMethod(
-						"#paypal-card-container",
-					);
-				} catch (paypalError) {
-					console.error('PayPal payment method creation failed:', paypalError);
-					
-					if (paypalError.message.includes('cancelled')) {
-						throw new Error("Payment setup was cancelled. Please try again when ready.");
-					} else if (paypalError.message.includes('Container')) {
-						throw new Error("Payment interface not ready. Please close and reopen this dialog.");
-					} else {
-						throw new Error(`PayPal setup failed: ${paypalError.message}`);
-					}
-				}
-
-				// Validate payment method ID
-				if (!paymentMethodId) {
-					throw new Error("Failed to create payment method. Please try again.");
-				}
-
-				// Add the payment method to the user's account
-				const response = await paymentAPI.addPaymentMethod({
-					type: "paypal_card",
-					paypalPaymentMethodId: paymentMethodId,
-					last4: cardForm.cardNumber ? cardForm.cardNumber.substr(-4) : "****",
-					expiryMonth: cardForm.expiryDate,
-					expiryYear: cardForm.expiryYear,
-					holderName: cardForm.cardholderName,
-					isDefault: cardForm.isDefault,
-				});
-
-				if (response.success) {
-					setMessage("Card linked successfully via PayPal!");
-					setMessageType("success");
-					setShowAddPaymentModal(false);
-					setSelectedPaymentType("card");
-					setCardForm({
-						cardNumber: "",
-						expiryDate: "",
-						expiryYear: "",
-						cvc: "",
-						cardholderName: "",
-						isDefault: false,
-					});
-					loadPaymentMethods(); // Reload payment methods
-				}
+				// Redirect to PayPal for card linking
+				await createPayPalPaymentMethod("card");
 			} else {
-				// For PayPal wallet, redirect to PayPal for authorization
-				const response = await paymentAPI.addPaymentMethod({
-					type: "paypal_wallet",
-					paypalEmail: user.email,
-					isDefault: true,
-				});
-
-				if (response) {
-					setMessage("PayPal Wallet added.");
-					setShowAddPaymentModal(false);
-					return;
-				}
+				// Redirect to PayPal for wallet authorization
+				await createPayPalPaymentMethod("wallet");
 			}
 		} catch (error) {
 			console.error("Payment method error:", error);
 			setMessage(error.message || "Failed to add payment method");
 			setMessageType("danger");
-		} finally {
 			setLoading(false);
 		}
 	};
@@ -284,9 +207,13 @@ const SubscriptionPage = () => {
 		loadPaymentMethods();
 		loadSubscriptionPlans();
 
-		// Check for payment completion
+		// Check for payment completion or PayPal return
 		const urlParams = new URLSearchParams(window.location.search);
 		const paymentStatus = urlParams.get("payment");
+		const paypalReturn = urlParams.get("paypal_return");
+		const paypalCancel = urlParams.get("paypal_cancel");
+		const paypalCode = urlParams.get("code");
+		const paypalType = urlParams.get("type");
 
 		if (paymentStatus === "success") {
 			setMessage(
@@ -304,8 +231,73 @@ const SubscriptionPage = () => {
 			// Clean up URL parameters
 			const newUrl = window.location.pathname;
 			window.history.replaceState({}, "", newUrl);
+		} else if (paypalReturn === "true" && paypalCode) {
+			// Handle PayPal return from authorization
+			handlePayPalReturn(paypalCode, paypalType);
+		} else if (paypalCancel === "true") {
+			setMessage("PayPal authorization was cancelled.");
+			setMessageType("warning");
+
+			// Clean up URL parameters
+			const newUrl = window.location.pathname;
+			window.history.replaceState({}, "", newUrl);
 		}
 	}, []);
+
+	// Handle PayPal return from authorization
+	const handlePayPalReturn = async (code, type) => {
+		try {
+			setLoading(true);
+			setMessage("Processing PayPal authorization...");
+			setMessageType("info");
+
+			// Exchange code for access token and get user info
+			const response = await paymentAPI.processPayPalAuth({
+				code: code,
+				type: type,
+				redirectUri: `${window.location.origin}${window.location.pathname}?paypal_return=true&type=${type}`
+			});
+
+			if (response.success) {
+				if (type === "wallet") {
+					// Add PayPal wallet with email
+					await paymentAPI.addPaymentMethod({
+						type: "paypal_wallet",
+						paypalEmail: response.email,
+						isDefault: true,
+					});
+					setMessage(`PayPal wallet linked successfully! Email: ${response.email}`);
+				} else {
+					// Add PayPal card
+					await paymentAPI.addPaymentMethod({
+						type: "paypal_card",
+						paypalPaymentMethodId: response.paymentMethodId,
+						last4: response.last4 || "****",
+						expiryMonth: response.expiryMonth,
+						expiryYear: response.expiryYear,
+						holderName: response.holderName,
+						isDefault: true,
+					});
+					setMessage("Card linked successfully via PayPal!");
+				}
+				setMessageType("success");
+				loadPaymentMethods(); // Reload payment methods
+			} else {
+				setMessage(response.message || "Failed to process PayPal authorization");
+				setMessageType("danger");
+			}
+		} catch (error) {
+			console.error("PayPal authorization error:", error);
+			setMessage(error.message || "Failed to process PayPal authorization");
+			setMessageType("danger");
+		} finally {
+			setLoading(false);
+			
+			// Clean up URL parameters
+			const newUrl = window.location.pathname;
+			window.history.replaceState({}, "", newUrl);
+		}
+	};
 
 	// Initialize PayPal SDK when modal opens for card payments
 	useEffect(() => {
@@ -849,31 +841,13 @@ const SubscriptionPage = () => {
 					</Form.Group>
 
 					{selectedPaymentType === "card" ? (
-						<div>
-							<div className="text-center py-3 mb-4">
-								<CreditCard size={48} className="text-primary mb-3" />
-								<h6>Add Credit/Debit Card via PayPal</h6>
-								<p className="text-muted mb-3">
-									You'll be redirected to PayPal to securely link your card
-								</p>
-							</div>
-
-							{/* PayPal Card Container */}
-							<div id="paypal-card-container" className="mb-4"></div>
-
-							<Form.Check
-								type="checkbox"
-								label="Set as default payment method"
-								checked={cardForm.isDefault}
-								onChange={(e) =>
-									setCardForm((prev) => ({
-										...prev,
-										isDefault: e.target.checked,
-									}))
-								}
-								className="mb-3"
-							/>
-
+						<div className="text-center py-4">
+							<CreditCard size={48} className="text-primary mb-3" />
+							<h6>Add Credit/Debit Card via PayPal</h6>
+							<p className="text-muted mb-3">
+								You'll be redirected to PayPal to securely link your card. After authorization, 
+								your card will be available for payments.
+							</p>
 							<div className="bg-light p-3 rounded">
 								<small className="text-muted">
 									<strong>Secure:</strong> Your card details are processed
@@ -885,8 +859,10 @@ const SubscriptionPage = () => {
 					) : (
 						<div className="text-center py-4">
 							<Paypal size={48} className="text-primary mb-3" />
+							<h6>Connect PayPal Wallet</h6>
 							<p className="text-muted mb-3">
-								You'll be redirected to PayPal to complete the setup
+								You'll be redirected to PayPal to authorize access to your wallet. 
+								We'll get your PayPal email for payment processing.
 							</p>
 							<div className="bg-light p-3 rounded">
 								<small className="text-muted">

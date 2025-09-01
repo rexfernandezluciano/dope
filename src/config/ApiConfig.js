@@ -1698,6 +1698,14 @@ export const subscriptionAPI = {
 			data: paymentData,
 		});
 	},
+
+	// Process PayPal authorization code
+	processPayPalAuth: async (authData) => {
+		return await apiRequest("/payments/paypal-auth", {
+			method: "POST",
+			data: authData,
+		});
+	},
 };
 
 // Admin API
