@@ -1556,7 +1556,7 @@ export const notificationAPI = {
 	async updateSettings(settings) {
 		const response = await apiRequest('/v1/notifications/settings', {
 			method: 'PUT',
-			body: JSON.stringify(settings)
+			body: settings
 		});
 		return response;
 	}
