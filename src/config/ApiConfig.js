@@ -295,6 +295,49 @@ class HttpClient {
 // Create HTTP client instance
 const httpClient = new HttpClient();
 
+// Mock apiCall function for demonstration purposes if it's not defined elsewhere
+// In a real scenario, this would likely be imported or defined globally
+const apiCall = async (endpoint, options = {}) => {
+    // Ensure API_BASE_URL is set if it's empty and not using a proxy
+    let baseUrl = API_BASE_URL;
+    if (!baseUrl && !API_ENDPOINTS.includes("")) {
+        baseUrl = API_ENDPOINTS.find(url => url !== "") || "";
+    }
+    // If using proxy (empty string in API_ENDPOINTS), then use "" as base URL
+    if (API_ENDPOINTS.includes("")) {
+        baseUrl = "";
+    }
+
+
+	const url = `${baseUrl}${endpoint}`;
+
+	try {
+		// Use the existing apiClient for actual requests
+		const response = await apiClient({
+			url,
+			method: options.method || 'GET',
+			data: options.body ? JSON.parse(options.body) : undefined, // Parse body if it's JSON string
+			headers: {
+				'Content-Type': 'application/json', // Default to JSON
+				...options.headers,
+			},
+			withCredentials: true, // Assuming this is needed based on context
+		});
+
+		return {
+			ok: response.status >= 200 && response.status < 300,
+			status: response.status,
+			statusText: response.statusText,
+			data: response.data,
+			headers: response.headers,
+		};
+	} catch (error) {
+		// Re-throw the error to be handled by the caller or the existing interceptors
+		throw error;
+	}
+};
+
+
 // Main API request function
 export const apiRequest = async (endpoint, options = {}) => {
 	try {
@@ -1438,44 +1481,70 @@ export const tfaAPI = {
 
 // Notification API
 export const notificationAPI = {
-	getNotifications: async (params = {}) => {
-		const queryString = new URLSearchParams(params).toString();
-		return await apiRequest(
-			`/notifications${queryString ? `?${queryString}` : ""}`,
-		);
+	// Get user notifications
+	async getUserNotifications(limit = 20, unread = false, since = null) {
+		const params = new URLSearchParams();
+		if (limit) params.append('limit', limit);
+		if (unread) params.append('unread', 'true');
+		if (since) params.append('since', since);
+
+		const response = await apiCall(`/v1/notifications?${params.toString()}`, {
+			method: 'GET'
+		});
+		return response;
 	},
 
-	markAsRead: async (notificationId) => {
-		return await apiRequest(`/notifications/${notificationId}/read`, {
-			method: "PATCH",
+	// Send notification
+	async sendNotification(notificationData) {
+		const response = await apiCall('/v1/notifications', {
+			method: 'POST',
+			body: JSON.stringify(notificationData)
 		});
+		return response;
 	},
 
-	markAllAsRead: async () => {
-		return await apiRequest("/notifications/mark-all-read", {
-			method: "PATCH",
+	// Mark notification as read
+	async markAsRead(notificationId) {
+		const response = await apiCall(`/v1/notifications/${notificationId}/read`, {
+			method: 'PUT'
 		});
+		return response;
 	},
 
-	deleteNotification: async (notificationId) => {
-		return await apiRequest(`/notifications/${notificationId}`, {
-			method: "DELETE",
+	// Mark all notifications as read
+	async markAllAsRead() {
+		const response = await apiCall('/v1/notifications/read-all', {
+			method: 'PUT'
 		});
+		return response;
 	},
 
-	getSettings: async () => {
-		return await apiRequest("/notifications/settings", {
-			method: "GET",
+	// Delete notification
+	async deleteNotification(notificationId) {
+		const response = await apiCall(`/v1/notifications/${notificationId}`, {
+			method: 'DELETE'
 		});
+		return response;
 	},
 
-	updateSettings: async (settings) => {
-		return await apiRequest("/notifications/settings", {
-			method: "PUT",
-			data: settings,
+	// Get notification settings
+	async getSettings() {
+		const response = await apiCall('/v1/notifications/settings', {
+			method: 'GET'
 		});
+		return response;
 	},
+
+	// Update notification settings
+	async updateSettings(settings) {
+		const response = await apiCall('/v1/notifications/settings', {
+			method: 'PUT',
+			body: JSON.stringify(settings)
+		});
+		return response;
+	}
 };
+
 
 // Live Stream API
 export const liveStreamAPI = {

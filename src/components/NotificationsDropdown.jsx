@@ -43,7 +43,7 @@ const NotificationsDropdown = ({ notifications = [], unreadCount = 0, user }) =>
 		
 		setLoading(true);
 		try {
-			// Use Firestore notifications directly since API endpoint doesn't exist
+			// Use API to fetch notifications
 			const allNotifs = await getUserNotifications(user.uid, 50);
 			setAllNotifications(allNotifs || []);
 		} catch (error) {
@@ -82,6 +82,7 @@ const NotificationsDropdown = ({ notifications = [], unreadCount = 0, user }) =>
 	const formatNotificationTime = (createdAt) => {
 		if (!createdAt) return '';
 		
+		// Handle both Firestore timestamp and ISO string formats
 		const date = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
 		const now = new Date();
 		const diff = now - date;

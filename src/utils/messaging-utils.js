@@ -225,12 +225,22 @@ export const getUserNotifications = async (userId, limitCount = 20) => {
  */
 export const markNotificationAsRead = async (notificationId) => {
 	try {
-		await updateDoc(doc(db, "notifications", notificationId), {
-			read: true,
-			readAt: serverTimestamp()
+		const response = await fetch(`/v1/notifications/${notificationId}/read`, {
+			method: 'PUT',
+			headers: {
+				'Authorization': `Bearer ${localStorage.getItem('token')}`,
+				'Content-Type': 'application/json'
+			}
 		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		return await response.json();
 	} catch (error) {
 		console.error("Error marking notification as read:", error);
+		throw error;
 	}
 };
 
