@@ -12,6 +12,7 @@ import {
 	Shield,
 	List,
 	Lock,
+	Apps,
 } from "react-bootstrap-icons";
 import { Link } from "react-router-dom";
 
@@ -76,9 +77,16 @@ const SettingsPage = () => {
 				category: "Privacy & Security",
 			},
 			{
+				key: "tfa",
+				label: "Two-Factor Authentication",
+				icon: <Lock size={20} />,
+				component: <TFASettingsPage />,
+				category: "Privacy & Security",
+			},
+			{
 				key: "oauth-apps",
 				label: "OAuth Apps",
-				icon: <Shield size={20} />,
+				icon: <Apps size={20} />,
 				component: <OAuthAppsPage />,
 				category: "Developer",
 			},
