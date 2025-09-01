@@ -692,7 +692,7 @@ const ProfilePage = () => {
 				<div className="d-flex flex-wrap gap-3 text-muted small mb-3">
 					<div className="d-flex align-items-center gap-1">
 						<Calendar size={14} />
-						Joined {formatJoinDate(profileUser?.createdAt)}
+						Joined {profileUser?.createdAt ? formatJoinDate(profileUser.createdAt) : 'Unknown'}
 					</div>
 				</div>
 

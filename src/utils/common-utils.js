@@ -27,7 +27,13 @@ export const formatTimeAgo = dateString => {
  * @returns {string} Formatted join date
  */
 export const formatJoinDate = dateString => {
+	if (!dateString) return "Unknown";
+	
 	const date = new Date(dateString);
+	
+	// Check if the date is valid
+	if (isNaN(date.getTime())) return "Unknown";
+	
 	return date.toLocaleDateString("en-US", {
 		year: "numeric",
 		month: "long",
