@@ -9,8 +9,6 @@ const GoogleCallbackPage = () => {
 	const [message, setMessage] = useState('Processing authentication...');
 	const navigate = useNavigate();
 
-	
-
 	useEffect(() => {
 		console.log('GoogleCallbackPage: Component mounted');
 		console.log('Current URL:', window.location.href);

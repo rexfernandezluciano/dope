@@ -116,12 +116,6 @@ const LoginPage = () => {
 			// Initialize popup OAuth flow
 			const result = await initializeGoogleOAuth("login");
 
-			if (result.user && !result.user.hasVerifiedEmail) {
-				setError("Please verify your account first to continue.");
-				setGoogleLoading(false);
-				return;
-			}
-
 			if (result.token) {
 				// Store the token with remember me option
 				const rememberMe = true;
