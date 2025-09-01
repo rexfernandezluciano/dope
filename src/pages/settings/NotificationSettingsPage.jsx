@@ -51,8 +51,8 @@ const NotificationSettingsPage = () => {
 		const fetchNotificationSettings = async () => {
 			try {
 				const response = await notificationAPI.getSettings();
-				if (response && typeof response === 'object') {
-					setSettings(response);
+				if (response && response.settings && typeof response.settings === 'object') {
+					setSettings(response.settings);
 				}
 			} catch (err) {
 				console.error("Error fetching notification settings:", err);
@@ -77,20 +77,10 @@ const NotificationSettingsPage = () => {
 		try {
 			setLoading(true);
 
-			// Transform the nested settings structure to match the server's expected flat structure
-			const flatSettings = {
-				emailNotifications: settings.email.likes || settings.email.comments || settings.email.follows || settings.email.mentions || settings.email.tips || settings.email.subscriptions || settings.email.security,
-				pushNotifications: settings.push.likes || settings.push.comments || settings.push.follows || settings.push.mentions || settings.push.tips || settings.push.subscriptions || settings.push.security,
-				smsNotifications: false, // Not implemented in UI
-				marketingEmails: settings.email.marketing || false,
-				securityAlerts: settings.email.security || settings.push.security || settings.inApp.security,
-				followNotifications: settings.email.follows || settings.push.follows || settings.inApp.follows,
-				likeNotifications: settings.email.likes || settings.push.likes || settings.inApp.likes,
-				commentNotifications: settings.email.comments || settings.push.comments || settings.inApp.comments,
-				mentionNotifications: settings.email.mentions || settings.push.mentions || settings.inApp.mentions
-			};
+			// Send the nested settings structure wrapped in a settings property as the server expects
+			const payload = { settings };
 
-			await notificationAPI.updateSettings(flatSettings);
+			await notificationAPI.updateSettings(payload);
 			setMessage("Notification settings updated successfully!");
 			setMessageType("success");
 		} catch (err) {
