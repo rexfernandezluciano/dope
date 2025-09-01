@@ -1400,6 +1400,42 @@ export const searchAPI = {
 	},
 };
 
+// TFA API
+export const tfaAPI = {
+	setup: async () => {
+		return await apiRequest("/2fa/setup", {
+			method: "POST",
+		});
+	},
+
+	verifySetup: async (token) => {
+		return await apiRequest("/2fa/verify-setup", {
+			method: "POST",
+			data: { token },
+		});
+	},
+
+	disable: async (password) => {
+		return await apiRequest("/2fa/disable", {
+			method: "POST",
+			data: { password },
+		});
+	},
+
+	getStatus: async () => {
+		return await apiRequest("/2fa/status", {
+			method: "GET",
+		});
+	},
+
+	regenerateBackupCodes: async (password) => {
+		return await apiRequest("/2fa/regenerate-backup-codes", {
+			method: "POST",
+			data: { password },
+		});
+	},
+};
+
 // Notification API
 export const notificationAPI = {
 	getNotifications: async (params = {}) => {
@@ -1411,19 +1447,32 @@ export const notificationAPI = {
 
 	markAsRead: async (notificationId) => {
 		return await apiRequest(`/notifications/${notificationId}/read`, {
-			method: "PUT",
+			method: "PATCH",
 		});
 	},
 
 	markAllAsRead: async () => {
 		return await apiRequest("/notifications/mark-all-read", {
-			method: "PUT",
+			method: "PATCH",
 		});
 	},
 
 	deleteNotification: async (notificationId) => {
 		return await apiRequest(`/notifications/${notificationId}`, {
 			method: "DELETE",
+		});
+	},
+
+	getSettings: async () => {
+		return await apiRequest("/notifications/settings", {
+			method: "GET",
+		});
+	},
+
+	updateSettings: async (settings) => {
+		return await apiRequest("/notifications/settings", {
+			method: "PUT",
+			data: settings,
 		});
 	},
 };
@@ -1722,6 +1771,13 @@ export const api = {
 	banUser: adminAPI.banUser,
 	unbanUser: adminAPI.unbanUser,
 	moderatePost: adminAPI.moderatePost,
+
+	// TFA
+	setupTfa: tfaAPI.setup,
+	verifyTfaSetup: tfaAPI.verifySetup,
+	disableTfa: tfaAPI.disable,
+	getTfaStatus: tfaAPI.getStatus,
+	regenerateBackupCodes: tfaAPI.regenerateBackupCodes,
 };
 
 // Placeholder for createRateLimiter if it's defined elsewhere

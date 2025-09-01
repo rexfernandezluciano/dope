@@ -1,3 +1,4 @@
+
 /** @format */
 
 import { useLoaderData } from "react-router-dom";
@@ -6,39 +7,39 @@ import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 import { Bell } from "react-bootstrap-icons";
 import { Adsense } from "@ctrl/react-adsense";
 
-import { userAPI } from "../../config/ApiConfig.js";
+import { notificationAPI } from "../../config/ApiConfig.js";
 
 const NotificationSettingsPage = () => {
 	const loaderData = useLoaderData() || {};
 	const { user } = loaderData;
 	const [settings, setSettings] = useState({
-		notifications: {
-			likes: true,
-			comments: true,
-			follows: true,
-			mentions: true,
-			reposts: true,
-			email: false,
-			push: true,
-		},
+		emailNotifications: true,
+		pushNotifications: true,
+		smsNotifications: false,
+		marketingEmails: false,
+		securityAlerts: true,
+		followNotifications: true,
+		likeNotifications: true,
+		commentNotifications: true,
+		mentionNotifications: true,
 	});
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
 	const [messageType, setMessageType] = useState("success");
 
 	useEffect(() => {
+		const fetchNotificationSettings = async () => {
+			try {
+				const response = await notificationAPI.getSettings();
+				setSettings(response);
+			} catch (err) {
+				console.error("Error fetching notification settings:", err);
+				// Keep default settings if fetch fails
+			}
+		};
+
 		if (user) {
-			setSettings({
-				notifications: user.notifications || {
-					likes: true,
-					comments: true,
-					follows: true,
-					mentions: true,
-					reposts: true,
-					email: false,
-					push: true,
-				},
-			});
+			fetchNotificationSettings();
 		}
 	}, [user]);
 
@@ -53,7 +54,7 @@ const NotificationSettingsPage = () => {
 	const handleSaveSettings = async () => {
 		try {
 			setLoading(true);
-			await userAPI.updateUser(user.username, settings);
+			const response = await notificationAPI.updateSettings(settings);
 			setMessage("Notification settings updated successfully!");
 			setMessageType("success");
 		} catch (err) {
@@ -68,10 +69,7 @@ const NotificationSettingsPage = () => {
 	const handleNotificationChange = (key, value) => {
 		setSettings((prev) => ({
 			...prev,
-			notifications: {
-				...prev.notifications,
-				[key]: value,
-			},
+			[key]: value,
 		}));
 	};
 
@@ -103,9 +101,9 @@ const NotificationSettingsPage = () => {
 								<Form.Check
 									type="checkbox"
 									label="Likes on your posts"
-									checked={settings.notifications.likes}
+									checked={settings.likeNotifications}
 									onChange={(e) =>
-										handleNotificationChange("likes", e.target.checked)
+										handleNotificationChange("likeNotifications", e.target.checked)
 									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
@@ -117,9 +115,9 @@ const NotificationSettingsPage = () => {
 								<Form.Check
 									type="checkbox"
 									label="Comments on your posts"
-									checked={settings.notifications.comments}
+									checked={settings.commentNotifications}
 									onChange={(e) =>
-										handleNotificationChange("comments", e.target.checked)
+										handleNotificationChange("commentNotifications", e.target.checked)
 									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
@@ -131,9 +129,9 @@ const NotificationSettingsPage = () => {
 								<Form.Check
 									type="checkbox"
 									label="New followers"
-									checked={settings.notifications.follows}
+									checked={settings.followNotifications}
 									onChange={(e) =>
-										handleNotificationChange("follows", e.target.checked)
+										handleNotificationChange("followNotifications", e.target.checked)
 									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
@@ -145,9 +143,9 @@ const NotificationSettingsPage = () => {
 								<Form.Check
 									type="checkbox"
 									label="Mentions"
-									checked={settings.notifications.mentions}
+									checked={settings.mentionNotifications}
 									onChange={(e) =>
-										handleNotificationChange("mentions", e.target.checked)
+										handleNotificationChange("mentionNotifications", e.target.checked)
 									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
@@ -158,14 +156,28 @@ const NotificationSettingsPage = () => {
 							<Form.Group className="mb-3">
 								<Form.Check
 									type="checkbox"
-									label="Reposts of your content"
-									checked={settings.notifications.reposts}
+									label="Security alerts"
+									checked={settings.securityAlerts}
 									onChange={(e) =>
-										handleNotificationChange("reposts", e.target.checked)
+										handleNotificationChange("securityAlerts", e.target.checked)
 									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
-									Get notified when someone reposts your content
+									Get notified about security-related activities
+								</Form.Text>
+							</Form.Group>
+
+							<Form.Group className="mb-3">
+								<Form.Check
+									type="checkbox"
+									label="Marketing emails"
+									checked={settings.marketingEmails}
+									onChange={(e) =>
+										handleNotificationChange("marketingEmails", e.target.checked)
+									}
+								/>
+								<Form.Text className="text-muted d-block ms-4">
+									Receive promotional emails and updates
 								</Form.Text>
 							</Form.Group>
 						</div>
@@ -179,9 +191,9 @@ const NotificationSettingsPage = () => {
 								<Form.Check
 									type="checkbox"
 									label="Push notifications"
-									checked={settings.notifications.push}
+									checked={settings.pushNotifications}
 									onChange={(e) =>
-										handleNotificationChange("push", e.target.checked)
+										handleNotificationChange("pushNotifications", e.target.checked)
 									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
@@ -193,13 +205,27 @@ const NotificationSettingsPage = () => {
 								<Form.Check
 									type="checkbox"
 									label="Email notifications"
-									checked={settings.notifications.email}
+									checked={settings.emailNotifications}
 									onChange={(e) =>
-										handleNotificationChange("email", e.target.checked)
+										handleNotificationChange("emailNotifications", e.target.checked)
 									}
 								/>
 								<Form.Text className="text-muted d-block ms-4">
 									Receive notifications via email
+								</Form.Text>
+							</Form.Group>
+
+							<Form.Group className="mb-3">
+								<Form.Check
+									type="checkbox"
+									label="SMS notifications"
+									checked={settings.smsNotifications}
+									onChange={(e) =>
+										handleNotificationChange("smsNotifications", e.target.checked)
+									}
+								/>
+								<Form.Text className="text-muted d-block ms-4">
+									Receive notifications via SMS
 								</Form.Text>
 							</Form.Group>
 						</div>

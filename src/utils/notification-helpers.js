@@ -21,6 +21,11 @@ export const handleLikeNotification = async (postId, post, currentUser) => {
 		// Don't notify if user likes their own post
 		if (post.author?.uid === currentUser.uid) return;
 
+		// Check if user has like notifications enabled
+		if (post.author?.notificationSettings && !shouldSendNotification(post.author.notificationSettings, 'like')) {
+			return;
+		}
+
 		// Send notification in background without blocking main operation
 		setTimeout(async () => {
 			try {
@@ -38,10 +43,16 @@ export const handleLikeNotification = async (postId, post, currentUser) => {
  * Helper function to handle follow notifications
  * @param {string} followedUserId - ID of user being followed
  * @param {Object} currentUser - Current user object
+ * @param {Object} followedUser - User being followed (optional, for settings check)
  */
-export const handleFollowNotification = async (followedUserId, currentUser) => {
+export const handleFollowNotification = async (followedUserId, currentUser, followedUser = null) => {
 	try {
 		if (!followedUserId || !currentUser) return;
+
+		// Check if user has follow notifications enabled
+		if (followedUser?.notificationSettings && !shouldSendNotification(followedUser.notificationSettings, 'follow')) {
+			return;
+		}
 
 		await sendFollowNotification(followedUserId, currentUser);
 	} catch (error) {
@@ -65,6 +76,11 @@ export const handleCommentNotification = async (postId, post, currentUser, comme
 
 		// Don't notify if user comments on their own post
 		if (post.author?.uid === currentUser.uid) return;
+
+		// Check if user has comment notifications enabled
+		if (post.author?.notificationSettings && !shouldSendNotification(post.author.notificationSettings, 'comment')) {
+			return;
+		}
 
 		// Send notification in background without blocking main operation
 		setTimeout(async () => {
@@ -121,19 +137,21 @@ export const formatNotificationData = (title, message, url = null, data = {}) =>
  * @returns {boolean} Whether notifications are enabled
  */
 export const shouldSendNotification = (userSettings, notificationType) => {
-	if (!userSettings || !userSettings.notifications) return true;
+	if (!userSettings) return true;
 
 	switch (notificationType) {
 		case 'like':
-			return userSettings.notifications.likes !== false;
+			return userSettings.likeNotifications !== false;
 		case 'comment':
-			return userSettings.notifications.comments !== false;
+			return userSettings.commentNotifications !== false;
 		case 'follow':
-			return userSettings.notifications.follows !== false;
-		case 'new_post':
-			return userSettings.notifications.posts !== false;
+			return userSettings.followNotifications !== false;
 		case 'mention':
-			return userSettings.notifications.mentions !== false;
+			return userSettings.mentionNotifications !== false;
+		case 'security':
+			return userSettings.securityAlerts !== false;
+		case 'marketing':
+			return userSettings.marketingEmails !== false;
 		default:
 			return true;
 	}

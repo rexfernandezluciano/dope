@@ -11,6 +11,7 @@ import {
 	X,
 	Shield,
 	List,
+	Lock,
 } from "react-bootstrap-icons";
 import { Link } from "react-router-dom";
 
@@ -20,6 +21,7 @@ import ProfileSettingsPage from "./settings/ProfileSettingsPage";
 import PrivacySettingsPage from "./settings/PrivacySettingsPage";
 import NotificationSettingsPage from "./settings/NotificationSettingsPage";
 import SessionSettingsPage from "./settings/SessionSettingsPage";
+import TFASettingsPage from "./settings/TFASettingsPage";
 import OAuthAppsPage from "./settings/OAuthAppsPage"; // Assuming this component exists
 import OAuthConsentPage from "./settings/OAuthConsentPage"; // Assuming this component exists
 import { authAPI } from "../config/ApiConfig";
