@@ -42,20 +42,38 @@ const apiClient = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
 	(config) => {
-		// Get auth token from storage
-		const token =
-			sessionStorage.getItem("authToken") ||
-			localStorage.getItem("authToken") ||
-			Cookies.get("authToken");
-
+		// Add authorization header if token exists
+		const token = getAuthToken();
 		if (token) {
-			console.log("Auth token found in storage");
-			config.headers.Authorization = `Bearer ${token}`;
-		} else {
-			console.log("No auth token found in any storage");
+			// Validate token before sending
+			try {
+				const tokenParts = token.split(".");
+				if (tokenParts.length === 3) {
+					const payload = JSON.parse(atob(tokenParts[1]));
+					const currentTime = Math.floor(Date.now() / 1000);
+
+					// Check if token is expired
+					if (payload.exp && payload.exp < currentTime) {
+						console.log("Token expired during API request, removing");
+						removeAuthToken();
+						throw new Error("Token expired");
+					}
+
+					config.headers.Authorization = `Bearer ${token}`;
+				} else {
+					console.log("Invalid token format, removing");
+					removeAuthToken();
+					throw new Error("Invalid token format");
+				}
+			} catch (tokenError) {
+				console.error("Token validation failed:", tokenError);
+				removeAuthToken();
+				throw new Error("Invalid or expired token");
+			}
 		}
 
-		return config;
+		// Apply security middleware
+		const secureConfig = await SecurityMiddleware.apply(config);
 	},
 	(error) => {
 		return Promise.reject(error);

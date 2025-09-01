@@ -29,13 +29,36 @@ const RequireAuth = ({ children }) => {
 					return;
 				}
 
+				// Check if token is expired
+				try {
+					const payload = JSON.parse(atob(tokenParts[1]));
+					const currentTime = Math.floor(Date.now() / 1000);
+					if (payload.exp && payload.exp < currentTime) {
+						console.log("Token expired, removing from storage");
+						removeAuthToken();
+						setUser(null);
+						setLoading(false);
+						return;
+					}
+				} catch (tokenParseError) {
+					console.error("Invalid token format:", tokenParseError);
+					removeAuthToken();
+					setUser(null);
+					setLoading(false);
+					return;
+				}
+
 				const currentUser = await getUser();
 				setUser(currentUser);
 			} catch (error) {
-				console.error("Auth check failed");
-				// Clear potentially invalid token using secure method
-				const { removeAuthToken } = await import("../../utils/app-utils");
-				removeAuthToken();
+				console.error("Auth check failed:", error);
+				// Check if it's a token-related error
+				if (error.message?.includes("Invalid or expired token") || 
+					error.message?.includes("unauthorized") ||
+					error.status === 401) {
+					console.log("Removing invalid token");
+					removeAuthToken();
+				}
 				setUser(null);
 			} finally {
 				setLoading(false);
