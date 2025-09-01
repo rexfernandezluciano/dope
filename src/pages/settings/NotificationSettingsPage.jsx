@@ -144,7 +144,7 @@ const NotificationSettingsPage = () => {
 											<Form.Check
 												type="checkbox"
 												label="Email"
-												checked={settings.email[notification.key]}
+												checked={settings?.email?.[notification.key] || false}
 												onChange={(e) =>
 													handleNotificationChange("email", notification.key, e.target.checked)
 												}
@@ -155,7 +155,7 @@ const NotificationSettingsPage = () => {
 											<Form.Check
 												type="checkbox"
 												label="Push"
-												checked={settings.push[notification.key]}
+												checked={settings?.push?.[notification.key] || false}
 												onChange={(e) =>
 													handleNotificationChange("push", notification.key, e.target.checked)
 												}
@@ -166,7 +166,7 @@ const NotificationSettingsPage = () => {
 											<Form.Check
 												type="checkbox"
 												label="In-App"
-												checked={settings.inApp[notification.key]}
+												checked={settings?.inApp?.[notification.key] || false}
 												onChange={(e) =>
 													handleNotificationChange("inApp", notification.key, e.target.checked)
 												}
