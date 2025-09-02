@@ -1,7 +1,7 @@
 /** @format */
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Row, Col, Form, Button, Image, Alert, Spinner } from "react-bootstrap";
 
 import { authAPI, setAuthToken } from "../../config/ApiConfig";
@@ -23,9 +23,7 @@ const LoginPage = () => {
 	const [dialogTitle, setDialogTitle] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [googleLoading, setGoogleLoading] = useState(false);
-
-	const navigate = useNavigate();
-
+	
 	useEffect(() => {
 		updatePageMeta(pageMetaData.login);
 	}, []);
@@ -72,7 +70,7 @@ const LoginPage = () => {
 				// Clear any existing errors
 				setError("");
 				// Use replace to prevent going back to login
-				navigate("/", { replace: true });
+				window.location.href = "/";
 			} else {
 				setError("Login failed. Please try again.");
 			}
@@ -121,7 +119,7 @@ const LoginPage = () => {
 				const rememberMe = true;
 				setAuthToken(result.token, rememberMe);
 				setError("");
-				navigate("/", { replace: true });
+				window.location.href = "/";
 			} else {
 				setError("Google login failed. Please try again.");
 			}

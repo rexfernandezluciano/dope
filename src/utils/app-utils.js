@@ -24,7 +24,7 @@ export const getUser = async () => {
 	} catch (error) {
 		console.error('Error getting user:', error);
 		// Only remove token if it's an auth error (401/403)
-		if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
+		if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized') || error.message.includes('Invalid or expired token')) {
 			const { removeAuthToken } = await import('../config/ApiConfig.js');
 			removeAuthToken();
 		}

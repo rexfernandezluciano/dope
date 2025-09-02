@@ -11,11 +11,22 @@ import socialNetIllustration from "../assets/images/undraw_social-networking_v4z
 
 const StartPage = () => {
 	const navigate = useNavigate();
-	const { user } = useLoaderData();
+	const { user, error } = useLoaderData();
 
 	useEffect(() => {
 		updatePageMeta(pageMetaData.home);
 	}, []);
+
+	if (error) {
+		return (
+			<Container className="min-vh-100 d-flex align-items-center justify-content-center">
+				<div className="w-100">
+					<h1 className="display-4 fw-bold mb-3">Something went wrong</h1>
+					<p className="fw-light mb-3">{error}</p>
+				</div>
+			</Container>
+		);
+	}
 
 	if (user) {
 		return (
