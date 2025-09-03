@@ -1,7 +1,12 @@
 /** @format */
 
 import { useState, useEffect } from "react";
-import { useParams, useLoaderData, useNavigate } from "react-router-dom";
+import {
+	useParams,
+	useLoaderData,
+	useNavigate,
+	useLocation,
+} from "react-router-dom";
 import {
 	Container,
 	Image,
@@ -34,9 +39,7 @@ import {
 	formatJoinDate,
 } from "../utils/common-utils";
 import { updatePageMeta } from "../utils/meta-utils";
-import {
-	formatActivityPubHandle,
-} from "../utils/activitypub-utils";
+import { formatActivityPubHandle } from "../utils/activitypub-utils";
 import PostCard from "../components/PostCard";
 import AlertDialog from "../components/dialogs/AlertDialog";
 import UserBlockModal from "../components/UserBlockModal";
@@ -47,6 +50,7 @@ import ImageCropper from "../components/ImageCropper";
 const ProfilePage = () => {
 	const { username: rawUsername, handle } = useParams();
 	// Handle both /:username and /@:handle routes
+	const { pathname } = useLocation();
 	const username = handle || rawUsername;
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData;
@@ -84,7 +88,11 @@ const ProfilePage = () => {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (!username || !currentUser?.uid) return;
+    // Check if user is authenticated and has a valid username
+		if (!username || !currentUser?.uid) {
+			navigate("/");
+			return;
+		}
 
 		const loadProfile = async () => {
 			try {
@@ -692,7 +700,10 @@ const ProfilePage = () => {
 				<div className="d-flex flex-wrap gap-3 text-muted small mb-3">
 					<div className="d-flex align-items-center gap-1">
 						<Calendar size={14} />
-						Joined {profileUser?.createdAt ? formatJoinDate(profileUser.createdAt) : 'Unknown'}
+						Joined{" "}
+						{profileUser?.createdAt
+							? formatJoinDate(profileUser.createdAt)
+							: "Unknown"}
 					</div>
 				</div>
 

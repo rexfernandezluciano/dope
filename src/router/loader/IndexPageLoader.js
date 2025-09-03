@@ -8,7 +8,7 @@ const IndexPageLoader = async () => {
 		return { user };
 	} catch (error) {
 		console.error("Error loading user:", error);
-		return { user: null, error: user.message ? user.message : error.message };
+		return { user: null, error: error.message };
 	}
 };
 

@@ -258,7 +258,7 @@ const router = createBrowserRouter([
 		hydrateFallbackElement: <LoadingView />,
 	},
 	{
-		path: "/dashboard/business",
+		path: "/dashboard/ads-manager",
 		element: (
 			<RequireAuth>
 				<NavigationView>

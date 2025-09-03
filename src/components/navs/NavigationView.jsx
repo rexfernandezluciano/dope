@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
 	useNavigate,
 	useLocation,
-	useLoaderData,
 	Link,
 } from "react-router-dom";
 import NProgress from "nprogress";
@@ -31,7 +30,6 @@ import {
 	GoGear,
 } from "react-icons/go";
 import { TbBrandGoogleAnalytics } from "react-icons/tb";
-import { Grid3x3 } from "react-bootstrap-icons";
 
 import {
 	initializeNotifications,
@@ -47,9 +45,7 @@ import NotificationsDropdown from "../NotificationsDropdown";
 const NavigationView = ({ children }) => {
 	const navigate = useNavigate();
 	const location = useLocation();
-	const loaderData = useLoaderData() || {};
-	const { user: loaderUserData } = loaderData; // Renamed to avoid conflict
-
+	
 	// Use DopeNetworkProvider state
 	const { 
 		user, 
@@ -223,8 +219,8 @@ const NavigationView = ({ children }) => {
 			icon: <TbBrandGoogleAnalytics size={18} />,
 		},
 		{
-			label: "Business",
-			href: "/dashboard/business",
+			label: "Ads Manager",
+			href: "/dashboard/ads-manager",
 			icon: <GoBriefcase size={18} />,
 		},
 	];
@@ -329,9 +325,9 @@ const NavigationView = ({ children }) => {
 										<TbBrandGoogleAnalytics size={18} className="me-2" />
 										Analytics
 									</Dropdown.Item>
-									<Dropdown.Item as={Link} to="/dashboard/business">
+									<Dropdown.Item as={Link} to="/dashboard/ads-manager">
 										<GoBriefcase size={18} className="me-2" />
-										Business
+										Ads Manager
 									</Dropdown.Item>
 									<Dropdown.Divider />
 									<span className="small fw-bold px-3 mb-2">Account</span>

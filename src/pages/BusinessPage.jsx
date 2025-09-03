@@ -67,7 +67,7 @@ const BusinessPage = () => {
 	useEffect(() => {
 		if (!hasInitialized) {
 			updatePageMeta({
-				title: "Business Dashboard - DOPE Network",
+				title: "Ads Manager - DOPE Network",
 				description: "Manage your ad campaigns and business analytics",
 			});
 			
@@ -191,7 +191,7 @@ const BusinessPage = () => {
 			// Get current user's profile only
 			const response = await authAPI.me();
 			if (response) {
-				setAvailableProfiles([response]);
+				setAvailableProfiles([response.user || {}]);
 			} else {
 				setAvailableProfiles([]);
 			}
@@ -316,7 +316,7 @@ const BusinessPage = () => {
 					<div className="d-flex align-items-center px-2 mb-4">
 						<Bullseye size={32} className="me-3 text-primary" />
 						<div>
-							<h2>Business Dashboard</h2>
+							<h2>Ads Manager</h2>
 							<p className="text-muted mb-0">
 								Grow your reach with targeted advertising
 							</p>
