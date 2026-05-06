@@ -1,25 +1,12 @@
 /** @format */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLoaderData } from "react-router-dom";
 import {
 	Container,
 	Button,
 	Spinner,
-	Alert,
-	Modal,
-	Image,
 } from "react-bootstrap";
-import {
-	Heart,
-	HeartFill,
-	ChatDots,
-	Share,
-	Filter,
-	X,
-	ChevronLeft,
-	ChevronRight,
-} from "react-bootstrap-icons";
 import ImageViewer from "../components/ImageViewer";
 
 import AgoraRTC from "agora-rtc-sdk-ng";
@@ -62,9 +49,10 @@ const HomePage = () => {
 	const [postContentForViewer, setPostContentForViewer] = useState(null); // To store post content for the viewer
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 	const [postToDelete, setPostToDelete] = useState(null);
-	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
+	const [, setDeletingPost] = useState(false); // State for post deletion loading
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
+	const isFetchingPostsRef = useRef(false);
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -73,18 +61,12 @@ const HomePage = () => {
 		// Update page meta data
 		updatePageMeta(pageMetaData.home);
 
-		loadPosts();
 		checkUser();
 		// Initialize notifications and request permission
 		initializeNotifications();
 		requestNotificationPermission();
 		setupMessageListener();
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-	// Effect to load posts when filterBy changes
-	useEffect(() => {
-		loadPosts();
-	}, [filterBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const checkUser = async () => {
 		try {
@@ -96,8 +78,10 @@ const HomePage = () => {
 		}
 	};
 
-	const loadPosts = async (cursor = null, filter = filterBy) => {
+	const loadPosts = useCallback(async (cursor = null, filter = filterBy) => {
 		try {
+			if (isFetchingPostsRef.current) return;
+			isFetchingPostsRef.current = true;
 			setLoading(true);
 			setError("");
 			const additionalParams = { random: "true" };
@@ -122,11 +106,11 @@ const HomePage = () => {
 
 				if (authorPrivacy === "public") return true;
 				if (authorPrivacy === "private") {
-					return post.author.uid === currentUser.uid;
+					return post.author.uid === currentUser?.uid;
 				}
 				if (authorPrivacy === "followers") {
 					return (
-						post.author.uid === currentUser.uid ||
+						post.author.uid === currentUser?.uid ||
 						post.author.isFollowedByCurrentUser
 					);
 				}
@@ -144,8 +128,14 @@ const HomePage = () => {
 			setError(err.message);
 		} finally {
 			setLoading(false);
+			isFetchingPostsRef.current = false;
 		}
-	};
+	}, [filterBy, currentUser?.uid]);
+
+	// Effect to load posts when filterBy changes (also runs on initial render)
+	useEffect(() => {
+		loadPosts();
+	}, [loadPosts]);
 
 	const handleFilterChange = (value) => {
 		setFilterBy(value);
