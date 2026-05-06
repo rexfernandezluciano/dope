@@ -5,7 +5,6 @@ import {
 	useParams,
 	useLoaderData,
 	useNavigate,
-	useLocation,
 } from "react-router-dom";
 import {
 	Container,
@@ -50,7 +49,6 @@ import ImageCropper from "../components/ImageCropper";
 const ProfilePage = () => {
 	const { username: rawUsername, handle } = useParams();
 	// Handle both /:username and /@:handle routes
-	const { pathname } = useLocation();
 	const username = handle || rawUsername;
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData;
@@ -81,7 +79,7 @@ const ProfilePage = () => {
 	const [isBlocked, setIsBlocked] = useState(false);
 	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 	const [showReportModal, setShowReportModal] = useState(false);
-	const [reportType, setReportType] = useState("user");
+	const [reportType] = useState("user");
 	const [showCropModal, setShowCropModal] = useState(false);
 	const [originalImageSrc, setOriginalImageSrc] = useState("");
 

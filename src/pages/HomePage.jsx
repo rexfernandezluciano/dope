@@ -119,11 +119,11 @@ const HomePage = () => {
 
 				if (authorPrivacy === "public") return true;
 				if (authorPrivacy === "private") {
-					return post.author.uid === currentUser.uid;
+					return post.author.uid === currentUser?.uid;
 				}
 				if (authorPrivacy === "followers") {
 					return (
-						post.author.uid === currentUser.uid ||
+						post.author.uid === currentUser?.uid ||
 						post.author.isFollowedByCurrentUser
 					);
 				}
