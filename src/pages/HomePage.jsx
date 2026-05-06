@@ -1,6 +1,6 @@
 /** @format */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLoaderData } from "react-router-dom";
 import {
 	Container,
@@ -65,6 +65,7 @@ const HomePage = () => {
 	const [deletingPost, setDeletingPost] = useState(false); // State for post deletion loading
 	const [filterBy, setFilterBy] = useState("for-you"); // 'for-you', 'following'
 	const [user, setUser] = useState(null); // State to hold the current user
+	const isFetchingPostsRef = useRef(false);
 
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData; // Renamed to currentUser to avoid conflict
@@ -73,18 +74,12 @@ const HomePage = () => {
 		// Update page meta data
 		updatePageMeta(pageMetaData.home);
 
-		loadPosts();
 		checkUser();
 		// Initialize notifications and request permission
 		initializeNotifications();
 		requestNotificationPermission();
 		setupMessageListener();
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-	// Effect to load posts when filterBy changes
-	useEffect(() => {
-		loadPosts();
-	}, [filterBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const checkUser = async () => {
 		try {
@@ -96,8 +91,10 @@ const HomePage = () => {
 		}
 	};
 
-	const loadPosts = async (cursor = null, filter = filterBy) => {
+	const loadPosts = useCallback(async (cursor = null, filter = filterBy) => {
 		try {
+			if (isFetchingPostsRef.current) return;
+			isFetchingPostsRef.current = true;
 			setLoading(true);
 			setError("");
 			const additionalParams = { random: "true" };
@@ -144,8 +141,14 @@ const HomePage = () => {
 			setError(err.message);
 		} finally {
 			setLoading(false);
+			isFetchingPostsRef.current = false;
 		}
-	};
+	}, [filterBy, currentUser?.uid]);
+
+	// Effect to load posts when filterBy changes (also runs on initial render)
+	useEffect(() => {
+		loadPosts();
+	}, [loadPosts]);
 
 	const handleFilterChange = (value) => {
 		setFilterBy(value);
