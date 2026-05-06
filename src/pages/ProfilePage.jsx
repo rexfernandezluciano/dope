@@ -1,11 +1,10 @@
 /** @format */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
 	useParams,
 	useLoaderData,
 	useNavigate,
-	useLocation,
 } from "react-router-dom";
 import {
 	Container,
@@ -50,7 +49,6 @@ import ImageCropper from "../components/ImageCropper";
 const ProfilePage = () => {
 	const { username: rawUsername, handle } = useParams();
 	// Handle both /:username and /@:handle routes
-	const { pathname } = useLocation();
 	const username = handle || rawUsername;
 	const loaderData = useLoaderData() || {};
 	const { user: currentUser } = loaderData;
@@ -81,178 +79,100 @@ const ProfilePage = () => {
 	const [isBlocked, setIsBlocked] = useState(false);
 	const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 	const [showReportModal, setShowReportModal] = useState(false);
-	const [reportType, setReportType] = useState("user");
+	const [reportType] = useState("user");
 	const [showCropModal, setShowCropModal] = useState(false);
 	const [originalImageSrc, setOriginalImageSrc] = useState("");
 
 	const navigate = useNavigate();
+	const isLoadingProfileRef = useRef(false);
+
+	const loadProfile = useCallback(async () => {
+		if (!username || !currentUser?.uid || isLoadingProfileRef.current) return;
+		try {
+			isLoadingProfileRef.current = true;
+			setLoading(true);
+			setError("");
+
+			const isFederated = username.includes("@");
+			setIsFederatedProfile(isFederated);
+
+			const userResponse = await userAPI.getUser(
+				isFederated ? username.replace("@", "") : username,
+			);
+			if (!userResponse) throw new Error("User not found");
+
+			const profileUserData = userResponse.user;
+			const profilePrivacy = profileUserData.privacy?.profile || "public";
+			const canViewProfile =
+				profileUserData.uid === currentUser.uid ||
+				profilePrivacy === "public" ||
+				(profilePrivacy === "followers" &&
+					(profileUserData.isFollowedByCurrentUser || false));
+			if (!canViewProfile) throw new Error("This profile is private");
+
+			setProfileUser(profileUserData);
+			setIsBlocked(profileUserData.isBlocked || false);
+			setEditForm({
+				name: profileUserData.name || "",
+				bio: profileUserData.bio || "",
+				photoURL: profileUserData.photoURL || "",
+			});
+
+			const rawPosts = userResponse.user.posts
+				? userResponse.user.posts
+				: (await postAPI.getPosts(1, 20, { author: username })).posts || [];
+			setPosts(
+				rawPosts.filter((post) => {
+					if (post.author.uid === currentUser.uid) return true;
+					const authorPrivacy = post.author.privacy?.profile || "public";
+					if (authorPrivacy === "public") return true;
+					if (authorPrivacy === "private") return false;
+					if (authorPrivacy === "followers") return post.author.isFollowedByCurrentUser || false;
+					return false;
+				}),
+			);
+
+			const [followersResponse, followingResponse] = await Promise.allSettled([
+				userAPI.getFollowers(username),
+				userAPI.getFollowing(username),
+			]);
+			const followersData = followersResponse.status === "fulfilled" ? followersResponse.value.followers || [] : [];
+			const followingData = followingResponse.status === "fulfilled" ? followingResponse.value.following || [] : [];
+			setFollowers(followersData);
+			setFollowing(followingData);
+			if (currentUser) {
+				setIsFollowing(
+					profileUserData.isFollowedByCurrentUser !== undefined
+						? profileUserData.isFollowedByCurrentUser
+						: followersData.some((f) => f.uid === currentUser.uid),
+				);
+			}
+		} catch (err) {
+			console.error("Error loading profile:", err);
+			setError(err.message || "Failed to load profile");
+		} finally {
+			setLoading(false);
+			isLoadingProfileRef.current = false;
+		}
+	}, [currentUser, username]);
 
 	useEffect(() => {
-    // Check if user is authenticated and has a valid username
 		if (!username || !currentUser?.uid) {
 			navigate("/");
 			return;
 		}
-
-		const loadProfile = async () => {
-			try {
-				setLoading(true);
-				setError("");
-
-				// Check if this is a federated profile (contains @)
-				const isFederated = username.includes("@");
-				setIsFederatedProfile(isFederated);
-
-				const userResponse = await userAPI.getUser(
-					isFederated ? username.replace("@", "") : username,
-				);
-				if (!userResponse) {
-					throw new Error("User not found");
-				}
-				await loadLocalProfile(userResponse);
-			} catch (err) {
-				console.error("Error loading profile:", err);
-				setError(err.message || "Failed to load profile");
-				setLoading(false);
-			}
-		};
-
-		const loadLocalProfile = async (userResponse) => {
-			try {
-				// Handle response structure - the API returns user data directly
-				const profileUserData = userResponse.user;
-				const profilePrivacy = profileUserData.privacy?.profile || "public";
-
-				// Check if current user can view this profile
-				const canViewProfile = () => {
-					// Profile owner can always view their own profile
-					if (profileUserData.uid === currentUser.uid) return true;
-
-					// Public profiles are visible to everyone
-					if (profilePrivacy === "public") return true;
-
-					// Private profiles are only visible to the owner
-					if (profilePrivacy === "private") return false;
-
-					// Followers-only profiles are visible to followers
-					if (profilePrivacy === "followers") {
-						return profileUserData.isFollowedByCurrentUser || false;
-					}
-
-					return false;
-				};
-
-				if (!canViewProfile()) {
-					throw new Error("This profile is private");
-				}
-
-				setProfileUser(profileUserData);
-
-				// Check if user is blocked
-				setIsBlocked(profileUserData.isBlocked || false);
-
-				// Set edit form data
-				setEditForm({
-					name: userResponse.user.name || "",
-					bio: userResponse.user.bio || "",
-					photoURL: userResponse.user.photoURL || "",
-				});
-
-				// Set posts from user response if available
-				if (userResponse.user.posts) {
-					// Filter posts based on profile privacy
-					const filteredPosts = userResponse.user.posts.filter((post) => {
-						// Profile owner can see all their posts
-						if (post.author.uid === currentUser.uid) return true;
-
-						// For other users, respect the profile privacy settings
-						const authorPrivacy = post.author.privacy?.profile || "public";
-
-						if (authorPrivacy === "public") return true;
-						if (authorPrivacy === "private") return false;
-						if (authorPrivacy === "followers") {
-							return post.author.isFollowedByCurrentUser || false;
-						}
-
-						return false;
-					});
-
-					setPosts(filteredPosts);
-				} else {
-					// Fallback to separate posts API call
-					try {
-						const postsResponse = await postAPI.getPosts(1, 20, {
-							author: username,
-						});
-
-						// Filter posts based on profile privacy
-						const filteredPosts = (postsResponse.posts || []).filter((post) => {
-							// Profile owner can see all their posts
-							if (post.author.uid === currentUser.uid) return true;
-
-							// For other users, respect the profile privacy settings
-							const authorPrivacy = post.author.privacy?.profile || "public";
-
-							if (authorPrivacy === "public") return true;
-							if (authorPrivacy === "private") return false;
-							if (authorPrivacy === "followers") {
-								return post.author.isFollowedByCurrentUser || false;
-							}
-
-							return false;
-						});
-
-						setPosts(filteredPosts);
-					} catch (err) {
-						console.error("Error loading posts:", err);
-						setPosts([]);
-					}
-				}
-
-				// Load followers and following data
-				try {
-					const followersResponse = await userAPI.getFollowers(username);
-					setFollowers(followersResponse.followers || []);
-
-					// Check if current user is following this profile from user data or followers list
-					if (currentUser) {
-						const isFollowingFromUserData =
-							profileUserData.isFollowedByCurrentUser;
-						const isFollowingFromFollowers = (
-							followersResponse.followers || []
-						).some((f) => f.uid === currentUser.uid);
-
-						// Prefer the user data value if available, otherwise check followers list
-						setIsFollowing(
-							isFollowingFromUserData !== undefined
-								? isFollowingFromUserData
-								: isFollowingFromFollowers,
-						);
-					}
-				} catch (err) {
-					console.error("Error loading followers:", err);
-					setFollowers([]);
-					// Continue execution even if followers fail to load
-				}
-
-				try {
-					const followingResponse = await userAPI.getFollowing(username);
-					setFollowing(followingResponse.following || []);
-				} catch (err) {
-					console.error("Error loading following:", err);
-					setFollowing([]);
-					// Continue execution even if following fails to load
-				}
-
-				setLoading(false);
-			} catch (err) {
-				console.error("Error loading local profile:", err);
-				throw err;
-			}
-		};
-
 		loadProfile();
-	}, [currentUser?.uid, username]);
+	}, [currentUser?.uid, username, navigate, loadProfile]);
+
+	useEffect(() => {
+		const handleProfileRefresh = () => loadProfile();
+		window.addEventListener("profile:refresh", handleProfileRefresh);
+		window.addEventListener("posts:refresh", handleProfileRefresh);
+		return () => {
+			window.removeEventListener("profile:refresh", handleProfileRefresh);
+			window.removeEventListener("posts:refresh", handleProfileRefresh);
+		};
+	}, [loadProfile]);
 
 	// Update page meta data when profile user changes
 	useEffect(() => {
